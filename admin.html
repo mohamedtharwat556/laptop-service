@@ -184,7 +184,22 @@
     <script>
         // Auto-login for admin demo
         document.addEventListener('DOMContentLoaded', async () => {
-            const user = storage.getUserByUsername('admin');
+            let user = storage.getUserByUsername('admin');
+            
+            // If admin user doesn't exist in localStorage, create it
+            if (!user) {
+                user = {
+                    id: 1,
+                    username: 'admin',
+                    password: 'admin123',
+                    role: 'admin',
+                    name: 'System Administrator',
+                    email: 'admin@yas.com',
+                    createdAt: new Date().toISOString()
+                };
+                storage.set('users', [user]);
+            }
+            
             if (user) {
                 sessionStorage.setItem('YAS_currentUser', JSON.stringify(user));
                 document.getElementById('welcomeUser').textContent = `Welcome, ${user.name}`;
