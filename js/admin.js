@@ -21,9 +21,109 @@ class AdminManager {
      * Initialize admin dashboard
      */
     async init() {
-        await this.loadData();
-        await this.switchSection('dashboard');
-        this.startAutoRefresh();
+        try {
+            console.log('🔄 AdminManager.init() called');
+            
+            // Always check if user is already set in sessionStorage
+            let user = sessionStorage.getItem('YAS_currentUser');
+            if (user) {
+                try {
+                    this.currentUser = JSON.parse(user);
+                    console.log('✅ User loaded from sessionStorage:', this.currentUser.name);
+                } catch (e) {
+                    console.error('Failed to parse user:', e);
+                }
+            }
+            
+            // If still no user, try isAuthenticated
+            if (!this.currentUser) {
+                if (this.isAuthenticated()) {
+                    console.log('✅ User authenticated via isAuthenticated()');
+                } else {
+                    console.warn('⚠️  User not authenticated, but continuing in development mode');
+                    // In development, create a default user
+                    this.currentUser = {
+                        id: 1,
+                        username: 'admin',
+                        password: 'admin123',
+                        role: 'admin',
+                        name: 'System Administrator',
+                        email: 'admin@yas.com'
+                    };
+                }
+            }
+            
+            if (!this.currentUser || this.currentUser.role !== 'admin') {
+                console.error('❌ User not authenticated as admin');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            console.log('📊 Loading data...');
+            await this.loadData();
+            console.log('✅ Data loaded successfully');
+            
+            console.log('📑 Switching to dashboard section...');
+            await this.switchSection('dashboard');
+            
+            console.log('🔄 Starting auto-refresh...');
+            this.startAutoRefresh();
+            
+            console.log('🔗 Setting up sidebar navigation...');
+            // Setup sidebar navigation
+            document.querySelectorAll('.sidebar-nav-link').forEach(link => {
+                link.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const section = link.dataset.section;
+                    await this.switchSection(section);
+                    if (section === 'daily-report') {
+                        // Set today's date by default
+                        const dateInput = document.getElementById('reportDate');
+                        if (dateInput && !dateInput.value) {
+                            dateInput.value = new Date().toISOString().slice(0, 10);
+                        }
+                        this.renderDailyReport();
+                        // Re-render on date change
+                        if (dateInput) {
+                            dateInput.onchange = () => this.renderDailyReport();
+                        }
+                    }
+                });
+            });
+
+            console.log('⏹️  Setting up logout button...');
+            // Setup logout
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => this.logout());
+            }
+
+            console.log('🔍 Setting up search and filters...');
+            // Setup search and filters
+            const searchInput = document.getElementById('requestSearch');
+            const statusFilter = document.getElementById('statusFilter');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', Utils.debounce(() => {
+                    this.currentPage = 1;
+                    this.renderRequests();
+                }, 300));
+            }
+
+            if (statusFilter) {
+                statusFilter.addEventListener('change', () => {
+                    this.currentPage = 1;
+                    this.renderRequests();
+                });
+            }
+            
+            console.log('✅ Admin dashboard initialized successfully!');
+        } catch (error) {
+            console.error('❌ Error initializing admin dashboard:', error);
+            console.error('📋 Error message:', error.message);
+            console.error('Stack:', error.stack);
+            toast.error('فشل تحميل لوحة التحكم: ' + error.message);
+        }
     }
 
     /**
@@ -95,20 +195,46 @@ class AdminManager {
     }
 
     /**
-     * Load data from API
+     * Convert snake_case from Supabase to camelCase for frontend
+     */
+    convertToCamelCase(obj) {
+        if (!obj) return obj;
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.convertToCamelCase(item));
+        }
+        if (typeof obj !== 'object') return obj;
+        
+        const converted = {};
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const camelKey = key.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
+                converted[camelKey] = this.convertToCamelCase(obj[key]);
+            }
+        }
+        return converted;
+    }
+
+    /**
+     * Load data from API (shared across all users)
      */
     async loadData() {
         try {
-            const [users, requests, orders, products] = await Promise.all([
-                fetch('/api/users').then(r => r.json()),
-                fetch('/api/requests').then(r => r.json()),
-                fetch('/api/orders').then(r => r.json()),
-                fetch('/api/products').then(r => r.json())
+            console.log('📡 Fetching data from API...');
+            const [usersRes, requestsRes, ordersRes, productsRes] = await Promise.all([
+                fetch('/api/users').then(r => r.json()).catch(() => []),
+                fetch('/api/requests').then(r => r.json()).catch(() => []),
+                fetch('/api/orders').then(r => r.json()).catch(() => []),
+                fetch('/api/products').then(r => r.json()).catch(() => [])
             ]);
-            this.users = users;
-            this.requests = requests;
-            this.orders = orders;
-            this.products = products;
+            
+            // Convert from snake_case to camelCase
+            this.users = this.convertToCamelCase(Array.isArray(usersRes) ? usersRes : []);
+            this.requests = this.convertToCamelCase(Array.isArray(requestsRes) ? requestsRes : []);
+            this.orders = this.convertToCamelCase(Array.isArray(ordersRes) ? ordersRes : []);
+            this.products = this.convertToCamelCase(Array.isArray(productsRes) ? productsRes : []);
+            
+            console.log(`✅ Data loaded: ${this.requests.length} requests, ${this.products.length} products`);
+            console.log('📋 Sample request:', this.requests[0]);
         } catch (error) {
             console.error('Failed to load data from API:', error);
             // Fallback to localStorage
@@ -1269,71 +1395,14 @@ class AdminManager {
         toast.success(`تم تصدير ${dayRequests.length} طلب بنجاح ✅`);
     }
 
-    /**
-     * Initialize admin dashboard
-     */
-    init() {
-        if (!this.isAuthenticated()) {
-            window.location.href = 'index.html';
-            return;
-        }
-
-        this.loadData();
-        this.renderStats();
-        this.renderCharts();
-
-        // Setup sidebar navigation
-        document.querySelectorAll('.sidebar-nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                this.switchSection(link.dataset.section);
-                if (link.dataset.section === 'daily-report') {
-                    // Set today's date by default
-                    const dateInput = document.getElementById('reportDate');
-                    if (dateInput && !dateInput.value) {
-                        dateInput.value = new Date().toISOString().slice(0, 10);
-                    }
-                    this.renderDailyReport();
-                    // Re-render on date change
-                    if (dateInput) {
-                        dateInput.onchange = () => this.renderDailyReport();
-                    }
-                }
-            });
-        });
-
-        // Setup logout
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => this.logout());
-        }
-
-        // Setup search and filters
-        const searchInput = document.getElementById('requestSearch');
-        const statusFilter = document.getElementById('statusFilter');
-
-        if (searchInput) {
-            searchInput.addEventListener('input', Utils.debounce(() => {
-                this.currentPage = 1;
-                this.renderRequests();
-            }, 300));
-        }
-
-        if (statusFilter) {
-            statusFilter.addEventListener('change', () => {
-                this.currentPage = 1;
-                this.renderRequests();
-            });
-        }
-    }
 }
-
 
 // Create global instance
 const adminManager = new AdminManager();
 
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     if (document.getElementById('adminDashboard')) {
-        adminManager.init();
+        await adminManager.init();
     }
 });
