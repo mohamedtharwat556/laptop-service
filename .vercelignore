@@ -1,8 +1,0 @@
-*.html
-*.css
-*.js
-!server.js
-!db.js
-assets/
-css/
-js/
