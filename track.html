@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تتبع الطلب - مركز خدمة لابتوب YAS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/ai-animations.css">
+    <link rel="stylesheet" href="css/advanced-animations.css">
+    <link rel="stylesheet" href="css/rtl.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+</head>
+<body>
+    <div class="glow-orb-1"></div>
+    <div class="glow-orb-2"></div>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="assets/images/yas-logo.svg" alt="YAS Logo" class="logo-img">
+                <span class="logo-text">
+                    <span class="logo-name">YAS</span>
+                    <span class="logo-sub">LAPTOP SERVICE</span>
+                </span>
+            </a>
+            <button class="mobile-menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">الرئيسية</a></li>
+                <li><a href="customer.html" class="nav-link">تقديم طلب</a></li>
+                <li><a href="track.html" class="nav-link">متابعة الطلب</a></li>
+                <li><button class="dark-mode-toggle" id="darkModeToggle" title="تبديل الوضع الليلي">
+                    <i class="fas fa-moon"></i>
+                </button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="section animate__animated animate__fadeInUp" style="padding-top: 120px;">
+        <h2 class="section-title">تتبع حالة الطلب</h2>
+        <div class="form-container glass-card">
+            <form id="trackingForm">
+                <div class="form-group">
+                    <label class="form-label">طريقة البحث</label>
+                    <select class="form-select" name="searchType">
+                        <option value="phone">رقم الهاتف</option>
+                        <option value="number">رقم الطلب</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">كلمة البحث</label>
+                    <input type="text" class="form-input" name="searchTerm" required placeholder="أدخل رقم الهاتف أو رقم الطلب">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-search"></i>
+                    بحث
+                </button>
+            </form>
+        </div>
+
+        <div id="trackingResult" style="max-width: 800px; margin: 2rem auto;"></div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>YAS Laptop Service</h4>
+                <p>شريكك الموثوق لجميع احتياجات صيانة وإصلاح الحواسيب المحمولة.</p>
+            </div>
+            <div class="footer-section">
+                <h4>روابط سريعة</h4>
+                <a href="index.html">الرئيسية</a>
+                <a href="customer.html">تقديم طلب صيانة</a>
+                <a href="track.html">تتبع حالة الطلب</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>جميع الحقوق محفوظة &copy; 2026 لمركز ياس لصيانة اللابتوب</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/customer.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/darkmode.js"></script>
+    <script src="js/mobile-menu.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /node_modules/
+Disallow: /js/
+Disallow: /css/
+
+Sitemap: https://yas-laptop-service.com/sitemap.xml
