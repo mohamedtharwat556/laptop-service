@@ -2,9 +2,9 @@
   "name": "yas-laptop-service",
   "version": "2.0.0",
   "description": "YAS Laptop Service Center - Backend and Frontend App",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node server.js",
     "dev": "node server.js",
     "test": "jest"
   },
