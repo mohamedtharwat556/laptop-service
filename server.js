@@ -1,21 +1,15 @@
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
-const mongoose = require('mongoose');
 const rateLimit = require('express-rate-limit');
+const supabase = require('./db');
 require('dotenv').config();
-
-// Import models
-const User = require('./models/User');
-const Request = require('./models/Request');
-const Product = require('./models/Product');
-const Order = require('./models/Order');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_FILE = path.join(__dirname, 'db.json');
-let useMongoDB = false;
+
+// Trust proxy for Vercel
+app.set('trust proxy', true);
 
 // Middleware
 app.use(cors());
@@ -26,7 +20,12 @@ app.use(express.urlencoded({ extended: true }));
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
-  message: 'Too many requests from this IP, please try again later.'
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    return req.path === '/api/health';
+  }
 });
 app.use('/api/', limiter);
 
@@ -36,112 +35,195 @@ app.use((req, res, next) => {
     next();
 });
 
-// MongoDB Connection (with fallback to JSON)
-async function connectDB() {
-  if (process.env.MONGODB_URI) {
-    try {
-      await mongoose.connect(process.env.MONGODB_URI);
-      console.log('Connected to MongoDB');
-      useMongoDB = true;
-      
-      // Seed initial data if empty
-      const userCount = await User.countDocuments();
-      if (userCount === 0) {
-        await seedMongoDB();
-      }
-    } catch (err) {
-      console.warn('MongoDB connection failed, falling back to JSON:', err.message);
-      useMongoDB = false;
+// Initialize Supabase with default data
+async function initSupabase() {
+  try {
+    console.log('Checking Supabase connection...');
+    console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'SET' : 'NOT SET');
+    console.log('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
+
+    // Check if users exist
+    const { data: existingUsers, error: usersError } = await supabase.from('users').select('count');
+    if (usersError) {
+      console.error('Error checking users:', usersError);
+      return;
     }
-  } else {
-    console.log('No MONGODB_URI provided, using JSON file storage');
+
+    if (!existingUsers || existingUsers.length === 0) {
+      const users = [
+        {
+          id: 1,
+          username: 'admin',
+          password: 'admin123',
+          role: 'admin',
+          name: 'System Administrator',
+          email: 'admin@yas.com',
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 2,
+          username: 'employee',
+          password: 'emp123',
+          role: 'employee',
+          name: 'Customer Service',
+          email: 'service@yas.com',
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 3,
+          username: 'technician',
+          password: 'tech123',
+          role: 'technician',
+          name: 'Senior Technician',
+          email: 'tech@yas.com',
+          created_at: new Date().toISOString()
+        }
+      ];
+      const { error: insertError } = await supabase.from('users').insert(users);
+      if (insertError) {
+        console.error('Error inserting users:', insertError);
+      } else {
+        console.log('Users seeded in Supabase');
+      }
+    }
+
+    // Check if products exist
+    const { data: existingProducts, error: productsError } = await supabase.from('products').select('count');
+    if (productsError) {
+      console.error('Error checking products:', productsError);
+      return;
+    }
+
+    if (!existingProducts || existingProducts.length === 0) {
+      const products = [
+        {
+          id: 1,
+          name: 'Dell XPS 15',
+          category: 'Laptops',
+          price: 1499,
+          description: 'High-performance laptop with Intel i7, 16GB RAM, 512GB SSD',
+          image: 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=Dell+XPS+15',
+          stock: 10,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 2,
+          name: 'HP Pavilion Gaming',
+          category: 'Laptops',
+          price: 899,
+          description: 'Gaming laptop with Ryzen 5, 8GB RAM, 256GB SSD',
+          image: 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=HP+Pavilion',
+          stock: 15,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 3,
+          name: '65W Laptop Charger',
+          category: 'Chargers',
+          price: 45,
+          description: 'Universal laptop charger with multiple tips',
+          image: 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=Charger',
+          stock: 50,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 4,
+          name: 'Wireless Mouse',
+          category: 'Mouse',
+          price: 25,
+          description: 'Ergonomic wireless mouse with precision tracking',
+          image: 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=Mouse',
+          stock: 100,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 5,
+          name: 'Mechanical Keyboard',
+          category: 'Keyboard',
+          price: 79,
+          description: 'RGB mechanical keyboard with cherry switches',
+          image: 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=Keyboard',
+          stock: 30,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 6,
+          name: '1TB SSD',
+          category: 'SSD',
+          price: 120,
+          description: 'High-speed NVMe SSD for faster performance',
+          image: 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=SSD',
+          stock: 40,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 7,
+          name: '16GB RAM DDR4',
+          category: 'RAM',
+          price: 65,
+          description: 'High-performance DDR4 RAM module',
+          image: 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=RAM',
+          stock: 60,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 8,
+          name: 'Laptop Cooling Pad',
+          category: 'Cooling Pads',
+          price: 35,
+          description: 'Dual fan cooling pad for optimal temperature',
+          image: 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=Cooling+Pad',
+          stock: 45,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 9,
+          name: 'Laptop Backpack',
+          category: 'Bags',
+          price: 55,
+          description: 'Water-resistant laptop backpack with padding',
+          image: 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=Backpack',
+          stock: 25,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 10,
+          name: 'USB-C Hub',
+          category: 'Accessories',
+          price: 40,
+          description: '7-in-1 USB-C hub with HDMI, USB 3.0, SD card',
+          image: 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=USB-C+Hub',
+          stock: 70,
+          created_at: new Date().toISOString()
+        }
+      ];
+      const { error: insertError } = await supabase.from('products').insert(products);
+      if (insertError) {
+        console.error('Error inserting products:', insertError);
+      } else {
+        console.log('Products seeded in Supabase');
+      }
+    }
+
+    console.log('Supabase initialization completed successfully');
+  } catch (error) {
+    console.error('Error initializing Supabase:', error);
   }
 }
 
-// Seed MongoDB with initial data
-async function seedMongoDB() {
-  console.log('Seeding MongoDB with initial data...');
-  
-  await User.create([
-    {
-      username: 'admin',
-      password: 'admin123',
-      role: 'admin',
-      name: 'System Administrator',
-      email: 'admin@yas.com'
-    },
-    {
-      username: 'employee',
-      password: 'emp123',
-      role: 'employee',
-      name: 'Customer Service',
-      email: 'service@yas.com'
-    },
-    {
-      username: 'technician',
-      password: 'tech123',
-      role: 'technician',
-      name: 'Senior Technician',
-      email: 'tech@yas.com'
-    }
-  ]);
-  
-  const products = [
-    {
-      name: 'Dell XPS 15',
-      category: 'Laptops',
-      price: 1499,
-      description: 'High-performance laptop with Intel i7, 16GB RAM, 512GB SSD',
-      image: 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=Dell+XPS+15',
-      stock: 10
-    },
-    {
-      name: 'HP Pavilion Gaming',
-      category: 'Laptops',
-      price: 899,
-      description: 'Gaming laptop with Ryzen 5, 8GB RAM, 256GB SSD',
-      image: 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=HP+Pavilion',
-      stock: 15
-    },
-    {
-      name: '65W Laptop Charger',
-      category: 'Chargers',
-      price: 45,
-      description: 'Universal laptop charger with multiple tips',
-      image: 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=Charger',
-      stock: 50
-    }
-  ];
-  
-  await Product.insertMany(products);
-  console.log('MongoDB seeded successfully');
-}
+// Initialize Supabase on startup
+initSupabase();
 
-// Serve all frontend files as static assets
-app.use(express.static(__dirname));
-
-// Helper to read DB
-function readDB() {
-    if (!fs.existsSync(DB_FILE)) {
-        fs.writeFileSync(DB_FILE, JSON.stringify({}, null, 2));
-    }
-    try {
-        const data = fs.readFileSync(DB_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (err) {
-        console.error('Error reading db.json:', err);
-        return {};
-    }
-}
-
-// Helper to write DB
-function writeDB(data) {
-    try {
-        fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-    } catch (err) {
-        console.error('Error writing db.json:', err);
-    }
-}
+// Simple test endpoint (no middleware)
+app.get('/test', (req, res) => {
+    res.json({ 
+        test: 'working',
+        env: {
+            SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+            SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET'
+        }
+    });
+});
 
 // ============ API ROUTES ============
 
@@ -153,23 +235,26 @@ app.get('/api/health', (req, res) => {
 // Get all data (legacy support)
 app.get('/api/data', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const [users, requests, products, orders] = await Promise.all([
-                User.find({}),
-                Request.find({}),
-                Product.find({}),
-                Order.find({})
-            ]);
-            res.json({
-                users,
-                requests,
-                products,
-                orders,
-                categories: products.length > 0 ? [...new Set(products.map(p => p.category))] : []
-            });
-        } else {
-            res.json(readDB());
-        }
+        console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'SET' : 'NOT SET');
+        console.log('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
+        
+        const [users, requests, products, orders] = await Promise.all([
+            supabase.from('users').select('*'),
+            supabase.from('requests').select('*'),
+            supabase.from('products').select('*'),
+            supabase.from('orders').select('*')
+        ]);
+
+        console.log('Users:', users.data?.length || 0);
+        console.log('Products:', products.data?.length || 0);
+
+        res.json({
+            users: users.data || [],
+            requests: requests.data || [],
+            products: products.data || [],
+            orders: orders.data || [],
+            categories: products.data && products.data.length > 0 ? [...new Set(products.data.map(p => p.category))] : []
+        });
     } catch (error) {
         console.error('Error fetching data:', error);
         res.status(500).json({ error: error.message });
@@ -177,13 +262,11 @@ app.get('/api/data', async (req, res) => {
 });
 
 // Save/merge all data (legacy support)
-app.post('/api/data', (req, res) => {
+app.post('/api/data', async (req, res) => {
     try {
         const clientData = req.body;
-        const currentDB = readDB();
-        const updatedDB = { ...currentDB, ...clientData };
-        writeDB(updatedDB);
-        res.json({ success: true, db: updatedDB });
+        // For now, just return success as Supabase handles data differently
+        res.json({ success: true });
     } catch (error) {
         console.error('API sync error:', error);
         res.status(500).json({ error: error.message });
@@ -193,13 +276,8 @@ app.post('/api/data', (req, res) => {
 // ============ USERS API ============
 app.get('/api/users', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const users = await User.find({});
-            res.json(users);
-        } else {
-            const db = readDB();
-            res.json(db.users || []);
-        }
+        const { data: users } = await supabase.from('users').select('*');
+        res.json(users || []);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -207,16 +285,9 @@ app.get('/api/users', async (req, res) => {
 
 app.get('/api/users/:id', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const user = await User.findById(req.params.id);
-            if (!user) return res.status(404).json({ error: 'User not found' });
-            res.json(user);
-        } else {
-            const db = readDB();
-            const user = db.users?.find(u => u.id === parseInt(req.params.id));
-            if (!user) return res.status(404).json({ error: 'User not found' });
-            res.json(user);
-        }
+        const { data: user } = await supabase.from('users').select('*').eq('id', req.params.id).single();
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json(user);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -224,21 +295,8 @@ app.get('/api/users/:id', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const newUser = await User.create(req.body);
-            res.status(201).json(newUser);
-        } else {
-            const db = readDB();
-            const newUser = {
-                id: Date.now(),
-                ...req.body,
-                createdAt: new Date().toISOString()
-            };
-            db.users = db.users || [];
-            db.users.push(newUser);
-            writeDB(db);
-            res.status(201).json(newUser);
-        }
+        const { data: newUser } = await supabase.from('users').insert(req.body).select().single();
+        res.status(201).json(newUser);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -246,18 +304,9 @@ app.post('/api/users', async (req, res) => {
 
 app.put('/api/users/:id', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
-            if (!user) return res.status(404).json({ error: 'User not found' });
-            res.json(user);
-        } else {
-            const db = readDB();
-            const index = db.users?.findIndex(u => u.id === parseInt(req.params.id));
-            if (index === -1 || index === undefined) return res.status(404).json({ error: 'User not found' });
-            db.users[index] = { ...db.users[index], ...req.body };
-            writeDB(db);
-            res.json(db.users[index]);
-        }
+        const { data: user } = await supabase.from('users').update(req.body).eq('id', req.params.id).select().single();
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json(user);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -265,18 +314,8 @@ app.put('/api/users/:id', async (req, res) => {
 
 app.delete('/api/users/:id', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const user = await User.findByIdAndDelete(req.params.id);
-            if (!user) return res.status(404).json({ error: 'User not found' });
-            res.json({ success: true });
-        } else {
-            const db = readDB();
-            const index = db.users?.findIndex(u => u.id === parseInt(req.params.id));
-            if (index === -1 || index === undefined) return res.status(404).json({ error: 'User not found' });
-            db.users.splice(index, 1);
-            writeDB(db);
-            res.json({ success: true });
-        }
+        await supabase.from('users').delete().eq('id', req.params.id);
+        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -285,13 +324,8 @@ app.delete('/api/users/:id', async (req, res) => {
 // ============ REQUESTS API ============
 app.get('/api/requests', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const requests = await Request.find({});
-            res.json(requests);
-        } else {
-            const db = readDB();
-            res.json(db.requests || []);
-        }
+        const { data: requests } = await supabase.from('requests').select('*');
+        res.json(requests || []);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -299,16 +333,9 @@ app.get('/api/requests', async (req, res) => {
 
 app.get('/api/requests/:id', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const request = await Request.findById(req.params.id);
-            if (!request) return res.status(404).json({ error: 'Request not found' });
-            res.json(request);
-        } else {
-            const db = readDB();
-            const request = db.requests?.find(r => r.id === req.params.id);
-            if (!request) return res.status(404).json({ error: 'Request not found' });
-            res.json(request);
-        }
+        const { data: request } = await supabase.from('requests').select('*').eq('id', req.params.id).single();
+        if (!request) return res.status(404).json({ error: 'Request not found' });
+        res.json(request);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -316,22 +343,8 @@ app.get('/api/requests/:id', async (req, res) => {
 
 app.post('/api/requests', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const newRequest = await Request.create(req.body);
-            res.status(201).json(newRequest);
-        } else {
-            const db = readDB();
-            const newRequest = {
-                id: req.body.id || `YAS-${String(Date.now()).slice(-6)}`,
-                ...req.body,
-                createdAt: new Date().toISOString(),
-                status: req.body.status || 'pending'
-            };
-            db.requests = db.requests || [];
-            db.requests.push(newRequest);
-            writeDB(db);
-            res.status(201).json(newRequest);
-        }
+        const { data: newRequest } = await supabase.from('requests').insert(req.body).select().single();
+        res.status(201).json(newRequest);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -339,18 +352,9 @@ app.post('/api/requests', async (req, res) => {
 
 app.put('/api/requests/:id', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const request = await Request.findByIdAndUpdate(req.params.id, req.body, { new: true });
-            if (!request) return res.status(404).json({ error: 'Request not found' });
-            res.json(request);
-        } else {
-            const db = readDB();
-            const index = db.requests?.findIndex(r => r.id === req.params.id);
-            if (index === -1 || index === undefined) return res.status(404).json({ error: 'Request not found' });
-            db.requests[index] = { ...db.requests[index], ...req.body, updatedAt: new Date().toISOString() };
-            writeDB(db);
-            res.json(db.requests[index]);
-        }
+        const { data: request } = await supabase.from('requests').update(req.body).eq('id', req.params.id).select().single();
+        if (!request) return res.status(404).json({ error: 'Request not found' });
+        res.json(request);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -358,18 +362,8 @@ app.put('/api/requests/:id', async (req, res) => {
 
 app.delete('/api/requests/:id', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const request = await Request.findByIdAndDelete(req.params.id);
-            if (!request) return res.status(404).json({ error: 'Request not found' });
-            res.json({ success: true });
-        } else {
-            const db = readDB();
-            const index = db.requests?.findIndex(r => r.id === req.params.id);
-            if (index === -1 || index === undefined) return res.status(404).json({ error: 'Request not found' });
-            db.requests.splice(index, 1);
-            writeDB(db);
-            res.json({ success: true });
-        }
+        await supabase.from('requests').delete().eq('id', req.params.id);
+        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -379,34 +373,23 @@ app.delete('/api/requests/:id', async (req, res) => {
 app.get('/api/products', async (req, res) => {
     try {
         const { category, search } = req.query;
+        let query = supabase.from('products').select('*');
         
-        if (useMongoDB) {
-            let query = {};
-            if (category) query.category = category;
-            if (search) {
-                query.$or = [
-                    { name: { $regex: search, $options: 'i' } },
-                    { description: { $regex: search, $options: 'i' } }
-                ];
-            }
-            const products = await Product.find(query);
-            res.json(products);
-        } else {
-            const db = readDB();
-            let products = db.products || [];
-            
-            if (category) {
-                products = products.filter(p => p.category === category);
-            }
-            if (search) {
-                products = products.filter(p => 
-                    p.name.toLowerCase().includes(search.toLowerCase()) ||
-                    p.description.toLowerCase().includes(search.toLowerCase())
-                );
-            }
-            
-            res.json(products);
+        if (category) {
+            query = query.eq('category', category);
         }
+        
+        const { data: products } = await query;
+        
+        let filteredProducts = products || [];
+        if (search) {
+            filteredProducts = filteredProducts.filter(p => 
+                p.name.toLowerCase().includes(search.toLowerCase()) ||
+                p.description.toLowerCase().includes(search.toLowerCase())
+            );
+        }
+        
+        res.json(filteredProducts);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -414,16 +397,9 @@ app.get('/api/products', async (req, res) => {
 
 app.get('/api/products/:id', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const product = await Product.findById(req.params.id);
-            if (!product) return res.status(404).json({ error: 'Product not found' });
-            res.json(product);
-        } else {
-            const db = readDB();
-            const product = db.products?.find(p => p.id === parseInt(req.params.id));
-            if (!product) return res.status(404).json({ error: 'Product not found' });
-            res.json(product);
-        }
+        const { data: product } = await supabase.from('products').select('*').eq('id', req.params.id).single();
+        if (!product) return res.status(404).json({ error: 'Product not found' });
+        res.json(product);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -431,21 +407,8 @@ app.get('/api/products/:id', async (req, res) => {
 
 app.post('/api/products', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const newProduct = await Product.create(req.body);
-            res.status(201).json(newProduct);
-        } else {
-            const db = readDB();
-            const newProduct = {
-                id: Date.now(),
-                ...req.body,
-                createdAt: new Date().toISOString()
-            };
-            db.products = db.products || [];
-            db.products.push(newProduct);
-            writeDB(db);
-            res.status(201).json(newProduct);
-        }
+        const { data: newProduct } = await supabase.from('products').insert(req.body).select().single();
+        res.status(201).json(newProduct);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -453,18 +416,9 @@ app.post('/api/products', async (req, res) => {
 
 app.put('/api/products/:id', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-            if (!product) return res.status(404).json({ error: 'Product not found' });
-            res.json(product);
-        } else {
-            const db = readDB();
-            const index = db.products?.findIndex(p => p.id === parseInt(req.params.id));
-            if (index === -1 || index === undefined) return res.status(404).json({ error: 'Product not found' });
-            db.products[index] = { ...db.products[index], ...req.body, updatedAt: new Date().toISOString() };
-            writeDB(db);
-            res.json(db.products[index]);
-        }
+        const { data: product } = await supabase.from('products').update(req.body).eq('id', req.params.id).select().single();
+        if (!product) return res.status(404).json({ error: 'Product not found' });
+        res.json(product);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -472,18 +426,8 @@ app.put('/api/products/:id', async (req, res) => {
 
 app.delete('/api/products/:id', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const product = await Product.findByIdAndDelete(req.params.id);
-            if (!product) return res.status(404).json({ error: 'Product not found' });
-            res.json({ success: true });
-        } else {
-            const db = readDB();
-            const index = db.products?.findIndex(p => p.id === parseInt(req.params.id));
-            if (index === -1 || index === undefined) return res.status(404).json({ error: 'Product not found' });
-            db.products.splice(index, 1);
-            writeDB(db);
-            res.json({ success: true });
-        }
+        await supabase.from('products').delete().eq('id', req.params.id);
+        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -492,13 +436,8 @@ app.delete('/api/products/:id', async (req, res) => {
 // ============ ORDERS API ============
 app.get('/api/orders', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const orders = await Order.find({});
-            res.json(orders);
-        } else {
-            const db = readDB();
-            res.json(db.orders || []);
-        }
+        const { data: orders } = await supabase.from('orders').select('*');
+        res.json(orders || []);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -506,16 +445,9 @@ app.get('/api/orders', async (req, res) => {
 
 app.get('/api/orders/:id', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const order = await Order.findById(req.params.id);
-            if (!order) return res.status(404).json({ error: 'Order not found' });
-            res.json(order);
-        } else {
-            const db = readDB();
-            const order = db.orders?.find(o => o.id === req.params.id);
-            if (!order) return res.status(404).json({ error: 'Order not found' });
-            res.json(order);
-        }
+        const { data: order } = await supabase.from('orders').select('*').eq('id', req.params.id).single();
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+        res.json(order);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -523,22 +455,8 @@ app.get('/api/orders/:id', async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const newOrder = await Order.create(req.body);
-            res.status(201).json(newOrder);
-        } else {
-            const db = readDB();
-            const newOrder = {
-                id: `ORD-${String(Date.now()).slice(-6)}`,
-                ...req.body,
-                createdAt: new Date().toISOString(),
-                status: req.body.status || 'pending'
-            };
-            db.orders = db.orders || [];
-            db.orders.push(newOrder);
-            writeDB(db);
-            res.status(201).json(newOrder);
-        }
+        const { data: newOrder } = await supabase.from('orders').insert(req.body).select().single();
+        res.status(201).json(newOrder);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -546,18 +464,9 @@ app.post('/api/orders', async (req, res) => {
 
 app.put('/api/orders/:id', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
-            if (!order) return res.status(404).json({ error: 'Order not found' });
-            res.json(order);
-        } else {
-            const db = readDB();
-            const index = db.orders?.findIndex(o => o.id === req.params.id);
-            if (index === -1 || index === undefined) return res.status(404).json({ error: 'Order not found' });
-            db.orders[index] = { ...db.orders[index], ...req.body, updatedAt: new Date().toISOString() };
-            writeDB(db);
-            res.json(db.orders[index]);
-        }
+        const { data: order } = await supabase.from('orders').update(req.body).eq('id', req.params.id).select().single();
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+        res.json(order);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -566,13 +475,9 @@ app.put('/api/orders/:id', async (req, res) => {
 // ============ CATEGORIES API ============
 app.get('/api/categories', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const products = await Product.find({}).distinct('category');
-            res.json(products);
-        } else {
-            const db = readDB();
-            res.json(db.categories || []);
-        }
+        const { data: products } = await supabase.from('products').select('category');
+        const categories = [...new Set(products?.map(p => p.category) || [])];
+        res.json(categories);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -581,14 +486,8 @@ app.get('/api/categories', async (req, res) => {
 // ============ CART API ============
 app.get('/api/cart', async (req, res) => {
     try {
-        if (useMongoDB) {
-            // For MongoDB, cart would be stored in a separate collection or user document
-            // For now, return empty array as cart is typically client-side
-            res.json([]);
-        } else {
-            const db = readDB();
-            res.json(db.cart || []);
-        }
+        const { data: cart } = await supabase.from('cart').select('*');
+        res.json(cart || []);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -596,15 +495,13 @@ app.get('/api/cart', async (req, res) => {
 
 app.post('/api/cart', async (req, res) => {
     try {
-        if (useMongoDB) {
-            // For MongoDB, cart would be stored in a separate collection or user document
-            res.json({ success: true, cart: req.body.cart || [] });
-        } else {
-            const db = readDB();
-            db.cart = req.body.cart || [];
-            writeDB(db);
-            res.json({ success: true, cart: db.cart });
+        const { cart } = req.body;
+        // Clear existing cart and insert new items
+        await supabase.from('cart').delete().neq('id', 0);
+        if (cart && cart.length > 0) {
+            await supabase.from('cart').insert(cart);
         }
+        res.json({ success: true, cart });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -613,43 +510,32 @@ app.post('/api/cart', async (req, res) => {
 // ============ STATS API ============
 app.get('/api/stats', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const [requests, products, orders, users] = await Promise.all([
-                Request.find({}),
-                Product.find({}),
-                Order.find({}),
-                User.find({})
-            ]);
-            
-            const stats = {
-                totalRequests: requests.length,
-                openRequests: requests.filter(r => 
-                    ['Received', 'Waiting Inspection', 'Under Maintenance', 'Waiting Parts'].includes(r.status)
-                ).length,
-                completedRequests: requests.filter(r => r.status === 'Delivered').length,
-                totalProducts: products.length,
-                totalOrders: orders.length,
-                totalUsers: users.length,
-                revenue: orders.reduce((sum, o) => sum + (o.total || 0), 0)
-            };
-            res.json(stats);
-        } else {
-            const db = readDB();
-            const stats = {
-                totalRequests: db.requests?.length || 0,
-                openRequests: db.requests?.filter(r => r.status === 'pending').length || 0,
-                completedRequests: db.requests?.filter(r => r.status === 'completed').length || 0,
-                totalProducts: db.products?.length || 0,
-                totalOrders: db.orders?.length || 0,
-                totalUsers: db.users?.length || 0,
-                revenue: db.orders?.reduce((sum, o) => sum + (o.total || 0), 0) || 0
-            };
-            res.json(stats);
-        }
+        const [requests, products, orders, users] = await Promise.all([
+            supabase.from('requests').select('*'),
+            supabase.from('products').select('*'),
+            supabase.from('orders').select('*'),
+            supabase.from('users').select('*')
+        ]);
+        
+        const stats = {
+            totalRequests: requests.data.length,
+            openRequests: requests.data.filter(r => 
+                ['Received', 'Waiting Inspection', 'Under Maintenance', 'Waiting Parts'].includes(r.status)
+            ).length,
+            completedRequests: requests.data.filter(r => r.status === 'Delivered').length,
+            totalProducts: products.data.length,
+            totalOrders: orders.data.length,
+            totalUsers: users.data.length,
+            revenue: orders.data.reduce((sum, o) => sum + (o.total || 0), 0)
+        };
+        res.json(stats);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
+
+// Serve all frontend files as static assets
+app.use(express.static(__dirname));
 
 // Serve main page on fallback
 app.get('*', (req, res) => {
@@ -663,24 +549,14 @@ app.use((err, req, res, next) => {
 });
 
 // Start server (only when not running on Vercel)
-if (process.env.VERCEL) {
-  // On Vercel, just connect to DB without listening
-  connectDB().catch(err => {
-    console.error('Failed to connect to DB:', err);
-  });
-} else {
-  connectDB().then(() => {
-    app.listen(PORT, () => {
-      console.log(`===================================================`);
-      console.log(` YAS Laptop Service Server is running online!`);
-      console.log(` URL: http://localhost:${PORT}`);
-      console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(` Database: ${useMongoDB ? 'MongoDB' : 'JSON File'}`);
-      console.log(`===================================================`);
-    });
-  }).catch(err => {
-    console.error('Failed to start server:', err);
-    process.exit(1);
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`===================================================`);
+    console.log(` YAS Laptop Service Server is running online!`);
+    console.log(` URL: http://localhost:${PORT}`);
+    console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(` Database: Supabase`);
+    console.log(`===================================================`);
   });
 }
 
