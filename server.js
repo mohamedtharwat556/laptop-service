@@ -1,4 +1,5 @@
 const express = require('express');
+const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -38,20 +39,18 @@ app.use((req, res, next) => {
 // Initialize Supabase with default data
 async function initSupabase() {
   try {
-    console.log('Checking Supabase connection...');
-    console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'SET' : 'NOT SET');
-    console.log('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
+    console.log('🔧 Initializing database...');
+    console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'SET ✅' : 'NOT SET ❌');
+    console.log('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'SET ✅' : 'NOT SET ❌');
     
-    // Skip Supabase initialization in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('✅ Development mode - using in-memory data storage');
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+      console.log('✅ Production mode - using Supabase database');
       return;
+    } else {
+      console.log('⚠️  Supabase credentials not found, falling back to in-memory storage');
     }
-    
-    // Try to connect if in production
-    console.log('Supabase initialization skipped (development mode)');
   } catch (error) {
-    console.error('Error initializing Supabase:', error);
+    console.error('Error initializing database:', error);
     console.log('⚠️  Falling back to in-memory data storage');
   }
 }
