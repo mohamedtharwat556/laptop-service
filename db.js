@@ -17,8 +17,21 @@ if (supabaseUrl && supabaseKey) {
     throw error;
   }
 } else {
-  console.error('❌ CRITICAL: Missing Supabase credentials!');
-  console.error('Please set SUPABASE_URL and SUPABASE_ANON_KEY environment variables');
-  process.exit(1);
+  console.log('⚠️  Supabase credentials not found, running in local mode');
+  console.log('📝 Creating mock Supabase client for local development');
+  
+  // Mock Supabase client for local development
+  const mockSupabase = {
+    from: (table) => ({
+      select: () => ({ data: [], error: null }),
+      insert: () => ({ data: null, error: null }),
+      update: () => ({ data: null, error: null }),
+      delete: () => ({ data: null, error: null }),
+      eq: () => ({ single: () => ({ data: null, error: null }) }),
+      order: () => ({ data: [], error: null }),
+      or: () => ({ data: [], error: null })
+    })
+  };
+  module.exports = mockSupabase;
 }
 

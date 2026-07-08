@@ -1,5 +1,4 @@
 const express = require('express');
-const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -36,36 +35,15 @@ app.use((req, res, next) => {
     next();
 });
 
-// Initialize Supabase with default data
-async function initSupabase() {
-  try {
-    console.log('🔧 Initializing database...');
-    console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'SET ✅' : 'NOT SET ❌');
-    console.log('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'SET ✅' : 'NOT SET ❌');
-    
-    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-      console.log('✅ Production mode - using Supabase database');
-      return;
-    } else {
-      console.log('⚠️  Supabase credentials not found, falling back to in-memory storage');
-    }
-  } catch (error) {
-    console.error('Error initializing database:', error);
-    console.log('⚠️  Falling back to in-memory data storage');
-  }
-}
-
-// Initialize Supabase on startup
-initSupabase();
+// Initialize database (localStorage mode only)
+console.log('🔧 Running in localStorage mode - no database required');
+console.log('📝 All data will be stored in browser localStorage');
 
 // Simple test endpoint (no middleware)
 app.get('/test', (req, res) => {
     res.json({ 
         test: 'working',
-        env: {
-            SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
-            SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET'
-        }
+        mode: 'localStorage'
     });
 });
 
@@ -76,34 +54,16 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Get all data (legacy support)
-app.get('/api/data', async (req, res) => {
-    try {
-        console.log('📊 Fetching all data from Supabase...');
-        
-        const [usersRes, requestsRes, productsRes, ordersRes] = await Promise.all([
-            supabase.from('users').select('*'),
-            supabase.from('requests').select('*'),
-            supabase.from('products').select('*'),
-            supabase.from('orders').select('*')
-        ]);
-
-        const users = usersRes.data || [];
-        const requests = requestsRes.data || [];
-        const products = productsRes.data || [];
-        const orders = ordersRes.data || [];
-
-        res.json({
-            users,
-            requests,
-            products,
-            orders,
-            categories: [...new Set(products.map(p => p.category))]
-        });
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: error.message });
-    }
+// Get all data (localStorage mode - returns empty, client uses localStorage)
+app.get('/api/data', (req, res) => {
+    console.log('📊 API data endpoint - returning empty (using localStorage)');
+    res.json({
+        users: [],
+        requests: [],
+        products: [],
+        orders: [],
+        categories: []
+    });
 });
 
 // Save/merge all data (legacy support)
