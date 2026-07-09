@@ -1212,7 +1212,17 @@ class AdminManager {
                     <div class="request-detail-item"><span class="request-detail-label">اسم العميل</span><span class="request-detail-value">${request.fullName}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${request.phone}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${request.laptopBrand}${request.laptopModel ? ' ' + request.laptopModel : ''}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">نوع الجهاز</span><span class="request-detail-value">${request.deviceType || '—'}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${request.receivedDate || '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${request.problemDescription}</span></div>
+                    ${request.deviceImage ? `
+                    <div class="request-detail-item" style="grid-column: 1 / -1;">
+                        <span class="request-detail-label">صورة الجهاز</span>
+                        <div style="margin-top: 0.5rem;">
+                            <img src="${request.deviceImage}" alt="صورة الجهاز" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                        </div>
+                    </div>
+                    ` : ''}
                 </div>
                 <form id="editRequestForm" style="margin-top: 1.5rem;">
                     <div class="form-group">
@@ -1297,31 +1307,67 @@ class AdminManager {
     }
 
     /**
-     * Render daily report table
+     * Generate report based on selected period
      */
-    renderDailyReport() {
+    generateReport() {
+        const reportPeriod = document.getElementById('reportPeriod');
+        const reportDate = document.getElementById('reportDate');
+        const reportDateFrom = document.getElementById('reportDateFrom');
+        const reportDateTo = document.getElementById('reportDateTo');
+        
+        let filteredRequests = [];
+        const allRequests = storage.getRequests();
+        
+        const period = reportPeriod ? reportPeriod.value : 'today';
+        
+        if (period === 'today') {
+            const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                return d.toISOString().slice(0, 10) === selectedDate;
+            });
+        } else if (period === 'yesterday') {
+            const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                return d.toISOString().slice(0, 10) === selectedDate;
+            });
+        } else if (period === 'lastWeek') {
+            const fromDate = reportDateFrom ? reportDateFrom.value : '';
+            const toDate = reportDateTo ? reportDateTo.value : '';
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                const dateStr = d.toISOString().slice(0, 10);
+                return dateStr >= fromDate && dateStr <= toDate;
+            });
+        } else if (period === 'custom') {
+            const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                return d.toISOString().slice(0, 10) === selectedDate;
+            });
+        }
+        
+        this.renderReportTable(filteredRequests);
+    }
+
+    /**
+     * Render report table
+     */
+    renderReportTable(requests) {
         const container = document.getElementById('dailyReportContainer');
         if (!container) return;
 
-        const dateInput = document.getElementById('reportDate');
-        const selectedDate = dateInput ? dateInput.value : new Date().toISOString().slice(0, 10);
-
-        const allRequests = storage.getRequests();
-        const dayRequests = allRequests.filter(r => {
-            const d = new Date(r.createdAt);
-            return d.toISOString().slice(0, 10) === selectedDate;
-        });
-
-        if (dayRequests.length === 0) {
+        if (requests.length === 0) {
             container.innerHTML = `
                 <div class="glass-card" style="text-align:center; padding:3rem; margin-top:1.5rem;">
                     <i class="fas fa-calendar-times" style="font-size:3rem; color:#64748b; margin-bottom:1rem;"></i>
-                    <p style="color:#94a3b8; font-size:1.1rem;">لا توجد طلبات في هذا اليوم</p>
+                    <p style="color:#94a3b8; font-size:1.1rem;">لا توجد طلبات في الفترة المحددة</p>
                 </div>`;
             return;
         }
 
-        const rows = dayRequests.map((r, i) => `
+        const rows = requests.map((r, i) => `
             <tr>
                 <td>${i + 1}</td>
                 <td>${r.requestNumber}</td>
@@ -1338,7 +1384,7 @@ class AdminManager {
             <div class="glass-card" style="margin-top:1.5rem; overflow-x:auto;">
                 <p style="color:#94a3b8; margin-bottom:1rem;">
                     <i class="fas fa-info-circle"></i>
-                    إجمالي الطلبات: <strong style="color:#3b82f6;">${dayRequests.length}</strong>
+                    إجمالي الطلبات: <strong style="color:#3b82f6;">${requests.length}</strong>
                 </p>
                 <table class="table" style="width:100%; min-width:700px;">
                     <thead>
@@ -1347,39 +1393,82 @@ class AdminManager {
                             <th>رقم الطلب</th>
                             <th>اسم العميل</th>
                             <th>الهاتف</th>
-                            <th>الجهاز</th>
+                            <th>اللابتوب</th>
                             <th>المشكلة</th>
                             <th>الحالة</th>
                             <th>التكلفة</th>
                             <th>التاريخ</th>
                         </tr>
                     </thead>
-                    <tbody>${rows}</tbody>
+                    <tbody>
+                        ${rows}
+                    </tbody>
                 </table>
             </div>`;
+    }
+
+    /**
+     * Render daily report table (legacy - for backward compatibility)
+     */
+    renderDailyReport() {
+        this.generateReport();
     }
 
     /**
      * Export daily report as Excel
      */
     exportDailyReport() {
-        const dateInput = document.getElementById('reportDate');
-        const selectedDate = dateInput ? dateInput.value : new Date().toISOString().slice(0, 10);
-
+        const reportPeriod = document.getElementById('reportPeriod');
+        const reportDate = document.getElementById('reportDate');
+        const reportDateFrom = document.getElementById('reportDateFrom');
+        const reportDateTo = document.getElementById('reportDateTo');
+        
+        let filteredRequests = [];
         const allRequests = storage.getRequests();
-        const dayRequests = allRequests.filter(r => {
-            const d = new Date(r.createdAt);
-            return d.toISOString().slice(0, 10) === selectedDate;
-        });
+        
+        const period = reportPeriod ? reportPeriod.value : 'today';
+        let fileName = 'تقرير';
+        
+        if (period === 'today') {
+            const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                return d.toISOString().slice(0, 10) === selectedDate;
+            });
+            fileName = `تقرير-${selectedDate}`;
+        } else if (period === 'yesterday') {
+            const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                return d.toISOString().slice(0, 10) === selectedDate;
+            });
+            fileName = `تقرير-${selectedDate}`;
+        } else if (period === 'lastWeek') {
+            const fromDate = reportDateFrom ? reportDateFrom.value : '';
+            const toDate = reportDateTo ? reportDateTo.value : '';
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                const dateStr = d.toISOString().slice(0, 10);
+                return dateStr >= fromDate && dateStr <= toDate;
+            });
+            fileName = `تقرير-${fromDate}-إلى-${toDate}`;
+        } else if (period === 'custom') {
+            const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                return d.toISOString().slice(0, 10) === selectedDate;
+            });
+            fileName = `تقرير-${selectedDate}`;
+        }
 
-        if (dayRequests.length === 0) {
-            toast.error('لا توجد طلبات في هذا اليوم');
+        if (filteredRequests.length === 0) {
+            toast.error('لا توجد طلبات في الفترة المحددة');
             return;
         }
 
         const data = [
             ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'المشكلة', 'الحالة', 'التكلفة', 'التاريخ'],
-            ...dayRequests.map((r, i) => [
+            ...filteredRequests.map((r, i) => [
                 i + 1,
                 r.requestNumber,
                 r.fullName,
@@ -1399,9 +1488,9 @@ class AdminManager {
             {wch:35},{wch:18},{wch:10},{wch:20}
         ];
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'تقرير اليوم');
-        XLSX.writeFile(wb, `YAS-تقرير-${selectedDate}.xlsx`);
-        toast.success(`تم تصدير ${dayRequests.length} طلب بنجاح ✅`);
+        XLSX.utils.book_append_sheet(wb, ws, 'التقرير');
+        XLSX.writeFile(wb, `YAS-${fileName}.xlsx`);
+        toast.success(`تم تصدير ${filteredRequests.length} طلب بنجاح ✅`);
     }
 
 }

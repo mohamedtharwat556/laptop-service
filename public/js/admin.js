@@ -1212,7 +1212,17 @@ class AdminManager {
                     <div class="request-detail-item"><span class="request-detail-label">اسم العميل</span><span class="request-detail-value">${request.fullName}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${request.phone}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${request.laptopBrand}${request.laptopModel ? ' ' + request.laptopModel : ''}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">نوع الجهاز</span><span class="request-detail-value">${request.deviceType || '—'}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${request.receivedDate || '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${request.problemDescription}</span></div>
+                    ${request.deviceImage ? `
+                    <div class="request-detail-item" style="grid-column: 1 / -1;">
+                        <span class="request-detail-label">صورة الجهاز</span>
+                        <div style="margin-top: 0.5rem;">
+                            <img src="${request.deviceImage}" alt="صورة الجهاز" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                        </div>
+                    </div>
+                    ` : ''}
                 </div>
                 <form id="editRequestForm" style="margin-top: 1.5rem;">
                     <div class="form-group">

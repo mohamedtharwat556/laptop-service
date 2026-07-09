@@ -20,6 +20,7 @@ class CustomerManager {
             deviceType: formData.deviceType,
             problemDescription: formData.problemDescription,
             priority: formData.priority || 'Medium',
+            receivedDate: formData.receivedDate || new Date().toISOString().slice(0, 10),
 
             deviceImage: formData.deviceImage || null,
             notes: '',
