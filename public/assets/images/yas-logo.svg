@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 520" width="520" height="520">
+  <!-- White background circle -->
+  <circle cx="260" cy="260" r="255" fill="white" stroke="#1a1aff" stroke-width="4"/>
+  
+  <!-- Logo oval shape -->
+  <ellipse cx="260" cy="220" rx="140" ry="90" fill="none" stroke="#1a1aff" stroke-width="8"/>
+  
+  <!-- YAS letters in center -->
+  <text x="260" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="72" fill="#1a1aff" letter-spacing="-2">YAS</text>
+  
+  <!-- Arabic text below oval -->
+  <text x="260" y="330" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#1a1aff">www.yas-eg.com</text>
+  
+  <!-- Arabic slogan -->
+  <text x="260" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" fill="#1a1aff">خدمة لابتوب احترافية</text>
+</svg>

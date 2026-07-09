@@ -1,0 +1,292 @@
+/* YAS Laptop Service Center - Additional Themes */
+
+/* Purple Theme */
+.theme-purple {
+    --primary-blue: #7c3aed;
+    --secondary-blue: #a78bfa;
+    --light-blue: #c4b5fd;
+    --dark-blue: #1e1b4b;
+}
+
+.theme-purple .logo,
+.theme-purple .nav-link:hover,
+.theme-purple .section-title {
+    background: linear-gradient(135deg, #a78bfa 0%, #c4b5fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.theme-purple .btn-primary {
+    background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+}
+
+.theme-purple .stat-icon {
+    background: rgba(167, 139, 250, 0.1);
+    color: #a78bfa;
+}
+
+/* Green Theme */
+.theme-green {
+    --primary-blue: #059669;
+    --secondary-blue: #10b981;
+    --light-blue: #34d399;
+    --dark-blue: #064e3b;
+}
+
+.theme-green .logo,
+.theme-green .nav-link:hover,
+.theme-green .section-title {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.theme-green .btn-primary {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.theme-green .stat-icon {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+/* Red Theme */
+.theme-red {
+    --primary-blue: #dc2626;
+    --secondary-blue: #ef4444;
+    --light-blue: #f87171;
+    --dark-blue: #7f1d1d;
+}
+
+.theme-red .logo,
+.theme-red .nav-link:hover,
+.theme-red .section-title {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.theme-red .btn-primary {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.theme-red .stat-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* Orange Theme */
+.theme-orange {
+    --primary-blue: #ea580c;
+    --secondary-blue: #f97316;
+    --light-blue: #fb923c;
+    --dark-blue: #7c2d12;
+}
+
+.theme-orange .logo,
+.theme-orange .nav-link:hover,
+.theme-orange .section-title {
+    background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.theme-orange .btn-primary {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+.theme-orange .stat-icon {
+    background: rgba(249, 115, 22, 0.1);
+    color: #f97316;
+}
+
+/* Pink Theme */
+.theme-pink {
+    --primary-blue: #db2777;
+    --secondary-blue: #ec4899;
+    --light-blue: #f472b6;
+    --dark-blue: #831843;
+}
+
+.theme-pink .logo,
+.theme-pink .nav-link:hover,
+.theme-pink .section-title {
+    background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.theme-pink .btn-primary {
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+}
+
+.theme-pink .stat-icon {
+    background: rgba(236, 72, 153, 0.1);
+    color: #ec4899;
+}
+
+/* Teal Theme */
+.theme-teal {
+    --primary-blue: #0d9488;
+    --secondary-blue: #14b8a6;
+    --light-blue: #2dd4bf;
+    --dark-blue: #134e4a;
+}
+
+.theme-teal .logo,
+.theme-teal .nav-link:hover,
+.theme-teal .section-title {
+    background: linear-gradient(135deg, #14b8a6 0%, #2dd4bf 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.theme-teal .btn-primary {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+}
+
+.theme-teal .stat-icon {
+    background: rgba(20, 184, 166, 0.1);
+    color: #14b8a6;
+}
+
+/* Indigo Theme */
+.theme-indigo {
+    --primary-blue: #4f46e5;
+    --secondary-blue: #6366f1;
+    --light-blue: #818cf8;
+    --dark-blue: #312e81;
+}
+
+.theme-indigo .logo,
+.theme-indigo .nav-link:hover,
+.theme-indigo .section-title {
+    background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.theme-indigo .btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+}
+
+.theme-indigo .stat-icon {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+}
+
+/* Theme Toggle Button Styles */
+.theme-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-left: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.theme-color-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+/* Theme Dropdown */
+.theme-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.theme-dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 0.5rem;
+    min-width: 150px;
+    z-index: 1000;
+    margin-top: 0.5rem;
+}
+
+.theme-dropdown:hover .theme-dropdown-content {
+    display: block;
+}
+
+.theme-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    text-decoration: none;
+}
+
+.theme-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.theme-option.active {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Light Theme Variations */
+.light-mode.theme-purple {
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+    color: #1e1b4b;
+}
+
+.light-mode.theme-green {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    color: #064e3b;
+}
+
+.light-mode.theme-red {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    color: #7f1d1d;
+}
+
+.light-mode.theme-orange {
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+    color: #7c2d12;
+}
+
+.light-mode.theme-pink {
+    background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+    color: #831843;
+}
+
+.light-mode.theme-teal {
+    background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+    color: #134e4a;
+}
+
+.light-mode.theme-indigo {
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    color: #312e81;
+}

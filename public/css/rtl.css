@@ -1,0 +1,200 @@
+/* YAS Laptop Service Center - RTL Support for Arabic */
+
+/* RTL Direction */
+[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+}
+
+/* RTL Navigation */
+[dir="rtl"] .nav-links {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .nav-link::after {
+    right: auto;
+    left: 0;
+}
+
+[dir="rtl"] .sidebar {
+    right: 0;
+    left: auto;
+}
+
+[dir="rtl"] .dashboard-main {
+    margin-right: 280px;
+    margin-left: 0;
+}
+
+[dir="rtl"] .sidebar-toggle {
+    margin-right: auto;
+    margin-left: 0;
+}
+
+/* RTL Forms */
+[dir="rtl"] .form-input,
+[dir="rtl"] .form-select,
+[dir="rtl"] .form-textarea {
+    text-align: right;
+}
+
+/* RTL Tables */
+[dir="rtl"] .table th,
+[dir="rtl"] .table td {
+    text-align: right;
+}
+
+/* RTL Cards */
+[dir="rtl"] .request-card-header,
+[dir="rtl"] .tracking-header {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .request-details {
+    direction: rtl;
+}
+
+[dir="rtl"] .cart-item {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .user-card-header {
+    flex-direction: row-reverse;
+}
+
+/* RTL Timeline */
+[dir="rtl"] .timeline {
+    padding-right: 2rem;
+    padding-left: 0;
+}
+
+[dir="rtl"] .timeline::before {
+    right: 0;
+    left: auto;
+}
+
+[dir="rtl"] .timeline-item::before {
+    right: calc(-2rem - 5px);
+    left: auto;
+}
+
+/* RTL Buttons with Icons */
+[dir="rtl"] .btn i {
+    margin-left: 0.5rem;
+    margin-right: 0;
+}
+
+[dir="rtl"] .btn i:first-child {
+    margin-left: 0;
+    margin-right: 0.5rem;
+}
+
+/* RTL Modal */
+[dir="rtl"] .modal-close {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+.modal-content {
+    direction: rtl;
+    text-align: right;
+}
+
+.modal-content .form-label {
+    display: block;
+    text-align: right;
+}
+
+.modal-content .form-input,
+.modal-content .form-select,
+.modal-content .form-textarea {
+    direction: rtl;
+    text-align: right;
+}
+
+.modal-content .request-detail-label {
+    text-align: right;
+}
+
+.modal-content .request-details {
+    direction: rtl;
+}
+
+.modal-content .modal-header {
+    flex-direction: row-reverse;
+}
+
+.modal-content .request-card-header {
+    flex-direction: row;
+}
+
+
+/* RTL Pagination */
+[dir="rtl"] .pagination {
+    flex-direction: row-reverse;
+}
+
+/* RTL Search */
+[dir="rtl"] .search-container {
+    flex-direction: row-reverse;
+}
+
+/* RTL Stats */
+[dir="rtl"] .stat-card {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .stat-icon {
+    margin-left: 1rem;
+    margin-right: 0;
+}
+
+/* RTL Toast */
+[dir="rtl"] .toast {
+    flex-direction: row-reverse;
+}
+
+/* RTL Footer */
+[dir="rtl"] .footer-content {
+    direction: rtl;
+}
+
+/* RTL Responsive */
+@media (max-width: 991px) {
+    [dir="rtl"] .sidebar {
+        transform: translateX(100%);
+    }
+    
+    [dir="rtl"] .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    [dir="rtl"] .dashboard-main {
+        margin-right: 0;
+    }
+}
+
+/* RTL Specific Adjustments */
+[dir="rtl"] .logo {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .hero-buttons {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .request-actions {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .user-actions {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .shop-categories {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .modal-footer {
+    flex-direction: row-reverse;
+}

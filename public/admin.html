@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المشرف - مركز خدمة لابتوب YAS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/ai-animations.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/rtl.css">
+</head>
+<body>
+    <div class="glow-orb-1"></div>
+    <div class="glow-orb-2"></div>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="assets/images/yas-logo.svg" alt="YAS Logo" class="logo-img">
+                <span class="logo-text">
+                    <span class="logo-name">YAS</span>
+                    <span class="logo-sub">ADMIN PANEL</span>
+                </span>
+            </a>
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links" style="display: flex; align-items: center; gap: 1rem;">
+                <a href="index.html" class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem; background: rgba(255,255,255,0.08); color:#94a3b8; border:1px solid rgba(255,255,255,0.1); border-radius:8px; text-decoration:none; display:flex; align-items:center; gap:0.4rem;">
+                    <i class="fas fa-home"></i> الصفحة الرئيسية
+                </a>
+                <button class="dark-mode-toggle" id="darkModeToggle" title="تبديل الوضع الليلi">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <span id="welcomeUser" style="color: #94a3b8;"></span>
+                <button id="logoutBtn" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Container -->
+    <div class="dashboard-container" id="adminDashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div style="text-align:center; margin-bottom:1rem;">
+                    <img src="assets/images/yas-logo.svg" alt="YAS" style="width:70px; height:70px; object-fit:contain; filter: drop-shadow(0 0 8px rgba(26,26,255,0.6));">
+                </div>
+                <h2>لوحة المشرف</h2>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link active" data-section="dashboard">
+                        <i class="fas fa-chart-line"></i>
+                        لوحة التحكم
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" data-section="requests">
+                        <i class="fas fa-clipboard-list"></i>
+                        الطلبات
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" data-section="users">
+                        <i class="fas fa-users"></i>
+                        المستخدمون
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" data-section="products">
+                        <i class="fas fa-box"></i>
+                        المنتجات
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" data-section="daily-report">
+                        <i class="fas fa-file-excel"></i>
+                        تقرير اليوم
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-main animate__animated animate__fadeInUp">
+            <div class="dashboard-header">
+                <h1>لوحة التحكم</h1>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="dashboard-section active">
+                <div id="adminStats"></div>
+                
+                <div class="charts-grid">
+                    <div class="glass-card chart-card">
+                        <h3>توزيع حالات الطلبات</h3>
+                        <div class="chart-container">
+                            <canvas id="requestsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card chart-card">
+                        <h3>الإيرادات (آخر 7 أيام)</h3>
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card chart-card">
+                        <h3>المنتجات حسب الفئة</h3>
+                        <div class="chart-container">
+                            <canvas id="productsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requests Section -->
+            <div id="requestsSection" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>إدارة الطلبات</h2>
+                    <div class="search-container">
+                        <input type="text" id="requestSearch" class="form-input search-input" placeholder="البحث برقم الهاتف، الاسم...">
+                        <select id="statusFilter" class="form-select filter-select">
+                            <option value="All">جميع الحالات</option>
+                            <option value="Received">تم الاستلام</option>
+                            <option value="Waiting Inspection">في انتظار الفحص</option>
+                            <option value="Under Maintenance">قيد الصيانة</option>
+                            <option value="Waiting Parts">في انتظار قطع غيار</option>
+                            <option value="Ready">جاهز</option>
+                            <option value="Delivered">تم التسليم</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="requestsContainer"></div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="usersSection" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>User Management</h2>
+                </div>
+                <div id="usersContainer"></div>
+            </div>
+
+            <!-- Products Section -->
+            <div id="productsSection" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>إدارة المنتجات</h2>
+                </div>
+                <div id="productsManagementContainer"></div>
+            </div>
+
+            <!-- Daily Report Section -->
+            <div id="daily-reportSection" class="dashboard-section">
+                <div class="dashboard-header" style="flex-wrap:wrap; gap:1rem;">
+                    <h2><i class="fas fa-file-excel" style="color:#10b981;"></i> تقرير اليوم</h2>
+                    <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                        <input type="date" id="reportDate" class="form-input" style="width:auto; min-width:180px;">
+                        <button onclick="adminManager.exportDailyReport()" class="btn btn-primary" style="display:flex;align-items:center;gap:0.5rem;">
+                            <i class="fas fa-download"></i> تحميل Excel
+                        </button>
+                    </div>
+                </div>
+                <div id="dailyReportContainer"></div>
+            </div>
+        </main>
+
+</div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/darkmode.js"></script>
+    <script>
+        // Auto-login for admin demo - Force set user before init
+        let adminInitialized = false;
+        
+        // Set admin user immediately before everything
+        (function() {
+            console.log('🔧 Pre-initialization: Setting admin user in session...');
+            const adminUser = {
+                id: 1,
+                username: 'admin',
+                password: 'admin123',
+                role: 'admin',
+                name: 'System Administrator',
+                email: 'admin@yas.com',
+                createdAt: new Date().toISOString()
+            };
+            sessionStorage.setItem('YAS_currentUser', JSON.stringify(adminUser));
+            console.log('✅ Admin user set in sessionStorage:', adminUser.name);
+        })();
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (adminInitialized) return;
+            adminInitialized = true;
+            
+            try {
+                console.log('📄 Admin page DOMContentLoaded - starting initialization...');
+                
+                // Give storage time to initialize
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                // Get user from sessionStorage (should already be set)
+                const userStr = sessionStorage.getItem('YAS_currentUser');
+                let user = userStr ? JSON.parse(userStr) : null;
+                
+                console.log('👤 User from sessionStorage:', user ? `${user.name} (${user.role})` : 'Not found');
+                
+                // If user not found, create default admin
+                if (!user) {
+                    console.log('⚙️  Creating default admin user...');
+                    user = {
+                        id: 1,
+                        username: 'admin',
+                        password: 'admin123',
+                        role: 'admin',
+                        name: 'System Administrator',
+                        email: 'admin@yas.com',
+                        createdAt: new Date().toISOString()
+                    };
+                    sessionStorage.setItem('YAS_currentUser', JSON.stringify(user));
+                    console.log('✅ Admin user created and set');
+                }
+                
+                // Update welcome text
+                const welcomeEl = document.getElementById('welcomeUser');
+                if (welcomeEl) {
+                    welcomeEl.textContent = `مرحباً، ${user.name}`;
+                    console.log('💬 Welcome text updated');
+                }
+                
+                // Wait for adminManager to be ready
+                console.log('⏳ Waiting for AdminManager to load...');
+                let attempts = 0;
+                while (typeof adminManager === 'undefined' && attempts < 100) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    attempts++;
+                }
+                
+                if (typeof adminManager !== 'undefined') {
+                    console.log('🚀 AdminManager found, initializing dashboard...');
+                    await adminManager.init();
+                    console.log('✅ Admin dashboard initialized successfully!');
+                } else {
+                    console.error('❌ AdminManager failed to load after 5 seconds');
+                }
+            } catch (error) {
+                console.error('❌ Error during admin initialization:', error);
+                console.error('📋 Error details:', error.message);
+                console.error('Stack:', error.stack);
+            }
+        });
+    </script>
+</body>
+</html>
