@@ -6,7 +6,10 @@
     <title>لوحة تحكم المشرف - مركز خدمة لابتوب YAS</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/ai-animations.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/rtl.css">
 </head>
 <body>
     <div class="glow-orb-1"></div>
@@ -173,46 +176,89 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/animations.js"></script>
     <script src="js/admin.js"></script>
+    <script src="js/chatbot.js"></script>
     <script src="js/darkmode.js"></script>
     <script>
-        // Simplified admin initialization
+        // Auto-login for admin demo - Force set user before init
+        let adminInitialized = false;
+        
+        // Set admin user immediately before everything
+        (function() {
+            console.log('🔧 Pre-initialization: Setting admin user in session...');
+            const adminUser = {
+                id: 1,
+                username: 'admin',
+                password: 'admin123',
+                role: 'admin',
+                name: 'System Administrator',
+                email: 'admin@yas.com',
+                createdAt: new Date().toISOString()
+            };
+            sessionStorage.setItem('YAS_currentUser', JSON.stringify(adminUser));
+            console.log('✅ Admin user set in sessionStorage:', adminUser.name);
+        })();
+        
         document.addEventListener('DOMContentLoaded', async () => {
+            if (adminInitialized) return;
+            adminInitialized = true;
+            
             try {
-                // Set admin user if not already set
+                console.log('📄 Admin page DOMContentLoaded - starting initialization...');
+                
+                // Give storage time to initialize
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                // Get user from sessionStorage (should already be set)
                 const userStr = sessionStorage.getItem('YAS_currentUser');
                 let user = userStr ? JSON.parse(userStr) : null;
                 
+                console.log('👤 User from sessionStorage:', user ? `${user.name} (${user.role})` : 'Not found');
+                
+                // If user not found, create default admin
                 if (!user) {
+                    console.log('⚙️  Creating default admin user...');
                     user = {
                         id: 1,
                         username: 'admin',
                         password: 'admin123',
                         role: 'admin',
                         name: 'System Administrator',
-                        email: 'admin@yas.com'
+                        email: 'admin@yas.com',
+                        createdAt: new Date().toISOString()
                     };
                     sessionStorage.setItem('YAS_currentUser', JSON.stringify(user));
+                    console.log('✅ Admin user created and set');
                 }
                 
                 // Update welcome text
                 const welcomeEl = document.getElementById('welcomeUser');
                 if (welcomeEl) {
                     welcomeEl.textContent = `مرحباً، ${user.name}`;
+                    console.log('💬 Welcome text updated');
                 }
                 
                 // Wait for adminManager to be ready
+                console.log('⏳ Waiting for AdminManager to load...');
                 let attempts = 0;
-                while (typeof adminManager === 'undefined' && attempts < 50) {
+                while (typeof adminManager === 'undefined' && attempts < 100) {
                     await new Promise(resolve => setTimeout(resolve, 50));
                     attempts++;
                 }
                 
                 if (typeof adminManager !== 'undefined') {
+                    console.log('🚀 AdminManager found, initializing dashboard...');
                     await adminManager.init();
+                    console.log('✅ Admin dashboard initialized successfully!');
+                } else {
+                    console.error('❌ AdminManager failed to load after 5 seconds');
                 }
             } catch (error) {
-                console.error('Admin initialization error:', error);
+                console.error('❌ Error during admin initialization:', error);
+                console.error('📋 Error details:', error.message);
+                console.error('Stack:', error.stack);
             }
         });
     </script>
