@@ -408,12 +408,12 @@ app.get('/api/stats', async (req, res) => {
     }
 });
 
-// Serve all frontend files as static assets from root folder
-app.use(express.static(path.join(__dirname, '.')));
+// Serve all frontend files as static assets from public folder
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve main page on fallback
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
 // Error handling middleware
