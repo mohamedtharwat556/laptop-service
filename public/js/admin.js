@@ -1230,6 +1230,10 @@ class AdminManager {
                         <textarea class="form-textarea" name="adminReply" rows="3">${request.adminReply || ''}</textarea>
                     </div>
                     <div class="form-group">
+                        <label class="form-label">تكلفة الصيانة (ج.م)</label>
+                        <input type="number" class="form-input" name="cost" value="${request.cost || ''}" placeholder="أدخل تكلفة الصيانة" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
                         <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${request.estimatedCompletionDate || ''}">
                     </div>
@@ -1256,6 +1260,7 @@ class AdminManager {
             e.preventDefault();
             this.updateRequest(requestId, {
                 adminReply: form.adminReply.value,
+                cost: parseFloat(form.cost.value) || 0,
                 estimatedCompletionDate: form.estimatedCompletionDate.value,
                 status: form.status.value
             });

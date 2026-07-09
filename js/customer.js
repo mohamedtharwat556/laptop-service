@@ -352,6 +352,12 @@ class CustomerManager {
                     <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
                         <h4 style="margin-bottom: 0.5rem; color: #3b82f6;">رد الإدارة</h4>
                         <p style="color: var(--text-muted);">${request.adminReply}</p>
+                        ${request.cost > 0 ? `
+                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(59, 130, 246, 0.2);">
+                                <p style="font-size: 0.875rem; color: var(--text-muted-more); margin-bottom: 0.25rem;">التكلفة:</p>
+                                <p style="font-weight: 600; color: #3b82f6; font-size: 1.1rem;">${Utils.formatCurrency(request.cost)}</p>
+                            </div>
+                        ` : ''}
                     </div>
                 ` : ''}
 
