@@ -51,11 +51,50 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">ماركة اللابتوب *</label>
-                <input type="text" class="form-input" name="laptopBrand" required placeholder="أدخل علامة اللابتوب"/>
+                    <select class="form-input" name="laptopBrand" required id="laptopBrandSelect">
+                        <option value="">اختر ماركة اللابتوب</option>
+                        <option value="Acer">Acer</option>
+                        <option value="Apple">Apple (MacBook)</option>
+                        <option value="Asus">Asus</option>
+                        <option value="Dell">Dell</option>
+                        <option value="HP">HP</option>
+                        <option value="Lenovo">Lenovo</option>
+                        <option value="MSI">MSI</option>
+                        <option value="Microsoft">Microsoft Surface</option>
+                        <option value="Samsung">Samsung</option>
+                        <option value="Sony">Sony Vaio</option>
+                        <option value="Toshiba">Toshiba</option>
+                        <option value="LG">LG</option>
+                        <option value="Razer">Razer</option>
+                        <option value="Gigabyte">Gigabyte</option>
+                        <option value="Huawei">Huawei</option>
+                        <option value="Xiaomi">Xiaomi</option>
+                        <option value="Fujitsu">Fujitsu</option>
+                        <option value="Panasonic">Panasonic</option>
+                        <option value="Medion">Medion</option>
+                        <option value="Packard Bell">Packard Bell</option>
+                        <option value="Gateway">Gateway</option>
+                        <option value="eMachines">eMachines</option>
+                        <option value="Compaq">Compaq</option>
+                        <option value="IBM">IBM (Lenovo)</option>
+                        <option value="NEC">NEC</option>
+                        <option value="Sharp">Sharp</option>
+                        <option value="BenQ">BenQ</option>
+                        <option value="Sager">Sager</option>
+                        <option value="Clevo">Clevo</option>
+                        <option value="Origin PC">Origin PC</option>
+                        <option value="Alienware">Alienware (Dell)</option>
+                        <option value="Other">أخرى</option>
+                    </select>
+                    <input type="text" class="form-input" name="laptopBrandOther" id="laptopBrandOther" placeholder="أدخل اسم الماركة" style="display: none; margin-top: 0.5rem;"/>
                 </div>
                 <div class="form-group">
                     <label class="form-label">نوع الجهاز *</label>
                     <input type="text" class="form-input" name="deviceType" required placeholder="أدخل نوع الجهاز"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">تاريخ الاستلام *</label>
+                    <input type="date" class="form-input" name="receivedDate" required id="receivedDate">
                 </div>
                 <div class="form-group">
                     <label class="form-label">الأولوية *</label>
@@ -110,5 +149,31 @@
     <script src="js/chatbot.js"></script>
     <script src="js/darkmode.js"></script>
     <script src="js/mobile-menu.js"></script>
+    <script>
+        // Set today's date as default for received date
+        document.addEventListener('DOMContentLoaded', () => {
+            const receivedDate = document.getElementById('receivedDate');
+            if (receivedDate) {
+                receivedDate.value = new Date().toISOString().slice(0, 10);
+            }
+            
+            // Handle laptop brand selection
+            const laptopBrandSelect = document.getElementById('laptopBrandSelect');
+            const laptopBrandOther = document.getElementById('laptopBrandOther');
+            
+            if (laptopBrandSelect && laptopBrandOther) {
+                laptopBrandSelect.addEventListener('change', () => {
+                    if (laptopBrandSelect.value === 'Other') {
+                        laptopBrandOther.style.display = 'block';
+                        laptopBrandOther.required = true;
+                    } else {
+                        laptopBrandOther.style.display = 'none';
+                        laptopBrandOther.required = false;
+                        laptopBrandOther.value = '';
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

@@ -157,10 +157,21 @@
             <!-- Daily Report Section -->
             <div id="daily-reportSection" class="dashboard-section">
                 <div class="dashboard-header" style="flex-wrap:wrap; gap:1rem;">
-                    <h2><i class="fas fa-file-excel" style="color:#10b981;"></i> تقرير اليوم</h2>
-                    <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
-                        <input type="date" id="reportDate" class="form-input" style="width:auto; min-width:180px;">
-                        <button onclick="adminManager.exportDailyReport()" class="btn btn-primary" style="display:flex;align-items:center;gap:0.5rem;">
+                    <h2><i class="fas fa-file-excel" style="color:#10b981;"></i> التقارير</h2>
+                    <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
+                        <select id="reportPeriod" class="form-select" style="width:auto; min-width:150px;">
+                            <option value="today">اليوم</option>
+                            <option value="yesterday">أمس</option>
+                            <option value="lastWeek">الأسبوع الماضي</option>
+                            <option value="custom">تاريخ مخصص</option>
+                        </select>
+                        <input type="date" id="reportDate" class="form-input" style="width:auto; min-width:180px; display:none;">
+                        <input type="date" id="reportDateFrom" class="form-input" style="width:auto; min-width:180px; display:none;" placeholder="من">
+                        <input type="date" id="reportDateTo" class="form-input" style="width:auto; min-width:180px; display:none;" placeholder="إلى">
+                        <button onclick="adminManager.generateReport()" class="btn btn-primary" style="display:flex;align-items:center;gap:0.5rem;">
+                            <i class="fas fa-sync"></i> إنشاء التقرير
+                        </button>
+                        <button onclick="adminManager.exportDailyReport()" class="btn btn-success" style="display:flex;align-items:center;gap:0.5rem;">
                             <i class="fas fa-download"></i> تحميل Excel
                         </button>
                     </div>
@@ -254,6 +265,39 @@
                     console.log('✅ Admin dashboard initialized successfully!');
                 } else {
                     console.error('❌ AdminManager failed to load after 5 seconds');
+                }
+                
+                // Setup report period selector
+                const reportPeriod = document.getElementById('reportPeriod');
+                const reportDate = document.getElementById('reportDate');
+                const reportDateFrom = document.getElementById('reportDateFrom');
+                const reportDateTo = document.getElementById('reportDateTo');
+                
+                if (reportPeriod) {
+                    reportPeriod.addEventListener('change', () => {
+                        const period = reportPeriod.value;
+                        reportDate.style.display = 'none';
+                        reportDateFrom.style.display = 'none';
+                        reportDateTo.style.display = 'none';
+                        
+                        if (period === 'today') {
+                            reportDate.value = new Date().toISOString().slice(0, 10);
+                        } else if (period === 'yesterday') {
+                            const yesterday = new Date();
+                            yesterday.setDate(yesterday.getDate() - 1);
+                            reportDate.value = yesterday.toISOString().slice(0, 10);
+                        } else if (period === 'lastWeek') {
+                            const today = new Date();
+                            const lastWeek = new Date();
+                            lastWeek.setDate(today.getDate() - 7);
+                            reportDateFrom.value = lastWeek.toISOString().slice(0, 10);
+                            reportDateTo.value = today.toISOString().slice(0, 10);
+                            reportDateFrom.style.display = 'block';
+                            reportDateTo.style.display = 'block';
+                        } else if (period === 'custom') {
+                            reportDate.style.display = 'block';
+                        }
+                    });
                 }
             } catch (error) {
                 console.error('❌ Error during admin initialization:', error);
