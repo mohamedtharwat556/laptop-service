@@ -22,14 +22,11 @@ class AdminManager {
      */
     async init() {
         try {
-            console.log('🔄 AdminManager.init() called');
-            
-            // Always check if user is already set in sessionStorage
+            // Check if user is already set in sessionStorage
             let user = sessionStorage.getItem('YAS_currentUser');
             if (user) {
                 try {
                     this.currentUser = JSON.parse(user);
-                    console.log('✅ User loaded from sessionStorage:', this.currentUser.name);
                 } catch (e) {
                     console.error('Failed to parse user:', e);
                 }
@@ -38,9 +35,8 @@ class AdminManager {
             // If still no user, try isAuthenticated
             if (!this.currentUser) {
                 if (this.isAuthenticated()) {
-                    console.log('✅ User authenticated via isAuthenticated()');
+                    // User authenticated
                 } else {
-                    console.warn('⚠️  User not authenticated, but continuing in development mode');
                     // In development, create a default user
                     this.currentUser = {
                         id: 1,
@@ -54,22 +50,14 @@ class AdminManager {
             }
             
             if (!this.currentUser || this.currentUser.role !== 'admin') {
-                console.error('❌ User not authenticated as admin');
                 window.location.href = 'index.html';
                 return;
             }
 
-            console.log('📊 Loading data...');
             await this.loadData();
-            console.log('✅ Data loaded successfully');
-            
-            console.log('📑 Switching to dashboard section...');
             await this.switchSection('dashboard');
-            
-            console.log('🔄 Starting auto-refresh...');
             this.startAutoRefresh();
             
-            console.log('🔗 Setting up sidebar navigation...');
             // Setup sidebar navigation
             document.querySelectorAll('.sidebar-nav-link').forEach(link => {
                 link.addEventListener('click', async (e) => {
@@ -77,13 +65,11 @@ class AdminManager {
                     const section = link.dataset.section;
                     await this.switchSection(section);
                     if (section === 'daily-report') {
-                        // Set today's date by default
                         const dateInput = document.getElementById('reportDate');
                         if (dateInput && !dateInput.value) {
                             dateInput.value = new Date().toISOString().slice(0, 10);
                         }
                         this.renderDailyReport();
-                        // Re-render on date change
                         if (dateInput) {
                             dateInput.onchange = () => this.renderDailyReport();
                         }
@@ -91,7 +77,6 @@ class AdminManager {
                 });
             });
 
-            console.log('⏹️  Setting up logout button...');
             // Setup logout
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) {
@@ -219,7 +204,6 @@ class AdminManager {
      */
     async loadData() {
         try {
-            console.log('📡 Fetching data from API...');
             const [usersRes, requestsRes, ordersRes, productsRes] = await Promise.all([
                 fetch('/api/users').then(r => r.json()).catch(() => []),
                 fetch('/api/requests').then(r => r.json()).catch(() => []),
@@ -233,19 +217,14 @@ class AdminManager {
             this.orders = this.convertToCamelCase(Array.isArray(ordersRes) ? ordersRes : []);
             this.products = this.convertToCamelCase(Array.isArray(productsRes) ? productsRes : []);
             
-            console.log(`✅ Data loaded: ${this.requests.length} requests, ${this.products.length} products`);
-            
             // If API returned empty data, fallback to localStorage
             if (this.requests.length === 0 && this.products.length === 0) {
-                console.log('⚠️  API returned empty data, using localStorage fallback');
                 this.users = storage.getUsers();
                 this.requests = storage.getRequests();
                 this.orders = storage.getOrders();
                 this.products = storage.getProducts();
-                console.log(`✅ LocalStorage data: ${this.requests.length} requests, ${this.products.length} products`);
             }
         } catch (error) {
-            console.error('Failed to load data from API:', error);
             // Fallback to localStorage
             this.users = storage.getUsers();
             this.requests = storage.getRequests();
