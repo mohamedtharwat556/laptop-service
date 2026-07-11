@@ -158,7 +158,7 @@ body.light-mode .modal-content .status-badge {
 
 /* Glassmorphism Cards */
 .glass-card {
-    background: var(--glass-bg);
+    background: rgba(15, 23, 42, 0.7);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--glass-border);
@@ -182,7 +182,7 @@ body.light-mode .modal-content .status-badge {
 .glass-card:hover {
     transform: translateY(-6px);
     box-shadow: var(--shadow-xl), 0 0 0 1px rgba(96,165,250,0.2);
-    background: var(--glass-hover);
+    background: rgba(15, 23, 42, 0.8);
 }
 
 /* Navigation */
@@ -550,7 +550,7 @@ body.light-mode .modal-content .status-badge {
     padding: 0.875rem;
     border: 1px solid var(--gray-300);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.8);
     color: var(--white);
     font-family: 'Poppins', sans-serif;
     font-size: 1rem;
@@ -597,13 +597,13 @@ body.light-mode .modal-content .status-badge {
 }
 
 .table th {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.8);
     font-weight: 600;
     color: var(--light-blue);
 }
 
 .table tr:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(15, 23, 42, 0.5);
 }
 
 /* Status Badges */
@@ -910,7 +910,7 @@ body.light-mode .toast {
 .pagination button {
     padding: 0.5rem 1rem;
     border: 1px solid var(--gray-300);
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.8);
     color: var(--white);
     border-radius: 8px;
     cursor: pointer;
@@ -1066,7 +1066,7 @@ body.light-mode .toast {
 
 /* Dark Mode Toggle */
 .dark-mode-toggle {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.8);
     border: 1px solid var(--glass-border);
     color: var(--white);
     font-size: 1.25rem;
@@ -1083,7 +1083,7 @@ body.light-mode .toast {
 
 .dark-mode-toggle:hover {
     color: var(--light-blue);
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(15, 23, 42, 0.9);
     transform: scale(1.1);
 }
 
@@ -1367,7 +1367,7 @@ html {
 
 /* Card shine effect on hover */
 .glass-card {
-    background: var(--glass-bg);
+    background: rgba(15, 23, 42, 0.7);
 }
 
 .glass-card::after {
