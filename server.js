@@ -427,8 +427,22 @@ app.get('/api/stats', async (req, res) => {
     }
 });
 
-// Serve all frontend files as static assets from public folder
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve all frontend files as static assets from public folder with caching
+app.use(express.static(path.join(__dirname, 'public'), {
+    maxAge: '1y',
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, filePath) => {
+        // Cache CSS, JS, and images for 1 year
+        if (filePath.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+        // Cache HTML files for 1 hour
+        else if (filePath.match(/\.html$/)) {
+            res.setHeader('Cache-Control', 'public, max-age=3600');
+        }
+    }
+}));
 
 // Serve main page on fallback
 app.get('*', (req, res) => {
