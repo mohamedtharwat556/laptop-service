@@ -173,13 +173,17 @@ class CustomerManager {
 
             loading.show('Submitting your request...');
 
-            // Simulate file upload if image is selected
+            // Convert image to base64 if selected
             let deviceImage = null;
             const imageInput = form.querySelector('[name="deviceImage"]');
             if (imageInput.files.length > 0) {
-                // In a real app, you would upload to a server
-                // For demo, we'll use a placeholder
-                deviceImage = 'https://via.placeholder.com/400x300/1e3a8a/ffffff?text=Device+Image';
+                const file = imageInput.files[0];
+                deviceImage = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
             }
 
             const formData = {
