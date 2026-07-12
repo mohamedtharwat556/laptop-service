@@ -165,57 +165,47 @@ class CustomerManager {
 
             loading.show('Submitting your request...');
 
-            // Convert image to base64 if selected
-            let deviceImage = null;
-            const imageInput = form.querySelector('[name="deviceImage"]');
-            if (imageInput.files.length > 0) {
-                const file = imageInput.files[0];
-                deviceImage = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
-            }
-
             const formData = {
+                requestNumber: 'REQ-' + Date.now(),
                 fullName: form.fullName.value,
                 phone: form.phone.value,
                 laptopBrand: form.laptopBrand.value,
                 laptopModel: form.laptopModel.value,
                 deviceType: form.deviceType.value,
                 problemDescription: form.problemDescription.value,
-                deviceImage: deviceImage
+                priority: form.priority ? form.priority.value : 'Medium'
             };
 
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
             try {
-                console.log('Submitting request with data:', formData);
-                const request = await this.submitRequest(formData);
-                console.log('Request submitted successfully:', request);
-                document.dispatchEvent(new CustomEvent('orderAdded', { detail: request }));
-                loading.hide();
+                const response = await fetch('/api/requests', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
 
-                // Show success modal
-                this.showRequestSuccess(request);
+                const responseData = await response.json();
 
-                // Prepare WhatsApp message with the entered data
-                const message = `طلب صيانة:\nالاسم: ${formData.fullName}\nالهاتف: ${formData.phone}\nماركة اللابتوب: ${formData.laptopBrand}\nنوع الجهاز: ${formData.deviceType}\nوصف المشكلة: ${formData.problemDescription}`;
-                const waUrl = `https://wa.me/201013791517?text=${encodeURIComponent(message)}`;
-                window.location.href = waUrl;
+                if (response.ok) {
+                    loading.hide();
+                    this.showRequestSuccess(responseData);
 
-                // Reset form
-                form.reset();
+                    // Prepare WhatsApp message
+                    const message = `طلب صيانة:\nالاسم: ${formData.fullName}\nالهاتف: ${formData.phone}\nماركة اللابتوب: ${formData.laptopBrand}\nنوع الجهاز: ${formData.deviceType}\nوصف المشكلة: ${formData.problemDescription}`;
+                    const waUrl = `https://wa.me/201013791517?text=${encodeURIComponent(message)}`;
+                    window.location.href = waUrl;
 
-                toast.success('Request submitted successfully!');
+                    form.reset();
+                    toast.success('تم الإرسال بنجاح!');
+                } else {
+                    loading.hide();
+                    toast.error('فشل الإرسال: ' + JSON.stringify(responseData));
+                }
             } catch (error) {
                 loading.hide();
-                alert('Error: ' + error.message + '\n\nCheck console for details');
-                console.error('Error submitting request:', error);
-                console.error('Error details:', error.message);
-                console.error('Error stack:', error.stack);
+                toast.error('خطأ: ' + error.message);
+                console.error('Error:', error);
             }
         });
     }
