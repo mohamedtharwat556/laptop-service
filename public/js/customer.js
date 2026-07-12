@@ -197,7 +197,7 @@ class CustomerManager {
                 fullName: form.fullName.value,
                 phone: form.phone.value,
                 laptopBrand: form.laptopBrand.value,
-                laptopModel: form.laptopModel ? form.laptopModel.value : '',
+                laptopModel: form.laptopModel.value,
                 deviceType: form.deviceType.value,
                 problemDescription: form.problemDescription.value,
                 deviceImage: deviceImage
