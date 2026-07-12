@@ -208,7 +208,9 @@ class CustomerManager {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             try {
+                console.log('Submitting request with data:', formData);
                 const request = await this.submitRequest(formData);
+                console.log('Request submitted successfully:', request);
                 document.dispatchEvent(new CustomEvent('orderAdded', { detail: request }));
                 loading.hide();
 
@@ -227,7 +229,8 @@ class CustomerManager {
             } catch (error) {
                 loading.hide();
                 toast.error('Failed to submit request. Please try again.');
-                console.error(error);
+                console.error('Error submitting request:', error);
+                console.error('Error details:', error.message);
             }
         });
     }
