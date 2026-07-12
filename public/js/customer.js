@@ -12,7 +12,11 @@ class CustomerManager {
      * Submit a maintenance request
      */
     async submitRequest(formData) {
+        // Generate request number
+        const requestNumber = 'REQ-' + Date.now().toString().slice(-6);
+
         const requestData = {
+            requestNumber: requestNumber,
             fullName: formData.fullName,
             phone: formData.phone,
             laptopBrand: formData.laptopBrand,
@@ -33,7 +37,7 @@ class CustomerManager {
 
         const request = await storage.createRequest(requestData);
         this.currentRequest = request;
-        
+
         return request;
     }
 
