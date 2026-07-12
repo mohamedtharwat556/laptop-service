@@ -208,12 +208,7 @@ class CustomerManager {
 
             try {
                 const request = await this.submitRequest(formData);
-        document.dispatchEvent(new CustomEvent('orderAdded', { detail: request }));
-            const order = storage.createOrder({
-                customerName: formData.fullName,
-                laptopBrand: formData.laptopBrand,
-                status: 'Received'
-            });
+                document.dispatchEvent(new CustomEvent('orderAdded', { detail: request }));
                 loading.hide();
 
                 // Show success modal
