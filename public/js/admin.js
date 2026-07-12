@@ -1196,9 +1196,13 @@ class AdminManager {
                                 <td>${request.priority}</td>
                                 <td>${Utils.formatDate(request.createdAt)}</td>
                                 <td>
-                                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;" 
+                                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
                                             onclick="adminManager.viewRequest(${request.id})">
                                         <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.deleteRequest(${request.id})">
+                                        <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -1431,6 +1435,48 @@ class AdminManager {
         this.renderCharts();
         modalManager.close('view-request');
         toast.success('تم تحديث الطلب بنجاح');
+    }
+
+    async deleteRequest(requestId) {
+        const request = this.requests.find(r => r.id === requestId);
+        if (!request) return;
+
+        const content = `
+            <div style="text-align: center; padding: 1rem;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #f59e0b; margin-bottom: 1rem;"></i>
+                <h3 style="margin-bottom: 0.5rem;">تأكيد الحذف</h3>
+                <p style="color: #94a3b8; margin-bottom: 1rem;">هل أنت متأكد من حذف الطلب رقم <strong>${request.requestNumber}</strong>؟</p>
+                <p style="color: #ef4444; font-size: 0.875rem;">لا يمكن التراجع عن هذا الإجراء.</p>
+            </div>
+        `;
+
+        modalManager.create('confirm-delete-request', 'تأكيد الحذف', content, [
+            {
+                text: 'إلغاء',
+                class: 'btn-secondary',
+                onclick: () => modalManager.close('confirm-delete-request')
+            },
+            {
+                text: 'حذف',
+                class: 'btn-danger',
+                onclick: async () => {
+                    try {
+                        await storage.deleteRequest(requestId);
+                        this.loadData();
+                        this.renderRequests();
+                        this.renderStats();
+                        this.renderCharts();
+                        modalManager.close('confirm-delete-request');
+                        toast.success('تم حذف الطلب بنجاح');
+                    } catch (error) {
+                        toast.error('فشل حذف الطلب');
+                        console.error(error);
+                    }
+                }
+            }
+        ]);
+
+        modalManager.open('confirm-delete-request');
     }
 
     getStatusClass(status) {
