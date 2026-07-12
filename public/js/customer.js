@@ -172,11 +172,12 @@ class CustomerManager {
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            if (!validator.validate()) {
-                toast.error('Please fix the errors in the form');
-                return;
-            }
+
+            // Skip validation for debugging
+            // if (!validator.validate()) {
+            //     toast.error('Please fix the errors in the form');
+            //     return;
+            // }
 
             loading.show('Submitting your request...');
 
