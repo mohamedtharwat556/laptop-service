@@ -1993,3 +1993,141 @@ body.light-mode .msg-admin-item:hover {
 body.light-mode .msg-typing-dot {
     background: var(--gray-400);
 }
+
+/* Ratings Section */
+.rating-overview {
+    max-width: 800px;
+    margin: 0 auto 3rem;
+}
+
+.rating-summary {
+    display: flex;
+    gap: 2rem;
+    padding: 2rem;
+    flex-wrap: wrap;
+}
+
+.rating-average {
+    flex: 1;
+    min-width: 200px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.rating-number {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--light-blue);
+    line-height: 1;
+}
+
+.rating-stars {
+    font-size: 1.5rem;
+    color: #fbbf24;
+    margin: 0.5rem 0;
+}
+
+.rating-count {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.rating-distribution {
+    flex: 2;
+    min-width: 300px;
+}
+
+.rating-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.rating-bar span:first-child {
+    width: 20px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.bar-container {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.rating-bar span:last-child {
+    width: 40px;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-align: left;
+}
+
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.testimonial-card {
+    padding: 2rem;
+    transition: var(--transition);
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+}
+
+.testimonial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.testimonial-stars {
+    color: #fbbf24;
+    font-size: 1rem;
+}
+
+.testimonial-date {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.testimonial-text {
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.testimonial-author {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.author-name {
+    font-weight: 600;
+    color: var(--white);
+}
+
+.author-device {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
