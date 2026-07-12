@@ -156,28 +156,8 @@ class CustomerManager {
         const form = document.getElementById('requestForm');
         if (!form) return;
 
-        const validator = new FormValidator(form);
-        
-        // Add validation rules
-        validator.addRule('fullName', FormValidator.required('Full name is required'));
-        validator.addRule('fullName', FormValidator.minLength(2, 'Name must be at least 2 characters'));
-        validator.addRule('phone', FormValidator.required('Phone number is required'));
-        validator.addRule('phone', FormValidator.phone('Invalid phone number'));
-        validator.addRule('laptopBrand', FormValidator.required('Laptop brand is required'));
-        validator.addRule('laptopModel', FormValidator.required('Laptop model is required'));
-        validator.addRule('deviceType', FormValidator.required('Device type is required'));
-        validator.addRule('problemDescription', FormValidator.required('Problem description is required'));
-        validator.addRule('problemDescription', FormValidator.minLength(10, 'Description must be at least 10 characters'));
-// validator.addRule('priority', FormValidator.required('Priority is required'));
-
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            // Skip validation for debugging
-            // if (!validator.validate()) {
-            //     toast.error('Please fix the errors in the form');
-            //     return;
-            // }
 
             loading.show('Submitting your request...');
 
