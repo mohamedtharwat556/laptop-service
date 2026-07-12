@@ -929,6 +929,12 @@ class AdminManager {
                     <label class="form-label">الوصف</label>
                     <textarea class="form-textarea" name="description" rows="3" required placeholder="وصف المنتج"></textarea>
                 </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" name="featured" style="width: 18px; height: 18px;">
+                        <span>عرض في الصفحة الرئيسية</span>
+                    </label>
+                </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
                     <i class="fas fa-plus"></i> إضافة المنتج
                 </button>
@@ -963,7 +969,7 @@ class AdminManager {
                 stock: parseInt(form.stock.value),
                 image: form.image.value || 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=No+Image',
                 description: form.description.value,
-                featured: false,
+                featured: form.featured.checked,
                 createdAt: new Date().toISOString()
             };
 
@@ -1018,6 +1024,12 @@ class AdminManager {
                 <div class="form-group">
                     <label class="form-label">الوصف</label>
                     <textarea class="form-textarea" name="description" rows="3" required>${product.description}</textarea>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" name="featured" style="width: 18px; height: 18px;" ${product.featured ? 'checked' : ''}>
+                        <span>عرض في الصفحة الرئيسية</span>
+                    </label>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
                     <i class="fas fa-save"></i> حفظ التغييرات

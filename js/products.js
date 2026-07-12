@@ -30,18 +30,21 @@ class ProductsManager {
         const container = document.getElementById('productsGrid');
         if (!container) return;
 
-        if (this.products.length === 0) {
+        // Only show featured products
+        const featuredProducts = this.products.filter(product => product.featured);
+
+        if (featuredProducts.length === 0) {
             container.innerHTML = `
                 <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
                     <i class="fas fa-box" style="font-size: 3rem;color: var(--text-muted); margin-bottom: 1rem;"></i>
-                    <h3 style="color: var(--white); margin-bottom: 0.5rem;">لا توجد منتجات حالياً</h3>
+                    <h3 style="color: var(--white); margin-bottom: 0.5rem;">لا توجد منتجات معروضة حالياً</h3>
                     <p style="color: var(--text-muted);">سيتم إضافة المنتجات قريباً</p>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = this.products.map(product => `
+        container.innerHTML = featuredProducts.map(product => `
             <div class="product-card">
                 <img src="${product.image}" alt="${product.name}" class="product-image" 
                      onerror="this.src='https://via.placeholder.com/300x200/1e3a8a/ffffff?text=No+Image'">
