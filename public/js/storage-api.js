@@ -78,7 +78,9 @@ class APIStorageManager {
      */
     async fetchAPI(endpoint, options = {}) {
         try {
-            const response = await fetch(`${this.apiBase}${endpoint}`, {
+            const url = `${this.apiBase}${endpoint}`;
+            console.log('Fetching API:', url);
+            const response = await fetch(url, {
                 ...options,
                 headers: {
                     'Content-Type': 'application/json',
@@ -86,6 +88,7 @@ class APIStorageManager {
                 }
             });
 
+            console.log('API Response status:', response.status);
             if (!response.ok) {
                 throw new Error(`API error: ${response.status} ${response.statusText}`);
             }
@@ -93,6 +96,7 @@ class APIStorageManager {
             return await response.json();
         } catch (error) {
             console.error(`API fetch error for ${endpoint}:`, error);
+            console.error('API Base:', this.apiBase);
             throw error;
         }
     }
