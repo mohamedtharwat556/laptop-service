@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -5,7 +6,6 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const compression = require('compression');
 const supabase = require('./db');
-require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -134,7 +134,8 @@ app.get('/api/users/:id', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
     try {
-        const newUser = { ...req.body, created_at: new Date().toISOString() };
+        const { password, ...userData } = req.body;
+        const newUser = { ...userData, created_at: new Date().toISOString() };
         const { data, error } = await supabase.from('users').insert([newUser]).select();
         if (error) throw error;
         res.status(201).json(data[0]);
@@ -215,12 +216,25 @@ app.get('/api/requests/:id', async (req, res) => {
 
 app.post('/api/requests', async (req, res) => {
     try {
-        const newRequest = { 
-            ...req.body, 
-            request_number: req.body.request_number || `REQ-${Date.now()}`,
+        const newRequest = {
+            request_number: req.body.requestNumber || `REQ-${Date.now()}`,
+            full_name: req.body.fullName,
+            phone: req.body.phone,
+            email: req.body.email,
+            laptop_brand: req.body.laptopBrand,
+            laptop_model: req.body.laptopModel,
+            problem_description: req.body.problemDescription,
+            status: req.body.status || 'Received',
+            priority: req.body.priority || 'Medium',
+            cost: req.body.cost || 0,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
+
+        // Add optional fields if provided
+        if (req.body.adminReply !== undefined) newRequest.admin_reply = req.body.adminReply;
+        if (req.body.estimatedCompletionDate !== undefined) newRequest.estimated_completion_date = req.body.estimatedCompletionDate;
+
         const { data, error } = await supabase.from('requests').insert([newRequest]).select();
         if (error) throw error;
         res.status(201).json(data[0]);
