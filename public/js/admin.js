@@ -609,8 +609,11 @@ class AdminManager {
             container.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-users"></i>
-                    <h3>No Users Found</h3>
-                    <p>There are no users in the system.</p>
+                    <h3>لا يوجد مستخدمين</h3>
+                    <p>لا يوجد مستخدمين في النظام حالياً.</p>
+                    <button class="btn btn-primary" onclick="adminManager.showAddUserModal()">
+                        <i class="fas fa-plus"></i> إضافة مستخدم جديد
+                    </button>
                 </div>
             `;
             return;
@@ -619,7 +622,7 @@ class AdminManager {
         container.innerHTML = `
             <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
                 <button class="btn btn-primary" onclick="adminManager.showAddUserModal()">
-                    <i class="fas fa-plus"></i> Add User
+                    <i class="fas fa-plus"></i> إضافة مستخدم جديد
                 </button>
             </div>
             <div style="display: grid; gap: 1rem;">
@@ -631,15 +634,17 @@ class AdminManager {
                                 <h4>${user.name}</h4>
                                 <p>${user.email || user.username}</p>
                             </div>
-                            <span class="user-role user-role-${user.role}">${user.role}</span>
+                            <span class="user-role user-role-${user.role}">
+                                ${user.role === 'admin' ? 'مدير' : user.role === 'super_admin' ? 'مدير عام' : 'مستخدم'}
+                            </span>
                         </div>
                         <div class="user-actions">
                             <button class="btn btn-primary" onclick="adminManager.editUser(${user.id})">
-                                <i class="fas fa-edit"></i> Edit
+                                <i class="fas fa-edit"></i> تعديل
                             </button>
-                            ${user.id !== this.currentUser.id ? `
+                            ${user.id !== this.currentUser.id && user.role !== 'super_admin' ? `
                                 <button class="btn btn-danger" onclick="adminManager.deleteUser(${user.id})">
-                                    <i class="fas fa-trash"></i> Delete
+                                    <i class="fas fa-trash"></i> حذف
                                 </button>
                             ` : ''}
                         </div>
@@ -656,36 +661,37 @@ class AdminManager {
         const content = `
             <form id="addUserForm">
                 <div class="form-group">
-                    <label class="form-label">Name</label>
-                    <input type="text" class="form-input" name="name" required>
+                    <label class="form-label">الاسم</label>
+                    <input type="text" class="form-input" name="name" required placeholder="أدخل الاسم">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Username</label>
-                    <input type="text" class="form-input" name="username" required>
+                    <label class="form-label">اسم المستخدم</label>
+                    <input type="text" class="form-input" name="username" required placeholder="أدخل اسم المستخدم">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" class="form-input" name="password" required>
+                    <label class="form-label">كلمة المرور</label>
+                    <input type="password" class="form-input" name="password" required placeholder="أدخل كلمة المرور">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-input" name="email">
+                    <label class="form-label">البريد الإلكتروني</label>
+                    <input type="email" class="form-input" name="email" placeholder="أدخل البريد الإلكتروني">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Role</label>
+                    <label class="form-label">الصلاحية</label>
                     <select class="form-select" name="role">
-                        <option value="employee">Employee</option>
-                        <option value="technician">Technician</option>
-                        <option value="admin">Admin</option>
+                        <option value="employee">موظف</option>
+                        <option value="technician">فني</option>
+                        <option value="admin">مدير</option>
+                        ${this.currentUser.role === 'super_admin' ? '<option value="super_admin">مدير عام</option>' : ''}
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    <i class="fas fa-plus"></i> Add User
+                    <i class="fas fa-plus"></i> إضافة المستخدم
                 </button>
             </form>
         `;
 
-        modalManager.create('add-user', 'Add New User', content);
+        modalManager.create('add-user', 'إضافة مستخدم جديد', content);
         modalManager.open('add-user');
 
         const form = document.getElementById('addUserForm');
@@ -704,7 +710,7 @@ class AdminManager {
             this.loadData();
             this.renderUsers();
             modalManager.close('add-user');
-            toast.success('User added successfully');
+            toast.success('تم إضافة المستخدم بنجاح');
         });
     }
 
@@ -718,36 +724,37 @@ class AdminManager {
         const content = `
             <form id="editUserForm">
                 <div class="form-group">
-                    <label class="form-label">Name</label>
+                    <label class="form-label">الاسم</label>
                     <input type="text" class="form-input" name="name" value="${user.name}" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Username</label>
+                    <label class="form-label">اسم المستخدم</label>
                     <input type="text" class="form-input" name="username" value="${user.username}" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Password (leave blank to keep current)</label>
+                    <label class="form-label">كلمة المرور (اتركها فارغة للحفاظ على الحالية)</label>
                     <input type="password" class="form-input" name="password">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Email</label>
+                    <label class="form-label">البريد الإلكتروني</label>
                     <input type="email" class="form-input" name="email" value="${user.email || ''}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Role</label>
+                    <label class="form-label">الصلاحية</label>
                     <select class="form-select" name="role">
-                        <option value="employee" ${user.role === 'employee' ? 'selected' : ''}>Employee</option>
-                        <option value="technician" ${user.role === 'technician' ? 'selected' : ''}>Technician</option>
-                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        <option value="employee" ${user.role === 'employee' ? 'selected' : ''}>موظف</option>
+                        <option value="technician" ${user.role === 'technician' ? 'selected' : ''}>فني</option>
+                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>مدير</option>
+                        ${this.currentUser.role === 'super_admin' ? `<option value="super_admin" ${user.role === 'super_admin' ? 'selected' : ''}>مدير عام</option>` : ''}
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    <i class="fas fa-save"></i> Save Changes
+                    <i class="fas fa-save"></i> حفظ التغييرات
                 </button>
             </form>
         `;
 
-        modalManager.create('edit-user', 'Edit User', content);
+        modalManager.create('edit-user', 'تعديل المستخدم', content);
         modalManager.open('edit-user');
 
         const form = document.getElementById('editUserForm');
@@ -769,7 +776,7 @@ class AdminManager {
             this.loadData();
             this.renderUsers();
             modalManager.close('edit-user');
-            toast.success('User updated successfully');
+            toast.success('تم تحديث المستخدم بنجاح');
         });
     }
 
@@ -778,21 +785,21 @@ class AdminManager {
      */
     deleteUser(userId) {
         if (userId === this.currentUser.id) {
-            toast.error('You cannot delete your own account');
+            toast.error('لا يمكنك حذف حسابك الخاص');
             return;
         }
 
         const content = `
             <div>
-                <p style="margin-bottom: 1rem;">Are you sure you want to delete this user? This action cannot be undone.</p>
+                <p style="margin-bottom: 1rem;">هل أنت متأكد من حذف هذا المستخدم؟ هذا الإجراء لا يمكن التراجع عنه.</p>
                 <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button class="btn btn-secondary" onclick="modalManager.close('delete-user')">Cancel</button>
-                    <button class="btn btn-danger" onclick="adminManager.confirmDeleteUser(${userId})">Delete</button>
+                    <button class="btn btn-secondary" onclick="modalManager.close('delete-user')">إلغاء</button>
+                    <button class="btn btn-danger" onclick="adminManager.confirmDeleteUser(${userId})">حذف</button>
                 </div>
             </div>
         `;
 
-        modalManager.create('delete-user', 'Delete User', content);
+        modalManager.create('delete-user', 'حذف المستخدم', content);
         modalManager.open('delete-user');
     }
 
@@ -804,7 +811,7 @@ class AdminManager {
         this.loadData();
         this.renderUsers();
         modalManager.close('delete-user');
-        toast.success('User deleted successfully');
+        toast.success('تم حذف المستخدم بنجاح');
     }
 
     /**
@@ -818,8 +825,11 @@ class AdminManager {
             container.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-box"></i>
-                    <h3>No Products Found</h3>
-                    <p>There are no products in the system.</p>
+                    <h3>لا توجد منتجات</h3>
+                    <p>لا توجد منتجات في النظام حالياً.</p>
+                    <button class="btn btn-primary" onclick="adminManager.showAddProductModal()">
+                        <i class="fas fa-plus"></i> إضافة منتج جديد
+                    </button>
                 </div>
             `;
             return;
@@ -828,18 +838,19 @@ class AdminManager {
         container.innerHTML = `
             <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
                 <button class="btn btn-primary" onclick="adminManager.showAddProductModal()">
-                    <i class="fas fa-plus"></i> Add Product
+                    <i class="fas fa-plus"></i> إضافة منتج جديد
                 </button>
             </div>
             <div class="table-container">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Product</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                            <th>Actions</th>
+                            <th>المنتج</th>
+                            <th>التصنيف</th>
+                            <th>السعر</th>
+                            <th>المخزون</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -855,6 +866,11 @@ class AdminManager {
                                 <td>${product.category}</td>
                                 <td>${Utils.formatCurrency(product.price)}</td>
                                 <td>${product.stock}</td>
+                                <td>
+                                    <span class="status-badge ${product.stock > 0 ? 'status-active' : 'status-inactive'}">
+                                        ${product.stock > 0 ? 'متوفر' : 'نفدت الكمية'}
+                                    </span>
+                                </td>
                                 <td>
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;" 
                                             onclick="adminManager.editProduct(${product.id})">
@@ -880,43 +896,63 @@ class AdminManager {
         const content = `
             <form id="addProductForm">
                 <div class="form-group">
-                    <label class="form-label">Product Name</label>
-                    <input type="text" class="form-input" name="name" required>
+                    <label class="form-label">اسم المنتج</label>
+                    <input type="text" class="form-input" name="name" required placeholder="أدخل اسم المنتج">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Category</label>
+                    <label class="form-label">التصنيف</label>
                     <select class="form-select" name="category">
-                        ${storage.getCategories().map(cat => `
-                            <option value="${cat}">${cat}</option>
-                        `).join('')}
+                        <option value="لابتوب">لابتوب</option>
+                        <option value="شاشة">شاشة</option>
+                        <option value="رامات">رامات</option>
+                        <option value="هارد">هارد/SSD</option>
+                        <option value="بطارية">بطارية</option>
+                        <option value="شاحن">شاحن</option>
+                        <option value="اكسسوارات">اكسسوارات</option>
+                        <option value="أخرى">أخرى</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Price ($)</label>
-                    <input type="number" class="form-input" name="price" step="0.01" min="0" required>
+                    <label class="form-label">السعر (ج.م)</label>
+                    <input type="number" class="form-input" name="price" step="0.01" min="0" required placeholder="أدخل السعر">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Stock</label>
-                    <input type="number" class="form-input" name="stock" min="0" required>
+                    <label class="form-label">المخزون</label>
+                    <input type="number" class="form-input" name="stock" min="0" required placeholder="الكمية المتاحة">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Image URL</label>
-                    <input type="url" class="form-input" name="image" placeholder="https://...">
+                    <label class="form-label">صورة المنتج</label>
+                    <input type="file" class="form-input" name="imageFile" accept="image/*">
+                    <input type="hidden" name="image" id="productImageInput">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-textarea" name="description" rows="3" required></textarea>
+                    <label class="form-label">الوصف</label>
+                    <textarea class="form-textarea" name="description" rows="3" required placeholder="وصف المنتج"></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    <i class="fas fa-plus"></i> Add Product
+                    <i class="fas fa-plus"></i> إضافة المنتج
                 </button>
             </form>
         `;
 
-        modalManager.create('add-product', 'Add New Product', content);
+        modalManager.create('add-product', 'إضافة منتج جديد', content);
         modalManager.open('add-product');
 
         const form = document.getElementById('addProductForm');
+        const imageFile = form.querySelector('input[name="imageFile"]');
+        const imageInput = document.getElementById('productImageInput');
+
+        imageFile.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    imageInput.value = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             
@@ -926,7 +962,9 @@ class AdminManager {
                 price: parseFloat(form.price.value),
                 stock: parseInt(form.stock.value),
                 image: form.image.value || 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=No+Image',
-                description: form.description.value
+                description: form.description.value,
+                featured: false,
+                createdAt: new Date().toISOString()
             };
 
             storage.createProduct(productData);
@@ -934,7 +972,7 @@ class AdminManager {
             this.renderProductsManagement();
             this.renderCharts();
             modalManager.close('add-product');
-            toast.success('Product added successfully');
+            toast.success('تم إضافة المنتج بنجاح');
         });
     }
 
@@ -948,43 +986,63 @@ class AdminManager {
         const content = `
             <form id="editProductForm">
                 <div class="form-group">
-                    <label class="form-label">Product Name</label>
+                    <label class="form-label">اسم المنتج</label>
                     <input type="text" class="form-input" name="name" value="${product.name}" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Category</label>
+                    <label class="form-label">التصنيف</label>
                     <select class="form-select" name="category">
-                        ${storage.getCategories().map(cat => `
-                            <option value="${cat}" ${product.category === cat ? 'selected' : ''}>${cat}</option>
-                        `).join('')}
+                        <option value="لابتوب" ${product.category === 'لابتوب' ? 'selected' : ''}>لابتوب</option>
+                        <option value="شاشة" ${product.category === 'شاشة' ? 'selected' : ''}>شاشة</option>
+                        <option value="رامات" ${product.category === 'رامات' ? 'selected' : ''}>رامات</option>
+                        <option value="هارد" ${product.category === 'هارد' ? 'selected' : ''}>هارد/SSD</option>
+                        <option value="بطارية" ${product.category === 'بطارية' ? 'selected' : ''}>بطارية</option>
+                        <option value="شاحن" ${product.category === 'شاحن' ? 'selected' : ''}>شاحن</option>
+                        <option value="اكسسوارات" ${product.category === 'اكسسوارات' ? 'selected' : ''}>اكسسوارات</option>
+                        <option value="أخرى" ${product.category === 'أخرى' ? 'selected' : ''}>أخرى</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Price ($)</label>
+                    <label class="form-label">السعر (ج.م)</label>
                     <input type="number" class="form-input" name="price" value="${product.price}" step="0.01" min="0" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Stock</label>
+                    <label class="form-label">المخزون</label>
                     <input type="number" class="form-input" name="stock" value="${product.stock}" min="0" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Image URL</label>
-                    <input type="url" class="form-input" name="image" value="${product.image}">
+                    <label class="form-label">صورة المنتج</label>
+                    <input type="file" class="form-input" name="imageFile" accept="image/*">
+                    <input type="hidden" name="image" id="editProductImageInput" value="${product.image}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Description</label>
+                    <label class="form-label">الوصف</label>
                     <textarea class="form-textarea" name="description" rows="3" required>${product.description}</textarea>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    <i class="fas fa-save"></i> Save Changes
+                    <i class="fas fa-save"></i> حفظ التغييرات
                 </button>
             </form>
         `;
 
-        modalManager.create('edit-product', 'Edit Product', content);
+        modalManager.create('edit-product', 'تعديل المنتج', content);
         modalManager.open('edit-product');
 
         const form = document.getElementById('editProductForm');
+        const imageFile = form.querySelector('input[name="imageFile"]');
+        const imageInput = document.getElementById('editProductImageInput');
+
+        imageFile.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    imageInput.value = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             
@@ -1002,7 +1060,7 @@ class AdminManager {
             this.renderProductsManagement();
             this.renderCharts();
             modalManager.close('edit-product');
-            toast.success('Product updated successfully');
+            toast.success('تم تحديث المنتج بنجاح');
         });
     }
 
@@ -1012,15 +1070,15 @@ class AdminManager {
     deleteProduct(productId) {
         const content = `
             <div>
-                <p style="margin-bottom: 1rem;">Are you sure you want to delete this product? This action cannot be undone.</p>
+                <p style="margin-bottom: 1rem;">هل أنت متأكد من حذف هذا المنتج؟ هذا الإجراء لا يمكن التراجع عنه.</p>
                 <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button class="btn btn-secondary" onclick="modalManager.close('delete-product')">Cancel</button>
-                    <button class="btn btn-danger" onclick="adminManager.confirmDeleteProduct(${productId})">Delete</button>
+                    <button class="btn btn-secondary" onclick="modalManager.close('delete-product')">إلغاء</button>
+                    <button class="btn btn-danger" onclick="adminManager.confirmDeleteProduct(${productId})">حذف</button>
                 </div>
             </div>
         `;
 
-        modalManager.create('delete-product', 'Delete Product', content);
+        modalManager.create('delete-product', 'حذف المنتج', content);
         modalManager.open('delete-product');
     }
 
@@ -1033,7 +1091,7 @@ class AdminManager {
         this.renderProductsManagement();
         this.renderCharts();
         modalManager.close('delete-product');
-        toast.success('Product deleted successfully');
+        toast.success('تم حذف المنتج بنجاح');
     }
 
     /**
