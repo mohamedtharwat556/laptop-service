@@ -381,6 +381,11 @@ class StorageManager {
         return requests.filter(request => request.phone === phone);
     }
 
+    getRequestsByName(name) {
+        const requests = this.getRequests();
+        return requests.filter(request => request.fullName.toLowerCase().includes(name.toLowerCase()));
+    }
+
     async createRequest(requestData) {
         try {
             // Send to server API first (MongoDB)

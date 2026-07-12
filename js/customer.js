@@ -38,7 +38,7 @@ class CustomerManager {
     }
 
     /**
-     * Track a request by phone number or request number
+     * Track a request by name, phone number or request number
      */
     trackRequest(searchTerm, searchType = 'phone') {
         let request;
@@ -46,9 +46,16 @@ class CustomerManager {
         if (searchType === 'phone') {
             const requests = storage.getRequestsByPhone(searchTerm);
             request = requests.length > 0 ? requests[requests.length - 1] : null;
+        } else if (searchType === 'name') {
+            const requests = storage.getRequestsByName(searchTerm);
+            request = requests.length > 0 ? requests[requests.length - 1] : null;
         } else {
             request = storage.getRequestByNumber(searchTerm);
         }
+        
+        // Store current search for refresh
+        this.currentSearchTerm = searchTerm;
+        this.currentSearchType = searchType;
         
         return request;
     }
