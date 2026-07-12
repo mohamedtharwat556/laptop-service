@@ -123,9 +123,13 @@
                 <div class="dashboard-header">
                     <h2>إدارة الطلبات</h2>
                     <div class="search-container">
-                        <input type="text" id="requestSearch" class="form-input search-input" placeholder="البحث برقم الهاتف، الاسم...">
+                        <input type="text" id="requestSearch" class="form-input search-input" placeholder="البحث برقم الهاتف، الاسم، الماركة...">
                         <select id="statusFilter" class="form-select filter-select">
                             <option value="All">جميع الحالات</option>
+                            <option value="today">اليوم</option>
+                            <option value="yesterday">أمس</option>
+                            <option value="week">آخر أسبوع</option>
+                            <option value="month">آخر شهر</option>
                             <option value="Received">تم الاستلام</option>
                             <option value="Waiting Inspection">في انتظار الفحص</option>
                             <option value="Under Maintenance">قيد الصيانة</option>
@@ -133,6 +137,36 @@
                             <option value="Ready">جاهز</option>
                             <option value="Delivered">تم التسليم</option>
                         </select>
+                        <select id="brandFilter" class="form-select filter-select">
+                            <option value="All">جميع الماركات</option>
+                            <option value="Dell">Dell</option>
+                            <option value="HP">HP</option>
+                            <option value="Lenovo">Lenovo</option>
+                            <option value="Asus">Asus</option>
+                            <option value="Acer">Acer</option>
+                            <option value="MSI">MSI</option>
+                            <option value="Apple">Apple</option>
+                            <option value="Samsung">Samsung</option>
+                            <option value="Toshiba">Toshiba</option>
+                            <option value="Sony">Sony</option>
+                            <option value="LG">LG</option>
+                        </select>
+                        <select id="priorityFilter" class="form-select filter-select">
+                            <option value="All">جميع الأولويات</option>
+                            <option value="High">عالية</option>
+                            <option value="Medium">متوسطة</option>
+                            <option value="Low">منخفضة</option>
+                        </select>
+                    </div>
+                    <div class="date-range-container" style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center;">
+                        <label style="color: var(--text-muted);">من:</label>
+                        <input type="date" id="dateFrom" class="form-input" style="flex: 1;">
+                        <label style="color: var(--text-muted);">إلى:</label>
+                        <input type="date" id="dateTo" class="form-input" style="flex: 1;">
+                        <button onclick="adminManager.clearFilters()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">
+                            <i class="fas fa-times"></i>
+                            مسح الفلاتر
+                        </button>
                     </div>
                 </div>
                 <div id="requestsContainer"></div>

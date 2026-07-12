@@ -102,6 +102,10 @@ class AdminManager {
             // Setup search and filters
             const searchInput = document.getElementById('requestSearch');
             const statusFilter = document.getElementById('statusFilter');
+            const brandFilter = document.getElementById('brandFilter');
+            const priorityFilter = document.getElementById('priorityFilter');
+            const dateFrom = document.getElementById('dateFrom');
+            const dateTo = document.getElementById('dateTo');
 
             if (searchInput) {
                 searchInput.addEventListener('input', Utils.debounce(() => {
@@ -112,6 +116,34 @@ class AdminManager {
 
             if (statusFilter) {
                 statusFilter.addEventListener('change', () => {
+                    this.currentPage = 1;
+                    this.renderRequests();
+                });
+            }
+
+            if (brandFilter) {
+                brandFilter.addEventListener('change', () => {
+                    this.currentPage = 1;
+                    this.renderRequests();
+                });
+            }
+
+            if (priorityFilter) {
+                priorityFilter.addEventListener('change', () => {
+                    this.currentPage = 1;
+                    this.renderRequests();
+                });
+            }
+
+            if (dateFrom) {
+                dateFrom.addEventListener('change', () => {
+                    this.currentPage = 1;
+                    this.renderRequests();
+                });
+            }
+
+            if (dateTo) {
+                dateTo.addEventListener('change', () => {
                     this.currentPage = 1;
                     this.renderRequests();
                 });
@@ -1111,12 +1143,16 @@ class AdminManager {
     }
 
     /**
-     * Filter requests
+     * Filter requests with advanced search
      */
     filterRequests() {
         let filtered = [...this.requests];
         const searchTerm = document.getElementById('requestSearch')?.value?.toLowerCase() || '';
         const statusFilter = document.getElementById('statusFilter')?.value || 'All';
+        const brandFilter = document.getElementById('brandFilter')?.value || 'All';
+        const priorityFilter = document.getElementById('priorityFilter')?.value || 'All';
+        const dateFrom = document.getElementById('dateFrom')?.value || '';
+        const dateTo = document.getElementById('dateTo')?.value || '';
 
         if (searchTerm) {
             // reset special filter on manual search
@@ -1124,7 +1160,10 @@ class AdminManager {
             filtered = filtered.filter(r => 
                 r.requestNumber.toLowerCase().includes(searchTerm) ||
                 r.fullName.toLowerCase().includes(searchTerm) ||
-                r.phone.includes(searchTerm)
+                r.phone.includes(searchTerm) ||
+                (r.laptopBrand && r.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                (r.laptopModel && r.laptopModel.toLowerCase().includes(searchTerm)) ||
+                (r.problemDescription && r.problemDescription.toLowerCase().includes(searchTerm))
             );
         }
 
@@ -1133,12 +1172,59 @@ class AdminManager {
         if (activeFilter === 'today') {
             const today = new Date().toDateString();
             filtered = filtered.filter(r => new Date(r.createdAt).toDateString() === today);
+        } else if (activeFilter === 'yesterday') {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            filtered = filtered.filter(r => new Date(r.createdAt).toDateString() === yesterday.toDateString());
+        } else if (activeFilter === 'week') {
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            filtered = filtered.filter(r => new Date(r.createdAt) >= weekAgo);
+        } else if (activeFilter === 'month') {
+            const monthAgo = new Date();
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            filtered = filtered.filter(r => new Date(r.createdAt) >= monthAgo);
         } else if (activeFilter === 'open') {
             filtered = filtered.filter(r => r.status !== 'Delivered');
         } else if (activeFilter !== 'All') {
             filtered = filtered.filter(r => r.status === activeFilter);
         }
+
+        // Brand filter
+        if (brandFilter !== 'All') {
+            filtered = filtered.filter(r => r.laptopBrand === brandFilter);
+        }
+
+        // Priority filter
+        if (priorityFilter !== 'All') {
+            filtered = filtered.filter(r => r.priority === priorityFilter);
+        }
+
+        // Date range filter
+        if (dateFrom) {
+            filtered = filtered.filter(r => new Date(r.createdAt) >= new Date(dateFrom));
+        }
+        if (dateTo) {
+            const toDate = new Date(dateTo);
+            toDate.setHours(23, 59, 59, 999);
+            filtered = filtered.filter(r => new Date(r.createdAt) <= toDate);
+        }
+
         return filtered;
+    }
+
+    /**
+     * Clear all filters
+     */
+    clearFilters() {
+        document.getElementById('requestSearch').value = '';
+        document.getElementById('statusFilter').value = 'All';
+        document.getElementById('brandFilter').value = 'All';
+        document.getElementById('priorityFilter').value = 'All';
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        this.currentPage = 1;
+        this.renderRequests();
     }
 
     paginate(data) {
