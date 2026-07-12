@@ -293,6 +293,23 @@ class CustomerManager {
     }
 
     /**
+     * Generate star rating HTML
+     */
+    generateStarRating(rating) {
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                stars += '<i class="fas fa-star" style="color: #fbbf24;"></i>';
+            } else if (i - 0.5 <= rating) {
+                stars += '<i class="fas fa-star-half-alt" style="color: #fbbf24;"></i>';
+            } else {
+                stars += '<i class="far fa-star" style="color: #d1d5db;"></i>';
+            }
+        }
+        return stars;
+    }
+
+    /**
      * Render tracking result
      */
     renderTrackingResult(request) {
@@ -372,6 +389,37 @@ class CustomerManager {
                     </div>
                 ` : ''}
 
+                ${request.status === 'Completed' && !request.rating ? `
+                    <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(251, 191, 36, 0.1); border-radius: 8px; border: 1px solid rgba(251, 191, 36, 0.3);">
+                        <h3 style="margin-bottom: 1rem; color: #fbbf24;">قيم خدمتنا</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 1rem;">كيف كانت تجربتك معنا؟</p>
+                        <div id="ratingForm">
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; justify-content: center;">
+                                ${[1, 2, 3, 4, 5].map(star => `
+                                    <button type="button" class="rating-star" data-rating="${star}" style="background: none; border: none; font-size: 2rem; cursor: pointer; color: #d1d5db; transition: color 0.2s;">
+                                        <i class="fas fa-star"></i>
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <textarea class="form-textarea" id="ratingComment" rows="3" placeholder="أضف تعليقك (اختياري)" style="margin-bottom: 1rem;"></textarea>
+                            <button type="button" id="submitRating" class="btn btn-primary" style="width: 100%;" disabled>
+                                <i class="fas fa-paper-plane"></i>
+                                إرسال التقييم
+                            </button>
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${request.rating ? `
+                    <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(251, 191, 36, 0.1); border-radius: 8px;">
+                        <h3 style="margin-bottom: 1rem; color: #fbbf24;">تقييمك</h3>
+                        <div style="display: flex; gap: 0.25rem; margin-bottom: 0.5rem;">
+                            ${this.generateStarRating(request.rating)}
+                        </div>
+                        ${request.ratingComment ? `<p style="color: var(--text-muted);">"${request.ratingComment}"</p>` : ''}
+                    </div>
+                ` : ''}
+
                 ${request.cost > 0 ? `
                     <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
                         <p style="font-size: 0.875rem; color: var(--text-muted-more); margin-bottom: 0.25rem;">التكلفة التقديرية:</p>
@@ -380,6 +428,96 @@ class CustomerManager {
                 ` : ''}
             </div>
         `;
+
+        // Add rating form event listeners
+        this.setupRatingForm(request.id);
+    }
+
+    /**
+     * Setup rating form event listeners
+     */
+    setupRatingForm(requestId) {
+        const ratingStars = document.querySelectorAll('.rating-star');
+        const submitButton = document.getElementById('submitRating');
+        const commentInput = document.getElementById('ratingComment');
+        let selectedRating = 0;
+
+        ratingStars.forEach(star => {
+            star.addEventListener('click', () => {
+                selectedRating = parseInt(star.dataset.rating);
+                
+                // Update star colors
+                ratingStars.forEach(s => {
+                    const rating = parseInt(s.dataset.rating);
+                    if (rating <= selectedRating) {
+                        s.style.color = '#fbbf24';
+                    } else {
+                        s.style.color = '#d1d5db';
+                    }
+                });
+
+                // Enable submit button
+                submitButton.disabled = false;
+            });
+
+            star.addEventListener('mouseenter', () => {
+                const rating = parseInt(star.dataset.rating);
+                ratingStars.forEach(s => {
+                    const sRating = parseInt(s.dataset.rating);
+                    if (sRating <= rating) {
+                        s.style.color = '#fbbf24';
+                    }
+                });
+            });
+
+            star.addEventListener('mouseleave', () => {
+                ratingStars.forEach(s => {
+                    const rating = parseInt(s.dataset.rating);
+                    if (rating <= selectedRating) {
+                        s.style.color = '#fbbf24';
+                    } else {
+                        s.style.color = '#d1d5db';
+                    }
+                });
+            });
+        });
+
+        if (submitButton) {
+            submitButton.addEventListener('click', async () => {
+                if (selectedRating === 0) {
+                    toast.error('يرجى اختيار تقييم');
+                    return;
+                }
+
+                loading.show('جاري إرسال التقييم...');
+
+                try {
+                    const comment = commentInput ? commentInput.value : '';
+                    
+                    // In production, this would call the API
+                    // For now, we'll update the local storage
+                    const storage = new LocalStorage();
+                    const request = await storage.getRequestById(requestId);
+                    
+                    if (request) {
+                        request.rating = selectedRating;
+                        request.ratingComment = comment;
+                        request.ratedAt = new Date().toISOString();
+                        await storage.updateRequest(requestId, request);
+                    }
+
+                    loading.hide();
+                    toast.success('شكراً لتقييمك!');
+                    
+                    // Refresh the tracking result
+                    this.trackRequest(this.currentSearchTerm, this.currentSearchType);
+                } catch (error) {
+                    loading.hide();
+                    toast.error('فشل إرسال التقييم. يرجى المحاولة مجدداً.');
+                    console.error(error);
+                }
+            });
+        }
     }
 
     /**
