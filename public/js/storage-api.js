@@ -5,7 +5,7 @@
 
 class APIStorageManager {
     constructor() {
-        this.apiBase = window.location.origin + '/api';
+        this.apiBase = '/api';
         this.cache = {
             users: [],
             requests: [],
