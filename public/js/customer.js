@@ -208,9 +208,10 @@ class CustomerManager {
                 toast.success('Request submitted successfully!');
             } catch (error) {
                 loading.hide();
-                toast.error('Failed to submit request. Please try again.');
+                alert('Error: ' + error.message + '\n\nCheck console for details');
                 console.error('Error submitting request:', error);
                 console.error('Error details:', error.message);
+                console.error('Error stack:', error.stack);
             }
         });
     }
