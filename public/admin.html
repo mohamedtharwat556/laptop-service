@@ -844,6 +844,12 @@
 
         // Check login status on page load
         checkLogin();
+
+        // Ensure modals are hidden on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('productModal').classList.add('hidden');
+            document.getElementById('replyModal').classList.add('hidden');
+        });
     </script>
 </body>
 </html>
