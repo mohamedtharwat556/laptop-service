@@ -163,8 +163,6 @@ class CustomerManager {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            loading.show('Submitting your request...');
-
             const formData = {
                 requestNumber: 'REQ-' + Date.now(),
                 fullName: form.querySelector('[name="fullName"]').value,
@@ -176,8 +174,6 @@ class CustomerManager {
                 priority: form.querySelector('[name="priority"]') ? form.querySelector('[name="priority"]').value : 'Medium'
             };
 
-            console.log('Sending data:', formData);
-
             try {
                 const response = await fetch('/api/requests', {
                     method: 'POST',
@@ -187,14 +183,10 @@ class CustomerManager {
                     body: JSON.stringify(formData)
                 });
 
-                console.log('Response status:', response.status);
                 const responseData = await response.json();
-                console.log('Response data:', responseData);
 
                 if (response.ok) {
-                    loading.hide();
-                    this.currentRequest = responseData;
-                    this.showRequestSuccess(responseData);
+                    alert('تم الإرسال بنجاح!\nرقم الطلب: ' + responseData.request_number);
 
                     // Prepare WhatsApp message
                     const message = `طلب صيانة:\nالاسم: ${formData.fullName}\nالهاتف: ${formData.phone}\nماركة اللابتوب: ${formData.laptopBrand}\nنوع الجهاز: ${formData.deviceType}\nوصف المشكلة: ${formData.problemDescription}`;
@@ -202,15 +194,11 @@ class CustomerManager {
                     window.location.href = waUrl;
 
                     form.reset();
-                    toast.success('تم الإرسال بنجاح!');
                 } else {
-                    loading.hide();
-                    toast.error('فشل الإرسال: ' + JSON.stringify(responseData));
+                    alert('فشل الإرسال: ' + JSON.stringify(responseData));
                 }
             } catch (error) {
-                loading.hide();
-                toast.error('خطأ: ' + error.message);
-                console.error('Error:', error);
+                alert('خطأ: ' + error.message);
             }
         });
     }
