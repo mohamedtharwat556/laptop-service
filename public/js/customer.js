@@ -167,13 +167,13 @@ class CustomerManager {
 
             const formData = {
                 requestNumber: 'REQ-' + Date.now(),
-                fullName: form.fullName.value,
-                phone: form.phone.value,
-                laptopBrand: form.laptopBrand.value,
-                laptopModel: form.laptopModel.value,
-                deviceType: form.deviceType.value,
-                problemDescription: form.problemDescription.value,
-                priority: form.priority ? form.priority.value : 'Medium'
+                fullName: form.querySelector('[name="fullName"]').value,
+                phone: form.querySelector('[name="phone"]').value,
+                laptopBrand: form.querySelector('[name="laptopBrand"]').value,
+                laptopModel: form.querySelector('[name="laptopModel"]').value,
+                deviceType: form.querySelector('[name="deviceType"]').value,
+                problemDescription: form.querySelector('[name="problemDescription"]').value,
+                priority: form.querySelector('[name="priority"]') ? form.querySelector('[name="priority"]').value : 'Medium'
             };
 
             try {
