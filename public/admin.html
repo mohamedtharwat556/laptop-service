@@ -797,6 +797,14 @@
             const id = document.getElementById('replyRequestId').dataset.id;
             const reply = document.getElementById('replyMessage').value;
 
+            console.log('Sending reply for ID:', id);
+            console.log('Reply message:', reply);
+
+            if (!id) {
+                alert('خطأ: لم يتم العثور على رقم الطلب');
+                return;
+            }
+
             try {
                 const response = await fetch(`/api/requests/${id}`, {
                     method: 'PUT',
@@ -806,15 +814,20 @@
                     body: JSON.stringify({ adminReply: reply })
                 });
 
+                console.log('Response status:', response.status);
+                const responseData = await response.json();
+                console.log('Response data:', responseData);
+
                 if (response.ok) {
                     alert('تم إرسال الرد بنجاح');
                     hideReplyModal();
                     loadRequests();
                 } else {
-                    alert('فشل إرسال الرد');
+                    alert('فشل إرسال الرد: ' + JSON.stringify(responseData));
                 }
             } catch (error) {
                 alert('خطأ: ' + error.message);
+                console.error('Error:', error);
             }
         }
 
