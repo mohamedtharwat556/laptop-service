@@ -12,33 +12,33 @@ class CustomerManager {
      * Submit a maintenance request
      */
     async submitRequest(formData) {
-        // Generate request number
-        const requestNumber = 'REQ-' + Date.now().toString().slice(-6);
-
         const requestData = {
-            requestNumber: requestNumber,
+            requestNumber: formData.requestNumber,
             fullName: formData.fullName,
             phone: formData.phone,
             laptopBrand: formData.laptopBrand,
             laptopModel: formData.laptopModel,
             deviceType: formData.deviceType,
             problemDescription: formData.problemDescription,
-            priority: formData.priority || 'Medium',
-            receivedDate: formData.receivedDate || new Date().toISOString().slice(0, 10),
-
-            deviceImage: formData.deviceImage || null,
-            notes: '',
-            technicianNotes: '',
-            cost: 0,
-            estimatedCompletionDate: null,
-            replacementParts: [],
-            repairImages: []
+            priority: formData.priority || 'Medium'
         };
 
-        const request = await storage.createRequest(requestData);
-        this.currentRequest = request;
+        const response = await fetch('/api/requests', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        });
 
-        return request;
+        const responseData = await response.json();
+
+        if (!response.ok) {
+            throw new Error(responseData.error || 'Failed to submit request');
+        }
+
+        this.currentRequest = responseData;
+        return responseData;
     }
 
     /**
@@ -193,6 +193,7 @@ class CustomerManager {
 
                 if (response.ok) {
                     loading.hide();
+                    this.currentRequest = responseData;
                     this.showRequestSuccess(responseData);
 
                     // Prepare WhatsApp message
