@@ -266,16 +266,6 @@ class AdminManager {
             this.products = this.convertToCamelCase(Array.isArray(productsRes) ? productsRes : []);
             
             console.log(`✅ Data loaded: ${this.requests.length} requests, ${this.products.length} products`);
-            
-            // If API returned empty data, fallback to localStorage
-            if (this.requests.length === 0 && this.products.length === 0) {
-                console.log('⚠️  API returned empty data, using localStorage fallback');
-                this.users = storage.getUsers();
-                this.requests = storage.getRequests();
-                this.orders = storage.getOrders();
-                this.products = storage.getProducts();
-                console.log(`✅ LocalStorage data: ${this.requests.length} requests, ${this.products.length} products`);
-            }
         } catch (error) {
             console.error('Failed to load data from API:', error);
             // Fallback to localStorage
