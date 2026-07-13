@@ -3,425 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الأدمن - YAS Laptop Service</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            direction: rtl;
-            background: #f5f5f5;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-            border-bottom: 3px solid #007bff;
-            padding-bottom: 10px;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        .stat-card h3 {
-            font-size: 2em;
-            margin: 10px 0;
-        }
-        .stat-card p {
-            margin: 0;
-            opacity: 0.9;
-        }
-        .actions {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        #refresh {
-            background: #28a745;
-            color: white;
-        }
-        #refresh:hover {
-            background: #218838;
-        }
-        #logout {
-            background: #dc3545;
-            color: white;
-        }
-        #logout:hover {
-            background: #c82333;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        th {
-            background: #007bff;
-            color: white;
-            padding: 15px;
-            text-align: right;
-            font-weight: bold;
-        }
-        td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #ddd;
-        }
-        tr:hover {
-            background: #f5f5f5;
-        }
-        .status {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .status-Received {
-            background: #ffc107;
-            color: #333;
-        }
-        .status-InProgress {
-            background: #17a2b8;
-            color: white;
-        }
-        .status-Completed {
-            background: #28a745;
-            color: white;
-        }
-        .status-Delivered {
-            background: #6c757d;
-            color: white;
-        }
-        .priority {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .priority-Low {
-            background: #6c757d;
-            color: white;
-        }
-        .priority-Medium {
-            background: #ffc107;
-            color: #333;
-        }
-        .priority-High {
-            background: #fd7e14;
-            color: white;
-        }
-        .priority-Urgent {
-            background: #dc3545;
-            color: white;
-        }
-        .action-btn {
-            padding: 5px 10px;
-            margin: 2px;
-            font-size: 12px;
-            border-radius: 3px;
-        }
-        .btn-progress {
-            background: #17a2b8;
-            color: white;
-        }
-        .btn-complete {
-            background: #28a745;
-            color: white;
-        }
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-        }
-        .btn-view {
-            background: #007bff;
-            color: white;
-        }
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #007bff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .back-link:hover {
-            text-decoration: underline;
-        }
-        .login-container {
-            max-width: 400px;
-            margin: 100px auto;
-            padding: 30px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .login-container h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .login-btn:hover {
-            background: #0056b3;
-        }
-        .error {
-            color: #dc3545;
-            text-align: center;
-            margin-top: 10px;
-        }
-        .hidden {
-            display: none !important;
-        }
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-    </style>
+    <title>لوحة تحكم المشرف - مركز خدمة لابتوب YAS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/ai-animations.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/rtl.css">
 </head>
 <body>
-    <!-- Login Form -->
-    <div id="loginForm" class="login-container">
-        <h2>تسجيل دخول الأدمن</h2>
-        <div class="form-group">
-            <label>اسم المستخدم:</label>
-            <input type="text" id="username" placeholder="admin">
-        </div>
-        <div class="form-group">
-            <label>كلمة المرور:</label>
-            <input type="password" id="password" placeholder="admin123">
-        </div>
-        <button class="login-btn" onclick="login()">دخول</button>
-        <div id="loginError" class="error hidden"></div>
-    </div>
-
-    <!-- Admin Dashboard -->
-    <div id="adminDashboard" class="container hidden">
-        <a href="index.html" class="back-link">← العودة للصفحة الرئيسية</a>
-        <h1>لوحة الأدمن - YAS Laptop Service</h1>
-
-        <div class="stats">
-            <div class="stat-card">
-                <h3 id="totalRequests">0</h3>
-                <p>إجمالي الطلبات</p>
-            </div>
-            <div class="stat-card">
-                <h3 id="pendingRequests">0</h3>
-                <p>الطلبات المعلقة</p>
-            </div>
-            <div class="stat-card">
-                <h3 id="completedRequests">0</h3>
-                <p>الطلبات المكتملة</p>
-            </div>
-            <div class="stat-card">
-                <h3 id="todayRequests">0</h3>
-                <p>طلبات اليوم</p>
-            </div>
-        </div>
-
-        <div class="actions">
-            <button id="refresh" onclick="loadRequests()">
-                <i class="fas fa-sync"></i> تحديث الطلبات
+    <div class="glow-orb-1"></div>
+    <div class="glow-orb-2"></div>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="assets/images/yas-logo.svg" alt="YAS Logo" class="logo-img">
+                <span class="logo-text">
+                    <span class="logo-name">YAS</span>
+                    <span class="logo-sub">ADMIN PANEL</span>
+                </span>
+            </a>
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
             </button>
-            <button id="logout" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-            </button>
-        </div>
-
-        <!-- Navigation Tabs -->
-        <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-            <button onclick="showSection('requests')" class="action-btn" style="background: #007bff; color: white;">الطلبات</button>
-            <button onclick="showSection('reports')" class="action-btn" style="background: #28a745; color: white;">التقارير</button>
-            <button onclick="showSection('products')" class="action-btn" style="background: #17a2b8; color: white;">المنتجات</button>
-        </div>
-
-        <!-- Requests Section -->
-        <div id="requestsSection">
-            <table id="requestsTable">
-                <thead>
-                    <tr>
-                        <th>رقم الطلب</th>
-                        <th>الاسم</th>
-                        <th>الهاتف</th>
-                        <th>الماركة</th>
-                        <th>الموديل</th>
-                        <th>الحالة</th>
-                        <th>الأولوية</th>
-                        <th>التاريخ</th>
-                        <th>الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody id="requestsBody"></tbody>
-            </table>
-        </div>
-
-        <!-- Reports Section -->
-        <div id="reportsSection" class="hidden">
-            <h2 style="margin-bottom: 20px;">التقارير</h2>
-            <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
-                <label>الفترة:</label>
-                <select id="reportPeriod" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    <option value="today">اليوم</option>
-                    <option value="yesterday">أمس</option>
-                    <option value="lastWeek">آخر أسبوع</option>
-                    <option value="lastMonth">آخر شهر</option>
-                    <option value="custom">تاريخ مخصص</option>
-                </select>
-                <input type="date" id="reportDateFrom" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; display: none;">
-                <input type="date" id="reportDateTo" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; display: none;">
-                <button onclick="generateReport()" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">إنشاء التقرير</button>
-                <button onclick="exportReport()" style="background: #28a745; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">تحميل Excel</button>
-            </div>
-            <div id="reportContainer" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <p style="color: #666;">اختر الفترة واضغط "إنشاء التقرير" لعرض البيانات</p>
-            </div>
-        </div>
-
-        <!-- Products Section -->
-        <div id="productsSection" class="hidden">
-            <h2 style="margin-bottom: 20px;">المنتجات</h2>
-            <div style="margin-bottom: 20px;">
-                <button onclick="showAddProductModal()" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
-                    <i class="fas fa-plus"></i> إضافة منتج
+            <div class="nav-links" style="display: flex; align-items: center; gap: 1rem;">
+                <a href="index.html" class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem; background: rgba(255,255,255,0.08); color:#94a3b8; border:1px solid rgba(255,255,255,0.1); border-radius:8px; text-decoration:none; display:flex; align-items:center; gap:0.4rem;">
+                    <i class="fas fa-home"></i> الصفحة الرئيسية
+                </a>
+                <button class="dark-mode-toggle" id="darkModeToggle" title="تبديل الوضع الليلi">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <span id="welcomeUser" style="color: #94a3b8;"></span>
+                <button id="logoutBtn" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
                 </button>
             </div>
-            <table id="productsTable">
-                <thead>
-                    <tr>
-                        <th>الاسم</th>
-                        <th>الفئة</th>
-                        <th>السعر</th>
-                        <th>المخزون</th>
-                        <th>الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody id="productsBody"></tbody>
-            </table>
         </div>
+    </nav>
 
-        <!-- Add Product Modal -->
-        <div id="productModal" class="hidden modal">
-            <div style="background: white; padding: 30px; border-radius: 10px; width: 400px;">
-                <h3 style="margin-bottom: 20px;">إضافة منتج جديد</h3>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">الاسم:</label>
-                    <input type="text" id="productName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+    <!-- Dashboard Container -->
+    <div class="dashboard-container" id="adminDashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div style="text-align:center; margin-bottom:1rem;">
+                    <img src="assets/images/yas-logo.svg" alt="YAS" style="width:70px; height:70px; object-fit:contain; filter: drop-shadow(0 0 8px rgba(26,26,255,0.6));">
                 </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">الفئة:</label>
-                    <input type="text" id="productCategory" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">السعر:</label>
-                    <input type="number" id="productPrice" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">المخزون:</label>
-                    <input type="number" id="productStock" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="addProduct()" style="flex: 1; background: #007bff; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">إضافة</button>
-                    <button onclick="hideProductModal()" style="flex: 1; background: #dc3545; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">إلغاء</button>
+                <h2>لوحة المشرف</h2>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link active" data-section="dashboard">
+                        <i class="fas fa-chart-line"></i>
+                        لوحة التحكم
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" data-section="requests">
+                        <i class="fas fa-clipboard-list"></i>
+                        الطلبات
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" data-section="users">
+                        <i class="fas fa-users"></i>
+                        المستخدمون
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" data-section="products">
+                        <i class="fas fa-box"></i>
+                        المنتجات
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" data-section="daily-report">
+                        <i class="fas fa-file-excel"></i>
+                        تقرير اليوم
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-main animate__animated animate__fadeInUp">
+            <div class="dashboard-header">
+                <h1>لوحة التحكم</h1>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="dashboard-section active">
+                <div id="adminStats"></div>
+                
+                <div class="charts-grid">
+                    <div class="glass-card chart-card">
+                        <h3>توزيع حالات الطلبات</h3>
+                        <div class="chart-container">
+                            <canvas id="requestsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card chart-card">
+                        <h3>الإيرادات (آخر 7 أيام)</h3>
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card chart-card">
+                        <h3>المنتجات حسب الفئة</h3>
+                        <div class="chart-container">
+                            <canvas id="productsChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Reply Modal -->
-        <div id="replyModal" class="hidden modal">
-            <div style="background: white; padding: 30px; border-radius: 10px; width: 500px;">
-                <h3 style="margin-bottom: 20px;">رد على العميل</h3>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">رقم الطلب:</label>
-                    <input type="text" id="replyRequestId" readonly style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background: #f5f5f5;">
+            <!-- Requests Section -->
+            <div id="requestsSection" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>إدارة الطلبات</h2>
+                    <div class="search-container">
+                        <input type="text" id="requestSearch" class="form-input search-input" placeholder="البحث برقم الهاتف، الاسم، الماركة...">
+                        <select id="statusFilter" class="form-select filter-select">
+                            <option value="All">جميع الحالات</option>
+                            <option value="today">اليوم</option>
+                            <option value="yesterday">أمس</option>
+                            <option value="week">آخر أسبوع</option>
+                            <option value="month">آخر شهر</option>
+                            <option value="Received">تم الاستلام</option>
+                            <option value="Waiting Inspection">في انتظار الفحص</option>
+                            <option value="Under Maintenance">قيد الصيانة</option>
+                            <option value="Waiting Parts">في انتظار قطع غيار</option>
+                            <option value="Ready">جاهز</option>
+                            <option value="Delivered">تم التسليم</option>
+                        </select>
+                        <select id="brandFilter" class="form-select filter-select">
+                            <option value="All">جميع الماركات</option>
+                            <option value="Dell">Dell</option>
+                            <option value="HP">HP</option>
+                            <option value="Lenovo">Lenovo</option>
+                            <option value="Asus">Asus</option>
+                            <option value="Acer">Acer</option>
+                            <option value="MSI">MSI</option>
+                            <option value="Apple">Apple</option>
+                            <option value="Samsung">Samsung</option>
+                            <option value="Toshiba">Toshiba</option>
+                            <option value="Sony">Sony</option>
+                            <option value="LG">LG</option>
+                        </select>
+                        <select id="priorityFilter" class="form-select filter-select">
+                            <option value="All">جميع الأولويات</option>
+                            <option value="High">عالية</option>
+                            <option value="Medium">متوسطة</option>
+                            <option value="Low">منخفضة</option>
+                        </select>
+                    </div>
+                    <div class="date-range-container" style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center;">
+                        <label style="color: var(--text-muted);">من:</label>
+                        <input type="date" id="dateFrom" class="form-input" style="flex: 1;">
+                        <label style="color: var(--text-muted);">إلى:</label>
+                        <input type="date" id="dateTo" class="form-input" style="flex: 1;">
+                        <button onclick="adminManager.clearFilters()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">
+                            <i class="fas fa-times"></i>
+                            مسح الفلاتر
+                        </button>
+                    </div>
                 </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">الرد:</label>
-                    <textarea id="replyMessage" rows="5" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"></textarea>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="sendReply()" style="flex: 1; background: #007bff; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">إرسال</button>
-                    <button onclick="hideReplyModal()" style="flex: 1; background: #dc3545; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">إلغاء</button>
-                </div>
+                <div id="requestsContainer"></div>
             </div>
-        </div>
-    </div>
 
+            <!-- Users Section -->
+            <div id="usersSection" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>User Management</h2>
+                </div>
+                <div id="usersContainer"></div>
+            </div>
+
+            <!-- Products Section -->
+            <div id="productsSection" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>إدارة المنتجات</h2>
+                </div>
+                <div id="productsManagementContainer"></div>
+            </div>
+
+            <!-- Daily Report Section -->
+            <div id="daily-reportSection" class="dashboard-section">
+                <div class="dashboard-header" style="flex-wrap:wrap; gap:1rem;">
+                    <h2><i class="fas fa-file-excel" style="color:#10b981;"></i> التقارير</h2>
+                    <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
+                        <select id="reportPeriod" class="form-select" style="width:auto; min-width:150px;">
+                            <option value="today">اليوم</option>
+                            <option value="yesterday">أمس</option>
+                            <option value="lastWeek">الأسبوع الماضي</option>
+                            <option value="custom">تاريخ مخصص</option>
+                        </select>
+                        <input type="date" id="reportDate" class="form-input" style="width:auto; min-width:180px; display:none;">
+                        <input type="date" id="reportDateFrom" class="form-input" style="width:auto; min-width:180px; display:none;" placeholder="من">
+                        <input type="date" id="reportDateTo" class="form-input" style="width:auto; min-width:180px; display:none;" placeholder="إلى">
+                        <button onclick="adminManager.generateReport()" class="btn btn-primary" style="display:flex;align-items:center;gap:0.5rem;">
+                            <i class="fas fa-sync"></i> إنشاء التقرير
+                        </button>
+                        <button onclick="adminManager.exportDailyReport()" class="btn btn-success" style="display:flex;align-items:center;gap:0.5rem;">
+                            <i class="fas fa-download"></i> تحميل Excel
+                        </button>
+                    </div>
+                </div>
+                <div id="dailyReportContainer"></div>
+            </div>
+        </main>
+
+</div>
+
+    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script src="js/storage-api.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/darkmode.js"></script>
     <script>
         // Check if user is logged in
         function checkLogin() {
             const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
-            if (isLoggedIn === 'true') {
-                document.getElementById('loginForm').classList.add('hidden');
-                document.getElementById('adminDashboard').classList.remove('hidden');
-                loadRequests();
-            } else {
-                document.getElementById('loginForm').classList.remove('hidden');
-                document.getElementById('adminDashboard').classList.add('hidden');
+            if (isLoggedIn !== 'true') {
+                // Show login form
+                const loginHtml = `
+                    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+                        <div style="background: white; padding: 40px; border-radius: 10px; width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                            <h2 style="text-align: center; color: #333; margin-bottom: 20px;">تسجيل دخول الأدمن</h2>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; color: #333;">اسم المستخدم:</label>
+                                <input type="text" id="username" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" placeholder="admin">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; color: #333;">كلمة المرور:</label>
+                                <input type="password" id="password" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" placeholder="admin123">
+                            </div>
+                            <button onclick="login()" style="width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">دخول</button>
+                            <div id="loginError" style="color: #dc3545; text-align: center; margin-top: 10px; display: none;"></div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', loginHtml);
+                document.getElementById('adminDashboard').style.display = 'none';
             }
         }
 
-        // Login function
         function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
@@ -429,426 +261,127 @@
 
             if (username === 'admin' && password === 'admin123') {
                 sessionStorage.setItem('adminLoggedIn', 'true');
-                loginError.classList.add('hidden');
-                checkLogin();
+                location.reload();
             } else {
                 loginError.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
-                loginError.classList.remove('hidden');
+                loginError.style.display = 'block';
             }
         }
 
-        // Logout function
-        function logout() {
-            sessionStorage.removeItem('adminLoggedIn');
-            checkLogin();
-        }
+        // Auto-login for admin demo - Force set user before init
+        let adminInitialized = false;
 
-        // Allow Enter key to submit login
-        document.getElementById('password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                login();
-            }
-        });
-
-        // Show section
-        function showSection(section) {
-            document.getElementById('requestsSection').classList.add('hidden');
-            document.getElementById('reportsSection').classList.add('hidden');
-            document.getElementById('productsSection').classList.add('hidden');
-
-            if (section === 'requests') {
-                document.getElementById('requestsSection').classList.remove('hidden');
-                loadRequests();
-            } else if (section === 'reports') {
-                document.getElementById('reportsSection').classList.remove('hidden');
-            } else if (section === 'products') {
-                document.getElementById('productsSection').classList.remove('hidden');
-                loadProducts();
-            }
-        }
-
-        // Report period selector
-        document.getElementById('reportPeriod').addEventListener('change', function() {
-            const period = this.value;
-            document.getElementById('reportDateFrom').style.display = 'none';
-            document.getElementById('reportDateTo').style.display = 'none';
-
-            if (period === 'custom') {
-                document.getElementById('reportDateFrom').style.display = 'block';
-                document.getElementById('reportDateTo').style.display = 'block';
-            }
-        });
-
-        // Generate report
-        async function generateReport() {
-            const period = document.getElementById('reportPeriod').value;
-            let dateFrom, dateTo;
-
-            if (period === 'today') {
-                dateFrom = new Date().toISOString().slice(0, 10);
-                dateTo = dateFrom;
-            } else if (period === 'yesterday') {
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                dateFrom = yesterday.toISOString().slice(0, 10);
-                dateTo = dateFrom;
-            } else if (period === 'lastWeek') {
-                const today = new Date();
-                const lastWeek = new Date();
-                lastWeek.setDate(today.getDate() - 7);
-                dateFrom = lastWeek.toISOString().slice(0, 10);
-                dateTo = today.toISOString().slice(0, 10);
-            } else if (period === 'lastMonth') {
-                const today = new Date();
-                const lastMonth = new Date();
-                lastMonth.setMonth(today.getMonth() - 1);
-                dateFrom = lastMonth.toISOString().slice(0, 10);
-                dateTo = today.toISOString().slice(0, 10);
-            } else if (period === 'custom') {
-                dateFrom = document.getElementById('reportDateFrom').value;
-                dateTo = document.getElementById('reportDateTo').value;
-            }
-
-            try {
-                const response = await fetch('/api/requests');
-                const requests = await response.json();
-
-                const filteredRequests = requests.filter(r => {
-                    const requestDate = r.createdAt ? r.createdAt.slice(0, 10) : '';
-                    return requestDate >= dateFrom && requestDate <= dateTo;
-                });
-
-                const container = document.getElementById('reportContainer');
-                container.innerHTML = `
-                    <h3>تقرير من ${dateFrom} إلى ${dateTo}</h3>
-                    <p>عدد الطلبات: ${filteredRequests.length}</p>
-                    <p>الطلبات المكتملة: ${filteredRequests.filter(r => r.status === 'Completed').length}</p>
-                    <p>الطلبات قيد التنفيذ: ${filteredRequests.filter(r => r.status === 'In Progress').length}</p>
-                    <p>الطلبات المعلقة: ${filteredRequests.filter(r => r.status === 'Received').length}</p>
-                `;
-
-                window.currentReportData = filteredRequests;
-            } catch (error) {
-                alert('خطأ: ' + error.message);
-            }
-        }
-
-        // Export report to Excel
-        function exportReport() {
-            if (!window.currentReportData || window.currentReportData.length === 0) {
-                alert('لا توجد بيانات للتصدير');
-                return;
-            }
-
-            const data = window.currentReportData.map(r => ({
-                'رقم الطلب': r.request_number || r.requestNumber,
-                'الاسم': r.full_name || r.fullName,
-                'الهاتف': r.phone,
-                'الماركة': r.laptop_brand || r.laptopBrand,
-                'الموديل': r.laptop_model || r.laptopModel,
-                'الحالة': r.status,
-                'الأولوية': r.priority,
-                'التاريخ': r.createdAt ? r.createdAt.slice(0, 10) : ''
-            }));
-
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'الطلبات');
-            XLSX.writeFile(wb, 'تقرير_الطلبات.xlsx');
-        }
-
-        // Load products
-        async function loadProducts() {
-            try {
-                const response = await fetch('/api/products');
-                const products = await response.json();
-                const tbody = document.getElementById('productsBody');
-                tbody.innerHTML = '';
-
-                products.forEach(product => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${product.name}</td>
-                        <td>${product.category}</td>
-                        <td>${product.price}</td>
-                        <td>${product.stock}</td>
-                        <td>
-                            <button class="action-btn btn-delete" onclick="deleteProduct(${product.id})">حذف</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (error) {
-                alert('خطأ في تحميل المنتجات: ' + error.message);
-            }
-        }
-
-        // Show add product modal
-        function showAddProductModal() {
-            document.getElementById('productModal').classList.remove('hidden');
-        }
-
-        // Hide add product modal
-        function hideProductModal() {
-            document.getElementById('productModal').classList.add('hidden');
-        }
-
-        // Add product
-        async function addProduct() {
-            const product = {
-                name: document.getElementById('productName').value,
-                category: document.getElementById('productCategory').value,
-                price: parseFloat(document.getElementById('productPrice').value),
-                stock: parseInt(document.getElementById('productStock').value)
+        // Set admin user immediately before everything
+        (function() {
+            console.log('🔧 Pre-initialization: Setting admin user in session...');
+            const adminUser = {
+                id: 1,
+                username: 'admin',
+                password: 'admin123',
+                role: 'admin',
+                name: 'System Administrator',
+                email: 'admin@yas.com',
+                createdAt: new Date().toISOString()
             };
-
-            try {
-                const response = await fetch('/api/products', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(product)
-                });
-
-                if (response.ok) {
-                    alert('تم إضافة المنتج بنجاح');
-                    hideProductModal();
-                    loadProducts();
-                } else {
-                    alert('فشل إضافة المنتج');
-                }
-            } catch (error) {
-                alert('خطأ: ' + error.message);
-            }
-        }
-
-        // Delete product
-        async function deleteProduct(id) {
-            if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
-                try {
-                    const response = await fetch(`/api/products/${id}`, {
-                        method: 'DELETE'
-                    });
-
-                    if (response.ok) {
-                        alert('تم حذف المنتج بنجاح');
-                        loadProducts();
-                    } else {
-                        alert('فشل حذف المنتج');
-                    }
-                } catch (error) {
-                    alert('خطأ: ' + error.message);
-                }
-            }
-        }
-
-        async function loadRequests() {
-            try {
-                const response = await fetch('/api/requests');
-                const requests = await response.json();
-                const tbody = document.getElementById('requestsBody');
-                tbody.innerHTML = '';
-
-                // Update stats
-                document.getElementById('totalRequests').textContent = requests.length;
-                document.getElementById('pendingRequests').textContent = requests.filter(r => r.status === 'Received').length;
-                document.getElementById('completedRequests').textContent = requests.filter(r => r.status === 'Completed').length;
-
-                const today = new Date().toISOString().slice(0, 10);
-                document.getElementById('todayRequests').textContent = requests.filter(r => r.createdAt && r.createdAt.startsWith(today)).length;
-
-                requests.forEach(request => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td><strong>${request.request_number || request.requestNumber}</strong></td>
-                        <td>${request.full_name || request.fullName}</td>
-                        <td>${request.phone}</td>
-                        <td>${request.laptop_brand || request.laptopBrand}</td>
-                        <td>${request.laptop_model || request.laptopModel}</td>
-                        <td><span class="status status-${request.status.replace(' ', '')}">${translateStatus(request.status)}</span></td>
-                        <td><span class="priority priority-${request.priority}">${translatePriority(request.priority)}</span></td>
-                        <td>${formatDate(request.createdAt)}</td>
-                        <td>
-                            <button class="action-btn btn-view" onclick="viewRequest(${request.id})">
-                                <i class="fas fa-eye"></i> عرض
-                            </button>
-                            <button class="action-btn btn-progress" onclick="updateStatus(${request.id}, 'In Progress')">
-                                <i class="fas fa-clock"></i> قيد التنفيذ
-                            </button>
-                            <button class="action-btn btn-complete" onclick="updateStatus(${request.id}, 'Completed')">
-                                <i class="fas fa-check"></i> مكتمل
-                            </button>
-                            <button class="action-btn" onclick="showReplyModal(${request.id})" style="background: #6c757d; color: white;">
-                                <i class="fas fa-reply"></i> رد
-                            </button>
-                            <button class="action-btn btn-delete" onclick="deleteRequest(${request.id})">
-                                <i class="fas fa-trash"></i> حذف
-                            </button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (error) {
-                alert('خطأ في تحميل الطلبات: ' + error.message);
-            }
-        }
-
-        function translateStatus(status) {
-            const translations = {
-                'Received': 'مستلم',
-                'In Progress': 'قيد التنفيذ',
-                'Completed': 'مكتمل',
-                'Delivered': 'تم التسليم'
-            };
-            return translations[status] || status;
-        }
-
-        function translatePriority(priority) {
-            const translations = {
-                'Low': 'منخفضة',
-                'Medium': 'متوسطة',
-                'High': 'عالية',
-                'Urgent': 'عاجلة'
-            };
-            return translations[priority] || priority;
-        }
-
-        function formatDate(dateString) {
-            if (!dateString) return '-';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('ar-EG');
-        }
-
-        async function updateStatus(id, status) {
-            try {
-                const response = await fetch(`/api/requests/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ status: status })
-                });
-                if (response.ok) {
-                    alert('تم تحديث الحالة بنجاح');
-                    loadRequests();
-                } else {
-                    alert('فشل تحديث الحالة');
-                }
-            } catch (error) {
-                alert('خطأ: ' + error.message);
-            }
-        }
-
-        async function deleteRequest(id) {
-            if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
-                try {
-                    const response = await fetch(`/api/requests/${id}`, {
-                        method: 'DELETE'
-                    });
-                    if (response.ok) {
-                        alert('تم حذف الطلب بنجاح');
-                        loadRequests();
-                    } else {
-                        alert('فشل حذف الطلب');
-                    }
-                } catch (error) {
-                    alert('خطأ: ' + error.message);
-                }
-            }
-        }
-
-        async function viewRequest(id) {
-            try {
-                const response = await fetch(`/api/requests/${id}`);
-                const request = await response.json();
-
-                const details = `
-                    رقم الطلب: ${request.request_number || request.requestNumber}
-                    الاسم: ${request.full_name || request.fullName}
-                    الهاتف: ${request.phone}
-                    الماركة: ${request.laptop_brand || request.laptopBrand}
-                    الموديل: ${request.laptop_model || request.laptopModel}
-                    نوع الجهاز: ${request.device_type || request.deviceType}
-                    وصف المشكلة: ${request.problem_description || request.problemDescription}
-                    الحالة: ${translateStatus(request.status)}
-                    الأولوية: ${translatePriority(request.priority)}
-                    التاريخ: ${formatDate(request.createdAt)}
-                    الرد: ${request.adminReply || 'لا يوجد رد'}
-                `;
-
-                alert(details);
-            } catch (error) {
-                alert('خطأ: ' + error.message);
-            }
-        }
-
-        // Show reply modal
-        async function showReplyModal(id) {
-            try {
-                const response = await fetch(`/api/requests/${id}`);
-                const request = await response.json();
-
-                document.getElementById('replyRequestId').value = request.request_number || request.requestNumber;
-                document.getElementById('replyRequestId').dataset.id = id;
-                document.getElementById('replyMessage').value = request.adminReply || '';
-                document.getElementById('replyModal').classList.remove('hidden');
-            } catch (error) {
-                alert('خطأ: ' + error.message);
-            }
-        }
-
-        // Hide reply modal
-        function hideReplyModal() {
-            document.getElementById('replyModal').classList.add('hidden');
-        }
-
-        // Send reply
-        async function sendReply() {
-            const id = document.getElementById('replyRequestId').dataset.id;
-            const reply = document.getElementById('replyMessage').value;
-
-            console.log('Sending reply for ID:', id);
-            console.log('Reply message:', reply);
-
-            if (!id) {
-                alert('خطأ: لم يتم العثور على رقم الطلب');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/requests/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ adminReply: reply })
-                });
-
-                console.log('Response status:', response.status);
-                const responseData = await response.json();
-                console.log('Response data:', responseData);
-
-                if (response.ok) {
-                    alert('تم إرسال الرد بنجاح');
-                    hideReplyModal();
-                    loadRequests();
-                } else {
-                    alert('فشل إرسال الرد: ' + JSON.stringify(responseData));
-                }
-            } catch (error) {
-                alert('خطأ: ' + error.message);
-                console.error('Error:', error);
-            }
-        }
-
+            sessionStorage.setItem('YAS_currentUser', JSON.stringify(adminUser));
+            console.log('✅ Admin user set in sessionStorage:', adminUser.name);
+        })();
+        
         // Check login status on page load
         checkLogin();
 
-        // Ensure modals are hidden on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('productModal').classList.add('hidden');
-            document.getElementById('replyModal').classList.add('hidden');
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (adminInitialized) return;
+            adminInitialized = true;
+            
+            try {
+                console.log('📄 Admin page DOMContentLoaded - starting initialization...');
+                
+                // Give storage time to initialize
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                // Get user from sessionStorage (should already be set)
+                const userStr = sessionStorage.getItem('YAS_currentUser');
+                let user = userStr ? JSON.parse(userStr) : null;
+                
+                console.log('👤 User from sessionStorage:', user ? `${user.name} (${user.role})` : 'Not found');
+                
+                // If user not found, create default admin
+                if (!user) {
+                    console.log('⚙️  Creating default admin user...');
+                    user = {
+                        id: 1,
+                        username: 'admin',
+                        password: 'admin123',
+                        role: 'admin',
+                        name: 'System Administrator',
+                        email: 'admin@yas.com',
+                        createdAt: new Date().toISOString()
+                    };
+                    sessionStorage.setItem('YAS_currentUser', JSON.stringify(user));
+                    console.log('✅ Admin user created and set');
+                }
+                
+                // Update welcome text
+                const welcomeEl = document.getElementById('welcomeUser');
+                if (welcomeEl) {
+                    welcomeEl.textContent = `مرحباً، ${user.name}`;
+                    console.log('💬 Welcome text updated');
+                }
+                
+                // Wait for adminManager to be ready
+                console.log('⏳ Waiting for AdminManager to load...');
+                let attempts = 0;
+                while (typeof adminManager === 'undefined' && attempts < 100) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    attempts++;
+                }
+                
+                if (typeof adminManager !== 'undefined') {
+                    console.log('🚀 AdminManager found, initializing dashboard...');
+                    await adminManager.init();
+                    console.log('✅ Admin dashboard initialized successfully!');
+                } else {
+                    console.error('❌ AdminManager failed to load after 5 seconds');
+                }
+                
+                // Setup report period selector
+                const reportPeriod = document.getElementById('reportPeriod');
+                const reportDate = document.getElementById('reportDate');
+                const reportDateFrom = document.getElementById('reportDateFrom');
+                const reportDateTo = document.getElementById('reportDateTo');
+                
+                if (reportPeriod) {
+                    reportPeriod.addEventListener('change', () => {
+                        const period = reportPeriod.value;
+                        reportDate.style.display = 'none';
+                        reportDateFrom.style.display = 'none';
+                        reportDateTo.style.display = 'none';
+                        
+                        if (period === 'today') {
+                            reportDate.value = new Date().toISOString().slice(0, 10);
+                        } else if (period === 'yesterday') {
+                            const yesterday = new Date();
+                            yesterday.setDate(yesterday.getDate() - 1);
+                            reportDate.value = yesterday.toISOString().slice(0, 10);
+                        } else if (period === 'lastWeek') {
+                            const today = new Date();
+                            const lastWeek = new Date();
+                            lastWeek.setDate(today.getDate() - 7);
+                            reportDateFrom.value = lastWeek.toISOString().slice(0, 10);
+                            reportDateTo.value = today.toISOString().slice(0, 10);
+                            reportDateFrom.style.display = 'block';
+                            reportDateTo.style.display = 'block';
+                        } else if (period === 'custom') {
+                            reportDate.style.display = 'block';
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('❌ Error during admin initialization:', error);
+                console.error('📋 Error details:', error.message);
+                console.error('Stack:', error.stack);
+            }
         });
     </script>
 </body>
