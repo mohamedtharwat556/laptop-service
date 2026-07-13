@@ -276,25 +276,126 @@
             </button>
         </div>
 
-        <table id="requestsTable">
-            <thead>
-                <tr>
-                    <th>رقم الطلب</th>
-                    <th>الاسم</th>
-                    <th>الهاتف</th>
-                    <th>الماركة</th>
-                    <th>الموديل</th>
-                    <th>الحالة</th>
-                    <th>الأولوية</th>
-                    <th>التاريخ</th>
-                    <th>الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody id="requestsBody"></tbody>
-        </table>
+        <!-- Navigation Tabs -->
+        <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+            <button onclick="showSection('requests')" class="action-btn" style="background: #007bff; color: white;">الطلبات</button>
+            <button onclick="showSection('reports')" class="action-btn" style="background: #28a745; color: white;">التقارير</button>
+            <button onclick="showSection('products')" class="action-btn" style="background: #17a2b8; color: white;">المنتجات</button>
+        </div>
+
+        <!-- Requests Section -->
+        <div id="requestsSection">
+            <table id="requestsTable">
+                <thead>
+                    <tr>
+                        <th>رقم الطلب</th>
+                        <th>الاسم</th>
+                        <th>الهاتف</th>
+                        <th>الماركة</th>
+                        <th>الموديل</th>
+                        <th>الحالة</th>
+                        <th>الأولوية</th>
+                        <th>التاريخ</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="requestsBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Reports Section -->
+        <div id="reportsSection" class="hidden">
+            <h2 style="margin-bottom: 20px;">التقارير</h2>
+            <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+                <label>الفترة:</label>
+                <select id="reportPeriod" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="today">اليوم</option>
+                    <option value="yesterday">أمس</option>
+                    <option value="lastWeek">آخر أسبوع</option>
+                    <option value="lastMonth">آخر شهر</option>
+                    <option value="custom">تاريخ مخصص</option>
+                </select>
+                <input type="date" id="reportDateFrom" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; display: none;">
+                <input type="date" id="reportDateTo" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; display: none;">
+                <button onclick="generateReport()" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">إنشاء التقرير</button>
+                <button onclick="exportReport()" style="background: #28a745; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">تحميل Excel</button>
+            </div>
+            <div id="reportContainer" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <p style="color: #666;">اختر الفترة واضغط "إنشاء التقرير" لعرض البيانات</p>
+            </div>
+        </div>
+
+        <!-- Products Section -->
+        <div id="productsSection" class="hidden">
+            <h2 style="margin-bottom: 20px;">المنتجات</h2>
+            <div style="margin-bottom: 20px;">
+                <button onclick="showAddProductModal()" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+                    <i class="fas fa-plus"></i> إضافة منتج
+                </button>
+            </div>
+            <table id="productsTable">
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>الفئة</th>
+                        <th>السعر</th>
+                        <th>المخزون</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="productsBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Add Product Modal -->
+        <div id="productModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 30px; border-radius: 10px; width: 400px;">
+                <h3 style="margin-bottom: 20px;">إضافة منتج جديد</h3>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">الاسم:</label>
+                    <input type="text" id="productName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">الفئة:</label>
+                    <input type="text" id="productCategory" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">السعر:</label>
+                    <input type="number" id="productPrice" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">المخزون:</label>
+                    <input type="number" id="productStock" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="addProduct()" style="flex: 1; background: #007bff; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">إضافة</button>
+                    <button onclick="hideProductModal()" style="flex: 1; background: #dc3545; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">إلغاء</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reply Modal -->
+        <div id="replyModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 30px; border-radius: 10px; width: 500px;">
+                <h3 style="margin-bottom: 20px;">رد على العميل</h3>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">رقم الطلب:</label>
+                    <input type="text" id="replyRequestId" readonly style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background: #f5f5f5;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">الرد:</label>
+                    <textarea id="replyMessage" rows="5" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="sendReply()" style="flex: 1; background: #007bff; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">إرسال</button>
+                    <button onclick="hideReplyModal()" style="flex: 1; background: #dc3545; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">إلغاء</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <script>
         // Check if user is logged in
         function checkLogin() {
@@ -338,6 +439,199 @@
             }
         });
 
+        // Show section
+        function showSection(section) {
+            document.getElementById('requestsSection').classList.add('hidden');
+            document.getElementById('reportsSection').classList.add('hidden');
+            document.getElementById('productsSection').classList.add('hidden');
+
+            if (section === 'requests') {
+                document.getElementById('requestsSection').classList.remove('hidden');
+                loadRequests();
+            } else if (section === 'reports') {
+                document.getElementById('reportsSection').classList.remove('hidden');
+            } else if (section === 'products') {
+                document.getElementById('productsSection').classList.remove('hidden');
+                loadProducts();
+            }
+        }
+
+        // Report period selector
+        document.getElementById('reportPeriod').addEventListener('change', function() {
+            const period = this.value;
+            document.getElementById('reportDateFrom').style.display = 'none';
+            document.getElementById('reportDateTo').style.display = 'none';
+
+            if (period === 'custom') {
+                document.getElementById('reportDateFrom').style.display = 'block';
+                document.getElementById('reportDateTo').style.display = 'block';
+            }
+        });
+
+        // Generate report
+        async function generateReport() {
+            const period = document.getElementById('reportPeriod').value;
+            let dateFrom, dateTo;
+
+            if (period === 'today') {
+                dateFrom = new Date().toISOString().slice(0, 10);
+                dateTo = dateFrom;
+            } else if (period === 'yesterday') {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                dateFrom = yesterday.toISOString().slice(0, 10);
+                dateTo = dateFrom;
+            } else if (period === 'lastWeek') {
+                const today = new Date();
+                const lastWeek = new Date();
+                lastWeek.setDate(today.getDate() - 7);
+                dateFrom = lastWeek.toISOString().slice(0, 10);
+                dateTo = today.toISOString().slice(0, 10);
+            } else if (period === 'lastMonth') {
+                const today = new Date();
+                const lastMonth = new Date();
+                lastMonth.setMonth(today.getMonth() - 1);
+                dateFrom = lastMonth.toISOString().slice(0, 10);
+                dateTo = today.toISOString().slice(0, 10);
+            } else if (period === 'custom') {
+                dateFrom = document.getElementById('reportDateFrom').value;
+                dateTo = document.getElementById('reportDateTo').value;
+            }
+
+            try {
+                const response = await fetch('/api/requests');
+                const requests = await response.json();
+
+                const filteredRequests = requests.filter(r => {
+                    const requestDate = r.createdAt ? r.createdAt.slice(0, 10) : '';
+                    return requestDate >= dateFrom && requestDate <= dateTo;
+                });
+
+                const container = document.getElementById('reportContainer');
+                container.innerHTML = `
+                    <h3>تقرير من ${dateFrom} إلى ${dateTo}</h3>
+                    <p>عدد الطلبات: ${filteredRequests.length}</p>
+                    <p>الطلبات المكتملة: ${filteredRequests.filter(r => r.status === 'Completed').length}</p>
+                    <p>الطلبات قيد التنفيذ: ${filteredRequests.filter(r => r.status === 'In Progress').length}</p>
+                    <p>الطلبات المعلقة: ${filteredRequests.filter(r => r.status === 'Received').length}</p>
+                `;
+
+                window.currentReportData = filteredRequests;
+            } catch (error) {
+                alert('خطأ: ' + error.message);
+            }
+        }
+
+        // Export report to Excel
+        function exportReport() {
+            if (!window.currentReportData || window.currentReportData.length === 0) {
+                alert('لا توجد بيانات للتصدير');
+                return;
+            }
+
+            const data = window.currentReportData.map(r => ({
+                'رقم الطلب': r.request_number || r.requestNumber,
+                'الاسم': r.full_name || r.fullName,
+                'الهاتف': r.phone,
+                'الماركة': r.laptop_brand || r.laptopBrand,
+                'الموديل': r.laptop_model || r.laptopModel,
+                'الحالة': r.status,
+                'الأولوية': r.priority,
+                'التاريخ': r.createdAt ? r.createdAt.slice(0, 10) : ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'الطلبات');
+            XLSX.writeFile(wb, 'تقرير_الطلبات.xlsx');
+        }
+
+        // Load products
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                const products = await response.json();
+                const tbody = document.getElementById('productsBody');
+                tbody.innerHTML = '';
+
+                products.forEach(product => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${product.name}</td>
+                        <td>${product.category}</td>
+                        <td>${product.price}</td>
+                        <td>${product.stock}</td>
+                        <td>
+                            <button class="action-btn btn-delete" onclick="deleteProduct(${product.id})">حذف</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                alert('خطأ في تحميل المنتجات: ' + error.message);
+            }
+        }
+
+        // Show add product modal
+        function showAddProductModal() {
+            document.getElementById('productModal').classList.remove('hidden');
+        }
+
+        // Hide add product modal
+        function hideProductModal() {
+            document.getElementById('productModal').classList.add('hidden');
+        }
+
+        // Add product
+        async function addProduct() {
+            const product = {
+                name: document.getElementById('productName').value,
+                category: document.getElementById('productCategory').value,
+                price: parseFloat(document.getElementById('productPrice').value),
+                stock: parseInt(document.getElementById('productStock').value)
+            };
+
+            try {
+                const response = await fetch('/api/products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(product)
+                });
+
+                if (response.ok) {
+                    alert('تم إضافة المنتج بنجاح');
+                    hideProductModal();
+                    loadProducts();
+                } else {
+                    alert('فشل إضافة المنتج');
+                }
+            } catch (error) {
+                alert('خطأ: ' + error.message);
+            }
+        }
+
+        // Delete product
+        async function deleteProduct(id) {
+            if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+                try {
+                    const response = await fetch(`/api/products/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        alert('تم حذف المنتج بنجاح');
+                        loadProducts();
+                    } else {
+                        alert('فشل حذف المنتج');
+                    }
+                } catch (error) {
+                    alert('خطأ: ' + error.message);
+                }
+            }
+        }
+
         async function loadRequests() {
             try {
                 const response = await fetch('/api/requests');
@@ -373,6 +667,9 @@
                             </button>
                             <button class="action-btn btn-complete" onclick="updateStatus(${request.id}, 'Completed')">
                                 <i class="fas fa-check"></i> مكتمل
+                            </button>
+                            <button class="action-btn" onclick="showReplyModal(${request.id})" style="background: #6c757d; color: white;">
+                                <i class="fas fa-reply"></i> رد
                             </button>
                             <button class="action-btn btn-delete" onclick="deleteRequest(${request.id})">
                                 <i class="fas fa-trash"></i> حذف
@@ -466,9 +763,56 @@
                     الحالة: ${translateStatus(request.status)}
                     الأولوية: ${translatePriority(request.priority)}
                     التاريخ: ${formatDate(request.createdAt)}
+                    الرد: ${request.adminReply || 'لا يوجد رد'}
                 `;
 
                 alert(details);
+            } catch (error) {
+                alert('خطأ: ' + error.message);
+            }
+        }
+
+        // Show reply modal
+        async function showReplyModal(id) {
+            try {
+                const response = await fetch(`/api/requests/${id}`);
+                const request = await response.json();
+
+                document.getElementById('replyRequestId').value = request.request_number || request.requestNumber;
+                document.getElementById('replyRequestId').dataset.id = id;
+                document.getElementById('replyMessage').value = request.adminReply || '';
+                document.getElementById('replyModal').classList.remove('hidden');
+            } catch (error) {
+                alert('خطأ: ' + error.message);
+            }
+        }
+
+        // Hide reply modal
+        function hideReplyModal() {
+            document.getElementById('replyModal').classList.add('hidden');
+        }
+
+        // Send reply
+        async function sendReply() {
+            const id = document.getElementById('replyRequestId').dataset.id;
+            const reply = document.getElementById('replyMessage').value;
+
+            try {
+                const response = await fetch(`/api/requests/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ adminReply: reply })
+                });
+
+                if (response.ok) {
+                    alert('تم إرسال الرد بنجاح');
+                    hideReplyModal();
+                    loadRequests();
+                } else {
+                    alert('فشل إرسال الرد');
+                }
             } catch (error) {
                 alert('خطأ: ' + error.message);
             }
