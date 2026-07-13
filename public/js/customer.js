@@ -176,6 +176,8 @@ class CustomerManager {
                 priority: form.querySelector('[name="priority"]') ? form.querySelector('[name="priority"]').value : 'Medium'
             };
 
+            console.log('Sending data:', formData);
+
             try {
                 const response = await fetch('/api/requests', {
                     method: 'POST',
@@ -185,7 +187,9 @@ class CustomerManager {
                     body: JSON.stringify(formData)
                 });
 
+                console.log('Response status:', response.status);
                 const responseData = await response.json();
+                console.log('Response data:', responseData);
 
                 if (response.ok) {
                     loading.hide();
