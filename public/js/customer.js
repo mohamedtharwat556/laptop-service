@@ -16,6 +16,7 @@ class CustomerManager {
             requestNumber: formData.requestNumber,
             fullName: formData.fullName,
             phone: formData.phone,
+            email: formData.email || '',
             laptopBrand: formData.laptopBrand,
             laptopModel: formData.laptopModel,
             deviceType: formData.deviceType,

@@ -207,11 +207,12 @@ app.get('/api/requests/:id', async (req, res) => {
 
 app.post('/api/requests', async (req, res) => {
     try {
+        console.log('📝 POST /api/requests - Request body:', req.body);
         const newRequest = {
             request_number: req.body.requestNumber || `REQ-${Date.now()}`,
             full_name: req.body.fullName,
             phone: req.body.phone,
-            email: req.body.email,
+            email: req.body.email || '',
             laptop_brand: req.body.laptopBrand,
             laptop_model: req.body.laptopModel,
             problem_description: req.body.problemDescription,
@@ -226,10 +227,16 @@ app.post('/api/requests', async (req, res) => {
         if (req.body.adminReply !== undefined) newRequest.admin_reply = req.body.adminReply;
         if (req.body.estimatedCompletionDate !== undefined) newRequest.estimated_completion_date = req.body.estimatedCompletionDate;
 
+        console.log('📝 Inserting request to Supabase:', newRequest);
         const { data, error } = await supabase.from('requests').insert([newRequest]).select();
-        if (error) throw error;
+        if (error) {
+            console.error('❌ Supabase error:', error);
+            throw error;
+        }
+        console.log('✅ Request inserted successfully:', data[0]);
         res.status(201).json(data[0]);
     } catch (error) {
+        console.error('❌ POST /api/requests error:', error);
         res.status(500).json({ error: error.message });
     }
 });
