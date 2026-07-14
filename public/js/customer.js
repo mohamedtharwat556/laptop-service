@@ -31,7 +31,11 @@ class CustomerManager {
 
         console.log('📤 Request data to send:', requestData);
 
-        const response = await fetch(`${this.apiBase}/requests`, {
+        // Direct Railway API call - bypass storage-api.js
+        const railwayUrl = 'https://intelligent-wholeness-production-e0e1.up.railway.app/api/requests';
+        console.log('📡 Calling Railway API directly:', railwayUrl);
+
+        const response = await fetch(railwayUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
