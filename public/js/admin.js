@@ -252,13 +252,13 @@ class AdminManager {
     async loadData() {
         try {
             console.log('📡 Fetching data from API...');
-            // Use Railway backend URL when deployed on Vercel
-            const apiBase = window.location.hostname === 'localhost' ? '/api' : 'https://intelligent-wholeness-production-e0e1.up.railway.app/api';
+            // Direct Railway API call - bypass storage-api.js
+            const railwayUrl = 'https://intelligent-wholeness-production-e0e1.up.railway.app/api';
             const [usersRes, requestsRes, ordersRes, productsRes] = await Promise.all([
-                fetch(`${apiBase}/users`).then(r => r.json()).catch(() => []),
-                fetch(`${apiBase}/requests`).then(r => r.json()).catch(() => []),
-                fetch(`${apiBase}/orders`).then(r => r.json()).catch(() => []),
-                fetch(`${apiBase}/products`).then(r => r.json()).catch(() => [])
+                fetch(`${railwayUrl}/users`).then(r => r.json()).catch(() => []),
+                fetch(`${railwayUrl}/requests`).then(r => r.json()).catch(() => []),
+                fetch(`${railwayUrl}/orders`).then(r => r.json()).catch(() => []),
+                fetch(`${railwayUrl}/products`).then(r => r.json()).catch(() => [])
             ]);
             
             // Convert from snake_case to camelCase
