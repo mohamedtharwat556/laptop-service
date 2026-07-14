@@ -14,6 +14,9 @@ class CustomerManager {
      * Submit a maintenance request
      */
     async submitRequest(formData) {
+        console.log('📝 Submitting request with data:', formData);
+        console.log('🌐 API Base:', this.apiBase);
+
         const requestData = {
             requestNumber: formData.requestNumber,
             fullName: formData.fullName,
@@ -26,6 +29,8 @@ class CustomerManager {
             priority: formData.priority || 'Medium'
         };
 
+        console.log('📤 Request data to send:', requestData);
+
         const response = await fetch(`${this.apiBase}/requests`, {
             method: 'POST',
             headers: {
@@ -34,7 +39,11 @@ class CustomerManager {
             body: JSON.stringify(requestData)
         });
 
+        console.log('📡 Response status:', response.status);
+        console.log('📡 Response ok:', response.ok);
+
         const responseData = await response.json();
+        console.log('📥 Response data:', responseData);
 
         if (!response.ok) {
             throw new Error(responseData.error || 'Failed to submit request');
