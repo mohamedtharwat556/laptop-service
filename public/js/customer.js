@@ -6,6 +6,8 @@
 class CustomerManager {
     constructor() {
         this.currentRequest = null;
+        // Use Railway backend URL when deployed on Vercel
+        this.apiBase = window.location.hostname === 'localhost' ? '/api' : 'https://intelligent-wholeness-production-e0e1.up.railway.app/api';
     }
 
     /**
@@ -24,7 +26,7 @@ class CustomerManager {
             priority: formData.priority || 'Medium'
         };
 
-        const response = await fetch('/api/requests', {
+        const response = await fetch(`${this.apiBase}/requests`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

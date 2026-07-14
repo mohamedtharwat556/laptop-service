@@ -5,7 +5,8 @@
 
 class APIStorageManager {
     constructor() {
-        this.apiBase = '/api';
+        // Use Railway backend URL when deployed on Vercel
+        this.apiBase = window.location.hostname === 'localhost' ? '/api' : 'https://intelligent-wholeness-production-e0e1.up.railway.app/api';
         this.cache = {
             users: [],
             requests: [],
