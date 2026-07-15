@@ -1171,6 +1171,8 @@ class AdminManager {
                             <th>Customer</th>
                             <th>Phone</th>
                             <th>Device</th>
+                            <th>Type</th>
+                            <th>Received</th>
                             <th>Status</th>
                             <th>Priority</th>
                             <th>Date</th>
@@ -1183,7 +1185,9 @@ class AdminManager {
                                 <td><strong>${request.requestNumber}</strong></td>
                                 <td>${request.fullName}</td>
                                 <td>${request.phone}</td>
-                                <td>${request.laptopBrand} ${request.laptopModel}</td>
+                                <td>${request.laptopBrand} ${request.laptopModel || ''}</td>
+                                <td>${request.deviceType || '—'}</td>
+                                <td>${request.receivedDate || '—'}</td>
                                 <td><span class="status-badge ${this.getStatusClass(request.status)}">${this.translateStatus(request.status)}</span></td>
                                 <td>${request.priority}</td>
                                 <td>${Utils.formatDate(request.createdAt)}</td>
@@ -1349,7 +1353,7 @@ class AdminManager {
     }
 
     viewRequest(requestId) {
-        const request = storage.getRequestById(requestId);
+        const request = this.requests.find(r => r.id === requestId);
         if (!request) return;
 
         const content = `
