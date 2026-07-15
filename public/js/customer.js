@@ -41,7 +41,7 @@ class CustomerManager {
             phone: formData.phone,
             email: formData.email || '',
             laptopBrand: formData.laptopBrand,
-            deviceType: formData.deviceType,
+            laptopModel: formData.laptopModel,
             receivedDate: formData.receivedDate,
             problemDescription: formData.problemDescription,
             priority: formData.priority || 'Medium',
@@ -236,7 +236,7 @@ class CustomerManager {
                 fullName: form.querySelector('[name="fullName"]').value,
                 phone: form.querySelector('[name="phone"]').value,
                 laptopBrand: form.querySelector('[name="laptopBrand"]').value,
-                deviceType: form.querySelector('[name="deviceType"]').value,
+                laptopModel: form.querySelector('[name="laptopModel"]').value,
                 receivedDate: form.querySelector('[name="receivedDate"]').value,
                 problemDescription: form.querySelector('[name="problemDescription"]').value,
                 priority: form.querySelector('[name="priority"]') ? form.querySelector('[name="priority"]').value : 'Medium',
@@ -391,7 +391,7 @@ class CustomerManager {
                     </div>
                     <div class="tracking-info-item">
                         <p class="tracking-info-label">الجهاز</p>
-                        <p class="tracking-info-value">${request.laptopBrand}</p>
+                        <p class="tracking-info-value">${request.laptopBrand} ${request.laptopModel || ''}</p>
                     </div>
                     ${request.estimatedCompletionDate ? `
                     <div class="tracking-info-item">
