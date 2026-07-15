@@ -1651,11 +1651,14 @@ class AdminManager {
         const allRequests = this.requests;
 
         const period = reportPeriod ? reportPeriod.value : 'today';
+        console.log('📊 Report period:', period);
+        console.log('📊 Total requests:', allRequests.length);
         let fileName = 'تقرير';
 
         if (period === 'all') {
             filteredRequests = allRequests;
             fileName = 'تقرير-كل-الطلبات';
+            console.log('📊 Showing all requests:', filteredRequests.length);
         } else if (period === 'today') {
             const today = new Date().toISOString().slice(0, 10);
             filteredRequests = allRequests.filter(r => {
