@@ -1410,23 +1410,46 @@ class AdminManager {
         const form = document.getElementById('editRequestForm');
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            this.updateRequest(requestId, {
+            const updateData = {
                 adminReply: form.adminReply.value,
                 cost: parseFloat(form.cost.value) || 0,
                 estimatedCompletionDate: form.estimatedCompletionDate.value,
                 status: form.status.value
-            });
+            };
+
+            // Auto-set estimated completion date if admin replies and no date is set
+            if (updateData.adminReply && !updateData.estimatedCompletionDate) {
+                const today = new Date();
+                today.setDate(today.getDate() + 3); // Default to 3 days from now
+                updateData.estimatedCompletionDate = today.toISOString().slice(0, 10);
+                form.estimatedCompletionDate.value = updateData.estimatedCompletionDate;
+            }
+
+            this.updateRequest(requestId, updateData);
         });
     }
 
-    updateRequest(requestId, data) {
-        storage.updateRequest(requestId, data);
-        this.loadData();
-        this.renderRequests();
-        this.renderStats();
-        this.renderCharts();
-        modalManager.close('view-request');
-        toast.success('تم تحديث الطلب بنجاح');
+    async updateRequest(requestId, data) {
+        // Direct Railway API call
+        const railwayUrl = 'https://intelligent-wholeness-production-e0e1.up.railway.app/api/requests';
+        const response = await fetch(`${railwayUrl}/${requestId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            this.loadData();
+            this.renderRequests();
+            this.renderStats();
+            this.renderCharts();
+            modalManager.close('view-request');
+            toast.success('تم تحديث الطلب بنجاح');
+        } else {
+            toast.error('فشل تحديث الطلب');
+        }
     }
 
     async deleteRequest(requestId) {
@@ -1621,10 +1644,10 @@ class AdminManager {
         const reportDate = document.getElementById('reportDate');
         const reportDateFrom = document.getElementById('reportDateFrom');
         const reportDateTo = document.getElementById('reportDateTo');
-        
+
         let filteredRequests = [];
-        const allRequests = storage.getRequests();
-        
+        const allRequests = this.requests;
+
         const period = reportPeriod ? reportPeriod.value : 'today';
         let fileName = 'تقرير';
         

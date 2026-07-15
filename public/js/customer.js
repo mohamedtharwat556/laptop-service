@@ -25,6 +25,7 @@ class CustomerManager {
             laptopBrand: formData.laptopBrand,
             laptopModel: formData.laptopModel,
             deviceType: formData.deviceType,
+            receivedDate: formData.receivedDate,
             problemDescription: formData.problemDescription,
             priority: formData.priority || 'Medium'
         };

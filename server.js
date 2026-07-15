@@ -218,6 +218,8 @@ app.post('/api/requests', async (req, res) => {
             email: req.body.email || '',
             laptop_brand: req.body.laptopBrand,
             laptop_model: req.body.laptopModel,
+            device_type: req.body.deviceType,
+            received_date: req.body.receivedDate,
             problem_description: req.body.problemDescription,
             status: req.body.status || 'Received',
             priority: req.body.priority || 'Medium',
