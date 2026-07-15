@@ -1195,7 +1195,7 @@ class AdminManager {
                                 <td><strong>${request.requestNumber}</strong></td>
                                 <td>${request.fullName}</td>
                                 <td>${request.phone}</td>
-                                <td>${request.laptopModel || '—'}</td>
+                                <td>${request.laptopBrand}</td>
                                 <td>${request.deviceType || '—'}</td>
                                 <td>${request.receivedDate || '—'}</td>
                                 <td><span class="status-badge ${this.getStatusClass(request.status)}">${this.translateStatus(request.status)}</span></td>
@@ -1377,7 +1377,7 @@ class AdminManager {
                 <div class="request-details">
                     <div class="request-detail-item"><span class="request-detail-label">اسم العميل</span><span class="request-detail-value">${request.fullName}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${request.phone}</span></div>
-                    <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${request.laptopModel || '—'}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${request.laptopBrand}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">نوع الجهاز</span><span class="request-detail-value">${request.deviceType || '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${request.receivedDate || '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(request.createdAt)}</span></div>

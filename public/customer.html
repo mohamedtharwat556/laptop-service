@@ -50,8 +50,43 @@
                     <input type="tel" class="form-input" name="phone" required placeholder="أدخل رقم هاتفك">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">موديل اللابتوب *</label>
-                    <input type="text" class="form-input" name="laptopModel" required placeholder="أدخل موديل اللابتوب"/>
+                    <label class="form-label">ماركة اللابتوب *</label>
+                    <select class="form-input" name="laptopBrand" required id="laptopBrandSelect">
+                        <option value="">اختر ماركة اللابتوب</option>
+                        <option value="Acer">Acer</option>
+                        <option value="Apple">Apple (MacBook)</option>
+                        <option value="Asus">Asus</option>
+                        <option value="Dell">Dell</option>
+                        <option value="HP">HP</option>
+                        <option value="Lenovo">Lenovo</option>
+                        <option value="MSI">MSI</option>
+                        <option value="Microsoft">Microsoft Surface</option>
+                        <option value="Samsung">Samsung</option>
+                        <option value="Sony">Sony Vaio</option>
+                        <option value="Toshiba">Toshiba</option>
+                        <option value="LG">LG</option>
+                        <option value="Razer">Razer</option>
+                        <option value="Gigabyte">Gigabyte</option>
+                        <option value="Huawei">Huawei</option>
+                        <option value="Xiaomi">Xiaomi</option>
+                        <option value="Fujitsu">Fujitsu</option>
+                        <option value="Panasonic">Panasonic</option>
+                        <option value="Medion">Medion</option>
+                        <option value="Packard Bell">Packard Bell</option>
+                        <option value="Gateway">Gateway</option>
+                        <option value="eMachines">eMachines</option>
+                        <option value="Compaq">Compaq</option>
+                        <option value="IBM">IBM (Lenovo)</option>
+                        <option value="NEC">NEC</option>
+                        <option value="Sharp">Sharp</option>
+                        <option value="BenQ">BenQ</option>
+                        <option value="Sager">Sager</option>
+                        <option value="Clevo">Clevo</option>
+                        <option value="Origin PC">Origin PC</option>
+                        <option value="Alienware">Alienware (Dell)</option>
+                        <option value="Other">أخرى</option>
+                    </select>
+                    <input type="text" class="form-input" name="laptopBrandOther" id="laptopBrandOther" placeholder="أدخل اسم الماركة" style="display: none; margin-top: 0.5rem;"/>
                 </div>
                 <div class="form-group">
                     <label class="form-label">نوع الجهاز *</label>

@@ -40,7 +40,7 @@ class CustomerManager {
             fullName: formData.fullName,
             phone: formData.phone,
             email: formData.email || '',
-            laptopModel: formData.laptopModel,
+            laptopBrand: formData.laptopBrand,
             deviceType: formData.deviceType,
             receivedDate: formData.receivedDate,
             problemDescription: formData.problemDescription,
@@ -235,7 +235,7 @@ class CustomerManager {
             const formData = {
                 fullName: form.querySelector('[name="fullName"]').value,
                 phone: form.querySelector('[name="phone"]').value,
-                laptopModel: form.querySelector('[name="laptopModel"]').value,
+                laptopBrand: form.querySelector('[name="laptopBrand"]').value,
                 deviceType: form.querySelector('[name="deviceType"]').value,
                 receivedDate: form.querySelector('[name="receivedDate"]').value,
                 problemDescription: form.querySelector('[name="problemDescription"]').value,
@@ -391,7 +391,7 @@ class CustomerManager {
                     </div>
                     <div class="tracking-info-item">
                         <p class="tracking-info-label">الجهاز</p>
-                        <p class="tracking-info-value">${request.laptopModel || '—'}</p>
+                        <p class="tracking-info-value">${request.laptopBrand}</p>
                     </div>
                     ${request.estimatedCompletionDate ? `
                     <div class="tracking-info-item">
