@@ -211,8 +211,21 @@ app.get('/api/requests/:id', async (req, res) => {
 app.post('/api/requests', async (req, res) => {
     try {
         console.log('📝 POST /api/requests - Request body:', req.body);
+
+        // Generate YAS request number
+        const { data: existingRequests } = await supabase.from('requests').select('request_number').order('created_at', { ascending: false }).limit(1);
+        let nextNumber = 1;
+        if (existingRequests && existingRequests.length > 0) {
+            const lastRequestNumber = existingRequests[0].request_number;
+            const match = lastRequestNumber.match(/YAS (\d+)/);
+            if (match) {
+                nextNumber = parseInt(match[1]) + 1;
+            }
+        }
+        const requestNumber = `YAS ${nextNumber}`;
+
         const newRequest = {
-            request_number: req.body.requestNumber || `REQ-${Date.now()}`,
+            request_number: req.body.requestNumber || requestNumber,
             full_name: req.body.fullName,
             phone: req.body.phone,
             email: req.body.email || '',
