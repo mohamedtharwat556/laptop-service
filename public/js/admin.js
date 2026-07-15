@@ -1476,13 +1476,22 @@ class AdminManager {
                 class: 'btn-danger',
                 onclick: async () => {
                     try {
-                        await storage.deleteRequest(requestId);
-                        this.loadData();
-                        this.renderRequests();
-                        this.renderStats();
-                        this.renderCharts();
-                        modalManager.close('confirm-delete-request');
-                        toast.success('تم حذف الطلب بنجاح');
+                        // Direct Railway API call
+                        const railwayUrl = 'https://intelligent-wholeness-production-e0e1.up.railway.app/api/requests';
+                        const response = await fetch(`${railwayUrl}/${requestId}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            this.loadData();
+                            this.renderRequests();
+                            this.renderStats();
+                            this.renderCharts();
+                            modalManager.close('confirm-delete-request');
+                            toast.success('تم حذف الطلب بنجاح');
+                        } else {
+                            toast.error('فشل حذف الطلب');
+                        }
                     } catch (error) {
                         toast.error('فشل حذف الطلب');
                         console.error(error);

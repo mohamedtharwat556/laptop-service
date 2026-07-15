@@ -368,11 +368,20 @@
     #daily-reportSection .dashboard-header {
         flex-direction: column;
         align-items: flex-start;
+        width: 100%;
     }
 
     #daily-reportSection .dashboard-header > div {
         width: 100%;
         flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #daily-reportSection .dashboard-header > div > select,
+    #daily-reportSection .dashboard-header > div > input,
+    #daily-reportSection .dashboard-header > div > button {
+        width: 100%;
+        margin-bottom: 0.5rem;
     }
 
     #reportPeriod,
@@ -380,6 +389,11 @@
     #reportDateFrom,
     #reportDateTo {
         width: 100%;
+    }
+
+    #daily-reportSection button {
+        width: 100%;
+        justify-content: center;
     }
     
     /* Pagination */
