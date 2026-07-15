@@ -1465,45 +1465,33 @@ class AdminManager {
             </div>
         `;
 
-        modalManager.create('confirm-delete-request', 'تأكيد الحذف', content, [
-            {
-                text: 'إلغاء',
-                class: 'btn-secondary',
-                onclick: () => modalManager.close('confirm-delete-request')
-            },
-            {
-                text: 'حذف',
-                class: 'btn-danger',
-                onclick: async () => {
-                    try {
-                        console.log('🗑️ Deleting request ID:', requestId);
-                        // Direct Railway API call
-                        const railwayUrl = 'https://intelligent-wholeness-production-e0e1.up.railway.app/api/requests';
-                        const response = await fetch(`${railwayUrl}/${requestId}`, {
-                            method: 'DELETE'
-                        });
+        modalManager.create('confirm-delete-request', 'تأكيد الحذف', content, async () => {
+            try {
+                console.log('🗑️ Deleting request ID:', requestId);
+                // Direct Railway API call
+                const railwayUrl = 'https://intelligent-wholeness-production-e0e1.up.railway.app/api/requests';
+                const response = await fetch(`${railwayUrl}/${requestId}`, {
+                    method: 'DELETE'
+                });
 
-                        console.log('📡 Delete response status:', response.status);
+                console.log('📡 Delete response status:', response.status);
 
-                        if (response.ok) {
-                            this.loadData();
-                            this.renderRequests();
-                            this.renderStats();
-                            this.renderCharts();
-                            modalManager.close('confirm-delete-request');
-                            toast.success('تم حذف الطلب بنجاح');
-                        } else {
-                            const errorText = await response.text();
-                            console.error('❌ Delete failed:', errorText);
-                            toast.error('فشل حذف الطلب');
-                        }
-                    } catch (error) {
-                        console.error('❌ Delete error:', error);
-                        toast.error('فشل حذف الطلب');
-                    }
+                if (response.ok) {
+                    this.loadData();
+                    this.renderRequests();
+                    this.renderStats();
+                    this.renderCharts();
+                    toast.success('تم حذف الطلب بنجاح');
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Delete failed:', errorText);
+                    toast.error('فشل حذف الطلب');
                 }
+            } catch (error) {
+                console.error('❌ Delete error:', error);
+                toast.error('فشل حذف الطلب');
             }
-        ]);
+        });
 
         modalManager.open('confirm-delete-request');
     }
