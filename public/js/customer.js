@@ -79,24 +79,58 @@ class CustomerManager {
     /**
      * Track a request by name, phone number or request number
      */
-    trackRequest(searchTerm, searchType = 'phone') {
-        let request;
-        
-        if (searchType === 'phone') {
-            const requests = storage.getRequestsByPhone(searchTerm);
-            request = requests.length > 0 ? requests[requests.length - 1] : null;
-        } else if (searchType === 'name') {
-            const requests = storage.getRequestsByName(searchTerm);
-            request = requests.length > 0 ? requests[requests.length - 1] : null;
-        } else {
-            request = storage.getRequestByNumber(searchTerm);
+    async trackRequest(searchTerm, searchType = 'phone') {
+        try {
+            // Use Railway API for tracking
+            const railwayUrl = 'https://intelligent-wholeness-production-e0e1.up.railway.app/api/requests';
+            const response = await fetch(railwayUrl);
+            const requests = await response.json();
+
+            let request;
+            if (searchType === 'phone') {
+                request = requests.filter(r => r.phone === searchTerm);
+                request = request.length > 0 ? request[request.length - 1] : null;
+            } else if (searchType === 'name') {
+                request = requests.filter(r => r.full_name.toLowerCase() === searchTerm.toLowerCase());
+                request = request.length > 0 ? request[request.length - 1] : null;
+            } else {
+                request = requests.find(r => r.request_number === searchTerm);
+            }
+
+            // Convert snake_case to camelCase
+            if (request) {
+                request = this.convertToCamelCase(request);
+            }
+
+            // Store current search for refresh
+            this.currentSearchTerm = searchTerm;
+            this.currentSearchType = searchType;
+
+            return request;
+        } catch (error) {
+            console.error('Failed to track request:', error);
+            return null;
         }
-        
-        // Store current search for refresh
-        this.currentSearchTerm = searchTerm;
-        this.currentSearchType = searchType;
-        
-        return request;
+    }
+
+    /**
+     * Convert snake_case from Supabase to camelCase for frontend
+     */
+    convertToCamelCase(obj) {
+        if (!obj) return obj;
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.convertToCamelCase(item));
+        }
+        if (typeof obj !== 'object') return obj;
+
+        const converted = {};
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const camelKey = key.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
+                converted[camelKey] = this.convertToCamelCase(obj[key]);
+            }
+        }
+        return converted;
     }
 
     /**
@@ -283,7 +317,7 @@ class CustomerManager {
             await new Promise(resolve => setTimeout(resolve, 500));
 
             try {
-                const request = this.trackRequest(searchTerm, searchType);
+                const request = await this.trackRequest(searchTerm, searchType);
                 loading.hide();
 
                 if (request) {
@@ -523,9 +557,12 @@ class CustomerManager {
 
                     loading.hide();
                     toast.success('شكراً لتقييمك!');
-                    
+
                     // Refresh the tracking result
-                    this.trackRequest(this.currentSearchTerm, this.currentSearchType);
+                    const refreshedRequest = await this.trackRequest(this.currentSearchTerm, this.currentSearchType);
+                    if (refreshedRequest) {
+                        this.renderTrackingResult(refreshedRequest);
+                    }
                 } catch (error) {
                     loading.hide();
                     toast.error('فشل إرسال التقييم. يرجى المحاولة مجدداً.');
