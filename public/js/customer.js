@@ -11,11 +11,29 @@ class CustomerManager {
     }
 
     /**
+     * Convert file to base64
+     */
+    fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    /**
      * Submit a maintenance request
      */
     async submitRequest(formData) {
         console.log('📝 Submitting request with data:', formData);
         console.log('🌐 API Base:', this.apiBase);
+
+        // Handle image upload - convert to base64
+        let deviceImage = '';
+        if (formData.deviceImage && formData.deviceImage instanceof File) {
+            deviceImage = await this.fileToBase64(formData.deviceImage);
+        }
 
         const requestData = {
             requestNumber: formData.requestNumber,
@@ -26,7 +44,8 @@ class CustomerManager {
             deviceType: formData.deviceType,
             receivedDate: formData.receivedDate,
             problemDescription: formData.problemDescription,
-            priority: formData.priority || 'Medium'
+            priority: formData.priority || 'Medium',
+            deviceImage: deviceImage
         };
 
         console.log('📤 Request data to send:', requestData);
@@ -184,10 +203,11 @@ class CustomerManager {
                 fullName: form.querySelector('[name="fullName"]').value,
                 phone: form.querySelector('[name="phone"]').value,
                 laptopBrand: form.querySelector('[name="laptopBrand"]').value,
-                laptopModel: form.querySelector('[name="laptopModel"]').value,
                 deviceType: form.querySelector('[name="deviceType"]').value,
+                receivedDate: form.querySelector('[name="receivedDate"]').value,
                 problemDescription: form.querySelector('[name="problemDescription"]').value,
-                priority: form.querySelector('[name="priority"]') ? form.querySelector('[name="priority"]').value : 'Medium'
+                priority: form.querySelector('[name="priority"]') ? form.querySelector('[name="priority"]').value : 'Medium',
+                deviceImage: form.querySelector('[name="deviceImage"]').files[0]
             };
 
             try {

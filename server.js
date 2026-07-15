@@ -223,6 +223,7 @@ app.post('/api/requests', async (req, res) => {
             status: req.body.status || 'Received',
             priority: req.body.priority || 'Medium',
             cost: req.body.cost || 0,
+            device_image: req.body.deviceImage || null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
