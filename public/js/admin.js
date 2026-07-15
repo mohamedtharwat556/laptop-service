@@ -267,11 +267,14 @@ class AdminManager {
             this.orders = this.convertToCamelCase(Array.isArray(ordersRes) ? ordersRes : []);
             this.products = this.convertToCamelCase(Array.isArray(productsRes) ? productsRes : []);
 
-            // Debug: Check first request for deviceType and receivedDate
+            // Debug: Check first request for new fields
             if (this.requests.length > 0) {
                 console.log('🔍 First request data:', this.requests[0]);
                 console.log('🔍 deviceType:', this.requests[0].deviceType);
                 console.log('🔍 receivedDate:', this.requests[0].receivedDate);
+                console.log('🔍 deviceImage:', this.requests[0].deviceImage);
+                console.log('🔍 estimatedCompletionDate:', this.requests[0].estimatedCompletionDate);
+                console.log('🔍 requestNumber:', this.requests[0].requestNumber);
             }
 
             console.log(`✅ Data loaded: ${this.requests.length} requests, ${this.products.length} products`);
