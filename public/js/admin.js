@@ -1652,8 +1652,11 @@ class AdminManager {
 
         const period = reportPeriod ? reportPeriod.value : 'today';
         let fileName = 'تقرير';
-        
-        if (period === 'today') {
+
+        if (period === 'all') {
+            filteredRequests = allRequests;
+            fileName = 'تقرير-كل-الطلبات';
+        } else if (period === 'today') {
             const today = new Date().toISOString().slice(0, 10);
             filteredRequests = allRequests.filter(r => {
                 const d = new Date(r.createdAt);
