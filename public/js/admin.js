@@ -1538,31 +1538,35 @@ class AdminManager {
         const reportDate = document.getElementById('reportDate');
         const reportDateFrom = document.getElementById('reportDateFrom');
         const reportDateTo = document.getElementById('reportDateTo');
-        
+
         let filteredRequests = [];
-        const allRequests = storage.getRequests();
-        
+        const allRequests = this.requests;
+
         const period = reportPeriod ? reportPeriod.value : 'today';
-        
-        if (period === 'today') {
-            const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
+
+        if (period === 'all') {
+            filteredRequests = allRequests;
+        } else if (period === 'today') {
+            const today = new Date().toISOString().slice(0, 10);
             filteredRequests = allRequests.filter(r => {
                 const d = new Date(r.createdAt);
-                return d.toISOString().slice(0, 10) === selectedDate;
+                return d.toISOString().slice(0, 10) === today;
             });
         } else if (period === 'yesterday') {
-            const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().slice(0, 10);
             filteredRequests = allRequests.filter(r => {
                 const d = new Date(r.createdAt);
-                return d.toISOString().slice(0, 10) === selectedDate;
+                return d.toISOString().slice(0, 10) === yesterdayStr;
             });
         } else if (period === 'lastWeek') {
-            const fromDate = reportDateFrom ? reportDateFrom.value : '';
-            const toDate = reportDateTo ? reportDateTo.value : '';
+            const today = new Date();
+            const lastWeek = new Date();
+            lastWeek.setDate(lastWeek.getDate() - 7);
             filteredRequests = allRequests.filter(r => {
                 const d = new Date(r.createdAt);
-                const dateStr = d.toISOString().slice(0, 10);
-                return dateStr >= fromDate && dateStr <= toDate;
+                return d >= lastWeek && d <= today;
             });
         } else if (period === 'custom') {
             const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
@@ -1571,7 +1575,7 @@ class AdminManager {
                 return d.toISOString().slice(0, 10) === selectedDate;
             });
         }
-        
+
         this.renderReportTable(filteredRequests);
     }
 
