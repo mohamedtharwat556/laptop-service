@@ -266,7 +266,14 @@ class AdminManager {
             this.requests = this.convertToCamelCase(Array.isArray(requestsRes) ? requestsRes : []);
             this.orders = this.convertToCamelCase(Array.isArray(ordersRes) ? ordersRes : []);
             this.products = this.convertToCamelCase(Array.isArray(productsRes) ? productsRes : []);
-            
+
+            // Debug: Check first request for deviceType and receivedDate
+            if (this.requests.length > 0) {
+                console.log('🔍 First request data:', this.requests[0]);
+                console.log('🔍 deviceType:', this.requests[0].deviceType);
+                console.log('🔍 receivedDate:', this.requests[0].receivedDate);
+            }
+
             console.log(`✅ Data loaded: ${this.requests.length} requests, ${this.products.length} products`);
         } catch (error) {
             console.error('Failed to load data from API:', error);
