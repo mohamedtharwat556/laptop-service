@@ -217,7 +217,6 @@ app.post('/api/requests', async (req, res) => {
             phone: req.body.phone,
             email: req.body.email || '',
             laptop_brand: req.body.laptopBrand,
-            laptop_model: req.body.laptopModel,
             device_type: req.body.deviceType,
             received_date: req.body.receivedDate,
             problem_description: req.body.problemDescription,

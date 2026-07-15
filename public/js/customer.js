@@ -23,7 +23,6 @@ class CustomerManager {
             phone: formData.phone,
             email: formData.email || '',
             laptopBrand: formData.laptopBrand,
-            laptopModel: formData.laptopModel,
             deviceType: formData.deviceType,
             receivedDate: formData.receivedDate,
             problemDescription: formData.problemDescription,
