@@ -1377,6 +1377,7 @@ class AdminManager {
                     <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${request.laptopBrand}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">نوع الجهاز</span><span class="request-detail-value">${request.deviceType || '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${request.receivedDate || '—'}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(request.createdAt)}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${request.problemDescription}</span></div>
                     ${request.deviceImage ? `
                     <div class="request-detail-item" style="grid-column: 1 / -1;">
