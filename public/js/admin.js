@@ -1652,28 +1652,30 @@ class AdminManager {
         let fileName = 'تقرير';
         
         if (period === 'today') {
-            const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
+            const today = new Date().toISOString().slice(0, 10);
             filteredRequests = allRequests.filter(r => {
                 const d = new Date(r.createdAt);
-                return d.toISOString().slice(0, 10) === selectedDate;
+                return d.toISOString().slice(0, 10) === today;
             });
-            fileName = `تقرير-${selectedDate}`;
+            fileName = `تقرير-${today}`;
         } else if (period === 'yesterday') {
-            const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().slice(0, 10);
             filteredRequests = allRequests.filter(r => {
                 const d = new Date(r.createdAt);
-                return d.toISOString().slice(0, 10) === selectedDate;
+                return d.toISOString().slice(0, 10) === yesterdayStr;
             });
-            fileName = `تقرير-${selectedDate}`;
+            fileName = `تقرير-${yesterdayStr}`;
         } else if (period === 'lastWeek') {
-            const fromDate = reportDateFrom ? reportDateFrom.value : '';
-            const toDate = reportDateTo ? reportDateTo.value : '';
+            const today = new Date();
+            const lastWeek = new Date();
+            lastWeek.setDate(lastWeek.getDate() - 7);
             filteredRequests = allRequests.filter(r => {
                 const d = new Date(r.createdAt);
-                const dateStr = d.toISOString().slice(0, 10);
-                return dateStr >= fromDate && dateStr <= toDate;
+                return d >= lastWeek && d <= today;
             });
-            fileName = `تقرير-${fromDate}-إلى-${toDate}`;
+            fileName = `تقرير-آخر-أسبوع`;
         } else if (period === 'custom') {
             const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
             filteredRequests = allRequests.filter(r => {
