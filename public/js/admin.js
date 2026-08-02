@@ -1617,6 +1617,8 @@ class AdminManager {
                 <td>${r.problemDescription}</td>
                 <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
                 <td>${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
+                <td>${r.receivedDate ? Utils.formatDate(r.receivedDate) : '—'}</td>
+                <td>${r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—'}</td>
                 <td>${Utils.formatDate(r.createdAt)}</td>
             </tr>`).join('');
 
@@ -1626,7 +1628,7 @@ class AdminManager {
                     <i class="fas fa-info-circle"></i>
                     إجمالي الطلبات: <strong style="color:#3b82f6;">${requests.length}</strong>
                 </p>
-                <table class="table" style="width:100%; min-width:700px;">
+                <table class="table" style="width:100%; min-width:900px;">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -1637,7 +1639,9 @@ class AdminManager {
                             <th>المشكلة</th>
                             <th>الحالة</th>
                             <th>التكلفة</th>
-                            <th>التاريخ</th>
+                            <th>تاريخ الاستلام</th>
+                            <th>تاريخ التسليم المتوقع</th>
+                            <th>تاريخ الطلب</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1715,7 +1719,7 @@ class AdminManager {
         }
 
         const data = [
-            ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'المشكلة', 'الحالة', 'التكلفة', 'التاريخ'],
+            ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'المشكلة', 'الحالة', 'التكلفة', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
             ...filteredRequests.map((r, i) => [
                 i + 1,
                 r.requestNumber,
@@ -1725,6 +1729,8 @@ class AdminManager {
                 r.problemDescription,
                 this.translateStatus(r.status),
                 r.cost > 0 ? r.cost : 0,
+                r.receivedDate ? Utils.formatDate(r.receivedDate) : '—',
+                r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—',
                 Utils.formatDate(r.createdAt)
             ])
         ];
@@ -1733,7 +1739,7 @@ class AdminManager {
         // Column widths
         ws['!cols'] = [
             {wch:4},{wch:14},{wch:20},{wch:14},{wch:18},
-            {wch:35},{wch:18},{wch:10},{wch:20}
+            {wch:35},{wch:18},{wch:10},{wch:18},{wch:18},{wch:20}
         ];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'التقرير');
