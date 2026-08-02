@@ -1626,46 +1626,60 @@ class AdminManager {
         }
 
         const rows = requests.map((r, i) => `
-            <tr>
-                <td>${i + 1}</td>
-                <td>${r.requestNumber}</td>
+            <tr style="transition: background-color 0.2s;">
+                <td style="font-weight: 600; color: #3b82f6;">${i + 1}</td>
+                <td style="font-weight: 600;">${r.requestNumber}</td>
                 <td>${r.fullName}</td>
-                <td>${r.phone}</td>
+                <td dir="ltr">${r.phone}</td>
                 <td>${r.laptopBrand}${r.laptopModel ? ' ' + r.laptopModel : ''}</td>
-                <td>${r.problemDescription}</td>
+                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription}</td>
                 <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
-                <td>${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
+                <td style="font-weight: 600;">${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
                 <td>${r.receivedDate ? Utils.formatDate(r.receivedDate) : '—'}</td>
                 <td>${r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—'}</td>
                 <td>${Utils.formatDate(r.createdAt)}</td>
             </tr>`).join('');
 
         container.innerHTML = `
-            <div class="glass-card" style="margin-top:1.5rem; overflow-x:auto;">
-                <p style="color:#94a3b8; margin-bottom:1rem;">
-                    <i class="fas fa-info-circle"></i>
-                    إجمالي الطلبات: <strong style="color:#3b82f6;">${requests.length}</strong>
-                </p>
-                <table class="table" style="width:100%; min-width:900px;">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>رقم الطلب</th>
-                            <th>اسم العميل</th>
-                            <th>الهاتف</th>
-                            <th>اللابتوب</th>
-                            <th>المشكلة</th>
-                            <th>الحالة</th>
-                            <th>التكلفة</th>
-                            <th>تاريخ الاستلام</th>
-                            <th>تاريخ التسليم المتوقع</th>
-                            <th>تاريخ الطلب</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows}
-                    </tbody>
-                </table>
+            <div class="glass-card" style="margin-top:1.5rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 365, 255, 0.02) 100%); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-chart-bar" style="color: #3b82f6; font-size: 1.5rem;"></i>
+                        <h3 style="margin: 0; color: #fff; font-size: 1.25rem;">تقرير الطلبات</h3>
+                    </div>
+                    <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: #94a3b8;">إجمالي الطلبات:</span>
+                            <strong style="color: #3b82f6; font-size: 1.25rem;">${requests.length}</strong>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: #94a3b8;">إجمالي التكلفة:</span>
+                            <strong style="color: #10b981; font-size: 1.25rem;">${Utils.formatCurrency(requests.reduce((sum, r) => sum + (r.cost || 0), 0))}</strong>
+                        </div>
+                    </div>
+                </div>
+                <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <table class="table" style="width:100%; min-width:1100px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: rgba(59, 130, 246, 0.1);">
+                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">#</th>
+                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">رقم الطلب</th>
+                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">اسم العميل</th>
+                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">الهاتف</th>
+                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">اللابتوب</th>
+                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">المشكلة</th>
+                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">الحالة</th>
+                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">التكلفة</th>
+                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">تاريخ الاستلام</th>
+                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">تاريخ التسليم المتوقع</th>
+                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">تاريخ الطلب</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
             </div>`;
     }
 
