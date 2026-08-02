@@ -1398,7 +1398,7 @@ class AdminManager {
                     </div>
                     <div class="form-group">
                         <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
-                        <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${request.estimatedCompletionDate || ''}">
+                        <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${request.estimatedCompletionDate ? new Date(request.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
                     </div>
                     <div class="form-group">
                         <label class="form-label">تحديث الحالة</label>
@@ -1421,10 +1421,14 @@ class AdminManager {
         const form = document.getElementById('editRequestForm');
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+            const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+            // Convert datetime-local to ISO string
+            const estimatedCompletionDate = estimatedCompletionDateValue ? new Date(estimatedCompletionDateValue).toISOString() : null;
+
             const updateData = {
                 adminReply: form.adminReply.value,
                 cost: parseFloat(form.cost.value) || 0,
-                estimatedCompletionDate: form.estimatedCompletionDate.value,
+                estimatedCompletionDate: estimatedCompletionDate,
                 status: form.status.value
             };
 
@@ -1432,8 +1436,8 @@ class AdminManager {
             if (updateData.adminReply && !updateData.estimatedCompletionDate) {
                 const today = new Date();
                 today.setDate(today.getDate() + 3); // Default to 3 days from now
-                updateData.estimatedCompletionDate = today.toISOString().slice(0, 10);
-                form.estimatedCompletionDate.value = updateData.estimatedCompletionDate;
+                updateData.estimatedCompletionDate = today.toISOString();
+                form.estimatedCompletionDate.value = today.toISOString().slice(0, 16);
             }
 
             this.updateRequest(requestId, updateData);
