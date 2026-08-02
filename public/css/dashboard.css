@@ -668,49 +668,131 @@
     cursor: pointer;
 }
 
+/* Responsive Tables */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.table th,
+.table td {
+    padding: 0.75rem 1rem;
+    text-align: right;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* Responsive Dashboard */
 @media (max-width: 1024px) {
     .sidebar {
         transform: translateX(-100%);
         z-index: 1000;
     }
-    
+
     .sidebar.active {
         transform: translateX(0);
     }
-    
+
     .dashboard-main {
         margin-left: 0;
     }
-    
+
     .sidebar-toggle {
         display: block;
     }
-    
+
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
     .charts-grid {
         grid-template-columns: 1fr;
+    }
+
+    .table {
+        font-size: 0.8rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.5rem 0.75rem;
     }
 }
 
 @media (max-width: 768px) {
     .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
+        padding: 1rem;
     }
-    
+
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+
+    .stat-info h3 {
+        font-size: 1.5rem;
+    }
+
+    .stat-info p {
+        font-size: 0.875rem;
+    }
+
+    .table {
+        font-size: 0.75rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.4rem 0.5rem;
+    }
+
+    .status-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Hide less important columns on mobile */
+    .table-hide-mobile {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
     .stats-grid {
         grid-template-columns: 1fr;
     }
-    
-    .request-card-header {
+
+    .dashboard-header {
         flex-direction: column;
+        align-items: flex-start;
     }
-    
-    .request-details {
-        grid-template-columns: 1fr;
+
+    .dashboard-header-actions {
+        width: 100%;
+        justify-content: flex-start;
     }
-    
-    .products-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+
+    .table {
+        font-size: 0.7rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.3rem 0.4rem;
     }
 }

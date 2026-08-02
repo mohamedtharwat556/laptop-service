@@ -318,7 +318,7 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','Delivered')" title="عرض الطلبات المكتملة">
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','completed')" title="عرض الطلبات المكتملة">
                     <div class="stat-icon success">
                         <i class="fas fa-check-circle"></i>
                     </div>
@@ -1172,32 +1172,32 @@ class AdminManager {
         }
 
         container.innerHTML = `
-            <div class="table-container">
-                <table class="table">
+            <div class="table-container" style="overflow-x: auto;">
+                <table class="table" style="min-width: 900px;">
                     <thead>
                         <tr>
-                            <th>Request #</th>
+                            <th class="table-hide-mobile">Request #</th>
                             <th>Customer</th>
-                            <th>Phone</th>
+                            <th class="table-hide-mobile">Phone</th>
                             <th>Device</th>
-                            <th>Received</th>
+                            <th class="table-hide-mobile">Received</th>
                             <th>Status</th>
-                            <th>Priority</th>
-                            <th>Date</th>
+                            <th class="table-hide-mobile">Priority</th>
+                            <th class="table-hide-mobile">Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${data.map(request => `
                             <tr>
-                                <td><strong>${request.requestNumber}</strong></td>
+                                <td class="table-hide-mobile"><strong>${request.requestNumber}</strong></td>
                                 <td>${request.fullName}</td>
-                                <td>${request.phone}</td>
+                                <td class="table-hide-mobile" dir="ltr">${request.phone}</td>
                                 <td>${request.laptopBrand} ${request.laptopModel || ''}</td>
-                                <td>${request.receivedDate || '—'}</td>
+                                <td class="table-hide-mobile">${request.receivedDate || '—'}</td>
                                 <td><span class="status-badge ${this.getStatusClass(request.status)}">${this.translateStatus(request.status)}</span></td>
-                                <td>${request.priority}</td>
-                                <td>${Utils.formatDate(request.createdAt)}</td>
+                                <td class="table-hide-mobile">${request.priority}</td>
+                                <td class="table-hide-mobile">${Utils.formatDate(request.createdAt)}</td>
                                 <td>
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
                                             onclick="adminManager.viewRequest(${request.id})">
@@ -1262,7 +1262,9 @@ class AdminManager {
             monthAgo.setMonth(monthAgo.getMonth() - 1);
             filtered = filtered.filter(r => new Date(r.createdAt) >= monthAgo);
         } else if (activeFilter === 'open') {
-            filtered = filtered.filter(r => r.status !== 'Delivered');
+            filtered = filtered.filter(r => r.status !== 'Delivered' && r.status !== 'Completed');
+        } else if (activeFilter === 'completed') {
+            filtered = filtered.filter(r => r.status === 'Delivered' || r.status === 'Completed');
         } else if (activeFilter !== 'All') {
             filtered = filtered.filter(r => r.status === activeFilter);
         }
@@ -1346,13 +1348,13 @@ class AdminManager {
                 const statusFilter = document.getElementById('statusFilter');
                 if (statusFilter) {
                     // Map special filters to select values
-                    if (filter === 'open' || filter === 'today') {
+                    if (filter === 'open' || filter === 'today' || filter === 'completed') {
                         statusFilter.value = 'All'; // will be handled by filterRequests
                     } else {
                         statusFilter.value = filter;
                     }
                     // Store special filter
-                    this._specialFilter = (filter === 'open' || filter === 'today') ? filter : null;
+                    this._specialFilter = (filter === 'open' || filter === 'today' || filter === 'completed') ? filter : null;
                     this.renderRequests();
                 }
             }, 50);
