@@ -176,6 +176,7 @@ app.get('/api/requests', async (req, res) => {
             deviceType: item.device_type,
             laptopBrand: item.laptop_brand,
             laptopModel: item.laptop_model,
+            receivedDate: item.received_date,
             problemDescription: item.problem_description,
             priority: item.priority,
             status: item.status,

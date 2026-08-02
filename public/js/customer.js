@@ -393,12 +393,10 @@ class CustomerManager {
                         <p class="tracking-info-label">الجهاز</p>
                         <p class="tracking-info-value">${request.laptopBrand} ${request.laptopModel || ''}</p>
                     </div>
-                    ${request.estimatedCompletionDate ? `
                     <div class="tracking-info-item">
                         <p class="tracking-info-label">تاريخ الاستلام المتوقع</p>
-                        <p class="tracking-info-value" style="color: #10b981; font-weight: 600;">${Utils.formatDate(request.estimatedCompletionDate)}</p>
+                        <p class="tracking-info-value" style="color: #10b981; font-weight: 600;">${request.estimatedCompletionDate ? Utils.formatDate(request.estimatedCompletionDate) : 'لم يحدد بعد'}</p>
                     </div>
-                    ` : ''}
                 </div>
 
                 <h3 style="margin: 2rem 0 1rem;">مسار حالة الطلب</h3>
