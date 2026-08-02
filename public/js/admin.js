@@ -1423,7 +1423,13 @@ class AdminManager {
             e.preventDefault();
             const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
             // Convert datetime-local to ISO string
-            const estimatedCompletionDate = estimatedCompletionDateValue ? new Date(estimatedCompletionDateValue).toISOString() : null;
+            let estimatedCompletionDate = null;
+            if (estimatedCompletionDateValue) {
+                const dateObj = new Date(estimatedCompletionDateValue);
+                if (!isNaN(dateObj.getTime())) {
+                    estimatedCompletionDate = dateObj.toISOString();
+                }
+            }
 
             const updateData = {
                 adminReply: form.adminReply.value,
@@ -1431,6 +1437,8 @@ class AdminManager {
                 estimatedCompletionDate: estimatedCompletionDate,
                 status: form.status.value
             };
+
+            console.log('📝 Updating request with data:', updateData);
 
             // Auto-set estimated completion date if admin replies and no date is set
             if (updateData.adminReply && !updateData.estimatedCompletionDate) {
@@ -1447,6 +1455,9 @@ class AdminManager {
     async updateRequest(requestId, data) {
         // Direct Railway API call
         const railwayUrl = 'https://intelligent-wholeness-production-e0e1.up.railway.app/api/requests';
+        console.log('📡 Sending PUT request to:', `${railwayUrl}/${requestId}`);
+        console.log('📡 Request data:', data);
+
         const response = await fetch(`${railwayUrl}/${requestId}`, {
             method: 'PUT',
             headers: {
@@ -1454,6 +1465,8 @@ class AdminManager {
             },
             body: JSON.stringify(data)
         });
+
+        console.log('📡 Response status:', response.status);
 
         if (response.ok) {
             this.loadData();
@@ -1463,7 +1476,9 @@ class AdminManager {
             modalManager.close('view-request');
             toast.success('تم تحديث الطلب بنجاح');
         } else {
-            toast.error('فشل تحديث الطلب');
+            const errorText = await response.text();
+            console.error('❌ Update request failed:', errorText);
+            toast.error('فشل تحديث الطلب: ' + errorText);
         }
     }
 
