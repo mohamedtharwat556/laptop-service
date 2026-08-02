@@ -244,28 +244,16 @@ class CustomerManager {
             };
 
             try {
-                const response = await fetch('/api/requests', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
+                const responseData = await this.submitRequest(formData);
 
-                const responseData = await response.json();
+                alert('تم الإرسال بنجاح!\nرقم الطلب: ' + responseData.requestNumber);
 
-                if (response.ok) {
-                    alert('تم الإرسال بنجاح!\nرقم الطلب: ' + responseData.request_number);
+                // Prepare WhatsApp message
+                const message = `طلب صيانة:\nالاسم: ${formData.fullName}\nالهاتف: ${formData.phone}\nماركة اللابتوب: ${formData.laptopBrand}\nموديل اللابتوب: ${formData.laptopModel}\nوصف المشكلة: ${formData.problemDescription}`;
+                const waUrl = `https://wa.me/201013791517?text=${encodeURIComponent(message)}`;
+                window.location.href = waUrl;
 
-                    // Prepare WhatsApp message
-                    const message = `طلب صيانة:\nالاسم: ${formData.fullName}\nالهاتف: ${formData.phone}\nماركة اللابتوب: ${formData.laptopBrand}\nنوع الجهاز: ${formData.deviceType}\nوصف المشكلة: ${formData.problemDescription}`;
-                    const waUrl = `https://wa.me/201013791517?text=${encodeURIComponent(message)}`;
-                    window.location.href = waUrl;
-
-                    form.reset();
-                } else {
-                    alert('فشل الإرسال: ' + JSON.stringify(responseData));
-                }
+                form.reset();
             } catch (error) {
                 alert('خطأ: ' + error.message);
             }
