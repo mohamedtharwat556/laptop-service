@@ -23,7 +23,7 @@ app.use(compression());
 
 // Middleware
 app.use(cors({
-  origin: ['https://laptop-service-weld.vercel.app', 'http://localhost:3000', '*'],
+  origin: '*',
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
