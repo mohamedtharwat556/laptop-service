@@ -1427,6 +1427,7 @@ class AdminManager {
                             <option value="استاذ محمد علي و عم وليد" ${request.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
                             <option value="الاستاذ عبد الدالي" ${request.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
                             <option value="الاستاذ نادر" ${request.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
+                            <option value="الاستاذ عبدالله موسي" ${request.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
                         </select>
                     </div>
                     <div class="form-group">
