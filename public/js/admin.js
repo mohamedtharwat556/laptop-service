@@ -274,6 +274,7 @@ class AdminManager {
                 console.log('🔍 estimatedCompletionDate:', this.requests[0].estimatedCompletionDate);
                 console.log('🔍 requestNumber:', this.requests[0].requestNumber);
                 console.log('🔍 laptopModel:', this.requests[0].laptopModel);
+                console.log('🔍 serialNumber:', this.requests[0].serialNumber);
             }
 
             console.log(`✅ Data loaded: ${this.requests.length} requests, ${this.products.length} products`);
