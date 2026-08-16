@@ -156,4 +156,17 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+// Delete all requests
+router.delete('/', async (req, res) => {
+    try {
+        console.log('🗑️ Deleting all requests');
+        const { error } = await supabase.from('requests').delete().neq('id', 0);
+        if (error) throw error;
+        res.json({ success: true, message: 'All requests deleted' });
+    } catch (error) {
+        console.error('Error deleting all requests:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

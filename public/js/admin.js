@@ -1173,6 +1173,12 @@ class AdminManager {
         }
 
         container.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">الطلبات (${filteredRequests.length})</h3>
+                <button class="btn btn-danger" onclick="adminManager.deleteAllRequests()" style="padding: 0.5rem 1rem;">
+                    <i class="fas fa-trash"></i> حذف الكل
+                </button>
+            </div>
             <div class="table-container" style="overflow-x: auto;">
                 <table class="table" style="min-width: 900px;">
                     <thead>
@@ -1531,6 +1537,48 @@ class AdminManager {
         });
 
         modalManager.open('confirm-delete-request');
+    }
+
+    async deleteAllRequests() {
+        const content = `
+            <div>
+                <p style="margin-bottom: 1rem; color: #ef4444; font-weight: 600;">⚠️ تحذير: هذا الإجراء سيحذف جميع الطلبات!</p>
+                <p style="margin-bottom: 1rem;">هل أنت متأكد من حذف جميع الطلبات؟ هذا الإجراء لا يمكن التراجع عنه.</p>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="modalManager.close('delete-all-requests')">إلغاء</button>
+                    <button class="btn btn-danger" onclick="adminManager.confirmDeleteAllRequests()">حذف الكل</button>
+                </div>
+            </div>
+        `;
+
+        modalManager.create('delete-all-requests', 'حذف جميع الطلبات', content);
+        modalManager.open('delete-all-requests');
+    }
+
+    async confirmDeleteAllRequests() {
+        try {
+            console.log('🗑️ Deleting all requests');
+            const apiUrl = '/api/requests';
+            const response = await fetch(apiUrl, {
+                method: 'DELETE'
+            });
+
+            console.log('📡 Delete all response status:', response.status);
+
+            if (response.ok) {
+                this.loadData();
+                this.renderRequests();
+                modalManager.close('delete-all-requests');
+                toast.success('تم حذف جميع الطلبات بنجاح');
+            } else {
+                const errorText = await response.text();
+                console.error('❌ Delete all failed:', errorText);
+                toast.error('فشل حذف جميع الطلبات');
+            }
+        } catch (error) {
+            console.error('❌ Delete all error:', error);
+            toast.error('فشل حذف جميع الطلبات');
+        }
     }
 
     getStatusClass(status) {
