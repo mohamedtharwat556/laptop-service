@@ -252,13 +252,13 @@ class AdminManager {
     async loadData() {
         try {
             console.log('📡 Fetching data from API...');
-            // Direct Railway API call - bypass storage-api.js
-            const railwayUrl = 'https://intelligent-wholeness-production-e0e1.up.railway.app/api';
+            // Use same-origin API (Vercel handles both frontend and backend)
+            const apiUrl = '/api';
             const [usersRes, requestsRes, ordersRes, productsRes] = await Promise.all([
-                fetch(`${railwayUrl}/users`).then(r => r.json()).catch(() => []),
-                fetch(`${railwayUrl}/requests`).then(r => r.json()).catch(() => []),
-                fetch(`${railwayUrl}/orders`).then(r => r.json()).catch(() => []),
-                fetch(`${railwayUrl}/products`).then(r => r.json()).catch(() => [])
+                fetch(`${apiUrl}/users`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/orders`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/products`).then(r => r.json()).catch(() => [])
             ]);
             
             // Convert from snake_case to camelCase
@@ -1455,12 +1455,12 @@ class AdminManager {
     }
 
     async updateRequest(requestId, data) {
-        // Direct Railway API call
-        const railwayUrl = 'https://intelligent-wholeness-production-e0e1.up.railway.app/api/requests';
-        console.log('📡 Sending PUT request to:', `${railwayUrl}/${requestId}`);
+        // Use same-origin API (Vercel handles both frontend and backend)
+        const apiUrl = '/api/requests';
+        console.log('📡 Sending PUT request to:', `${apiUrl}/${requestId}`);
         console.log('📡 Request data:', data);
 
-        const response = await fetch(`${railwayUrl}/${requestId}`, {
+        const response = await fetch(`${apiUrl}/${requestId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -1500,9 +1500,9 @@ class AdminManager {
         modalManager.create('confirm-delete-request', 'تأكيد الحذف', content, async () => {
             try {
                 console.log('🗑️ Deleting request ID:', requestId);
-                // Direct Railway API call
-                const railwayUrl = 'https://intelligent-wholeness-production-e0e1.up.railway.app/api/requests';
-                const response = await fetch(`${railwayUrl}/${requestId}`, {
+                // Use same-origin API (Vercel handles both frontend and backend)
+                const apiUrl = '/api/requests';
+                const response = await fetch(`${apiUrl}/${requestId}`, {
                     method: 'DELETE'
                 });
 

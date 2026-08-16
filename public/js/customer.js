@@ -6,8 +6,8 @@
 class CustomerManager {
     constructor() {
         this.currentRequest = null;
-        // Use Railway backend URL when deployed on Vercel
-        this.apiBase = window.location.hostname === 'localhost' ? '/api' : 'https://intelligent-wholeness-production-e0e1.up.railway.app/api';
+        // Use same-origin API (Vercel handles both frontend and backend)
+        this.apiBase = '/api';
     }
 
     /**
@@ -50,11 +50,11 @@ class CustomerManager {
 
         console.log('📤 Request data to send:', requestData);
 
-        // Direct Railway API call - bypass storage-api.js
-        const railwayUrl = 'https://intelligent-wholeness-production-e0e1.up.railway.app/api/requests';
-        console.log('📡 Calling Railway API directly:', railwayUrl);
+        // Use same-origin API (Vercel handles both frontend and backend)
+        const apiUrl = '/api/requests';
+        console.log('📡 Calling API directly:', apiUrl);
 
-        const response = await fetch(railwayUrl, {
+        const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -81,9 +81,9 @@ class CustomerManager {
      */
     async trackRequest(searchTerm, searchType = 'phone') {
         try {
-            // Use Railway API for tracking
-            const railwayUrl = 'https://intelligent-wholeness-production-e0e1.up.railway.app/api/requests';
-            const response = await fetch(railwayUrl);
+            // Use same-origin API (Vercel handles both frontend and backend)
+            const apiUrl = '/api/requests';
+            const response = await fetch(apiUrl);
             const requests = await response.json();
 
             let request;
