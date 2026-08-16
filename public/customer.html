@@ -93,15 +93,9 @@
                     <input type="text" class="form-input" name="laptopModel" required placeholder="أدخل موديل اللابتوب"/>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">الرقم التسلسلي (السيريال) *</label>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <input type="text" class="form-input" name="serialNumber" required placeholder="أدخل الرقم التسلسلي الموجود على اللابتوب" id="serialNumberInput"/>
-                        <button type="button" class="btn btn-primary" id="scanButton" style="padding: 0.5rem 1rem;">
-                            <i class="fas fa-qrcode"></i> مسح
-                        </button>
-                    </div>
+                    <label class="form-label">الرقم التسلسلي (السيريال)</label>
+                    <input type="text" class="form-input" name="serialNumber" placeholder="أدخل الرقم التسلسلي الموجود على اللابتوب"/>
                     <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">موجود عادة على ملصق أسفل اللابتوب أو في البطارية</p>
-                    <div id="reader" style="width: 100%; margin-top: 1rem; display: none;"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">تاريخ الاستلام *</label>
@@ -154,7 +148,6 @@
 
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="js/storage-api.js"></script>
     <script src="js/app.js"></script>
     <script src="js/customer.js"></script>

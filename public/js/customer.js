@@ -584,61 +584,6 @@ class CustomerManager {
     init() {
         this.renderRequestForm();
         this.renderTrackingForm();
-        this.initScanner();
-    }
-
-    /**
-     * Initialize QR/Barcode scanner
-     */
-    initScanner() {
-        const scanButton = document.getElementById('scanButton');
-        const reader = document.getElementById('reader');
-        const serialNumberInput = document.getElementById('serialNumberInput');
-        let html5QrcodeScanner = null;
-
-        if (scanButton && reader && serialNumberInput) {
-            scanButton.addEventListener('click', () => {
-                if (reader.style.display === 'none') {
-                    // Start scanning
-                    reader.style.display = 'block';
-                    scanButton.innerHTML = '<i class="fas fa-stop"></i> إيقاف';
-
-                    html5QrcodeScanner = new Html5Qrcode("reader");
-                    html5QrcodeScanner.start(
-                        { facingMode: "environment" },
-                        {
-                            fps: 10,
-                            qrbox: { width: 250, height: 250 }
-                        },
-                        (decodedText, decodedResult) => {
-                            // Success callback
-                            serialNumberInput.value = decodedText;
-                            html5QrcodeScanner.stop();
-                            reader.style.display = 'none';
-                            scanButton.innerHTML = '<i class="fas fa-qrcode"></i> مسح';
-                            console.log('Scanned:', decodedText);
-                        },
-                        (errorMessage) => {
-                            // Error callback (ignore)
-                        }
-                    ).catch(err => {
-                        console.error('Scanner error:', err);
-                        reader.style.display = 'none';
-                        scanButton.innerHTML = '<i class="fas fa-qrcode"></i> مسح';
-                    });
-                } else {
-                    // Stop scanning
-                    if (html5QrcodeScanner) {
-                        html5QrcodeScanner.stop().then(() => {
-                            reader.style.display = 'none';
-                            scanButton.innerHTML = '<i class="fas fa-qrcode"></i> مسح';
-                        }).catch(err => {
-                            console.error('Stop error:', err);
-                        });
-                    }
-                }
-            });
-        }
     }
 }
 
