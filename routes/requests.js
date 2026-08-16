@@ -31,6 +31,7 @@ router.get('/', async (req, res) => {
             replacementParts: item.replacement_parts,
             notes: item.notes,
             technicianNotes: item.technician_notes,
+            adminReply: item.admin_reply,
             createdAt: item.created_at,
             updatedAt: item.updated_at
         }));
