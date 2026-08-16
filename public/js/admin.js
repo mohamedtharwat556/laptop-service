@@ -1181,7 +1181,6 @@ class AdminManager {
                             <th>Customer</th>
                             <th class="table-hide-mobile">Phone</th>
                             <th>Device</th>
-                            <th class="table-hide-mobile">Serial</th>
                             <th class="table-hide-mobile">Received</th>
                             <th>Status</th>
                             <th class="table-hide-mobile">Priority</th>
@@ -1195,8 +1194,10 @@ class AdminManager {
                                 <td class="table-hide-mobile"><strong>${request.requestNumber}</strong></td>
                                 <td>${request.fullName}</td>
                                 <td class="table-hide-mobile" dir="ltr">${request.phone}</td>
-                                <td>${request.laptopBrand} ${request.laptopModel || ''}</td>
-                                <td class="table-hide-mobile" dir="ltr">${request.serialNumber || '—'}</td>
+                                <td>
+                                    <div>${request.laptopBrand} ${request.laptopModel || ''}</div>
+                                    ${request.serialNumber ? `<div style="font-size: 0.875rem; color: #94a3b8;" dir="ltr">SN: ${request.serialNumber}</div>` : ''}
+                                </td>
                                 <td class="table-hide-mobile">${request.receivedDate || '—'}</td>
                                 <td><span class="status-badge ${this.getStatusClass(request.status)}">${this.translateStatus(request.status)}</span></td>
                                 <td class="table-hide-mobile">${request.priority}</td>
@@ -1395,10 +1396,6 @@ class AdminManager {
                 </div>
                 <form id="editRequestForm" style="margin-top: 1.5rem;">
                     <div class="form-group">
-                        <label class="form-label">الرقم التسلسلي</label>
-                        <input type="text" class="form-input" name="serialNumber" value="${request.serialNumber || ''}" placeholder="أدخل الرقم التسلسلي">
-                    </div>
-                    <div class="form-group">
                         <label class="form-label">رد الإدارة</label>
                         <textarea class="form-textarea" name="adminReply" rows="3">${request.adminReply || ''}</textarea>
                     </div>
@@ -1442,7 +1439,6 @@ class AdminManager {
             }
 
             const updateData = {
-                serialNumber: form.serialNumber.value,
                 adminReply: form.adminReply.value,
                 cost: parseFloat(form.cost.value) || 0,
                 estimatedCompletionDate: estimatedCompletionDate,
