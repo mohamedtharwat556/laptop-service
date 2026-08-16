@@ -1641,6 +1641,7 @@ class AdminManager {
                 <td>${r.laptopBrand}${r.laptopModel ? ' ' + r.laptopModel : ''}</td>
                 <td dir="ltr" style="color: #94a3b8;">${r.serialNumber || '—'}</td>
                 <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription}</td>
+                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.adminReply || '—'}</td>
                 <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
                 <td style="font-weight: 600;">${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
                 <td>${r.receivedDate ? Utils.formatDate(r.receivedDate) : '—'}</td>
@@ -1667,7 +1668,7 @@ class AdminManager {
                     </div>
                 </div>
                 <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
-                    <table class="table" style="width:100%; min-width:1200px; border-collapse: collapse;">
+                    <table class="table" style="width:100%; min-width:1300px; border-collapse: collapse;">
                         <thead>
                             <tr style="background: rgba(59, 130, 246, 0.1);">
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">#</th>
@@ -1677,6 +1678,7 @@ class AdminManager {
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">اللابتوب</th>
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">الرقم التسلسلي</th>
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">المشكلة</th>
+                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">رد الإدارة</th>
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">الحالة</th>
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">التكلفة</th>
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">تاريخ الاستلام</th>
@@ -1760,7 +1762,7 @@ class AdminManager {
         }
 
         const data = [
-            ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'الحالة', 'التكلفة', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
+            ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
             ...filteredRequests.map((r, i) => [
                 i + 1,
                 r.requestNumber,
@@ -1769,6 +1771,7 @@ class AdminManager {
                 `${r.laptopBrand}${r.laptopModel ? ' ' + r.laptopModel : ''}`,
                 r.serialNumber || '—',
                 r.problemDescription,
+                r.adminReply || '—',
                 this.translateStatus(r.status),
                 r.cost > 0 ? r.cost : 0,
                 r.receivedDate ? Utils.formatDate(r.receivedDate) : '—',
@@ -1781,7 +1784,7 @@ class AdminManager {
         // Column widths
         ws['!cols'] = [
             {wch:4},{wch:14},{wch:20},{wch:14},{wch:18},{wch:15},
-            {wch:35},{wch:18},{wch:10},{wch:18},{wch:18},{wch:20}
+            {wch:35},{wch:25},{wch:18},{wch:10},{wch:18},{wch:18},{wch:20}
         ];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'التقرير');
