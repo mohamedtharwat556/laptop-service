@@ -238,6 +238,7 @@ class CustomerManager {
                 phone: form.querySelector('[name="phone"]').value,
                 laptopBrand: form.querySelector('[name="laptopBrand"]').value,
                 laptopModel: form.querySelector('[name="laptopModel"]').value,
+                serialNumber: form.querySelector('[name="serialNumber"]').value,
                 receivedDate: form.querySelector('[name="receivedDate"]').value,
                 problemDescription: form.querySelector('[name="problemDescription"]').value,
                 priority: form.querySelector('[name="priority"]') ? form.querySelector('[name="priority"]').value : 'Medium',
