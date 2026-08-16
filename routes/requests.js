@@ -19,6 +19,7 @@ router.get('/', async (req, res) => {
             deviceType: item.device_type,
             laptopBrand: item.laptop_brand,
             laptopModel: item.laptop_model,
+            serialNumber: item.serial_number,
             receivedDate: item.received_date,
             problemDescription: item.problem_description,
             priority: item.priority,
@@ -77,6 +78,7 @@ router.post('/', async (req, res) => {
             email: req.body.email || '',
             laptop_brand: req.body.laptopBrand,
             laptop_model: req.body.laptopModel,
+            serial_number: req.body.serialNumber,
             received_date: req.body.receivedDate,
             problem_description: req.body.problemDescription,
             status: req.body.status || 'Received',
@@ -120,6 +122,7 @@ router.put('/:id', async (req, res) => {
             else if (key === 'receivedDate') snakeCaseData.received_date = req.body[key];
             else if (key === 'laptopBrand') snakeCaseData.laptop_brand = req.body[key];
             else if (key === 'laptopModel') snakeCaseData.laptop_model = req.body[key];
+            else if (key === 'serialNumber') snakeCaseData.serial_number = req.body[key];
             else if (key === 'problemDescription') snakeCaseData.problem_description = req.body[key];
             else if (key === 'deviceImage') snakeCaseData.device_image = req.body[key];
             else if (key === 'repairImages') snakeCaseData.repair_images = req.body[key];

@@ -42,6 +42,7 @@ class CustomerManager {
             email: formData.email || '',
             laptopBrand: formData.laptopBrand,
             laptopModel: formData.laptopModel,
+            serialNumber: formData.serialNumber,
             receivedDate: formData.receivedDate,
             problemDescription: formData.problemDescription,
             priority: formData.priority || 'Medium',

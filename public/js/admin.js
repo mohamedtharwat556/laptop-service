@@ -1180,6 +1180,7 @@ class AdminManager {
                             <th>Customer</th>
                             <th class="table-hide-mobile">Phone</th>
                             <th>Device</th>
+                            <th class="table-hide-mobile">Serial</th>
                             <th class="table-hide-mobile">Received</th>
                             <th>Status</th>
                             <th class="table-hide-mobile">Priority</th>
@@ -1194,6 +1195,7 @@ class AdminManager {
                                 <td>${request.fullName}</td>
                                 <td class="table-hide-mobile" dir="ltr">${request.phone}</td>
                                 <td>${request.laptopBrand} ${request.laptopModel || ''}</td>
+                                <td class="table-hide-mobile" dir="ltr">${request.serialNumber || '—'}</td>
                                 <td class="table-hide-mobile">${request.receivedDate || '—'}</td>
                                 <td><span class="status-badge ${this.getStatusClass(request.status)}">${this.translateStatus(request.status)}</span></td>
                                 <td class="table-hide-mobile">${request.priority}</td>
@@ -1377,6 +1379,7 @@ class AdminManager {
                     <div class="request-detail-item"><span class="request-detail-label">اسم العميل</span><span class="request-detail-value">${request.fullName}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${request.phone}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${request.laptopBrand} ${request.laptopModel || ''}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${request.serialNumber || '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${request.receivedDate || '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(request.createdAt)}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${request.problemDescription}</span></div>
@@ -1390,6 +1393,10 @@ class AdminManager {
                     ` : ''}
                 </div>
                 <form id="editRequestForm" style="margin-top: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label">الرقم التسلسلي</label>
+                        <input type="text" class="form-input" name="serialNumber" value="${request.serialNumber || ''}" placeholder="أدخل الرقم التسلسلي">
+                    </div>
                     <div class="form-group">
                         <label class="form-label">رد الإدارة</label>
                         <textarea class="form-textarea" name="adminReply" rows="3">${request.adminReply || ''}</textarea>
@@ -1434,6 +1441,7 @@ class AdminManager {
             }
 
             const updateData = {
+                serialNumber: form.serialNumber.value,
                 adminReply: form.adminReply.value,
                 cost: parseFloat(form.cost.value) || 0,
                 estimatedCompletionDate: estimatedCompletionDate,
