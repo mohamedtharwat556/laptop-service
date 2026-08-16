@@ -1196,7 +1196,7 @@ class AdminManager {
                                 <td class="table-hide-mobile" dir="ltr">${request.phone}</td>
                                 <td>
                                     <div>${request.laptopBrand} ${request.laptopModel || ''}</div>
-                                    ${request.serialNumber ? `<div style="font-size: 0.875rem; color: #94a3b8;" dir="ltr">SN: ${request.serialNumber}</div>` : ''}
+                                    ${request.serialNumber && request.serialNumber !== 'N/A' ? `<div style="font-size: 0.875rem; color: #94a3b8;" dir="ltr">SN: ${request.serialNumber}</div>` : ''}
                                 </td>
                                 <td class="table-hide-mobile">${request.receivedDate || '—'}</td>
                                 <td><span class="status-badge ${this.getStatusClass(request.status)}">${this.translateStatus(request.status)}</span></td>
