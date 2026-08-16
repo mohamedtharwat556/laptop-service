@@ -1180,7 +1180,7 @@ class AdminManager {
                 </button>
             </div>
             <div class="table-container" style="overflow-x: auto;">
-                <table class="table" style="min-width: 900px;">
+                <table class="table" style="min-width: 1000px;">
                     <thead>
                         <tr>
                             <th class="table-hide-mobile">Request #</th>
@@ -1190,6 +1190,8 @@ class AdminManager {
                             <th class="table-hide-mobile">Received</th>
                             <th>Status</th>
                             <th class="table-hide-mobile">Priority</th>
+                            <th class="table-hide-mobile">Cost</th>
+                            <th>Technician</th>
                             <th class="table-hide-mobile">Date</th>
                             <th>Actions</th>
                         </tr>
@@ -1207,6 +1209,8 @@ class AdminManager {
                                 <td class="table-hide-mobile">${request.receivedDate || '—'}</td>
                                 <td><span class="status-badge ${this.getStatusClass(request.status)}">${this.translateStatus(request.status)}</span></td>
                                 <td class="table-hide-mobile">${request.priority}</td>
+                                <td class="table-hide-mobile">${request.cost > 0 ? Utils.formatCurrency(request.cost) : '—'}</td>
+                                <td>${request.technician || '—'}</td>
                                 <td class="table-hide-mobile">${Utils.formatDate(request.createdAt)}</td>
                                 <td>
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
@@ -1218,8 +1222,7 @@ class AdminManager {
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
-                            </tr>
-                        `).join('')}
+                            </tr>`).join('')}
                     </tbody>
                 </table>
             </div>
@@ -1410,6 +1413,23 @@ class AdminManager {
                         <input type="number" class="form-input" name="cost" value="${request.cost || ''}" placeholder="أدخل تكلفة الصيانة" min="0" step="0.01">
                     </div>
                     <div class="form-group">
+                        <label class="form-label">الفني المسؤول</label>
+                        <select class="form-select" name="technician">
+                            <option value="">اختر الفني</option>
+                            <option value="استاذ ابراهيم" ${request.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
+                            <option value="علياء" ${request.technician === 'علياء' ? 'selected' : ''}>علياء</option>
+                            <option value="سلمي" ${request.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
+                            <option value="استاذة سهير رمزي" ${request.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
+                            <option value="استاذة ناديه" ${request.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
+                            <option value="استاذة ام كلثوم" ${request.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
+                            <option value="استاذة اسماء" ${request.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
+                            <option value="استاذ خالد" ${request.technician === 'استاذ خالد' ? 'selected' : ''}>استاذ خالد</option>
+                            <option value="استاذ محمد علي و عم وليد" ${request.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
+                            <option value="الاستاذ عبد الدالي" ${request.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
+                            <option value="الاستاذ نادر" ${request.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
                         <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${request.estimatedCompletionDate ? new Date(request.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
                     </div>
@@ -1447,6 +1467,7 @@ class AdminManager {
             const updateData = {
                 adminReply: form.adminReply.value,
                 cost: parseFloat(form.cost.value) || 0,
+                technician: form.technician.value,
                 estimatedCompletionDate: estimatedCompletionDate,
                 status: form.status.value
             };
@@ -1692,6 +1713,7 @@ class AdminManager {
                 <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.adminReply || '—'}</td>
                 <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
                 <td style="font-weight: 600;">${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
+                <td>${r.technician || '—'}</td>
                 <td>${r.receivedDate ? Utils.formatDate(r.receivedDate) : '—'}</td>
                 <td>${r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—'}</td>
                 <td>${Utils.formatDate(r.createdAt)}</td>
@@ -1716,7 +1738,7 @@ class AdminManager {
                     </div>
                 </div>
                 <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
-                    <table class="table" style="width:100%; min-width:1300px; border-collapse: collapse;">
+                    <table class="table" style="width:100%; min-width:1400px; border-collapse: collapse;">
                         <thead>
                             <tr style="background: rgba(59, 130, 246, 0.1);">
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">#</th>
@@ -1729,6 +1751,7 @@ class AdminManager {
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">رد الإدارة</th>
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">الحالة</th>
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">التكلفة</th>
+                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">الفني</th>
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">تاريخ الاستلام</th>
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">تاريخ التسليم المتوقع</th>
                                 <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">تاريخ الطلب</th>
@@ -1810,7 +1833,7 @@ class AdminManager {
         }
 
         const data = [
-            ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
+            ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
             ...filteredRequests.map((r, i) => [
                 i + 1,
                 r.requestNumber,
@@ -1822,6 +1845,7 @@ class AdminManager {
                 r.adminReply || '—',
                 this.translateStatus(r.status),
                 r.cost > 0 ? r.cost : 0,
+                r.technician || '—',
                 r.receivedDate ? Utils.formatDate(r.receivedDate) : '—',
                 r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—',
                 Utils.formatDate(r.createdAt)
@@ -1832,7 +1856,7 @@ class AdminManager {
         // Column widths
         ws['!cols'] = [
             {wch:4},{wch:14},{wch:20},{wch:14},{wch:18},{wch:15},
-            {wch:35},{wch:25},{wch:18},{wch:10},{wch:18},{wch:18},{wch:20}
+            {wch:35},{wch:25},{wch:18},{wch:10},{wch:15},{wch:18},{wch:18},{wch:20}
         ];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'التقرير');

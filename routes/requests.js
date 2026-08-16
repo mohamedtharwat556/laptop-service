@@ -31,6 +31,7 @@ router.get('/', async (req, res) => {
             replacementParts: item.replacement_parts,
             notes: item.notes,
             technicianNotes: item.technician_notes,
+            technician: item.technician,
             adminReply: item.admin_reply,
             createdAt: item.created_at,
             updatedAt: item.updated_at
@@ -129,6 +130,7 @@ router.put('/:id', async (req, res) => {
             else if (key === 'repairImages') snakeCaseData.repair_images = req.body[key];
             else if (key === 'replacementParts') snakeCaseData.replacement_parts = req.body[key];
             else if (key === 'technicianNotes') snakeCaseData.technician_notes = req.body[key];
+            else if (key === 'technician') snakeCaseData.technician = req.body[key];
             else snakeCaseData[key] = req.body[key];
         });
         
