@@ -619,15 +619,15 @@ class AdminManager {
      */
     calculateStatistics() {
         const today = new Date().toDateString();
-        const todayOrders = this.orders.filter(order => 
-            new Date(order.createdAt).toDateString() === today
+        const todayOrders = this.requests.filter(request =>
+            new Date(request.createdAt).toDateString() === today
         );
 
         const totalRevenue = this.orders.reduce((sum, order) => sum + (order.total || 0), 0);
 
         return {
             totalRequests: this.requests.length,
-            openRequests: this.requests.filter(r => 
+            openRequests: this.requests.filter(r =>
                 ['Received', 'Waiting Inspection', 'Under Maintenance', 'Waiting Parts'].includes(r.status)
             ).length,
             completedRequests: this.requests.filter(r => r.status === 'Delivered').length,
@@ -1526,9 +1526,9 @@ class AdminManager {
             monthAgo.setMonth(monthAgo.getMonth() - 1);
             filtered = filtered.filter(r => new Date(r.createdAt) >= monthAgo);
         } else if (activeFilter === 'open') {
-            filtered = filtered.filter(r => r.status !== 'Delivered' && r.status !== 'Completed');
+            filtered = filtered.filter(r => r.status !== 'Delivered');
         } else if (activeFilter === 'completed') {
-            filtered = filtered.filter(r => r.status === 'Delivered' || r.status === 'Completed');
+            filtered = filtered.filter(r => r.status === 'Delivered');
         } else if (activeFilter !== 'All') {
             filtered = filtered.filter(r => r.status === activeFilter);
         }
