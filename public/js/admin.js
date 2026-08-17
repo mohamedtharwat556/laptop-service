@@ -1674,11 +1674,13 @@ class AdminManager {
                             <option value="استاذة ناديه" ${request.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
                             <option value="استاذة ام كلثوم" ${request.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
                             <option value="استاذة اسماء" ${request.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
-                            <option value="استاذ خالد" ${request.technician === 'استاذ خالد' ? 'selected' : ''}>استاذ خالد</option>
+                            <option value="استاذ خالد و عبدالله رضا" ${request.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
                             <option value="استاذ محمد علي و عم وليد" ${request.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
                             <option value="الاستاذ عبد الدالي" ${request.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
                             <option value="الاستاذ نادر" ${request.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
                             <option value="الاستاذ عبدالله موسي" ${request.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
+                            <option value="استاذ احمد اسلام" ${request.technician === 'استاذ احمد اسلام' ? 'selected' : ''}>استاذ احمد اسلام</option>
+                            <option value="احمد طه" ${request.technician === 'احمد طه' ? 'selected' : ''}>احمد طه</option>
                         </select>
                     </div>
                     <div class="form-group">
