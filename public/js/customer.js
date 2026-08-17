@@ -252,7 +252,7 @@ class CustomerManager {
 
                 // Prepare WhatsApp message
                 const message = `طلب صيانة:\nالاسم: ${formData.fullName}\nالهاتف: ${formData.phone}\nماركة اللابتوب: ${formData.laptopBrand}\nموديل اللابتوب: ${formData.laptopModel}\nوصف المشكلة: ${formData.problemDescription}`;
-                const waUrl = `https://wa.me/20106943785?text=${encodeURIComponent(message)}`;
+                const waUrl = `https://wa.me/201069143785?text=${encodeURIComponent(message)}`;
                 window.location.href = waUrl;
 
                 form.reset();
