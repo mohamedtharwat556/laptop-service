@@ -31,6 +31,13 @@
                 <a href="index.html" class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem; background: rgba(255,255,255,0.08); color:#94a3b8; border:1px solid rgba(255,255,255,0.1); border-radius:8px; text-decoration:none; display:flex; align-items:center; gap:0.4rem;">
                     <i class="fas fa-home"></i> الصفحة الرئيسية
                 </a>
+                <div style="position: relative;">
+                    <button id="notificationBtn" onclick="adminManager.toggleNotificationDropdown()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.5rem 1rem; color: #94a3b8; cursor: pointer; position: relative;">
+                        <i class="fas fa-bell" style="font-size: 1.1rem;"></i>
+                        <span id="notificationBadge" style="display: none; position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.7rem; font-weight: 700; align-items: center; justify-content: center;">0</span>
+                    </button>
+                    <div id="notificationDropdown" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; width: 320px; max-height: 450px; overflow: hidden; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); z-index: 1000;"></div>
+                </div>
                 <button class="dark-mode-toggle" id="darkModeToggle" title="تبديل الوضع الليلi">
                     <i class="fas fa-moon"></i>
                 </button>

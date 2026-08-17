@@ -17,6 +17,7 @@ class AdminManager {
         this.autoRefreshInterval = null;
         this.lastSeenRequestId = parseInt(localStorage.getItem('lastSeenRequestId') || '0');
         this.newRequestNotifications = [];
+        this.unreadNotifications = JSON.parse(localStorage.getItem('unreadNotifications') || '[]');
     }
 
     /**
@@ -71,7 +72,19 @@ class AdminManager {
             console.log('🔄 Starting auto-refresh...');
             this.startAutoRefresh();
             
-            console.log('🔗 Setting up sidebar navigation...');
+            console.log('� Initializing notification badge...');
+            this.updateNotificationBadge();
+            
+            // Close notification dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                const dropdown = document.getElementById('notificationDropdown');
+                const notificationBtn = document.getElementById('notificationBtn');
+                if (dropdown && notificationBtn && !dropdown.contains(e.target) && !notificationBtn.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+            
+            console.log('�🔗 Setting up sidebar navigation...');
             // Setup sidebar navigation
             document.querySelectorAll('.sidebar-nav-link').forEach(link => {
                 link.addEventListener('click', async (e) => {
@@ -199,24 +212,39 @@ class AdminManager {
             this.lastSeenRequestId = maxId;
             localStorage.setItem('lastSeenRequestId', maxId.toString());
             
-            // Show notification for each new request
+            // Add to unread notifications
             newRequests.forEach(request => {
-                this.showNewRequestNotification(request);
+                const notification = {
+                    id: request.id,
+                    type: 'new_request',
+                    requestNumber: request.requestNumber,
+                    fullName: request.fullName,
+                    laptopBrand: request.laptopBrand,
+                    laptopModel: request.laptopModel,
+                    createdAt: new Date().toISOString(),
+                    read: false
+                };
+                this.unreadNotifications.push(notification);
             });
+            
+            // Save to localStorage
+            localStorage.setItem('unreadNotifications', JSON.stringify(this.unreadNotifications));
+            
+            // Update notification badge
+            this.updateNotificationBadge();
+            
+            // Show toast notification
+            this.showNewRequestToast(newRequests.length);
         }
     }
 
     /**
-     * Show notification for new request
+     * Show toast notification for new requests
      */
-    showNewRequestNotification(request) {
-        const notificationId = `notification-${request.id}-${Date.now()}`;
-        
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.id = notificationId;
-        notification.className = 'new-request-notification';
-        notification.style.cssText = `
+    showNewRequestToast(count) {
+        const toast = document.createElement('div');
+        toast.className = 'notification-toast';
+        toast.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
@@ -232,43 +260,33 @@ class AdminManager {
             border: 2px solid rgba(255, 255, 255, 0.2);
         `;
         
-        notification.innerHTML = `
+        toast.innerHTML = `
             <div style="display: flex; align-items: center; gap: 1rem;">
                 <div style="background: rgba(255, 255, 255, 0.2); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-laptop" style="font-size: 1.5rem;"></i>
                 </div>
                 <div style="flex: 1;">
-                    <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">🔔 لاب جديد واصل!</div>
-                    <div style="font-size: 0.875rem; opacity: 0.9;">${request.fullName} - ${request.laptopBrand} ${request.laptopModel || ''}</div>
-                    <div style="font-size: 0.75rem; opacity: 0.75; margin-top: 0.25rem;">رقم الطلب: ${request.requestNumber}</div>
+                    <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">🔔 ${count} لاب${count > 1 ? 'ات' : ''} جديد${count > 1 ? 'ة' : ''} واصل${count > 1 ? 'ة' : ''}!</div>
+                    <div style="font-size: 0.875rem; opacity: 0.9;">اضغط لعرض الإشعارات</div>
                 </div>
-                <button onclick="event.stopPropagation(); document.getElementById('${notificationId}').remove();" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer; opacity: 0.7; padding: 0.25rem;">
+                <button onclick="event.stopPropagation(); this.closest('.notification-toast').remove();" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer; opacity: 0.7; padding: 0.25rem;">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         `;
         
-        // Add click handler to navigate to request
-        notification.onclick = () => {
-            this.switchSection('requests');
-            setTimeout(() => {
-                this.viewRequest(request.id);
-            }, 100);
-            notification.remove();
+        toast.onclick = () => {
+            this.toggleNotificationDropdown();
+            toast.remove();
         };
         
-        // Add to DOM
-        document.body.appendChild(notification);
+        document.body.appendChild(toast);
         
-        // Auto-remove after 10 seconds
         setTimeout(() => {
-            if (document.getElementById(notificationId)) {
-                notification.style.animation = 'slideOut 0.5s ease-out';
-                setTimeout(() => notification.remove(), 500);
-            }
-        }, 10000);
+            toast.style.animation = 'slideOut 0.5s ease-out';
+            setTimeout(() => toast.remove(), 500);
+        }, 5000);
         
-        // Play notification sound
         this.playNotificationSound();
     }
 
@@ -294,6 +312,123 @@ class AdminManager {
         } catch (e) {
             console.log('Could not play notification sound:', e);
         }
+    }
+
+    /**
+     * Update notification badge count
+     */
+    updateNotificationBadge() {
+        const badge = document.getElementById('notificationBadge');
+        if (badge) {
+            const unreadCount = this.unreadNotifications.filter(n => !n.read).length;
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+
+    /**
+     * Toggle notification dropdown
+     */
+    toggleNotificationDropdown() {
+        const dropdown = document.getElementById('notificationDropdown');
+        if (dropdown) {
+            if (dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+            } else {
+                this.renderNotificationDropdown();
+                dropdown.style.display = 'block';
+            }
+        }
+    }
+
+    /**
+     * Render notification dropdown
+     */
+    renderNotificationDropdown() {
+        const dropdown = document.getElementById('notificationDropdown');
+        if (!dropdown) return;
+
+        const unreadNotifications = this.unreadNotifications.filter(n => !n.read);
+        
+        if (unreadNotifications.length === 0) {
+            dropdown.innerHTML = `
+                <div style="padding: 2rem; text-align: center; color: #94a3b8;">
+                    <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                    <p>لا توجد إشعارات جديدة</p>
+                </div>
+            `;
+            return;
+        }
+
+        dropdown.innerHTML = `
+            <div style="max-height: 400px; overflow-y: auto;">
+                ${unreadNotifications.reverse().map(notification => `
+                    <div class="notification-item" style="padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: background 0.2s;"
+                         onclick="adminManager.openNotification(${notification.id})">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="background: rgba(16, 185, 129, 0.2); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-laptop" style="color: #10b981; font-size: 1rem;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">${notification.fullName}</div>
+                                <div style="font-size: 0.75rem; color: #94a3b8;">${notification.laptopBrand} ${notification.laptopModel || ''}</div>
+                                <div style="font-size: 0.7rem; color: #64748b; margin-top: 0.25rem;">رقم الطلب: ${notification.requestNumber}</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            <div style="padding: 0.75rem; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <button onclick="adminManager.markAllAsRead()" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.875rem;">
+                    تعليم الكل كمقروء
+                </button>
+            </div>
+        `;
+    }
+
+    /**
+     * Open notification and navigate to request
+     */
+    openNotification(notificationId) {
+        const notification = this.unreadNotifications.find(n => n.id === notificationId);
+        if (notification) {
+            // Mark as read
+            notification.read = true;
+            localStorage.setItem('unreadNotifications', JSON.stringify(this.unreadNotifications));
+            
+            // Update badge
+            this.updateNotificationBadge();
+            
+            // Close dropdown
+            const dropdown = document.getElementById('notificationDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+            
+            // Navigate to request
+            this.switchSection('requests');
+            
+            // Find and open the request
+            setTimeout(() => {
+                const request = this.requests.find(r => r.id === notificationId);
+                if (request) {
+                    this.viewRequest(notificationId);
+                }
+            }, 100);
+        }
+    }
+
+    /**
+     * Mark all notifications as read
+     */
+    markAllAsRead() {
+        this.unreadNotifications.forEach(n => n.read = true);
+        localStorage.setItem('unreadNotifications', JSON.stringify(this.unreadNotifications));
+        this.updateNotificationBadge();
+        this.renderNotificationDropdown();
     }
 
     /**
