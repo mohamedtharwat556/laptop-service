@@ -1459,7 +1459,7 @@ class AdminManager {
                                 </td>
                                 <td class="table-hide-mobile">${request.receivedDate || '—'}</td>
                                 <td><span class="status-badge ${this.getStatusClass(request.status)}">${this.translateStatus(request.status)}</span></td>
-                                <td class="table-hide-mobile">${request.priority}</td>
+                                <td class="table-hide-mobile">${this.translatePriority(request.priority)}</td>
                                 <td class="table-hide-mobile">${request.cost > 0 ? Utils.formatCurrency(request.cost) : '—'}</td>
                                 <td>${request.technician || '—'}</td>
                                 <td class="table-hide-mobile">${Utils.formatDate(request.createdAt)}</td>
