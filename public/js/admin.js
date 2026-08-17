@@ -15,6 +15,8 @@ class AdminManager {
         this.currentPage = 1;
         this.itemsPerPage = 10;
         this.autoRefreshInterval = null;
+        this.lastSeenRequestId = parseInt(localStorage.getItem('lastSeenRequestId') || '0');
+        this.newRequestNotifications = [];
     }
 
     /**
@@ -166,7 +168,12 @@ class AdminManager {
             clearInterval(this.autoRefreshInterval);
         }
         this.autoRefreshInterval = setInterval(async () => {
+            const oldRequests = [...this.requests];
             await this.loadData();
+            
+            // Check for new requests
+            this.checkForNewRequests(oldRequests);
+            
             if (this.currentSection === 'dashboard') {
                 this.renderStats();
                 this.renderCharts();
@@ -178,6 +185,115 @@ class AdminManager {
                 this.renderProductsManagement();
             }
         }, 10000);
+    }
+
+    /**
+     * Check for new requests and show notifications
+     */
+    checkForNewRequests(oldRequests) {
+        const newRequests = this.requests.filter(r => r.id > this.lastSeenRequestId);
+        
+        if (newRequests.length > 0) {
+            // Update last seen request ID
+            const maxId = Math.max(...this.requests.map(r => r.id));
+            this.lastSeenRequestId = maxId;
+            localStorage.setItem('lastSeenRequestId', maxId.toString());
+            
+            // Show notification for each new request
+            newRequests.forEach(request => {
+                this.showNewRequestNotification(request);
+            });
+        }
+    }
+
+    /**
+     * Show notification for new request
+     */
+    showNewRequestNotification(request) {
+        const notificationId = `notification-${request.id}-${Date.now()}`;
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.id = notificationId;
+        notification.className = 'new-request-notification';
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            max-width: 400px;
+            animation: slideIn 0.5s ease-out;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-laptop" style="font-size: 1.5rem;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">🔔 لاب جديد واصل!</div>
+                    <div style="font-size: 0.875rem; opacity: 0.9;">${request.fullName} - ${request.laptopBrand} ${request.laptopModel || ''}</div>
+                    <div style="font-size: 0.75rem; opacity: 0.75; margin-top: 0.25rem;">رقم الطلب: ${request.requestNumber}</div>
+                </div>
+                <button onclick="event.stopPropagation(); document.getElementById('${notificationId}').remove();" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer; opacity: 0.7; padding: 0.25rem;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        // Add click handler to navigate to request
+        notification.onclick = () => {
+            this.switchSection('requests');
+            setTimeout(() => {
+                this.viewRequest(request.id);
+            }, 100);
+            notification.remove();
+        };
+        
+        // Add to DOM
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (document.getElementById(notificationId)) {
+                notification.style.animation = 'slideOut 0.5s ease-out';
+                setTimeout(() => notification.remove(), 500);
+            }
+        }, 10000);
+        
+        // Play notification sound
+        this.playNotificationSound();
+    }
+
+    /**
+     * Play notification sound
+     */
+    playNotificationSound() {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        } catch (e) {
+            console.log('Could not play notification sound:', e);
+        }
     }
 
     /**
