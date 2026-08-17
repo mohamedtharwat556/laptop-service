@@ -56,7 +56,7 @@ class ProductsManager {
                     ${product.stock > 0 ? `متوفر (${product.stock} قطعة)` : 'نفدت الكمية'}
                 </p>
                 <div class="product-actions">
-                    <a href="https://wa.me/201013791517?text=${encodeURIComponent(`مرحباً، أريد الاستفسار عن المنتج: ${product.name}`)}" 
+                    <a href="https://wa.me/20106943785?text=${encodeURIComponent(`مرحباً، أريد الاستفسار عن المنتج: ${product.name}`)}" 
                        class="btn btn-primary" target="_blank">
                         <i class="fab fa-whatsapp"></i> اطلب الآن
                     </a>
