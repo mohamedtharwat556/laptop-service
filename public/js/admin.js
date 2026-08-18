@@ -543,14 +543,11 @@ class AdminManager {
             console.log('📊 Loaded bulk requests:', this.bulkRequests);
             console.log('📊 Bulk requests count:', this.bulkRequests.length);
 
-            // Debug: Check first request for new fields
-            if (this.requests.length > 0) {
-                console.log('🔍 First request data:', this.requests[0]);
-                console.log('🔍 receivedDate:', this.requests[0].receivedDate);
-                console.log('🔍 estimatedCompletionDate:', this.requests[0].estimatedCompletionDate);
-                console.log('🔍 requestNumber:', this.requests[0].requestNumber);
-                console.log('🔍 laptopModel:', this.requests[0].laptopModel);
-                console.log('🔍 serialNumber:', this.requests[0].serialNumber);
+            // Debug: Check first bulk request for devices
+            if (this.bulkRequests.length > 0) {
+                console.log('🔍 First bulk request data:', this.bulkRequests[0]);
+                console.log('🔍 First bulk request devices:', this.bulkRequests[0].devices);
+                console.log('🔍 First bulk request devices count:', this.bulkRequests[0].devices?.length || 0);
             }
 
             console.log(`✅ Data loaded: ${this.requests.length} requests, ${this.products.length} products, ${this.bulkRequests.length} bulk requests`);
@@ -1632,6 +1629,7 @@ class AdminManager {
                                 <option value="الاستاذ نادر" ${bulkRequest.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
                                 <option value="الاستاذ عبدالله موسي" ${bulkRequest.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
                                 <option value="استاذ احمد اسلام و احمد طه" ${bulkRequest.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
+                                <option value="المهندس عبد الفتاح وادم" ${bulkRequest.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -2004,6 +2002,7 @@ class AdminManager {
                             <option value="الاستاذ نادر" ${request.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
                             <option value="الاستاذ عبدالله موسي" ${request.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
                             <option value="استاذ احمد اسلام و احمد طه" ${request.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
+                            <option value="المهندس عبد الفتاح وادم" ${request.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
                         </select>
                     </div>
                     <div class="form-group">
