@@ -1483,6 +1483,10 @@ class AdminManager {
                                             onclick="adminManager.viewBulkRequest(${bulkRequest.id})">
                                         <i class="fas fa-eye"></i>
                                     </button>
+                                    <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.deleteBulkRequest(${bulkRequest.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </td>
                             </tr>
                         `).join('')}
@@ -1590,7 +1594,7 @@ class AdminManager {
                     </div>
 
                     <h4 style="margin-bottom: 1rem;"><i class="fas fa-laptop"></i> اللابتوبات (${bulkRequest.devices?.length || 0})</h4>
-                    <div style="overflow-x: auto;">
+                    <div style="overflow-x: auto; margin-bottom: 1.5rem;">
                         <table class="table">
                             <thead>
                                 <tr>
@@ -1620,11 +1624,82 @@ class AdminManager {
                             </tbody>
                         </table>
                     </div>
+
+                    <form id="editBulkRequestForm">
+                        <div class="form-group">
+                            <label class="form-label">رد الإدارة</label>
+                            <textarea class="form-textarea" name="adminReply" rows="3">${bulkRequest.adminReply || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تحديث الحالة</label>
+                            <select class="form-select" name="status">
+                                <option value="Received" ${bulkRequest.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
+                                <option value="Waiting Inspection" ${bulkRequest.status === 'Waiting Inspection' ? 'selected' : ''}>بانتظار الفحص</option>
+                                <option value="Under Maintenance" ${bulkRequest.status === 'Under Maintenance' ? 'selected' : ''}>قيد الصيانة</option>
+                                <option value="Waiting Parts" ${bulkRequest.status === 'Waiting Parts' ? 'selected' : ''}>بانتظار قطع الغيار</option>
+                                <option value="Ready" ${bulkRequest.status === 'Ready' ? 'selected' : ''}>جاهز للتسليم</option>
+                                <option value="Delivered" ${bulkRequest.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
+                    </form>
                 </div>
             `;
+
+            const form = document.getElementById('editBulkRequestForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const updateData = {
+                    adminReply: form.adminReply.value,
+                    status: form.status.value
+                };
+
+                try {
+                    const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (response.ok) {
+                        toast.success('تم تحديث طلب الجملة بنجاح');
+                        await this.loadData();
+                        this.renderBulkRequests();
+                    } else {
+                        throw new Error('Failed to update bulk request');
+                    }
+                } catch (error) {
+                    console.error('Error updating bulk request:', error);
+                    toast.error('فشل في تحديث طلب الجملة');
+                }
+            });
         } catch (error) {
             console.error('Error viewing bulk request:', error);
             toast.error('فشل في تحميل تفاصيل طلب الجملة');
+        }
+    }
+
+    async deleteBulkRequest(bulkRequestId) {
+        if (!confirm('هل أنت متأكد من حذف طلب الجملة؟ سيتم حذف جميع الأجهزة المرتبطة به.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                toast.success('تم حذف طلب الجملة بنجاح');
+                await this.loadData();
+                this.renderBulkRequests();
+            } else {
+                throw new Error('Failed to delete bulk request');
+            }
+        } catch (error) {
+            console.error('Error deleting bulk request:', error);
+            toast.error('فشل في حذف طلب الجملة');
         }
     }
 
