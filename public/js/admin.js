@@ -1734,9 +1734,9 @@ class AdminManager {
             `;
             
             console.log('🎨 Creating modal...');
-            modalManager.create('view-company-request', 'تفاصيل الطلب', content);
+            modalManager.create('view-company-request-' + companyRequestId, 'تفاصيل الطلب', content);
             console.log('🚀 Opening modal...');
-            modalManager.open('view-company-request');
+            modalManager.open('view-company-request-' + companyRequestId);
             console.log('✅ Modal should be open now');
 
             setTimeout(() => {
@@ -1777,7 +1777,7 @@ class AdminManager {
                         if (!response.ok) throw new Error('Failed to update company request');
 
                         toast.success('تم تحديث الطلب بنجاح');
-                        modalManager.close('view-company-request');
+                        modalManager.close('view-company-request-' + companyRequestId);
                         await this.loadData();
                     } catch (error) {
                         console.error('Error updating company request:', error);
