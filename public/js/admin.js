@@ -150,6 +150,24 @@ class AdminManager {
                 });
             }
 
+            // Setup bulk requests search and filters
+            const bulkSearchInput = document.getElementById('bulkRequestSearch');
+            const bulkStatusFilter = document.getElementById('bulkStatusFilter');
+
+            if (bulkSearchInput) {
+                bulkSearchInput.addEventListener('input', Utils.debounce(() => {
+                    this.currentPage = 1;
+                    this.renderBulkRequests();
+                }, 300));
+            }
+
+            if (bulkStatusFilter) {
+                bulkStatusFilter.addEventListener('change', () => {
+                    this.currentPage = 1;
+                    this.renderBulkRequests();
+                });
+            }
+
             if (dateFrom) {
                 dateFrom.addEventListener('change', () => {
                     this.currentPage = 1;
@@ -1393,6 +1411,9 @@ class AdminManager {
             case 'requests':
                 this.renderRequests();
                 break;
+            case 'bulk-requests':
+                this.renderBulkRequests();
+                break;
             case 'users':
                 this.renderUsers();
                 break;
@@ -1400,6 +1421,204 @@ class AdminManager {
                 this.renderProductsManagement();
                 break;
         }
+    }
+
+    /**
+     * Render bulk requests table
+     */
+    renderBulkRequests() {
+        const container = document.getElementById('bulkRequestsContainer');
+        if (!container) return;
+
+        // Filter only bulk requests
+        const bulkRequests = this.requests.filter(r => r.requestType === 'bulk');
+        const filteredRequests = this.filterBulkRequests(bulkRequests);
+        const { data, pages } = this.paginate(filteredRequests);
+
+        if (data.length === 0) {
+            container.innerHTML = `
+                <div class="glass-card" style="text-align: center; padding: 3rem;">
+                    <i class="fas fa-boxes" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+                    <p style="color: #94a3b8;">لا توجد طلبات جملة حالياً</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Group bulk requests by customer (phone number)
+        const groupedByCustomer = this.groupBulkRequestsByCustomer(data);
+
+        container.innerHTML = `
+            <div style="overflow-x: auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>العميل</th>
+                            <th>الهاتف</th>
+                            <th>عدد اللابتوبات</th>
+                            <th>أرقام الطلبات</th>
+                            <th>الحالة</th>
+                            <th>التاريخ</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${groupedByCustomer.map(group => `
+                            <tr style="transition: background-color 0.2s;">
+                                <td style="font-weight: 600;">${group.customerName}</td>
+                                <td dir="ltr">${group.customerPhone}</td>
+                                <td style="font-weight: 600; color: #3b82f6;">${group.deviceCount}</td>
+                                <td dir="ltr" style="font-size: 0.8rem; color: #94a3b8;">${group.requestNumbers.join(', ')}</td>
+                                <td><span class="status-badge ${this.getStatusClass(group.status)}">${this.translateStatus(group.status)}</span></td>
+                                <td>${Utils.formatDate(group.createdAt)}</td>
+                                <td>
+                                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
+                                            onclick="adminManager.viewBulkRequest('${group.customerPhone}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div id="bulkRequestsPagination"></div>
+        `;
+
+        this.renderPagination('bulkRequestsPagination', pages);
+    }
+
+    /**
+     * Group bulk requests by customer
+     */
+    groupBulkRequestsByCustomer(requests) {
+        const groups = {};
+        
+        requests.forEach(request => {
+            const key = request.phone;
+            if (!groups[key]) {
+                groups[key] = {
+                    customerName: request.fullName,
+                    customerPhone: request.phone,
+                    deviceCount: 0,
+                    requestNumbers: [],
+                    status: request.status,
+                    createdAt: request.createdAt
+                };
+            }
+            groups[key].deviceCount++;
+            groups[key].requestNumbers.push(request.requestNumber);
+        });
+
+        return Object.values(groups);
+    }
+
+    /**
+     * Filter bulk requests
+     */
+    filterBulkRequests(requests) {
+        const searchTerm = document.getElementById('bulkRequestSearch')?.value?.toLowerCase() || '';
+        const statusFilter = document.getElementById('bulkStatusFilter')?.value || 'All';
+
+        let filtered = [...requests];
+
+        // Search filter
+        if (searchTerm) {
+            filtered = filtered.filter(r => 
+                r.fullName.toLowerCase().includes(searchTerm) ||
+                r.phone.toLowerCase().includes(searchTerm) ||
+                r.requestNumber.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        // Status filter
+        if (statusFilter !== 'All') {
+            filtered = filtered.filter(r => r.status === statusFilter);
+        }
+
+        return filtered;
+    }
+
+    /**
+     * View bulk request details
+     */
+    viewBulkRequest(customerPhone) {
+        const bulkRequests = this.requests.filter(r => r.requestType === 'bulk' && r.phone === customerPhone);
+        
+        if (bulkRequests.length === 0) return;
+
+        const container = document.getElementById('bulkRequestsContainer');
+        const firstRequest = bulkRequests[0];
+
+        container.innerHTML = `
+            <div class="glass-card" style="margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0;">تفاصيل طلب الجملة</h3>
+                    <button class="btn btn-secondary" onclick="adminManager.renderBulkRequests()">
+                        <i class="fas fa-arrow-right"></i> رجوع
+                    </button>
+                </div>
+                
+                <div style="background: rgba(59, 130, 246, 0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(59, 130, 246, 0.2);">
+                    <h4 style="color: #3b82f6; margin-bottom: 1rem;"><i class="fas fa-user"></i> معلومات العميل</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <strong style="color: #94a3b8;">الاسم:</strong>
+                            <span>${firstRequest.fullName}</span>
+                        </div>
+                        <div>
+                            <strong style="color: #94a3b8;">الهاتف:</strong>
+                            <span dir="ltr">${firstRequest.phone}</span>
+                        </div>
+                        <div>
+                            <strong style="color: #94a3b8;">البريد:</strong>
+                            <span>${firstRequest.email || '—'}</span>
+                        </div>
+                        <div>
+                            <strong style="color: #94a3b8;">عدد اللابتوبات:</strong>
+                            <span style="color: #3b82f6; font-weight: 600;">${bulkRequests.length}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 style="margin-bottom: 1rem;"><i class="fas fa-laptop"></i> اللابتوبات (${bulkRequests.length})</h4>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>رقم الطلب</th>
+                                <th>الماركة</th>
+                                <th>الموديل</th>
+                                <th>الرقم التسلسلي</th>
+                                <th>المشكلة</th>
+                                <th>الحالة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${bulkRequests.map((request, index) => `
+                                <tr>
+                                    <td style="font-weight: 600;">${index + 1}</td>
+                                    <td style="font-weight: 600; color: #3b82f6;">${request.requestNumber}</td>
+                                    <td>${request.laptopBrand}</td>
+                                    <td>${request.laptopModel || '—'}</td>
+                                    <td dir="ltr" style="color: #94a3b8;">${request.serialNumber || '—'}</td>
+                                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${request.problemDescription}</td>
+                                    <td><span class="status-badge ${this.getStatusClass(request.status)}">${this.translateStatus(request.status)}</span></td>
+                                    <td>
+                                        <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
+                                                onclick="adminManager.viewRequest(${request.id})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
     }
 
     /**
@@ -1897,17 +2116,27 @@ class AdminManager {
         const reportDate = document.getElementById('reportDate');
         const reportDateFrom = document.getElementById('reportDateFrom');
         const reportDateTo = document.getElementById('reportDateTo');
+        const reportType = document.getElementById('reportType');
 
         let filteredRequests = [];
         const allRequests = this.requests;
 
+        // Filter by request type
+        const type = reportType ? reportType.value : 'single';
+        let requestsByType = allRequests;
+        if (type === 'bulk') {
+            requestsByType = allRequests.filter(r => r.requestType === 'bulk');
+        } else {
+            requestsByType = allRequests.filter(r => r.requestType === 'single' || !r.requestType);
+        }
+
         const period = reportPeriod ? reportPeriod.value : 'today';
 
         if (period === 'all') {
-            filteredRequests = allRequests;
+            filteredRequests = requestsByType;
         } else if (period === 'today') {
             const today = new Date().toISOString().slice(0, 10);
-            filteredRequests = allRequests.filter(r => {
+            filteredRequests = requestsByType.filter(r => {
                 const d = new Date(r.createdAt);
                 return d.toISOString().slice(0, 10) === today;
             });
@@ -1915,7 +2144,7 @@ class AdminManager {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
             const yesterdayStr = yesterday.toISOString().slice(0, 10);
-            filteredRequests = allRequests.filter(r => {
+            filteredRequests = requestsByType.filter(r => {
                 const d = new Date(r.createdAt);
                 return d.toISOString().slice(0, 10) === yesterdayStr;
             });
@@ -1923,99 +2152,117 @@ class AdminManager {
             const today = new Date();
             const lastWeek = new Date();
             lastWeek.setDate(lastWeek.getDate() - 7);
-            filteredRequests = allRequests.filter(r => {
+            filteredRequests = requestsByType.filter(r => {
                 const d = new Date(r.createdAt);
                 return d >= lastWeek && d <= today;
             });
         } else if (period === 'custom') {
             const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
-            filteredRequests = allRequests.filter(r => {
+            filteredRequests = requestsByType.filter(r => {
                 const d = new Date(r.createdAt);
                 return d.toISOString().slice(0, 10) === selectedDate;
             });
         }
 
-        this.renderReportTable(filteredRequests);
+        this.renderReportTable(filteredRequests, type);
     }
 
     /**
      * Render report table
      */
-    renderReportTable(requests) {
+    renderReportTable(requests, type = 'single') {
         const container = document.getElementById('dailyReportContainer');
         if (!container) return;
 
         if (requests.length === 0) {
             container.innerHTML = `
-                <div class="glass-card" style="text-align:center; padding:3rem; margin-top:1.5rem;">
-                    <i class="fas fa-calendar-times" style="font-size:3rem; color:#64748b; margin-bottom:1rem;"></i>
-                    <p style="color:#94a3b8; font-size:1.1rem;">لا توجد طلبات في الفترة المحددة</p>
-                </div>`;
+                <div class="glass-card" style="text-align: center; padding: 3rem;">
+                    <i class="fas fa-file-excel" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+                    <p style="color: #94a3b8;">لا توجد طلبات للفترة المحددة</p>
+                </div>
+            `;
             return;
         }
 
-        const rows = requests.map((r, i) => `
-            <tr style="transition: background-color 0.2s;">
-                <td style="font-weight: 600; color: #3b82f6;">${i + 1}</td>
-                <td style="font-weight: 600;">${r.requestNumber}</td>
-                <td>${r.fullName}</td>
-                <td dir="ltr">${r.phone}</td>
-                <td>${r.laptopBrand}${r.laptopModel ? ' ' + r.laptopModel : ''}</td>
-                <td dir="ltr" style="color: #94a3b8;">${r.serialNumber || '—'}</td>
-                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription}</td>
-                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.adminReply || '—'}</td>
-                <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
-                <td style="font-weight: 600;">${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
-                <td>${r.technician || '—'}</td>
-                <td>${r.receivedDate ? Utils.formatDate(r.receivedDate) : '—'}</td>
-                <td>${r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—'}</td>
-                <td>${Utils.formatDate(r.createdAt)}</td>
-            </tr>`).join('');
-
-        container.innerHTML = `
-            <div class="glass-card" style="margin-top:1.5rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 365, 255, 0.02) 100%); border: 1px solid rgba(255, 255, 255, 0.1);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-chart-bar" style="color: #3b82f6; font-size: 1.5rem;"></i>
-                        <h3 style="margin: 0; color: #fff; font-size: 1.25rem;">تقرير الطلبات</h3>
+        // For bulk requests, group by customer
+        if (type === 'bulk') {
+            const groupedByCustomer = this.groupBulkRequestsByCustomer(requests);
+            
+            container.innerHTML = `
+                <div class="glass-card">
+                    <div style="overflow-x: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>العميل</th>
+                                    <th>الهاتف</th>
+                                    <th>عدد اللابتوبات</th>
+                                    <th>أرقام الطلبات</th>
+                                    <th>الحالة</th>
+                                    <th>التاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${groupedByCustomer.map(group => `
+                                    <tr>
+                                        <td style="font-weight: 600;">${group.customerName}</td>
+                                        <td dir="ltr">${group.customerPhone}</td>
+                                        <td style="font-weight: 600; color: #3b82f6;">${group.deviceCount}</td>
+                                        <td dir="ltr" style="font-size: 0.8rem; color: #94a3b8;">${group.requestNumbers.join(', ')}</td>
+                                        <td><span class="status-badge ${this.getStatusClass(group.status)}">${this.translateStatus(group.status)}</span></td>
+                                        <td>${Utils.formatDate(group.createdAt)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
                     </div>
-                    <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="color: #94a3b8;">إجمالي الطلبات:</span>
-                            <strong style="color: #3b82f6; font-size: 1.25rem;">${requests.length}</strong>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="color: #94a3b8;">إجمالي التكلفة:</span>
-                            <strong style="color: #10b981; font-size: 1.25rem;">${Utils.formatCurrency(requests.reduce((sum, r) => sum + (r.cost || 0), 0))}</strong>
-                        </div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
+                        <strong>إجمالي العملاء:</strong> ${groupedByCustomer.length} | 
+                        <strong>إجمالي اللابتوبات:</strong> ${groupedByCustomer.reduce((sum, g) => sum + g.deviceCount, 0)}
                     </div>
                 </div>
-                <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
-                    <table class="table" style="width:100%; min-width:1400px; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: rgba(59, 130, 246, 0.1);">
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">#</th>
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">رقم الطلب</th>
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">اسم العميل</th>
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">الهاتف</th>
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">اللابتوب</th>
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">الرقم التسلسلي</th>
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">المشكلة</th>
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">رد الإدارة</th>
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">الحالة</th>
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">التكلفة</th>
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">الفني</th>
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">تاريخ الاستلام</th>
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">تاريخ التسليم المتوقع</th>
-                                <th style="padding: 1rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: #3b82f6; font-weight: 600;">تاريخ الطلب</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rows}
-                        </tbody>
-                    </table>
+            `;
+        } else {
+            // Single requests (existing logic)
+            container.innerHTML = `
+                <div class="glass-card">
+                    <div style="overflow-x: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>رقم الطلب</th>
+                                    <th>اسم العميل</th>
+                                    <th>الهاتف</th>
+                                    <th>الجهاز</th>
+                                    <th>المشكلة</th>
+                                    <th>الحالة</th>
+                                    <th>التكلفة</th>
+                                    <th>التاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${requests.map(r => `
+                                    <tr>
+                                        <td style="font-weight: 600;">${r.requestNumber}</td>
+                                        <td>${r.fullName}</td>
+                                        <td dir="ltr">${r.phone}</td>
+                                        <td>${r.laptopBrand} ${r.laptopModel || ''}</td>
+                                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription}</td>
+                                        <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
+                                        <td>${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
+                                        <td>${Utils.formatDate(r.createdAt)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
+                        <strong>إجمالي الطلبات:</strong> ${requests.length} |
+                        <strong>إجمالي التكلفة:</strong> ${Utils.formatCurrency(requests.reduce((sum, r) => sum + (r.cost || 0), 0))}
+                    </div>
                 </div>
-            </div>`;
+            `;
+        }
     }
 
     /**
@@ -2033,51 +2280,62 @@ class AdminManager {
         const reportDate = document.getElementById('reportDate');
         const reportDateFrom = document.getElementById('reportDateFrom');
         const reportDateTo = document.getElementById('reportDateTo');
+        const reportType = document.getElementById('reportType');
 
         let filteredRequests = [];
         const allRequests = this.requests;
 
+        // Filter by request type
+        const type = reportType ? reportType.value : 'single';
+        let requestsByType = allRequests;
+        if (type === 'bulk') {
+            requestsByType = allRequests.filter(r => r.requestType === 'bulk');
+        } else {
+            requestsByType = allRequests.filter(r => r.requestType === 'single' || !r.requestType);
+        }
+
         const period = reportPeriod ? reportPeriod.value : 'today';
         console.log('📊 Report period:', period);
-        console.log('📊 Total requests:', allRequests.length);
+        console.log('📊 Report type:', type);
+        console.log('📊 Total requests:', requestsByType.length);
         let fileName = 'تقرير';
 
         if (period === 'all') {
-            filteredRequests = allRequests;
-            fileName = 'تقرير-كل-الطلبات';
+            filteredRequests = requestsByType;
+            fileName = type === 'bulk' ? 'تقرير-طلبات-جملة' : 'تقرير-كل-الطلبات';
             console.log('📊 Showing all requests:', filteredRequests.length);
         } else if (period === 'today') {
             const today = new Date().toISOString().slice(0, 10);
-            filteredRequests = allRequests.filter(r => {
+            filteredRequests = requestsByType.filter(r => {
                 const d = new Date(r.createdAt);
                 return d.toISOString().slice(0, 10) === today;
             });
-            fileName = `تقرير-${today}`;
+            fileName = type === 'bulk' ? `تقرير-جملة-${today}` : `تقرير-${today}`;
         } else if (period === 'yesterday') {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
             const yesterdayStr = yesterday.toISOString().slice(0, 10);
-            filteredRequests = allRequests.filter(r => {
+            filteredRequests = requestsByType.filter(r => {
                 const d = new Date(r.createdAt);
                 return d.toISOString().slice(0, 10) === yesterdayStr;
             });
-            fileName = `تقرير-${yesterdayStr}`;
+            fileName = type === 'bulk' ? `تقرير-جملة-${yesterdayStr}` : `تقرير-${yesterdayStr}`;
         } else if (period === 'lastWeek') {
             const today = new Date();
             const lastWeek = new Date();
             lastWeek.setDate(lastWeek.getDate() - 7);
-            filteredRequests = allRequests.filter(r => {
+            filteredRequests = requestsByType.filter(r => {
                 const d = new Date(r.createdAt);
                 return d >= lastWeek && d <= today;
             });
-            fileName = `تقرير-آخر-أسبوع`;
+            fileName = type === 'bulk' ? 'تقرير-جملة-آخر-أسبوع' : `تقرير-آخر-أسبوع`;
         } else if (period === 'custom') {
             const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
-            filteredRequests = allRequests.filter(r => {
+            filteredRequests = requestsByType.filter(r => {
                 const d = new Date(r.createdAt);
                 return d.toISOString().slice(0, 10) === selectedDate;
             });
-            fileName = `تقرير-${selectedDate}`;
+            fileName = type === 'bulk' ? `تقرير-جملة-${selectedDate}` : `تقرير-${selectedDate}`;
         }
 
         if (filteredRequests.length === 0) {
@@ -2085,32 +2343,57 @@ class AdminManager {
             return;
         }
 
-        const data = [
-            ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
-            ...filteredRequests.map((r, i) => [
-                i + 1,
-                r.requestNumber,
-                r.fullName,
-                r.phone,
-                `${r.laptopBrand}${r.laptopModel ? ' ' + r.laptopModel : ''}`,
-                r.serialNumber || '—',
-                r.problemDescription,
-                r.adminReply || '—',
-                this.translateStatus(r.status),
-                r.cost > 0 ? r.cost : 0,
-                r.technician || '—',
-                r.receivedDate ? Utils.formatDate(r.receivedDate) : '—',
-                r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—',
-                Utils.formatDate(r.createdAt)
-            ])
-        ];
+        let data;
+        if (type === 'bulk') {
+            // Group bulk requests by customer for Excel export
+            const groupedByCustomer = this.groupBulkRequestsByCustomer(filteredRequests);
+            data = [
+                ['#', 'اسم العميل', 'الهاتف', 'عدد اللابتوبات', 'أرقام الطلبات', 'الحالة', 'التاريخ'],
+                ...groupedByCustomer.map((group, i) => [
+                    i + 1,
+                    group.customerName,
+                    group.customerPhone,
+                    group.deviceCount,
+                    group.requestNumbers.join(', '),
+                    this.translateStatus(group.status),
+                    Utils.formatDate(group.createdAt)
+                ])
+            ];
+        } else {
+            // Single requests
+            data = [
+                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
+                ...filteredRequests.map((r, i) => [
+                    i + 1,
+                    r.requestNumber,
+                    r.fullName,
+                    r.phone,
+                    `${r.laptopBrand}${r.laptopModel ? ' ' + r.laptopModel : ''}`,
+                    r.serialNumber || '—',
+                    r.problemDescription,
+                    r.adminReply || '—',
+                    this.translateStatus(r.status),
+                    r.cost > 0 ? r.cost : 0,
+                    r.technician || '—',
+                    r.receivedDate ? Utils.formatDate(r.receivedDate) : '—',
+                    r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—',
+                    Utils.formatDate(r.createdAt)
+                ])
+            ];
+        }
 
         const ws = XLSX.utils.aoa_to_sheet(data);
         // Column widths
-        ws['!cols'] = [
-            {wch:4},{wch:14},{wch:20},{wch:14},{wch:18},{wch:15},
-            {wch:35},{wch:25},{wch:18},{wch:10},{wch:15},{wch:18},{wch:18},{wch:20}
-        ];
+        if (type === 'bulk') {
+            ws['!cols'] = [
+                {wch:4},{wch:20},{wch:14},{wch:10},{wch:25},{wch:18},{wch:20}
+            ];
+        } else {
+            ws['!cols'] = [
+                {wch:4},{wch:14},{wch:20},{wch:14},{wch:18},{wch:15},
+                {wch:35},{wch:25},{wch:18},{wch:10},{wch:15},{wch:18},{wch:18},{wch:20}
+            ];
+        }
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'التقرير');
         XLSX.writeFile(wb, `YAS-${fileName}.xlsx`);

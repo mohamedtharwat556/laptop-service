@@ -69,7 +69,13 @@
                 <li class="sidebar-nav-item">
                     <a href="#" class="sidebar-nav-link" data-section="requests">
                         <i class="fas fa-clipboard-list"></i>
-                        الطلبات
+                        الطلبات العادية
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" data-section="bulk-requests">
+                        <i class="fas fa-boxes"></i>
+                        طلبات الجملة
                     </a>
                 </li>
                 <li class="sidebar-nav-item">
@@ -179,6 +185,26 @@
                 <div id="requestsContainer"></div>
             </div>
 
+            <!-- Bulk Requests Section -->
+            <div id="bulk-requestsSection" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>إدارة طلبات الجملة</h2>
+                    <div class="search-container">
+                        <input type="text" id="bulkRequestSearch" class="form-input search-input" placeholder="البحث برقم الهاتف، الاسم...">
+                        <select id="bulkStatusFilter" class="form-select filter-select">
+                            <option value="All">جميع الحالات</option>
+                            <option value="Received">تم الاستلام</option>
+                            <option value="Waiting Inspection">بانتظار الفحص</option>
+                            <option value="Under Maintenance">قيد الصيانة</option>
+                            <option value="Waiting Parts">بانتظار قطع الغيار</option>
+                            <option value="Ready">جاهز للتسليم</option>
+                            <option value="Delivered">تم التسليم</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="bulkRequestsContainer"></div>
+            </div>
+
             <!-- Users Section -->
             <div id="usersSection" class="dashboard-section">
                 <div class="dashboard-header">
@@ -200,6 +226,10 @@
                 <div class="dashboard-header" style="flex-wrap:wrap; gap:1rem;">
                     <h2><i class="fas fa-file-excel" style="color:#10b981;"></i> التقارير</h2>
                     <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
+                        <select id="reportType" class="form-select" style="width:auto; min-width:150px;">
+                            <option value="single">طلبات عادية</option>
+                            <option value="bulk">طلبات جملة</option>
+                        </select>
                         <select id="reportPeriod" class="form-select" style="width:auto; min-width:150px;">
                             <option value="all">عرض كل الطلبات</option>
                             <option value="today">اليوم</option>

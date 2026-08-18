@@ -13,6 +13,7 @@ router.get('/', async (req, res) => {
         const converted = (data || []).map(item => ({
             id: item.id,
             requestNumber: item.request_number,
+            requestType: item.request_type || 'single',
             fullName: item.full_name,
             phone: item.phone,
             email: item.email,
@@ -75,6 +76,7 @@ router.post('/', async (req, res) => {
 
         const newRequest = {
             request_number: req.body.requestNumber || requestNumber,
+            request_type: req.body.requestType || 'single',
             full_name: req.body.fullName,
             phone: req.body.phone,
             email: req.body.email || '',
@@ -131,6 +133,7 @@ router.put('/:id', async (req, res) => {
             else if (key === 'replacementParts') snakeCaseData.replacement_parts = req.body[key];
             else if (key === 'technicianNotes') snakeCaseData.technician_notes = req.body[key];
             else if (key === 'technician') snakeCaseData.technician = req.body[key];
+            else if (key === 'requestType') snakeCaseData.request_type = req.body[key];
             else snakeCaseData[key] = req.body[key];
         });
         
