@@ -531,12 +531,17 @@ class AdminManager {
                 fetch(`${apiUrl}/bulk-requests`).then(r => r.json()).catch(() => [])
             ]);
             
+            console.log('📊 Bulk requests API response:', bulkRequestsRes);
+            
             // Convert from snake_case to camelCase
             this.users = this.convertToCamelCase(Array.isArray(usersRes) ? usersRes : []);
             this.requests = this.convertToCamelCase(Array.isArray(requestsRes) ? requestsRes : []);
             this.orders = this.convertToCamelCase(Array.isArray(ordersRes) ? ordersRes : []);
             this.products = this.convertToCamelCase(Array.isArray(productsRes) ? productsRes : []);
             this.bulkRequests = Array.isArray(bulkRequestsRes) ? bulkRequestsRes : [];
+
+            console.log('📊 Loaded bulk requests:', this.bulkRequests);
+            console.log('📊 Bulk requests count:', this.bulkRequests.length);
 
             // Debug: Check first request for new fields
             if (this.requests.length > 0) {
