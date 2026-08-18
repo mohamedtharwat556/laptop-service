@@ -2296,8 +2296,29 @@ class AdminManager {
             return;
         }
 
-        // For bulk requests, use the bulk request data directly
+        // For bulk requests, show all device details like single requests
         if (type === 'bulk') {
+            const deviceRows = [];
+            requests.forEach(bulkRequest => {
+                if (bulkRequest.devices && bulkRequest.devices.length > 0) {
+                    bulkRequest.devices.forEach(device => {
+                        deviceRows.push({
+                            requestNumber: bulkRequest.requestNumber,
+                            customerName: bulkRequest.customerName,
+                            customerPhone: bulkRequest.customerPhone,
+                            laptopBrand: device.laptopBrand,
+                            laptopModel: device.laptopModel,
+                            serialNumber: device.serialNumber,
+                            problemDescription: device.problemDescription,
+                            status: device.status,
+                            cost: bulkRequest.cost || 0,
+                            technician: bulkRequest.technician || '—',
+                            createdAt: bulkRequest.createdAt
+                        });
+                    });
+                }
+            });
+
             container.innerHTML = `
                 <div class="glass-card">
                     <div style="overflow-x: auto;">
@@ -2305,23 +2326,27 @@ class AdminManager {
                             <thead>
                                 <tr>
                                     <th>رقم الطلب</th>
-                                    <th>العميل</th>
+                                    <th>اسم العميل</th>
                                     <th>الهاتف</th>
-                                    <th>عدد اللابتوبات</th>
+                                    <th>الجهاز</th>
+                                    <th>المشكلة</th>
                                     <th>الحالة</th>
-                                    <th>الأولوية</th>
+                                    <th>التكلفة</th>
+                                    <th>الفني</th>
                                     <th>التاريخ</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${requests.map(r => `
+                                ${deviceRows.map(r => `
                                     <tr>
-                                        <td style="font-weight: 600; color: #3b82f6;">${r.requestNumber}</td>
-                                        <td style="font-weight: 600;">${r.customerName}</td>
+                                        <td style="font-weight: 600;">${r.requestNumber}</td>
+                                        <td>${r.customerName}</td>
                                         <td dir="ltr">${r.customerPhone}</td>
-                                        <td style="font-weight: 600; color: #3b82f6;">${r.deviceCount}</td>
+                                        <td>${r.laptopBrand} ${r.laptopModel || ''}</td>
+                                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription}</td>
                                         <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
-                                        <td><span class="priority-badge ${this.getPriorityClass(r.priority)}">${this.translatePriority(r.priority)}</span></td>
+                                        <td>${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
+                                        <td>${r.technician}</td>
                                         <td>${Utils.formatDate(r.createdAt)}</td>
                                     </tr>
                                 `).join('')}
@@ -2330,7 +2355,7 @@ class AdminManager {
                     </div>
                     <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
                         <strong>إجمالي الطلبات:</strong> ${requests.length} | 
-                        <strong>إجمالي اللابتوبات:</strong> ${requests.reduce((sum, r) => sum + r.deviceCount, 0)}
+                        <strong>إجمالي الأجهزة:</strong> ${deviceRows.length}
                     </div>
                 </div>
             `;
@@ -2456,17 +2481,41 @@ class AdminManager {
 
         let data;
         if (type === 'bulk') {
-            // For bulk requests, use the bulk request data directly
+            // For bulk requests, expand to show each device as a row
+            const deviceRows = [];
+            filteredRequests.forEach(bulkRequest => {
+                if (bulkRequest.devices && bulkRequest.devices.length > 0) {
+                    bulkRequest.devices.forEach((device, index) => {
+                        deviceRows.push({
+                            requestNumber: bulkRequest.requestNumber,
+                            customerName: bulkRequest.customerName,
+                            customerPhone: bulkRequest.customerPhone,
+                            laptopBrand: device.laptopBrand,
+                            laptopModel: device.laptopModel,
+                            serialNumber: device.serialNumber,
+                            problemDescription: device.problemDescription,
+                            status: device.status,
+                            cost: bulkRequest.cost || 0,
+                            technician: bulkRequest.technician || '—',
+                            createdAt: bulkRequest.createdAt
+                        });
+                    });
+                }
+            });
+
             data = [
-                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'عدد اللابتوبات', 'الحالة', 'الأولوية', 'التاريخ'],
-                ...filteredRequests.map((r, i) => [
+                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الطلب'],
+                ...deviceRows.map((r, i) => [
                     i + 1,
                     r.requestNumber,
                     r.customerName,
                     r.customerPhone,
-                    r.deviceCount,
+                    `${r.laptopBrand}${r.laptopModel ? ' ' + r.laptopModel : ''}`,
+                    r.serialNumber || '—',
+                    r.problemDescription,
                     this.translateStatus(r.status),
-                    this.translatePriority(r.priority),
+                    r.cost > 0 ? r.cost : 0,
+                    r.technician,
                     Utils.formatDate(r.createdAt)
                 ])
             ];
@@ -2497,7 +2546,8 @@ class AdminManager {
         // Column widths
         if (type === 'bulk') {
             ws['!cols'] = [
-                {wch:4},{wch:14},{wch:20},{wch:14},{wch:10},{wch:18},{wch:18},{wch:20}
+                {wch:4},{wch:14},{wch:20},{wch:14},{wch:18},{wch:15},
+                {wch:35},{wch:18},{wch:10},{wch:15},{wch:20}
             ];
         } else {
             ws['!cols'] = [
