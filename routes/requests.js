@@ -76,7 +76,6 @@ router.post('/', async (req, res) => {
 
         const newRequest = {
             request_number: req.body.requestNumber || requestNumber,
-            request_type: req.body.requestType || 'single',
             full_name: req.body.fullName,
             phone: req.body.phone,
             email: req.body.email || '',
@@ -92,6 +91,11 @@ router.post('/', async (req, res) => {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
+
+        // Only add request_type if provided (for backward compatibility)
+        if (req.body.requestType) {
+            newRequest.request_type = req.body.requestType;
+        }
 
         // Add optional fields if provided
         if (req.body.adminReply !== undefined) newRequest.admin_reply = req.body.adminReply;
