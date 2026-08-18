@@ -79,6 +79,12 @@
                     </a>
                 </li>
                 <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" data-section="company-requests">
+                        <i class="fas fa-building"></i>
+                        طلبات الشركات
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
                     <a href="#" class="sidebar-nav-link" data-section="users">
                         <i class="fas fa-users"></i>
                         المستخدمون
@@ -190,9 +196,9 @@
                 <div class="dashboard-header">
                     <h2>إدارة طلبات الجملة</h2>
                     <div class="search-container">
-                        <input type="text" id="bulkRequestSearch" class="form-input search-input" placeholder="البحث برقم الهاتف، الاسم...">
-                        <select id="bulkStatusFilter" class="form-select filter-select">
-                            <option value="All">جميع الحالات</option>
+                        <input type="text" id="bulkSearchInput" class="form-input" placeholder="بحث برقم الطلب أو اسم العميل..." style="width: 300px;">
+                        <select id="bulkStatusFilter" class="form-select" style="width: auto;">
+                            <option value="">كل الحالات</option>
                             <option value="Received">تم الاستلام</option>
                             <option value="Waiting Inspection">بانتظار الفحص</option>
                             <option value="Under Maintenance">قيد الصيانة</option>
@@ -203,6 +209,26 @@
                     </div>
                 </div>
                 <div id="bulkRequestsContainer"></div>
+            </div>
+
+            <!-- Company Requests Section -->
+            <div id="company-requestsSection" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>إدارة طلبات الشركات</h2>
+                    <div class="search-container">
+                        <input type="text" id="companySearchInput" class="form-input" placeholder="بحث برقم الطلب أو اسم الشركة..." style="width: 300px;">
+                        <select id="companyStatusFilter" class="form-select" style="width: auto;">
+                            <option value="">كل الحالات</option>
+                            <option value="Received">تم الاستلام</option>
+                            <option value="Waiting Inspection">بانتظار الفحص</option>
+                            <option value="Under Maintenance">قيد الصيانة</option>
+                            <option value="Waiting Parts">بانتظار قطع الغيار</option>
+                            <option value="Ready">جاهز للتسليم</option>
+                            <option value="Delivered">تم التسليم</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="companyRequestsContainer"></div>
             </div>
 
             <!-- Users Section -->
@@ -229,6 +255,7 @@
                         <select id="reportType" class="form-select" style="width:auto; min-width:150px;">
                             <option value="single">طلبات عادية</option>
                             <option value="bulk">طلبات جملة</option>
+                            <option value="company">طلبات شركات</option>
                         </select>
                         <select id="reportPeriod" class="form-select" style="width:auto; min-width:150px;">
                             <option value="all">عرض كل الطلبات</option>

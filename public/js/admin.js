@@ -11,6 +11,8 @@ class AdminManager {
         this.requests = [];
         this.orders = [];
         this.products = [];
+        this.bulkRequests = [];
+        this.companyRequests = [];
         this.charts = {};
         this.currentPage = 1;
         this.itemsPerPage = 10;
@@ -523,15 +525,17 @@ class AdminManager {
             console.log('📡 Fetching data from API...');
             // Use same-origin API (Vercel handles both frontend and backend)
             const apiUrl = '/api';
-            const [usersRes, requestsRes, ordersRes, productsRes, bulkRequestsRes] = await Promise.all([
+            const [usersRes, requestsRes, ordersRes, productsRes, bulkRequestsRes, companyRequestsRes] = await Promise.all([
                 fetch(`${apiUrl}/users`).then(r => r.json()).catch(() => []),
                 fetch(`${apiUrl}/requests`).then(r => r.json()).catch(() => []),
                 fetch(`${apiUrl}/orders`).then(r => r.json()).catch(() => []),
                 fetch(`${apiUrl}/products`).then(r => r.json()).catch(() => []),
-                fetch(`${apiUrl}/bulk-requests`).then(r => r.json()).catch(() => [])
+                fetch(`${apiUrl}/bulk-requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/company-requests`).then(r => r.json()).catch(() => [])
             ]);
             
             console.log('📊 Bulk requests API response:', bulkRequestsRes);
+            console.log('📊 Company requests API response:', companyRequestsRes);
             
             // Convert from snake_case to camelCase
             this.users = this.convertToCamelCase(Array.isArray(usersRes) ? usersRes : []);
@@ -539,9 +543,12 @@ class AdminManager {
             this.orders = this.convertToCamelCase(Array.isArray(ordersRes) ? ordersRes : []);
             this.products = this.convertToCamelCase(Array.isArray(productsRes) ? productsRes : []);
             this.bulkRequests = Array.isArray(bulkRequestsRes) ? bulkRequestsRes : [];
+            this.companyRequests = Array.isArray(companyRequestsRes) ? companyRequestsRes : [];
 
             console.log('📊 Loaded bulk requests:', this.bulkRequests);
             console.log('📊 Bulk requests count:', this.bulkRequests.length);
+            console.log('📊 Loaded company requests:', this.companyRequests);
+            console.log('📊 Company requests count:', this.companyRequests.length);
 
             // Debug: Check first bulk request for devices
             if (this.bulkRequests.length > 0) {
@@ -1419,6 +1426,9 @@ class AdminManager {
             case 'bulk-requests':
                 this.renderBulkRequests();
                 break;
+            case 'company-requests':
+                this.renderCompanyRequests();
+                break;
             case 'users':
                 this.renderUsers();
                 break;
@@ -1499,8 +1509,255 @@ class AdminManager {
     }
 
     /**
-     * Group bulk requests by customer
+     * Render company requests table
      */
+    renderCompanyRequests() {
+        const container = document.getElementById('companyRequestsContainer');
+        if (!container) return;
+
+        const companyRequests = this.companyRequests || [];
+        const filteredRequests = this.filterCompanyRequests(companyRequests);
+        const { data, pages } = this.paginate(filteredRequests);
+
+        if (data.length === 0) {
+            container.innerHTML = `
+                <div class="glass-card" style="text-align: center; padding: 3rem;">
+                    <i class="fas fa-building" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+                    <p style="color: #94a3b8;">لا توجد طلبات شركات حالياً</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div style="overflow-x: auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>رقم الطلب</th>
+                            <th>اسم الشركة</th>
+                            <th>الهاتف</th>
+                            <th>الجهاز</th>
+                            <th>الحالة</th>
+                            <th>الأولوية</th>
+                            <th>رد الإدارة</th>
+                            <th>التاريخ</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(companyRequest => `
+                            <tr style="transition: background-color 0.2s;">
+                                <td style="font-weight: 600; color: #3b82f6;">${companyRequest.requestNumber}</td>
+                                <td style="font-weight: 600;">${companyRequest.companyName}</td>
+                                <td dir="ltr">${companyRequest.companyPhone}</td>
+                                <td>${companyRequest.laptopBrand} ${companyRequest.laptopModel || ''}</td>
+                                <td><span class="status-badge ${this.getStatusClass(companyRequest.status)}">${this.translateStatus(companyRequest.status)}</span></td>
+                                <td><span class="priority-badge ${this.getPriorityClass(companyRequest.priority)}">${this.translatePriority(companyRequest.priority)}</span></td>
+                                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${companyRequest.adminReply || '—'}</td>
+                                <td>${Utils.formatDate(companyRequest.createdAt)}</td>
+                                <td>
+                                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
+                                            onclick="adminManager.viewCompanyRequest(${companyRequest.id})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.deleteCompanyRequest(${companyRequest.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div id="companyRequestsPagination"></div>
+        `;
+
+        this.renderPagination('companyRequestsPagination', pages);
+    }
+
+    /**
+     * Filter company requests
+     */
+    filterCompanyRequests(requests) {
+        const searchTerm = document.getElementById('companySearchInput')?.value?.toLowerCase() || '';
+        const statusFilter = document.getElementById('companyStatusFilter')?.value || '';
+
+        let filtered = [...requests];
+
+        // Search filter
+        if (searchTerm) {
+            filtered = filtered.filter(r => 
+                r.companyName.toLowerCase().includes(searchTerm) ||
+                r.companyPhone.includes(searchTerm) ||
+                r.requestNumber.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        // Status filter
+        if (statusFilter) {
+            filtered = filtered.filter(r => r.status === statusFilter);
+        }
+
+        return filtered;
+    }
+
+    /**
+     * View company request details
+     */
+    async viewCompanyRequest(companyRequestId) {
+        try {
+            const response = await fetch(`/api/company-requests/${companyRequestId}`);
+            if (!response.ok) throw new Error('Failed to fetch company request details');
+            
+            const companyRequest = await response.json();
+            
+            const content = `
+                <div style="max-height: 70vh; overflow-y: auto;">
+                    <div class="request-card-header">
+                        <div>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${companyRequest.requestNumber}</h3>
+                            <span class="status-badge ${this.getStatusClass(companyRequest.status)}">${this.translateStatus(companyRequest.status)}</span>
+                        </div>
+                    </div>
+                    <div class="request-details">
+                        <div class="request-detail-item"><span class="request-detail-label">اسم الشركة</span><span class="request-detail-value">${companyRequest.companyName}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">رقم هاتف الشركة</span><span class="request-detail-value">${companyRequest.companyPhone}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">البريد الإلكتروني</span><span class="request-detail-value">${companyRequest.companyEmail || '—'}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">السجل التجاري</span><span class="request-detail-value">${companyRequest.commercialRegister || '—'}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">الشخص المسؤول</span><span class="request-detail-value">${companyRequest.contactPerson || '—'}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">هاتف الشخص المسؤول</span><span class="request-detail-value">${companyRequest.contactPersonPhone || '—'}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptopBrand} ${companyRequest.laptopModel || ''}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${companyRequest.serialNumber || '—'}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${companyRequest.receivedDate ? Utils.formatDate(companyRequest.receivedDate) : '—'}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(companyRequest.createdAt)}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${companyRequest.problemDescription}</span></div>
+                    </div>
+
+                    <form id="editCompanyRequestForm" style="margin-top: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label">رد الإدارة</label>
+                            <textarea class="form-textarea" name="adminReply" rows="3">${companyRequest.adminReply || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تكلفة الصيانة (ج.م)</label>
+                            <input type="number" class="form-input" name="cost" value="${companyRequest.cost || ''}" placeholder="أدخل تكلفة الصيانة" min="0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">الفني المسؤول</label>
+                            <select class="form-select" name="technician">
+                                <option value="">اختر الفني</option>
+                                <option value="استاذ ابراهيم" ${companyRequest.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
+                                <option value="علياء" ${companyRequest.technician === 'علياء' ? 'selected' : ''}>علياء</option>
+                                <option value="سلمي" ${companyRequest.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
+                                <option value="استاذة سهير رمزي" ${companyRequest.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
+                                <option value="استاذة ناديه" ${companyRequest.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
+                                <option value="استاذة ام كلثوم" ${companyRequest.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
+                                <option value="استاذة اسماء" ${companyRequest.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
+                                <option value="استاذ خالد و عبدالله رضا" ${companyRequest.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
+                                <option value="استاذ محمد علي و عم وليد" ${companyRequest.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
+                                <option value="الاستاذ عبد الدالي" ${companyRequest.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
+                                <option value="الاستاذ نادر" ${companyRequest.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
+                                <option value="الاستاذ عبدالله موسي" ${companyRequest.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
+                                <option value="استاذ احمد اسلام و احمد طه" ${companyRequest.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
+                                <option value="المهندس عبد الفتاح وادم" ${companyRequest.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
+                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${companyRequest.estimatedCompletionDate ? new Date(companyRequest.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تحديث الحالة</label>
+                            <select class="form-select" name="status">
+                                <option value="Received" ${companyRequest.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
+                                <option value="Waiting Inspection" ${companyRequest.status === 'Waiting Inspection' ? 'selected' : ''}>بانتظار الفحص</option>
+                                <option value="Under Maintenance" ${companyRequest.status === 'Under Maintenance' ? 'selected' : ''}>قيد الصيانة</option>
+                                <option value="Waiting Parts" ${companyRequest.status === 'Waiting Parts' ? 'selected' : ''}>بانتظار قطع الغيار</option>
+                                <option value="Ready" ${companyRequest.status === 'Ready' ? 'selected' : ''}>جاهز للتسليم</option>
+                                <option value="Delivered" ${companyRequest.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
+                    </form>
+                </div>
+            `;
+            
+            modalManager.create('view-company-request', 'تفاصيل طلب الشركة', content);
+            modalManager.open('view-company-request');
+
+            const form = document.getElementById('editCompanyRequestForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+                let estimatedCompletionDate = null;
+                if (estimatedCompletionDateValue) {
+                    const dateObj = new Date(estimatedCompletionDateValue);
+                    if (!isNaN(dateObj.getTime())) {
+                        estimatedCompletionDate = dateObj.toISOString();
+                    }
+                }
+                
+                const updateData = {
+                    adminReply: form.adminReply.value,
+                    cost: form.cost.value ? parseFloat(form.cost.value) : 0,
+                    technician: form.technician.value,
+                    estimatedCompletionDate: estimatedCompletionDate,
+                    status: form.status.value
+                };
+
+                try {
+                    const response = await fetch(`/api/company-requests/${companyRequestId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (response.ok) {
+                        toast.success('تم تحديث طلب الشركة بنجاح');
+                        modalManager.close('view-company-request');
+                        await this.loadData();
+                        this.renderCompanyRequests();
+                    } else {
+                        throw new Error('Failed to update company request');
+                    }
+                } catch (error) {
+                    console.error('Error updating company request:', error);
+                    toast.error('فشل في تحديث طلب الشركة');
+                }
+            });
+        } catch (error) {
+            console.error('Error viewing company request:', error);
+            toast.error('فشل في تحميل تفاصيل طلب الشركة');
+        }
+    }
+
+    async deleteCompanyRequest(companyRequestId) {
+        if (!confirm('هل أنت متأكد من حذف طلب الشركة؟')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/company-requests/${companyRequestId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                toast.success('تم حذف طلب الشركة بنجاح');
+                await this.loadData();
+                this.renderCompanyRequests();
+            } else {
+                throw new Error('Failed to delete company request');
+            }
+        } catch (error) {
+            console.error('Error deleting company request:', error);
+            toast.error('فشل في حذف طلب الشركة');
+        }
+    }
     groupBulkRequestsByCustomer(requests) {
         const groups = {};
         
@@ -2256,6 +2513,8 @@ class AdminManager {
         let requestsByType;
         if (type === 'bulk') {
             requestsByType = this.bulkRequests || [];
+        } else if (type === 'company') {
+            requestsByType = this.companyRequests || [];
         } else {
             requestsByType = this.requests;
         }
@@ -2374,6 +2633,47 @@ class AdminManager {
                     <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
                         <strong>إجمالي الطلبات:</strong> ${requests.length} | 
                         <strong>إجمالي الأجهزة:</strong> ${deviceRows.length}
+                    </div>
+                </div>
+            `;
+        } else if (type === 'company') {
+            // Company requests
+            container.innerHTML = `
+                <div class="glass-card">
+                    <div style="overflow-x: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>رقم الطلب</th>
+                                    <th>اسم الشركة</th>
+                                    <th>الهاتف</th>
+                                    <th>الجهاز</th>
+                                    <th>المشكلة</th>
+                                    <th>الحالة</th>
+                                    <th>التكلفة</th>
+                                    <th>الفني</th>
+                                    <th>التاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${requests.map(r => `
+                                    <tr>
+                                        <td style="font-weight: 600;">${r.requestNumber}</td>
+                                        <td>${r.companyName}</td>
+                                        <td dir="ltr">${r.companyPhone}</td>
+                                        <td>${r.laptopBrand} ${r.laptopModel || ''}</td>
+                                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription}</td>
+                                        <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
+                                        <td>${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
+                                        <td>${r.technician || '—'}</td>
+                                        <td>${Utils.formatDate(r.createdAt)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
+                        <strong>إجمالي طلبات الشركات:</strong> ${requests.length}
                     </div>
                 </div>
             `;

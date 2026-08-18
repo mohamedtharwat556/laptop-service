@@ -67,6 +67,7 @@ const usersRoutes = require('./routes/users');
 const requestsRoutes = require('./routes/requests');
 const productsRoutes = require('./routes/products');
 const bulkRequestsRoutes = require('./routes/bulk-requests');
+const companyRequestsRoutes = require('./routes/company-requests');
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -102,6 +103,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/requests', requestsRoutes);
 app.use('/api/products', productsRoutes);
 app.use('/api/bulk-requests', bulkRequestsRoutes);
+app.use('/api/company-requests', companyRequestsRoutes);
 
 // ============ ORDERS API ============
 app.get('/api/orders', async (req, res) => {

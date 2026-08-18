@@ -152,6 +152,43 @@ class CustomerManager {
     }
 
     /**
+     * Track a company request by name, phone number or request number
+     */
+    async trackCompanyRequest(searchTerm, searchType = 'phone') {
+        try {
+            const apiUrl = '/api/company-requests';
+            const response = await fetch(apiUrl);
+            const companyRequests = await response.json();
+
+            console.log('🔍 Company requests from API:', companyRequests);
+            console.log('🔍 Search term:', searchTerm);
+            console.log('🔍 Search type:', searchType);
+
+            let companyRequest;
+            if (searchType === 'phone') {
+                companyRequest = companyRequests.filter(r => r.companyPhone === searchTerm);
+                companyRequest = companyRequest.length > 0 ? companyRequest[companyRequest.length - 1] : null;
+            } else if (searchType === 'name') {
+                companyRequest = companyRequests.filter(r => r.companyName.toLowerCase() === searchTerm.toLowerCase());
+                companyRequest = companyRequest.length > 0 ? companyRequest[companyRequest.length - 1] : null;
+            } else {
+                companyRequest = companyRequests.find(r => r.requestNumber === searchTerm);
+            }
+
+            console.log('🔍 Found company request:', companyRequest);
+
+            // Store current search for refresh
+            this.currentSearchTerm = searchTerm;
+            this.currentSearchType = searchType;
+
+            return companyRequest;
+        } catch (error) {
+            console.error('Failed to track company request:', error);
+            return null;
+        }
+    }
+
+    /**
      * Convert snake_case from Supabase to camelCase for frontend
      */
     convertToCamelCase(obj) {
@@ -346,6 +383,8 @@ class CustomerManager {
                 let request;
                 if (requestType === 'bulk') {
                     request = await this.trackBulkRequest(searchTerm, searchType);
+                } else if (requestType === 'company') {
+                    request = await this.trackCompanyRequest(searchTerm, searchType);
                 } else {
                     request = await this.trackRequest(searchTerm, searchType);
                 }
@@ -355,6 +394,8 @@ class CustomerManager {
                 if (request) {
                     if (requestType === 'bulk') {
                         this.renderBulkTrackingResult(request);
+                    } else if (requestType === 'company') {
+                        this.renderCompanyTrackingResult(request);
                     } else {
                         this.renderTrackingResult(request);
                     }
@@ -731,6 +772,115 @@ class CustomerManager {
                     <div style="margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
                         <p style="font-size: 0.875rem; color: var(--text-muted-more); margin-bottom: 0.25rem;">الفني المسؤول:</p>
                         <p style="font-weight: 500; color: #10b981;">${bulkRequest.technician}</p>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    /**
+     * Render company request tracking result
+     */
+    renderCompanyTrackingResult(companyRequest) {
+        const container = document.getElementById('trackingResult');
+        if (!container) return;
+
+        const progress = this.calculateProgress(companyRequest);
+        const timeline = this.getRequestTimeline(companyRequest);
+        const statusClass = this.getStatusClass(companyRequest.status);
+
+        container.innerHTML = `
+            <div class="glass-card tracking-result">
+                <div class="tracking-header">
+                    <div>
+                        <h2>${companyRequest.requestNumber}</h2>
+                        <span style="color: #94a3b8; font-size: 0.875rem;">طلب شركة</span>
+                    </div>
+                    <div class="date-info">
+                        <p class="tracking-info-label">تاريخ التقديم</p>
+                        <p class="tracking-info-value">${Utils.formatDate(companyRequest.createdAt)}</p>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: ${progress}%"></div>
+                </div>
+
+                <div class="tracking-info">
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">اسم الشركة</p>
+                        <p class="tracking-info-value">${companyRequest.companyName}</p>
+                    </div>
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">رقم هاتف الشركة</p>
+                        <p class="tracking-info-value">${companyRequest.companyPhone}</p>
+                    </div>
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">البريد الإلكتروني</p>
+                        <p class="tracking-info-value">${companyRequest.companyEmail || '—'}</p>
+                    </div>
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">السجل التجاري</p>
+                        <p class="tracking-info-value">${companyRequest.commercialRegister || '—'}</p>
+                    </div>
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">الشخص المسؤول</p>
+                        <p class="tracking-info-value">${companyRequest.contactPerson || '—'}</p>
+                    </div>
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">هاتف الشخص المسؤول</p>
+                        <p class="tracking-info-value">${companyRequest.contactPersonPhone || '—'}</p>
+                    </div>
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">الجهاز</p>
+                        <p class="tracking-info-value">${companyRequest.laptopBrand} ${companyRequest.laptopModel || ''}</p>
+                    </div>
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">الرقم التسلسلي</p>
+                        <p class="tracking-info-value" dir="ltr">${companyRequest.serialNumber || '—'}</p>
+                    </div>
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">تاريخ الاستلام</p>
+                        <p class="tracking-info-value">${companyRequest.receivedDate ? Utils.formatDate(companyRequest.receivedDate) : '—'}</p>
+                    </div>
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">تاريخ الاستلام المتوقع</p>
+                        <p class="tracking-info-value" style="color: #10b981; font-weight: 600;">${companyRequest.estimatedCompletionDate ? Utils.formatDate(companyRequest.estimatedCompletionDate) : 'لم يحدد بعد'}</p>
+                    </div>
+                </div>
+
+                <h3 style="margin: 2rem 0 1rem;">مسار حالة الطلب</h3>
+                <div class="timeline">
+                    ${timeline.map(item => `
+                        <div class="timeline-item ${item.completed ? 'completed' : ''}">
+                            <h4>${this.translateStatus(item.status)}</h4>
+                            <p>${item.date ? Utils.formatDate(item.date) : 'قيد الانتظار'}</p>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <h3 style="margin: 2rem 0 1rem;">وصف المشكلة</h3>
+                <div style="padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
+                    <p style="color: var(--text-muted);">${companyRequest.problemDescription}</p>
+                </div>
+
+                ${companyRequest.adminReply ? `
+                    <div style="margin-top: 2rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
+                        <h4 style="margin-bottom: 0.5rem; color: #3b82f6;">رد الإدارة</h4>
+                        <p style="color: var(--text-muted);">${companyRequest.adminReply}</p>
+                        ${companyRequest.cost > 0 ? `
+                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(59, 130, 246, 0.2);">
+                                <p style="font-size: 0.875rem; color: var(--text-muted-more); margin-bottom: 0.25rem;">التكلفة:</p>
+                                <p style="font-weight: 600; color: #3b82f6; font-size: 1.1rem;">${Utils.formatCurrency(companyRequest.cost)}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : ''}
+
+                ${companyRequest.technician ? `
+                    <div style="margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
+                        <p style="font-size: 0.875rem; color: var(--text-muted-more); margin-bottom: 0.25rem;">الفني المسؤول:</p>
+                        <p style="font-weight: 500; color: #10b981;">${companyRequest.technician}</p>
                     </div>
                 ` : ''}
             </div>
