@@ -808,28 +808,12 @@ class CustomerManager {
 
                 <div class="tracking-info">
                     <div class="tracking-info-item">
-                        <p class="tracking-info-label">اسم الشركة</p>
-                        <p class="tracking-info-value">${companyRequest.companyName}</p>
+                        <p class="tracking-info-label">الاسم</p>
+                        <p class="tracking-info-value">${companyRequest.fullName}</p>
                     </div>
                     <div class="tracking-info-item">
-                        <p class="tracking-info-label">رقم هاتف الشركة</p>
-                        <p class="tracking-info-value">${companyRequest.companyPhone}</p>
-                    </div>
-                    <div class="tracking-info-item">
-                        <p class="tracking-info-label">البريد الإلكتروني</p>
-                        <p class="tracking-info-value">${companyRequest.companyEmail || '—'}</p>
-                    </div>
-                    <div class="tracking-info-item">
-                        <p class="tracking-info-label">السجل التجاري</p>
-                        <p class="tracking-info-value">${companyRequest.commercialRegister || '—'}</p>
-                    </div>
-                    <div class="tracking-info-item">
-                        <p class="tracking-info-label">الشخص المسؤول</p>
-                        <p class="tracking-info-value">${companyRequest.contactPerson || '—'}</p>
-                    </div>
-                    <div class="tracking-info-item">
-                        <p class="tracking-info-label">هاتف الشخص المسؤول</p>
-                        <p class="tracking-info-value">${companyRequest.contactPersonPhone || '—'}</p>
+                        <p class="tracking-info-label">رقم الهاتف</p>
+                        <p class="tracking-info-value">${companyRequest.phone}</p>
                     </div>
                     <div class="tracking-info-item">
                         <p class="tracking-info-label">الجهاز</p>

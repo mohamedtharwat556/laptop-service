@@ -40,116 +40,89 @@
 
     <!-- Main Content -->
     <section class="section animate__animated animate__fadeInUp" style="padding-top: 120px;">
-        <h2 class="section-title">طلب صيانة شركة</h2>
+        <h2 class="section-title">تقديم طلب صيانة</h2>
         <div class="form-container glass-card">
             <form id="companyRequestForm">
-                <!-- Company Information -->
-                <div style="background: rgba(59, 130, 246, 0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid rgba(59, 130, 246, 0.2);">
-                    <h3 style="color: #3b82f6; margin-bottom: 1rem;"><i class="fas fa-building"></i> معلومات الشركة</h3>
-                    <div class="form-group">
-                        <label class="form-label">اسم الشركة *</label>
-                        <input type="text" class="form-input" name="companyName" required placeholder="أدخل اسم الشركة">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">رقم هاتف الشركة *</label>
-                        <input type="tel" class="form-input" name="companyPhone" required placeholder="أدخل رقم هاتف الشركة">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">البريد الإلكتروني للشركة</label>
-                        <input type="email" class="form-input" name="companyEmail" placeholder="company@email.com">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">السجل التجاري</label>
-                        <input type="text" class="form-input" name="commercialRegister" placeholder="أدخل رقم السجل التجاري">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">اسم الشخص المسؤول</label>
-                        <input type="text" class="form-input" name="contactPerson" placeholder="أدخل اسم الشخص المسؤول">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">رقم هاتف الشخص المسؤول</label>
-                        <input type="tel" class="form-input" name="contactPersonPhone" placeholder=" أدخل رقم هاتف الشخص المسؤول">
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">الاسم الكامل *</label>
+                    <input type="text" class="form-input" name="fullName" required placeholder="أدخل اسمك الكامل">
                 </div>
-
-                <!-- Device Information -->
-                <div style="background: rgba(16, 185, 129, 0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid rgba(16, 185, 129, 0.2);">
-                    <h3 style="color: #10b981; margin-bottom: 1rem;"><i class="fas fa-laptop"></i> معلومات الجهاز</h3>
-                    <div class="form-group">
-                        <label class="form-label">ماركة اللابتوب *</label>
-                        <select class="form-input" name="laptopBrand" required id="laptopBrandSelect">
-                            <option value="">اختر ماركة اللابتوب</option>
-                            <option value="Acer">Acer</option>
-                            <option value="Apple">Apple (MacBook)</option>
-                            <option value="Asus">Asus</option>
-                            <option value="Dell">Dell</option>
-                            <option value="HP">HP</option>
-                            <option value="Lenovo">Lenovo</option>
-                            <option value="MSI">MSI</option>
-                            <option value="Microsoft">Microsoft Surface</option>
-                            <option value="Samsung">Samsung</option>
-                            <option value="Sony">Sony Vaio</option>
-                            <option value="Toshiba">Toshiba</option>
-                            <option value="LG">LG</option>
-                            <option value="Razer">Razer</option>
-                            <option value="Gigabyte">Gigabyte</option>
-                            <option value="Huawei">Huawei</option>
-                            <option value="Xiaomi">Xiaomi</option>
-                            <option value="Fujitsu">Fujitsu</option>
-                            <option value="Panasonic">Panasonic</option>
-                            <option value="Medion">Medion</option>
-                            <option value="Packard Bell">Packard Bell</option>
-                            <option value="Gateway">Gateway</option>
-                            <option value="eMachines">eMachines</option>
-                            <option value="Compaq">Compaq</option>
-                            <option value="IBM">IBM (Lenovo)</option>
-                            <option value="NEC">NEC</option>
-                            <option value="Sharp">Sharp</option>
-                            <option value="BenQ">BenQ</option>
-                            <option value="Sager">Sager</option>
-                            <option value="Clevo">Clevo</option>
-                            <option value="Origin PC">Origin PC</option>
-                            <option value="Alienware">Alienware (Dell)</option>
-                            <option value="Other">أخرى</option>
-                        </select>
-                        <input type="text" class="form-input" name="laptopBrandOther" id="laptopBrandOther" placeholder="أدخل اسم الماركة" style="display: none; margin-top: 0.5rem;"/>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">موديل اللابتوب *</label>
-                        <input type="text" class="form-input" name="laptopModel" required placeholder="أدخل موديل اللابتوب"/>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">الرقم التسلسلي (السيريال)</label>
-                        <input type="text" class="form-input" name="serialNumber" placeholder="أدخل الرقم التسلسلي الموجود على اللابتوب"/>
-                        <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">موجود عادة على ملصق أسفل اللابتوب أو في البطارية</p>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">تاريخ الاستلام *</label>
-                        <input type="date" class="form-input" name="receivedDate" required id="receivedDate">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">الأولوية *</label>
-                        <select class="form-input" name="priority" required>
-                            <option value="Low">منخفضة</option>
-                            <option value="Medium" selected>متوسطة</option>
-                            <option value="High">عالية</option>
-                            <option value="Urgent">عاجلة</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">وصف المشكلة *</label>
-                        <textarea class="form-textarea" name="problemDescription" required placeholder="يرجى وصف المشكلة التي تواجهها مع الجهاز..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">صورة الجهاز (اختياري)</label>
-                        <input type="file" class="form-input" name="deviceImage" accept="image/*">
-                        <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">قم برفع صورة للجهاز أو للمشكلة</p>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">رقم الهاتف *</label>
+                    <input type="tel" class="form-input" name="phone" required placeholder="أدخل رقم هاتفك">
                 </div>
-
-                <!-- Submit Button -->
+                <div class="form-group">
+                    <label class="form-label">ماركة اللابتوب *</label>
+                    <select class="form-input" name="laptopBrand" required id="laptopBrandSelect">
+                        <option value="">اختر ماركة اللابتوب</option>
+                        <option value="Acer">Acer</option>
+                        <option value="Apple">Apple (MacBook)</option>
+                        <option value="Asus">Asus</option>
+                        <option value="Dell">Dell</option>
+                        <option value="HP">HP</option>
+                        <option value="Lenovo">Lenovo</option>
+                        <option value="MSI">MSI</option>
+                        <option value="Microsoft">Microsoft Surface</option>
+                        <option value="Samsung">Samsung</option>
+                        <option value="Sony">Sony Vaio</option>
+                        <option value="Toshiba">Toshiba</option>
+                        <option value="LG">LG</option>
+                        <option value="Razer">Razer</option>
+                        <option value="Gigabyte">Gigabyte</option>
+                        <option value="Huawei">Huawei</option>
+                        <option value="Xiaomi">Xiaomi</option>
+                        <option value="Fujitsu">Fujitsu</option>
+                        <option value="Panasonic">Panasonic</option>
+                        <option value="Medion">Medion</option>
+                        <option value="Packard Bell">Packard Bell</option>
+                        <option value="Gateway">Gateway</option>
+                        <option value="eMachines">eMachines</option>
+                        <option value="Compaq">Compaq</option>
+                        <option value="IBM">IBM (Lenovo)</option>
+                        <option value="NEC">NEC</option>
+                        <option value="Sharp">Sharp</option>
+                        <option value="BenQ">BenQ</option>
+                        <option value="Sager">Sager</option>
+                        <option value="Clevo">Clevo</option>
+                        <option value="Origin PC">Origin PC</option>
+                        <option value="Alienware">Alienware (Dell)</option>
+                        <option value="Other">أخرى</option>
+                    </select>
+                    <input type="text" class="form-input" name="laptopBrandOther" id="laptopBrandOther" placeholder="أدخل اسم الماركة" style="display: none; margin-top: 0.5rem;"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">موديل اللابتوب *</label>
+                    <input type="text" class="form-input" name="laptopModel" required placeholder="أدخل موديل اللابتوب"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الرقم التسلسلي (السيريال)</label>
+                    <input type="text" class="form-input" name="serialNumber" placeholder="أدخل الرقم التسلسلي الموجود على اللابتوب"/>
+                    <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">موجود عادة على ملصق أسفل اللابتوب أو في البطارية</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">تاريخ الاستلام *</label>
+                    <input type="date" class="form-input" name="receivedDate" required id="receivedDate">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الأولوية *</label>
+                    <select class="form-input" name="priority" required>
+                        <option value="Low">منخفضة</option>
+                        <option value="Medium" selected>متوسطة</option>
+                        <option value="High">عالية</option>
+                        <option value="Urgent">عاجلة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">وصف المشكلة *</label>
+                    <textarea class="form-textarea" name="problemDescription" required placeholder="يرجى وصف المشكلة التي تواجهها مع جهازك..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">صورة الجهاز (اختياري)</label>
+                    <input type="file" class="form-input" name="deviceImage" accept="image/*">
+                    <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">قم برفع صورة للجهاز أو للمشكلة</p>
+                </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    <i class="fas fa-paper-plane"></i> إرسال طلب الشركة
+                    <i class="fas fa-paper-plane"></i> إرسال الطلب
                 </button>
             </form>
         </div>

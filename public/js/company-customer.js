@@ -23,12 +23,8 @@ class CompanyCustomerManager {
             const finalLaptopBrand = laptopBrand === 'Other' ? laptopBrandOther : laptopBrand;
 
             const requestData = {
-                companyName: formData.get('companyName'),
-                companyPhone: formData.get('companyPhone'),
-                companyEmail: formData.get('companyEmail'),
-                commercialRegister: formData.get('commercialRegister'),
-                contactPerson: formData.get('contactPerson'),
-                contactPersonPhone: formData.get('contactPersonPhone'),
+                fullName: formData.get('fullName'),
+                phone: formData.get('phone'),
                 laptopBrand: finalLaptopBrand,
                 laptopModel: formData.get('laptopModel'),
                 serialNumber: formData.get('serialNumber'),
@@ -64,7 +60,7 @@ class CompanyCustomerManager {
                 alert('تم الإرسال بنجاح!\nرقم الطلب: ' + result.requestNumber);
 
                 // Prepare WhatsApp message
-                const message = `طلب صيانة شركة:\nاسم الشركة: ${requestData.companyName}\nالهاتف: ${requestData.companyPhone}\nماركة اللابتوب: ${requestData.laptopBrand}\nموديل اللابتوب: ${requestData.laptopModel}\nوصف المشكلة: ${requestData.problemDescription}`;
+                const message = `طلب صيانة:\nالاسم: ${requestData.fullName}\nالهاتف: ${requestData.phone}\nماركة اللابتوب: ${requestData.laptopBrand}\nموديل اللابتوب: ${requestData.laptopModel}\nوصف المشكلة: ${requestData.problemDescription}`;
                 const waUrl = `https://wa.me/201069143785?text=${encodeURIComponent(message)}`;
                 window.location.href = waUrl;
 

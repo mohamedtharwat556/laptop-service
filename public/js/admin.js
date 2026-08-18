@@ -1552,7 +1552,7 @@ class AdminManager {
                     <thead>
                         <tr>
                             <th>رقم الطلب</th>
-                            <th>اسم الشركة</th>
+                            <th>الاسم</th>
                             <th>الهاتف</th>
                             <th>الجهاز</th>
                             <th>الحالة</th>
@@ -1566,8 +1566,8 @@ class AdminManager {
                         ${data.map(companyRequest => `
                             <tr style="transition: background-color 0.2s;">
                                 <td style="font-weight: 600; color: #3b82f6;">${companyRequest.requestNumber}</td>
-                                <td style="font-weight: 600;">${companyRequest.companyName}</td>
-                                <td dir="ltr">${companyRequest.companyPhone}</td>
+                                <td style="font-weight: 600;">${companyRequest.fullName}</td>
+                                <td dir="ltr">${companyRequest.phone}</td>
                                 <td>${companyRequest.laptopBrand} ${companyRequest.laptopModel || ''}</td>
                                 <td><span class="status-badge ${this.getStatusClass(companyRequest.status)}">${this.translateStatus(companyRequest.status)}</span></td>
                                 <td><span class="priority-badge ${this.getPriorityClass(companyRequest.priority)}">${this.translatePriority(companyRequest.priority)}</span></td>
@@ -1639,12 +1639,8 @@ class AdminManager {
                         </div>
                     </div>
                     <div class="request-details">
-                        <div class="request-detail-item"><span class="request-detail-label">اسم الشركة</span><span class="request-detail-value">${companyRequest.companyName}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">رقم هاتف الشركة</span><span class="request-detail-value">${companyRequest.companyPhone}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">البريد الإلكتروني</span><span class="request-detail-value">${companyRequest.companyEmail || '—'}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">السجل التجاري</span><span class="request-detail-value">${companyRequest.commercialRegister || '—'}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">الشخص المسؤول</span><span class="request-detail-value">${companyRequest.contactPerson || '—'}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">هاتف الشخص المسؤول</span><span class="request-detail-value">${companyRequest.contactPersonPhone || '—'}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">الاسم</span><span class="request-detail-value">${companyRequest.fullName}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${companyRequest.phone}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptopBrand} ${companyRequest.laptopModel || ''}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${companyRequest.serialNumber || '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${companyRequest.receivedDate ? Utils.formatDate(companyRequest.receivedDate) : '—'}</span></div>

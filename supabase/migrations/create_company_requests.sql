@@ -2,12 +2,8 @@
 CREATE TABLE IF NOT EXISTS company_requests (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     request_number VARCHAR(50) UNIQUE NOT NULL,
-    company_name VARCHAR(255) NOT NULL,
-    company_phone VARCHAR(20) NOT NULL,
-    company_email VARCHAR(255),
-    commercial_register VARCHAR(100),
-    contact_person VARCHAR(255),
-    contact_person_phone VARCHAR(20),
+    full_name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
     laptop_brand VARCHAR(100) NOT NULL,
     laptop_model VARCHAR(100) NOT NULL,
     serial_number VARCHAR(100),
@@ -26,7 +22,7 @@ CREATE TABLE IF NOT EXISTS company_requests (
 
 -- Create index on request_number for faster lookups
 CREATE INDEX IF NOT EXISTS idx_company_requests_request_number ON company_requests(request_number);
-CREATE INDEX IF NOT EXISTS idx_company_requests_company_phone ON company_requests(company_phone);
+CREATE INDEX IF NOT EXISTS idx_company_requests_phone ON company_requests(phone);
 CREATE INDEX IF NOT EXISTS idx_company_requests_status ON company_requests(status);
 
 -- Enable Row Level Security
