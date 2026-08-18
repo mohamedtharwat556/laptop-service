@@ -1559,24 +1559,32 @@ class AdminManager {
             
             const bulkRequest = await response.json();
             
+            // Get first device for display details
+            const firstDevice = bulkRequest.devices && bulkRequest.devices.length > 0 ? bulkRequest.devices[0] : null;
+            
             const content = `
                 <div style="max-height: 70vh; overflow-y: auto;">
                     <div class="request-card-header">
                         <div>
                             <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${bulkRequest.requestNumber}</h3>
                             <span class="status-badge ${this.getStatusClass(bulkRequest.status)}">${this.translateStatus(bulkRequest.status)}</span>
-                        </div>
                     </div>
-                    <div class="request-details">
-                        <div class="request-detail-item"><span class="request-detail-label">اسم العميل</span><span class="request-detail-value">${bulkRequest.customerName}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value" dir="ltr">${bulkRequest.customerPhone}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">البريد</span><span class="request-detail-value">${bulkRequest.customerEmail || '—'}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">عدد اللابتوبات</span><span class="request-detail-value" style="color: #3b82f6; font-weight: 600;">${bulkRequest.deviceCount}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(bulkRequest.createdAt)}</span></div>
-                    </div>
-                    
-                    <h4 style="margin: 1.5rem 0 1rem 0; color: #3b82f6;"><i class="fas fa-laptop"></i> اللابتوبات (${bulkRequest.devices?.length || 0})</h4>
-                    <div style="overflow-x: auto; margin-bottom: 1.5rem;">
+                </div>
+                <div class="request-details">
+                    <div class="request-detail-item"><span class="request-detail-label">اسم العميل</span><span class="request-detail-value">${bulkRequest.customerName}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${bulkRequest.customerPhone}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${firstDevice ? `${firstDevice.laptopBrand} ${firstDevice.laptopModel || ''}` : '—'}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${firstDevice ? (firstDevice.serialNumber || '—') : '—'}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${firstDevice ? (firstDevice.receivedDate ? Utils.formatDate(firstDevice.receivedDate) : '—') : '—'}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(bulkRequest.createdAt)}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${firstDevice ? firstDevice.problemDescription : '—'}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">عدد الأجهزة</span><span class="request-detail-value">${bulkRequest.deviceCount}</span></div>
+                </div>
+
+                ${bulkRequest.devices && bulkRequest.devices.length > 1 ? `
+                <div style="margin-top: 1.5rem;">
+                    <h4 style="margin-bottom: 1rem; color: #94a3b8;">جميع الأجهزة</h4>
+                    <div style="overflow-x: auto;">
                         <table class="table">
                             <thead>
                                 <tr>
@@ -1591,7 +1599,7 @@ class AdminManager {
                                 </tr>
                             </thead>
                             <tbody>
-                                ${(bulkRequest.devices || []).map((device, index) => `
+                                ${bulkRequest.devices.map((device, index) => `
                                     <tr>
                                         <td style="font-weight: 600;">${device.deviceNumber}</td>
                                         <td>${device.laptopBrand}</td>
@@ -1606,95 +1614,104 @@ class AdminManager {
                             </tbody>
                         </table>
                     </div>
-
-                    <form id="editBulkRequestForm">
-                        <div class="form-group">
-                            <label class="form-label">رد الإدارة</label>
-                            <textarea class="form-textarea" name="adminReply" rows="3">${bulkRequest.adminReply || ''}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">الفني المسؤول</label>
-                            <select class="form-select" name="technician">
-                                <option value="">اختر الفني</option>
-                                <option value="استاذ ابراهيم" ${bulkRequest.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
-                                <option value="علياء" ${bulkRequest.technician === 'علياء' ? 'selected' : ''}>علياء</option>
-                                <option value="سلمي" ${bulkRequest.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
-                                <option value="استاذة سهير رمزي" ${bulkRequest.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
-                                <option value="استاذة ناديه" ${bulkRequest.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
-                                <option value="استاذة ام كلثوم" ${bulkRequest.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
-                                <option value="استاذة اسماء" ${bulkRequest.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
-                                <option value="استاذ خالد و عبدالله رضا" ${bulkRequest.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
-                                <option value="استاذ محمد علي و عم وليد" ${bulkRequest.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
-                                <option value="الاستاذ عبد الدالي" ${bulkRequest.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
-                                <option value="الاستاذ نادر" ${bulkRequest.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
-                                <option value="الاستاذ عبدالله موسي" ${bulkRequest.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
-                                <option value="استاذ احمد اسلام و احمد طه" ${bulkRequest.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
-                                <option value="المهندس عبد الفتاح وادم" ${bulkRequest.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
-                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${bulkRequest.estimatedCompletionDate ? new Date(bulkRequest.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">تحديث الحالة</label>
-                            <select class="form-select" name="status">
-                                <option value="Received" ${bulkRequest.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
-                                <option value="Waiting Inspection" ${bulkRequest.status === 'Waiting Inspection' ? 'selected' : ''}>بانتظار الفحص</option>
-                                <option value="Under Maintenance" ${bulkRequest.status === 'Under Maintenance' ? 'selected' : ''}>قيد الصيانة</option>
-                                <option value="Waiting Parts" ${bulkRequest.status === 'Waiting Parts' ? 'selected' : ''}>بانتظار قطع الغيار</option>
-                                <option value="Ready" ${bulkRequest.status === 'Ready' ? 'selected' : ''}>جاهز للتسليم</option>
-                                <option value="Delivered" ${bulkRequest.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
-                    </form>
                 </div>
-            `;
+                ` : ''}
+
+                <form id="editBulkRequestForm" style="margin-top: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label">رد الإدارة</label>
+                        <textarea class="form-textarea" name="adminReply" rows="3">${bulkRequest.adminReply || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">تكلفة الصيانة (ج.م)</label>
+                        <input type="number" class="form-input" name="cost" value="${bulkRequest.cost || ''}" placeholder="أدخل تكلفة الصيانة" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">الفني المسؤول</label>
+                        <select class="form-select" name="technician">
+                            <option value="">اختر الفني</option>
+                            <option value="استاذ ابراهيم" ${bulkRequest.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
+                            <option value="علياء" ${bulkRequest.technician === 'علياء' ? 'selected' : ''}>علياء</option>
+                            <option value="سلمي" ${bulkRequest.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
+                            <option value="استاذة سهير رمزي" ${bulkRequest.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
+                            <option value="استاذة ناديه" ${bulkRequest.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
+                            <option value="استاذة ام كلثوم" ${bulkRequest.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
+                            <option value="استاذة اسماء" ${bulkRequest.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
+                            <option value="استاذ خالد و عبدالله رضا" ${bulkRequest.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
+                            <option value="استاذ محمد علي و عم وليد" ${bulkRequest.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
+                            <option value="الاستاذ عبد الدالي" ${bulkRequest.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
+                            <option value="الاستاذ نادر" ${bulkRequest.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
+                            <option value="الاستاذ عبدالله موسي" ${bulkRequest.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
+                            <option value="استاذ احمد اسلام و احمد طه" ${bulkRequest.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
+                            <option value="المهندس عبد الفتاح وادم" ${bulkRequest.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
+                        <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${bulkRequest.estimatedCompletionDate ? new Date(bulkRequest.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">تحديث الحالة</label>
+                        <select class="form-select" name="status">
+                            <option value="Received" ${bulkRequest.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
+                            <option value="Waiting Inspection" ${bulkRequest.status === 'Waiting Inspection' ? 'selected' : ''}>بانتظار الفحص</option>
+                            <option value="Under Maintenance" ${bulkRequest.status === 'Under Maintenance' ? 'selected' : ''}>قيد الصيانة</option>
+                            <option value="Waiting Parts" ${bulkRequest.status === 'Waiting Parts' ? 'selected' : ''}>بانتظار قطع الغيار</option>
+                            <option value="Ready" ${bulkRequest.status === 'Ready' ? 'selected' : ''}>جاهز للتسليم</option>
+                            <option value="Delivered" ${bulkRequest.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
+                </form>
+            </div>
+        `;
+        
+        modalManager.create('view-bulk-request', 'تفاصيل طلب الجملة', content);
+        modalManager.open('view-bulk-request');
+
+        const form = document.getElementById('editBulkRequestForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            modalManager.create('view-bulk-request', 'تفاصيل طلب الجملة', content);
-            modalManager.open('view-bulk-request');
-
-            const form = document.getElementById('editBulkRequestForm');
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
-                let estimatedCompletionDate = null;
-                if (estimatedCompletionDateValue) {
-                    const dateObj = new Date(estimatedCompletionDateValue);
-                    if (!isNaN(dateObj.getTime())) {
-                        estimatedCompletionDate = dateObj.toISOString();
-                    }
+            const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+            let estimatedCompletionDate = null;
+            if (estimatedCompletionDateValue) {
+                const dateObj = new Date(estimatedCompletionDateValue);
+                if (!isNaN(dateObj.getTime())) {
+                    estimatedCompletionDate = dateObj.toISOString();
                 }
-                
-                const updateData = {
-                    adminReply: form.adminReply.value,
-                    technician: form.technician.value,
-                    estimatedCompletionDate: estimatedCompletionDate,
-                    status: form.status.value
-                };
+            }
+            
+            const updateData = {
+                adminReply: form.adminReply.value,
+                cost: form.cost.value ? parseFloat(form.cost.value) : 0,
+                technician: form.technician.value,
+                estimatedCompletionDate: estimatedCompletionDate,
+                status: form.status.value
+            };
 
-                try {
-                    const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(updateData)
-                    });
+            try {
+                const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
 
-                    if (response.ok) {
-                        toast.success('تم تحديث طلب الجملة بنجاح');
-                        modalManager.close('view-bulk-request');
-                        await this.loadData();
-                        this.renderBulkRequests();
-                    } else {
-                        throw new Error('Failed to update bulk request');
-                    }
-                } catch (error) {
-                    console.error('Error updating bulk request:', error);
-                    toast.error('فشل في تحديث طلب الجملة');
+                if (response.ok) {
+                    toast.success('تم تحديث طلب الجملة بنجاح');
+                    modalManager.close('view-bulk-request');
+                    await this.loadData();
+                    this.renderBulkRequests();
+                } else {
+                    throw new Error('Failed to update bulk request');
                 }
-            });
+            } catch (error) {
+                console.error('Error updating bulk request:', error);
+                toast.error('فشل في تحديث طلب الجملة');
+            }
+        });
         } catch (error) {
             console.error('Error viewing bulk request:', error);
             toast.error('فشل في تحميل تفاصيل طلب الجملة');
