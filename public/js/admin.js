@@ -630,7 +630,7 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.showSection('company-requests')" title="عرض طلبات الشركات">
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('company-requests')" title="عرض طلبات الشركات">
                     <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2);">
                         <i class="fas fa-building" style="color: #10b981;"></i>
                     </div>
@@ -640,7 +640,7 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.showSection('company-requests')" title="عرض إيرادات الشركات">
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('company-requests')" title="عرض إيرادات الشركات">
                     <div class="stat-icon success" style="background: rgba(16, 185, 129, 0.2);">
                         <i class="fas fa-dollar-sign" style="color: #10b981;"></i>
                     </div>
