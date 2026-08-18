@@ -1803,6 +1803,62 @@ class AdminManager {
             toast.error('فشل حذف الطلب');
         }
     }
+
+    /**
+     * Delete all company requests
+     */
+    async deleteAllCompanyRequests() {
+        if (!confirm('هل أنت متأكد من حذف جميع طلبات الشركات؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/company-requests', {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                toast.success('تم حذف جميع طلبات الشركات بنجاح');
+                await this.loadData();
+                this.renderCompanyRequests();
+            } else {
+                const errorText = await response.text();
+                console.error('Delete all failed:', errorText);
+                toast.error('فشل حذف جميع الطلبات');
+            }
+        } catch (error) {
+            console.error('Error deleting all company requests:', error);
+            toast.error('فشل حذف جميع الطلبات');
+        }
+    }
+
+    /**
+     * Delete all bulk requests
+     */
+    async deleteAllBulkRequests() {
+        if (!confirm('هل أنت متأكد من حذف جميع طلبات الجملة؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/bulk-requests', {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                toast.success('تم حذف جميع طلبات الجملة بنجاح');
+                await this.loadData();
+                this.renderBulkRequests();
+            } else {
+                const errorText = await response.text();
+                console.error('Delete all failed:', errorText);
+                toast.error('فشل حذف جميع الطلبات');
+            }
+        } catch (error) {
+            console.error('Error deleting all bulk requests:', error);
+            toast.error('فشل حذف جميع الطلبات');
+        }
+    }
     groupBulkRequestsByCustomer(requests) {
         const groups = {};
         

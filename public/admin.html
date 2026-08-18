@@ -206,6 +206,9 @@
                             <option value="Ready">جاهز للتسليم</option>
                             <option value="Delivered">تم التسليم</option>
                         </select>
+                        <button onclick="adminManager.deleteAllBulkRequests()" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                            <i class="fas fa-trash"></i> حذف الكل
+                        </button>
                     </div>
                 </div>
                 <div id="bulkRequestsContainer"></div>
@@ -226,6 +229,9 @@
                             <option value="Ready">جاهز للتسليم</option>
                             <option value="Delivered">تم التسليم</option>
                         </select>
+                        <button onclick="adminManager.deleteAllCompanyRequests()" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                            <i class="fas fa-trash"></i> حذف الكل
+                        </button>
                     </div>
                 </div>
                 <div id="companyRequestsContainer"></div>

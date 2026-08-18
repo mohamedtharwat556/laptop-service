@@ -166,13 +166,13 @@ class CustomerManager {
 
             let companyRequest;
             if (searchType === 'phone') {
-                companyRequest = companyRequests.filter(r => r.companyPhone === searchTerm);
+                companyRequest = companyRequests.filter(r => r.phone === searchTerm);
                 companyRequest = companyRequest.length > 0 ? companyRequest[companyRequest.length - 1] : null;
             } else if (searchType === 'name') {
-                companyRequest = companyRequests.filter(r => r.companyName.toLowerCase() === searchTerm.toLowerCase());
+                companyRequest = companyRequests.filter(r => (r.fullName || r.full_name).toLowerCase() === searchTerm.toLowerCase());
                 companyRequest = companyRequest.length > 0 ? companyRequest[companyRequest.length - 1] : null;
             } else {
-                companyRequest = companyRequests.find(r => r.requestNumber === searchTerm);
+                companyRequest = companyRequests.find(r => (r.requestNumber || r.request_number) === searchTerm);
             }
 
             console.log('🔍 Found company request:', companyRequest);
@@ -809,7 +809,7 @@ class CustomerManager {
                 <div class="tracking-info">
                     <div class="tracking-info-item">
                         <p class="tracking-info-label">الاسم</p>
-                        <p class="tracking-info-value">${companyRequest.fullName}</p>
+                        <p class="tracking-info-value">${companyRequest.fullName || companyRequest.full_name}</p>
                     </div>
                     <div class="tracking-info-item">
                         <p class="tracking-info-label">رقم الهاتف</p>
@@ -817,19 +817,19 @@ class CustomerManager {
                     </div>
                     <div class="tracking-info-item">
                         <p class="tracking-info-label">الجهاز</p>
-                        <p class="tracking-info-value">${companyRequest.laptopBrand} ${companyRequest.laptopModel || ''}</p>
+                        <p class="tracking-info-value">${companyRequest.laptopBrand || companyRequest.laptop_brand} ${companyRequest.laptopModel || companyRequest.laptop_model || ''}</p>
                     </div>
                     <div class="tracking-info-item">
                         <p class="tracking-info-label">الرقم التسلسلي</p>
-                        <p class="tracking-info-value" dir="ltr">${companyRequest.serialNumber || '—'}</p>
+                        <p class="tracking-info-value" dir="ltr">${companyRequest.serialNumber || companyRequest.serial_number || '—'}</p>
                     </div>
                     <div class="tracking-info-item">
                         <p class="tracking-info-label">تاريخ الاستلام</p>
-                        <p class="tracking-info-value">${companyRequest.receivedDate ? Utils.formatDate(companyRequest.receivedDate) : '—'}</p>
+                        <p class="tracking-info-value">${companyRequest.receivedDate || companyRequest.received_date ? Utils.formatDate(companyRequest.receivedDate || companyRequest.received_date) : '—'}</p>
                     </div>
                     <div class="tracking-info-item">
                         <p class="tracking-info-label">تاريخ الاستلام المتوقع</p>
-                        <p class="tracking-info-value" style="color: #10b981; font-weight: 600;">${companyRequest.estimatedCompletionDate ? Utils.formatDate(companyRequest.estimatedCompletionDate) : 'لم يحدد بعد'}</p>
+                        <p class="tracking-info-value" style="color: #10b981; font-weight: 600;">${companyRequest.estimatedCompletionDate || companyRequest.estimated_completion_date ? Utils.formatDate(companyRequest.estimatedCompletionDate || companyRequest.estimated_completion_date) : 'لم يحدد بعد'}</p>
                     </div>
                 </div>
 
@@ -845,13 +845,13 @@ class CustomerManager {
 
                 <h3 style="margin: 2rem 0 1rem;">وصف المشكلة</h3>
                 <div style="padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
-                    <p style="color: var(--text-muted);">${companyRequest.problemDescription}</p>
+                    <p style="color: var(--text-muted);">${companyRequest.problemDescription || companyRequest.problem_description}</p>
                 </div>
 
-                ${companyRequest.adminReply ? `
+                ${companyRequest.adminReply || companyRequest.admin_reply ? `
                     <div style="margin-top: 2rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
                         <h4 style="margin-bottom: 0.5rem; color: #3b82f6;">رد الإدارة</h4>
-                        <p style="color: var(--text-muted);">${companyRequest.adminReply}</p>
+                        <p style="color: var(--text-muted);">${companyRequest.adminReply || companyRequest.admin_reply}</p>
                         ${companyRequest.cost > 0 ? `
                             <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(59, 130, 246, 0.2);">
                                 <p style="font-size: 0.875rem; color: var(--text-muted-more); margin-bottom: 0.25rem;">التكلفة:</p>
