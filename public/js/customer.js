@@ -789,6 +789,38 @@ class CustomerManager {
         const timeline = this.getRequestTimeline(companyRequest);
         const statusClass = this.getStatusClass(companyRequest.status);
 
+        const devicesHtml = companyRequest.devices && companyRequest.devices.length > 0 ? `
+            <h3 style="margin: 2rem 0 1rem;">الأجهزة المرسلة (${companyRequest.devices.length})</h3>
+            <div style="overflow-x: auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الماركة</th>
+                            <th>الموديل</th>
+                            <th>السيريال</th>
+                            <th>تاريخ الاستلام</th>
+                            <th>الأولوية</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${companyRequest.devices.map((device, index) => `
+                            <tr>
+                                <td style="font-weight: 600;">${device.deviceNumber}</td>
+                                <td>${device.laptopBrand}</td>
+                                <td>${device.laptopModel}</td>
+                                <td dir="ltr" style="color: #94a3b8;">${device.serialNumber || '—'}</td>
+                                <td>${device.receivedDate ? Utils.formatDate(device.receivedDate) : '—'}</td>
+                                <td><span class="priority-badge ${this.getPriorityClass(device.priority)}">${this.translatePriority(device.priority)}</span></td>
+                                <td><span class="status-badge ${this.getStatusClass(device.status)}">${this.translateStatus(device.status)}</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        ` : '';
+
         container.innerHTML = `
             <div class="glass-card tracking-result">
                 <div class="tracking-header">
@@ -832,16 +864,8 @@ class CustomerManager {
                         <p class="tracking-info-value">${companyRequest.contactPersonPhone || '—'}</p>
                     </div>
                     <div class="tracking-info-item">
-                        <p class="tracking-info-label">الجهاز</p>
-                        <p class="tracking-info-value">${companyRequest.laptopBrand} ${companyRequest.laptopModel || ''}</p>
-                    </div>
-                    <div class="tracking-info-item">
-                        <p class="tracking-info-label">الرقم التسلسلي</p>
-                        <p class="tracking-info-value" dir="ltr">${companyRequest.serialNumber || '—'}</p>
-                    </div>
-                    <div class="tracking-info-item">
-                        <p class="tracking-info-label">تاريخ الاستلام</p>
-                        <p class="tracking-info-value">${companyRequest.receivedDate ? Utils.formatDate(companyRequest.receivedDate) : '—'}</p>
+                        <p class="tracking-info-label">عدد الأجهزة</p>
+                        <p class="tracking-info-value">${companyRequest.deviceCount}</p>
                     </div>
                     <div class="tracking-info-item">
                         <p class="tracking-info-label">تاريخ الاستلام المتوقع</p>
@@ -859,10 +883,7 @@ class CustomerManager {
                     `).join('')}
                 </div>
 
-                <h3 style="margin: 2rem 0 1rem;">وصف المشكلة</h3>
-                <div style="padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
-                    <p style="color: var(--text-muted);">${companyRequest.problemDescription}</p>
-                </div>
+                ${devicesHtml}
 
                 ${companyRequest.adminReply ? `
                     <div style="margin-top: 2rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">

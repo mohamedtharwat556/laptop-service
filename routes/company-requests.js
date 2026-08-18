@@ -9,8 +9,26 @@ router.get('/', async (req, res) => {
         const { data, error } = await supabase.from('company_requests').select('*').order('created_at', { ascending: false });
         if (error) throw error;
         
+        // Get devices for each company request
+        const companyRequestsWithDevices = await Promise.all(
+            (data || []).map(async (item) => {
+                const { data: devices, error: devicesError } = await supabase
+                    .from('company_request_devices')
+                    .select('*')
+                    .eq('bulk_request_id', item.id)
+                    .order('device_number', { ascending: true });
+                
+                if (devicesError) {
+                    console.error('Error fetching devices for company request:', item.id, devicesError);
+                    return { ...item, devices: [] };
+                }
+                
+                return { ...item, devices: devices || [] };
+            })
+        );
+        
         // Convert snake_case to camelCase
-        const converted = (data || []).map(item => ({
+        const converted = companyRequestsWithDevices.map(item => ({
             id: item.id,
             requestNumber: item.request_number,
             companyName: item.company_name,
@@ -19,23 +37,31 @@ router.get('/', async (req, res) => {
             commercialRegister: item.commercial_register,
             contactPerson: item.contact_person,
             contactPersonPhone: item.contact_person_phone,
-            laptopBrand: item.laptop_brand,
-            laptopModel: item.laptop_model,
-            serialNumber: item.serial_number,
-            receivedDate: item.received_date,
-            problemDescription: item.problem_description,
-            priority: item.priority,
+            deviceCount: item.device_count,
             status: item.status,
+            priority: item.priority,
             cost: item.cost,
-            estimatedCompletionDate: item.estimated_completion_date,
-            deviceImage: item.device_image,
-            technicianNotes: item.technician_notes,
-            technician: item.technician,
+            notes: item.technician_notes,
             adminReply: item.admin_reply,
-            rating: item.rating,
-            ratingComment: item.rating_comment,
+            technician: item.technician,
+            estimatedCompletionDate: item.estimated_completion_date,
             createdAt: item.created_at,
-            updatedAt: item.updated_at
+            updatedAt: item.updated_at,
+            devices: (item.devices || []).map(device => ({
+                id: device.id,
+                bulkRequestId: device.bulk_request_id,
+                deviceNumber: device.device_number,
+                laptopBrand: device.laptop_brand,
+                laptopModel: device.laptop_model,
+                serialNumber: device.serial_number,
+                receivedDate: device.received_date,
+                problemDescription: device.problem_description,
+                priority: device.priority,
+                deviceImage: device.device_image,
+                status: device.status,
+                createdAt: device.created_at,
+                updatedAt: device.updated_at
+            }))
         }));
         
         res.json(converted);
@@ -51,7 +77,20 @@ router.get('/:id', async (req, res) => {
         const { data, error } = await supabase.from('company_requests').select('*').eq('id', req.params.id).single();
         if (error) throw error;
         if (!data) return res.status(404).json({ error: 'Company request not found' });
-        res.json(data);
+        
+        // Get devices for this request
+        const { data: devices, error: devicesError } = await supabase
+            .from('company_request_devices')
+            .select('*')
+            .eq('bulk_request_id', req.params.id)
+            .order('device_number', { ascending: true });
+        
+        if (devicesError) {
+            console.error('Error fetching devices:', devicesError);
+            return res.json({ ...data, devices: [] });
+        }
+        
+        res.json({ ...data, devices: devices || [] });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -74,6 +113,9 @@ router.post('/', async (req, res) => {
         }
         const requestNumber = `YAS-COMP ${nextNumber}`;
 
+        const devices = req.body.devices || [];
+        const deviceCount = devices.length;
+
         const newRequest = {
             request_number: req.body.requestNumber || requestNumber,
             company_name: req.body.companyName,
@@ -82,15 +124,10 @@ router.post('/', async (req, res) => {
             commercial_register: req.body.commercialRegister || '',
             contact_person: req.body.contactPerson || '',
             contact_person_phone: req.body.contactPersonPhone || '',
-            laptop_brand: req.body.laptopBrand,
-            laptop_model: req.body.laptopModel,
-            serial_number: req.body.serialNumber,
-            received_date: req.body.receivedDate,
-            problem_description: req.body.problemDescription,
+            device_count: deviceCount,
             status: req.body.status || 'Received',
             priority: req.body.priority || 'Medium',
             cost: req.body.cost || 0,
-            device_image: req.body.deviceImage || null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
@@ -108,6 +145,31 @@ router.post('/', async (req, res) => {
             throw error;
         }
         console.log('✅ Company request inserted successfully:', data[0]);
+
+        // Insert devices
+        if (devices.length > 0) {
+            const devicesToInsert = devices.map((device, index) => ({
+                bulk_request_id: data[0].id,
+                device_number: index + 1,
+                laptop_brand: device.laptopBrand,
+                laptop_model: device.laptopModel,
+                serial_number: device.serialNumber,
+                received_date: device.receivedDate,
+                problem_description: device.problemDescription,
+                priority: device.priority || 'Medium',
+                device_image: device.deviceImage || null,
+                status: 'Received',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }));
+
+            const { error: devicesError } = await supabase.from('company_request_devices').insert(devicesToInsert);
+            if (devicesError) {
+                console.error('❌ Error inserting devices:', devicesError);
+                // Don't throw error, just log it
+            }
+        }
+
         res.status(201).json(data[0]);
     } catch (error) {
         console.error('❌ POST /api/company-requests error:', error);
