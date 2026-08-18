@@ -1732,44 +1732,51 @@ class AdminManager {
             modalManager.create('view-company-request', 'تفاصيل الطلب', content);
             modalManager.open('view-company-request');
 
-            const form = document.getElementById('editCompanyRequestForm');
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
+            setTimeout(() => {
+                const form = document.getElementById('editCompanyRequestForm');
+                if (!form) {
+                    console.error('Form not found');
+                    return;
+                }
                 
-                const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
-                let estimatedCompletionDate = null;
-                if (estimatedCompletionDateValue) {
-                    const dateObj = new Date(estimatedCompletionDateValue);
-                    if (!isNaN(dateObj.getTime())) {
-                        estimatedCompletionDate = dateObj.toISOString();
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+                    let estimatedCompletionDate = null;
+                    if (estimatedCompletionDateValue) {
+                        const dateObj = new Date(estimatedCompletionDateValue);
+                        if (!isNaN(dateObj.getTime())) {
+                            estimatedCompletionDate = dateObj.toISOString();
+                        }
                     }
-                }
 
-                const updateData = {
-                    adminReply: form.adminReply.value,
-                    cost: parseFloat(form.cost.value) || 0,
-                    technician: form.technician.value,
-                    estimatedCompletionDate: estimatedCompletionDate,
-                    status: form.status.value
-                };
+                    const updateData = {
+                        adminReply: form.adminReply.value,
+                        cost: parseFloat(form.cost.value) || 0,
+                        technician: form.technician.value,
+                        estimatedCompletionDate: estimatedCompletionDate,
+                        status: form.status.value
+                    };
 
-                try {
-                    const response = await fetch(`/api/company-requests/${companyRequestId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(updateData)
-                    });
+                    try {
+                        const response = await fetch(`/api/company-requests/${companyRequestId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(updateData)
+                        });
 
-                    if (!response.ok) throw new Error('Failed to update company request');
+                        if (!response.ok) throw new Error('Failed to update company request');
 
-                    toast.success('تم تحديث الطلب بنجاح');
-                    modalManager.close('view-company-request');
-                    await this.loadData();
-                } catch (error) {
-                    console.error('Error updating company request:', error);
-                    toast.error('فشل تحديث الطلب');
-                }
-            });
+                        toast.success('تم تحديث الطلب بنجاح');
+                        modalManager.close('view-company-request');
+                        await this.loadData();
+                    } catch (error) {
+                        console.error('Error updating company request:', error);
+                        toast.error('فشل تحديث الطلب');
+                    }
+                });
+            }, 100);
         } catch (error) {
             console.error('Error viewing company request:', error);
             toast.error('فشل تحميل تفاصيل الطلب');
