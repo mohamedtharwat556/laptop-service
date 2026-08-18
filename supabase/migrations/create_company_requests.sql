@@ -34,7 +34,7 @@ CREATE POLICY "Allow all access to company_requests" ON company_requests
     WITH CHECK (true);
 
 -- Create trigger for updated_at
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+CREATE OR REPLACE FUNCTION update_company_requests_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
@@ -43,4 +43,4 @@ END;
 $$ language 'plpgsql';
 
 CREATE TRIGGER update_company_requests_updated_at BEFORE UPDATE
-    ON company_requests FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    ON company_requests FOR EACH ROW EXECUTE FUNCTION update_company_requests_updated_at_column();
