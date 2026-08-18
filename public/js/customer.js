@@ -115,6 +115,42 @@ class CustomerManager {
     }
 
     /**
+     * Track a bulk request by name, phone number or request number
+     */
+    async trackBulkRequest(searchTerm, searchType = 'phone') {
+        try {
+            const apiUrl = '/api/bulk-requests';
+            const response = await fetch(apiUrl);
+            const bulkRequests = await response.json();
+
+            let bulkRequest;
+            if (searchType === 'phone') {
+                bulkRequest = bulkRequests.filter(r => r.customer_phone === searchTerm);
+                bulkRequest = bulkRequest.length > 0 ? bulkRequest[bulkRequest.length - 1] : null;
+            } else if (searchType === 'name') {
+                bulkRequest = bulkRequests.filter(r => r.customer_name.toLowerCase() === searchTerm.toLowerCase());
+                bulkRequest = bulkRequest.length > 0 ? bulkRequest[bulkRequest.length - 1] : null;
+            } else {
+                bulkRequest = bulkRequests.find(r => r.request_number === searchTerm);
+            }
+
+            // Convert snake_case to camelCase
+            if (bulkRequest) {
+                bulkRequest = this.convertToCamelCase(bulkRequest);
+            }
+
+            // Store current search for refresh
+            this.currentSearchTerm = searchTerm;
+            this.currentSearchType = searchType;
+
+            return bulkRequest;
+        } catch (error) {
+            console.error('Failed to track bulk request:', error);
+            return null;
+        }
+    }
+
+    /**
      * Convert snake_case from Supabase to camelCase for frontend
      */
     convertToCamelCase(obj) {
@@ -295,23 +331,32 @@ class CustomerManager {
             
             const searchTerm = form.searchTerm.value.trim();
             const searchType = form.searchType.value;
+            const requestType = form.requestType ? form.requestType.value : 'single';
 
             if (!searchTerm) {
-                toast.error('Please enter a phone number or request number');
+                toast.error('يرجى إدخال كلمة البحث');
                 return;
             }
 
-            loading.show('Searching for your request...');
-
-            // Simulate API delay
+            loading.show();
             await new Promise(resolve => setTimeout(resolve, 500));
 
             try {
-                const request = await this.trackRequest(searchTerm, searchType);
+                let request;
+                if (requestType === 'bulk') {
+                    request = await this.trackBulkRequest(searchTerm, searchType);
+                } else {
+                    request = await this.trackRequest(searchTerm, searchType);
+                }
+                
                 loading.hide();
 
                 if (request) {
-                    this.renderTrackingResult(request);
+                    if (requestType === 'bulk') {
+                        this.renderBulkTrackingResult(request);
+                    } else {
+                        this.renderTrackingResult(request);
+                    }
                     toast.success('تم العثور على الطلب!');
                 } else {
                     this.renderTrackingError();
@@ -319,8 +364,8 @@ class CustomerManager {
                 }
             } catch (error) {
                 loading.hide();
-                toast.error('فشل البحث. يرجى المحاولة مجدداً.');
-                console.error(error);
+                console.error('Tracking error:', error);
+                toast.error('حدث خطأ أثناء البحث');
             }
         });
     }
@@ -575,6 +620,118 @@ class CustomerManager {
                 <button class="btn btn-primary" onclick="document.getElementById('trackingForm').reset(); document.getElementById('trackingResult').innerHTML = '';" style="margin-top: 1rem;">
                     حاول مجدداً
                 </button>
+            </div>
+        `;
+    }
+
+    /**
+     * Render bulk request tracking result
+     */
+    renderBulkTrackingResult(bulkRequest) {
+        const container = document.getElementById('trackingResult');
+        if (!container) return;
+
+        const progress = this.calculateProgress(bulkRequest);
+        const timeline = this.getRequestTimeline(bulkRequest);
+        const statusClass = this.getStatusClass(bulkRequest.status);
+
+        container.innerHTML = `
+            <div class="glass-card tracking-result">
+                <div class="tracking-header">
+                    <div>
+                        <h2>${bulkRequest.requestNumber}</h2>
+                        <span style="color: #94a3b8; font-size: 0.875rem;">طلب جملة</span>
+                    </div>
+                    <div class="date-info">
+                        <p class="tracking-info-label">تاريخ التقديم</p>
+                        <p class="tracking-info-value">${Utils.formatDate(bulkRequest.createdAt)}</p>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: ${progress}%"></div>
+                </div>
+
+                <div class="tracking-info">
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">اسم العميل</p>
+                        <p class="tracking-info-value">${bulkRequest.customerName}</p>
+                    </div>
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">رقم الهاتف</p>
+                        <p class="tracking-info-value">${bulkRequest.customerPhone}</p>
+                    </div>
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">عدد الأجهزة</p>
+                        <p class="tracking-info-value">${bulkRequest.deviceCount}</p>
+                    </div>
+                    <div class="tracking-info-item">
+                        <p class="tracking-info-label">تاريخ الاستلام المتوقع</p>
+                        <p class="tracking-info-value" style="color: #10b981; font-weight: 600;">${bulkRequest.estimatedCompletionDate ? Utils.formatDate(bulkRequest.estimatedCompletionDate) : 'لم يحدد بعد'}</p>
+                    </div>
+                </div>
+
+                <h3 style="margin: 2rem 0 1rem;">مسار حالة الطلب</h3>
+                <div class="timeline">
+                    ${timeline.map(item => `
+                        <div class="timeline-item ${item.completed ? 'completed' : ''}">
+                            <h4>${this.translateStatus(item.status)}</h4>
+                            <p>${item.date ? Utils.formatDate(item.date) : 'قيد الانتظار'}</p>
+                        </div>
+                    `).join('')}
+                </div>
+
+                ${bulkRequest.devices && bulkRequest.devices.length > 0 ? `
+                    <h3 style="margin: 2rem 0 1rem;">الأجهزة المرسلة</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الماركة</th>
+                                    <th>الموديل</th>
+                                    <th>الرقم التسلسلي</th>
+                                    <th>تاريخ الاستلام</th>
+                                    <th>الأولوية</th>
+                                    <th>الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${bulkRequest.devices.map((device, index) => `
+                                    <tr>
+                                        <td style="font-weight: 600;">${device.deviceNumber}</td>
+                                        <td>${device.laptopBrand}</td>
+                                        <td>${device.laptopModel}</td>
+                                        <td dir="ltr" style="color: #94a3b8;">${device.serialNumber || '—'}</td>
+                                        <td>${device.receivedDate ? Utils.formatDate(device.receivedDate) : '—'}</td>
+                                        <td><span class="priority-badge ${this.getStatusClass(device.priority)}">${this.translatePriority(device.priority)}</span></td>
+                                        <td><span class="status-badge ${this.getStatusClass(device.status)}">${this.translateStatus(device.status)}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                ` : ''}
+
+                ${bulkRequest.adminReply ? `
+                    <div style="margin-top: 2rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
+                        <h4 style="margin-bottom: 0.5rem; color: #3b82f6;">رد الإدارة</h4>
+                        <p style="color: var(--text-muted);">${bulkRequest.adminReply}</p>
+                        ${bulkRequest.cost > 0 ? `
+                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(59, 130, 246, 0.2);">
+                                <p style="font-size: 0.875rem; color: var(--text-muted-more); margin-bottom: 0.25rem;">التكلفة:</p>
+                                <p style="font-weight: 600; color: #3b82f6; font-size: 1.1rem;">${Utils.formatCurrency(bulkRequest.cost)}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : ''}
+
+                ${bulkRequest.technician ? `
+                    <div style="margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
+                        <p style="font-size: 0.875rem; color: var(--text-muted-more); margin-bottom: 0.25rem;">الفني المسؤول:</p>
+                        <p style="font-weight: 500; color: #10b981;">${bulkRequest.technician}</p>
+                    </div>
+                ` : ''}
             </div>
         `;
     }
