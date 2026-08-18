@@ -1597,14 +1597,14 @@ class AdminManager {
                     <tbody>
                         ${data.map(companyRequest => `
                             <tr style="transition: background-color 0.2s;">
-                                <td style="font-weight: 600; color: #3b82f6;">${companyRequest.requestNumber}</td>
-                                <td style="font-weight: 600;">${companyRequest.fullName}</td>
+                                <td style="font-weight: 600; color: #3b82f6;">${companyRequest.request_number || companyRequest.requestNumber}</td>
+                                <td style="font-weight: 600;">${companyRequest.full_name || companyRequest.fullName}</td>
                                 <td dir="ltr">${companyRequest.phone}</td>
-                                <td>${companyRequest.laptopBrand} ${companyRequest.laptopModel || ''}</td>
+                                <td>${companyRequest.laptop_brand || companyRequest.laptopBrand} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</td>
                                 <td><span class="status-badge ${this.getStatusClass(companyRequest.status)}">${this.translateStatus(companyRequest.status)}</span></td>
                                 <td><span class="priority-badge ${this.getPriorityClass(companyRequest.priority)}">${this.translatePriority(companyRequest.priority)}</span></td>
-                                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${companyRequest.adminReply || '—'}</td>
-                                <td>${Utils.formatDate(companyRequest.createdAt)}</td>
+                                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${companyRequest.admin_reply || companyRequest.adminReply || '—'}</td>
+                                <td>${Utils.formatDate(companyRequest.created_at || companyRequest.createdAt)}</td>
                                 <td>
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
                                             onclick="adminManager.viewCompanyRequest(${companyRequest.id})">
@@ -1638,9 +1638,9 @@ class AdminManager {
         // Search filter
         if (searchTerm) {
             filtered = filtered.filter(r => 
-                (r.fullName && r.fullName.toLowerCase().includes(searchTerm)) ||
+                ((r.full_name || r.fullName) && (r.full_name || r.fullName).toLowerCase().includes(searchTerm)) ||
                 (r.phone && r.phone.includes(searchTerm)) ||
-                (r.requestNumber && r.requestNumber.toLowerCase().includes(searchTerm))
+                ((r.request_number || r.requestNumber) && (r.request_number || r.requestNumber).toLowerCase().includes(searchTerm))
             );
         }
 
@@ -1657,37 +1657,33 @@ class AdminManager {
      */
     async viewCompanyRequest(companyRequestId) {
         try {
-            console.log('🔍 Fetching company request:', companyRequestId);
-            console.log('🔍 modalManager exists:', typeof modalManager);
-            
             const response = await fetch(`/api/company-requests/${companyRequestId}`);
             if (!response.ok) throw new Error('Failed to fetch company request details');
             
             const companyRequest = await response.json();
-            console.log('📊 Company request data:', companyRequest);
             
             const content = `
                 <div style="max-height: 70vh; overflow-y: auto;">
                     <div class="request-card-header">
                         <div>
-                            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${companyRequest.requestNumber}</h3>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${companyRequest.request_number || companyRequest.requestNumber}</h3>
                             <span class="status-badge ${this.getStatusClass(companyRequest.status)}">${this.translateStatus(companyRequest.status)}</span>
                         </div>
                     </div>
                     <div class="request-details">
-                        <div class="request-detail-item"><span class="request-detail-label">الاسم</span><span class="request-detail-value">${companyRequest.fullName || ''}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">الاسم</span><span class="request-detail-value">${companyRequest.full_name || companyRequest.fullName || ''}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${companyRequest.phone || ''}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptopBrand || ''} ${companyRequest.laptopModel || ''}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${companyRequest.serialNumber || '—'}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${companyRequest.receivedDate ? Utils.formatDate(companyRequest.receivedDate) : '—'}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(companyRequest.createdAt)}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${companyRequest.problemDescription || ''}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptop_brand || companyRequest.laptopBrand || ''} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${companyRequest.serial_number || companyRequest.serialNumber || '—'}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${companyRequest.received_date || companyRequest.receivedDate ? Utils.formatDate(companyRequest.received_date || companyRequest.receivedDate) : '—'}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(companyRequest.created_at || companyRequest.createdAt)}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${companyRequest.problem_description || companyRequest.problemDescription || ''}</span></div>
                     </div>
 
                     <form id="editCompanyRequestForm" style="margin-top: 1.5rem;">
                         <div class="form-group">
                             <label class="form-label">رد الإدارة</label>
-                            <textarea class="form-textarea" name="adminReply" rows="3">${companyRequest.adminReply || ''}</textarea>
+                            <textarea class="form-textarea" name="adminReply" rows="3">${companyRequest.admin_reply || companyRequest.adminReply || ''}</textarea>
                         </div>
                         <div class="form-group">
                             <label class="form-label">تكلفة الصيانة (ج.م)</label>
@@ -1715,7 +1711,7 @@ class AdminManager {
                         </div>
                         <div class="form-group">
                             <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
-                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${companyRequest.estimatedCompletionDate ? new Date(companyRequest.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
+                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${companyRequest.estimated_completion_date || companyRequest.estimatedCompletionDate ? new Date(companyRequest.estimated_completion_date || companyRequest.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
                         </div>
                         <div class="form-group">
                             <label class="form-label">تحديث الحالة</label>
@@ -1733,60 +1729,49 @@ class AdminManager {
                 </div>
             `;
             
-            console.log('🎨 Creating modal...');
-            modalManager.create('view-company-request-' + companyRequestId, 'تفاصيل الطلب', content);
-            console.log('🚀 Opening modal...');
-            modalManager.open('view-company-request-' + companyRequestId);
-            console.log('✅ Modal should be open now');
+            modalManager.create('view-company-request', 'تفاصيل الطلب', content);
+            modalManager.open('view-company-request');
 
-            setTimeout(() => {
-                const form = document.getElementById('editCompanyRequestForm');
-                if (!form) {
-                    console.error('❌ Form not found');
-                    return;
-                }
-                console.log('✅ Form found, attaching event listener');
+            const form = document.getElementById('editCompanyRequestForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
                 
-                form.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    
-                    const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
-                    let estimatedCompletionDate = null;
-                    if (estimatedCompletionDateValue) {
-                        const dateObj = new Date(estimatedCompletionDateValue);
-                        if (!isNaN(dateObj.getTime())) {
-                            estimatedCompletionDate = dateObj.toISOString();
-                        }
+                const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+                let estimatedCompletionDate = null;
+                if (estimatedCompletionDateValue) {
+                    const dateObj = new Date(estimatedCompletionDateValue);
+                    if (!isNaN(dateObj.getTime())) {
+                        estimatedCompletionDate = dateObj.toISOString();
                     }
+                }
 
-                    const updateData = {
-                        adminReply: form.adminReply.value,
-                        cost: parseFloat(form.cost.value) || 0,
-                        technician: form.technician.value,
-                        estimatedCompletionDate: estimatedCompletionDate,
-                        status: form.status.value
-                    };
+                const updateData = {
+                    admin_reply: form.adminReply.value,
+                    cost: parseFloat(form.cost.value) || 0,
+                    technician: form.technician.value,
+                    estimated_completion_date: estimatedCompletionDate,
+                    status: form.status.value
+                };
 
-                    try {
-                        const response = await fetch(`/api/company-requests/${companyRequestId}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(updateData)
-                        });
+                try {
+                    const response = await fetch(`/api/company-requests/${companyRequestId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
 
-                        if (!response.ok) throw new Error('Failed to update company request');
+                    if (!response.ok) throw new Error('Failed to update company request');
 
-                        toast.success('تم تحديث الطلب بنجاح');
-                        modalManager.close('view-company-request-' + companyRequestId);
-                        await this.loadData();
-                    } catch (error) {
-                        console.error('Error updating company request:', error);
-                        toast.error('فشل تحديث الطلب');
-                    }
-                });
-            }, 100);
+                    toast.success('تم تحديث الطلب بنجاح');
+                    modalManager.close('view-company-request');
+                    await this.loadData();
+                } catch (error) {
+                    console.error('Error updating company request:', error);
+                    toast.error('فشل تحديث الطلب');
+                }
+            });
         } catch (error) {
-            console.error('❌ Error viewing company request:', error);
+            console.error('Error viewing company request:', error);
             toast.error('فشل تحميل تفاصيل الطلب');
         }
     }

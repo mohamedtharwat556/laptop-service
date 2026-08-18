@@ -1,18 +1,18 @@
 -- Create company_requests table
 CREATE TABLE IF NOT EXISTS company_requests (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    request_number VARCHAR(50) UNIQUE NOT NULL,
-    full_name VARCHAR(255) NOT NULL,
-    phone VARCHAR(20) NOT NULL,
-    laptop_brand VARCHAR(100) NOT NULL,
-    laptop_model VARCHAR(100) NOT NULL,
-    serial_number VARCHAR(100),
-    received_date DATE NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    request_number TEXT UNIQUE NOT NULL,
+    full_name TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    laptop_brand TEXT NOT NULL,
+    laptop_model TEXT,
+    serial_number TEXT,
+    received_date DATE,
     problem_description TEXT NOT NULL,
-    priority VARCHAR(20) DEFAULT 'Medium',
-    status VARCHAR(50) DEFAULT 'Received',
+    priority TEXT DEFAULT 'Medium',
+    status TEXT DEFAULT 'Received',
     admin_reply TEXT,
-    technician VARCHAR(255),
+    technician TEXT,
     technician_notes TEXT,
     cost DECIMAL(10, 2) DEFAULT 0,
     estimated_completion_date TIMESTAMP WITH TIME ZONE,
@@ -20,38 +20,27 @@ CREATE TABLE IF NOT EXISTS company_requests (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create index on request_number for faster lookups
-CREATE INDEX IF NOT EXISTS idx_company_requests_request_number ON company_requests(request_number);
-CREATE INDEX IF NOT EXISTS idx_company_requests_phone ON company_requests(phone);
+-- Create indexes
 CREATE INDEX IF NOT EXISTS idx_company_requests_status ON company_requests(status);
+CREATE INDEX IF NOT EXISTS idx_company_requests_created_at ON company_requests(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_company_requests_phone ON company_requests(phone);
 
--- Enable Row Level Security
+-- Enable RLS
 ALTER TABLE company_requests ENABLE ROW LEVEL SECURITY;
 
--- Create policies for company_requests
-CREATE POLICY "Public read access for company requests" ON company_requests
-    FOR SELECT USING (true);
+-- Create policies
+CREATE POLICY "Allow all access to company_requests" ON company_requests
+    FOR ALL USING (true)
+    WITH CHECK (true);
 
-CREATE POLICY "Public insert for company requests" ON company_requests
-    FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Public update for company requests" ON company_requests
-    FOR UPDATE USING (true);
-
-CREATE POLICY "Public delete for company requests" ON company_requests
-    FOR DELETE USING (true);
-
--- Function to update updated_at timestamp
+-- Create trigger for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ language 'plpgsql';
 
--- Trigger to automatically update updated_at
-CREATE TRIGGER update_company_requests_updated_at
-    BEFORE UPDATE ON company_requests
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_company_requests_updated_at BEFORE UPDATE
+    ON company_requests FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

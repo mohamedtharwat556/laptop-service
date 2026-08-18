@@ -157,10 +157,10 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const updateData = {
-            admin_reply: req.body.adminReply,
+            admin_reply: req.body.admin_reply,
             cost: req.body.cost,
             technician: req.body.technician,
-            estimated_completion_date: req.body.estimatedCompletionDate,
+            estimated_completion_date: req.body.estimated_completion_date,
             status: req.body.status
         };
 
