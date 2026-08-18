@@ -2,15 +2,33 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../config/db');
 
-// Get all bulk requests
+// Get all bulk requests with devices
 router.get('/', async (req, res) => {
     try {
         console.log('📋 GET /api/bulk-requests');
         const { data, error } = await supabase.from('bulk_requests').select('*').order('created_at', { ascending: false });
         if (error) throw error;
         
+        // Get devices for each bulk request
+        const bulkRequestsWithDevices = await Promise.all(
+            (data || []).map(async (item) => {
+                const { data: devices, error: devicesError } = await supabase
+                    .from('bulk_request_devices')
+                    .select('*')
+                    .eq('bulk_request_id', item.id)
+                    .order('device_number', { ascending: true });
+                
+                if (devicesError) {
+                    console.error('Error fetching devices for bulk request:', item.id, devicesError);
+                    return { ...item, devices: [] };
+                }
+                
+                return { ...item, devices: devices || [] };
+            })
+        );
+        
         // Convert snake_case to camelCase
-        const converted = (data || []).map(item => ({
+        const converted = bulkRequestsWithDevices.map(item => ({
             id: item.id,
             requestNumber: item.request_number,
             customerName: item.customer_name,
@@ -21,8 +39,26 @@ router.get('/', async (req, res) => {
             priority: item.priority,
             cost: item.cost,
             notes: item.notes,
+            adminReply: item.admin_reply,
+            technician: item.technician,
+            estimatedCompletionDate: item.estimated_completion_date,
             createdAt: item.created_at,
-            updatedAt: item.updated_at
+            updatedAt: item.updated_at,
+            devices: (item.devices || []).map(device => ({
+                id: device.id,
+                bulkRequestId: device.bulk_request_id,
+                deviceNumber: device.device_number,
+                laptopBrand: device.laptop_brand,
+                laptopModel: device.laptop_model,
+                serialNumber: device.serial_number,
+                receivedDate: device.received_date,
+                priority: device.priority,
+                problemDescription: device.problem_description,
+                deviceImage: device.device_image,
+                status: device.status,
+                createdAt: device.created_at,
+                updatedAt: device.updated_at
+            }))
         }));
         
         res.json(converted);
