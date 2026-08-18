@@ -630,6 +630,26 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.showSection('company-requests')" title="عرض طلبات الشركات">
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2);">
+                        <i class="fas fa-building" style="color: #10b981;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>${stats.companyTotalRequests}</h3>
+                        <p>طلبات الشركات</p>
+                    </div>
+                    <i class="fas fa-arrow-left stat-arrow"></i>
+                </div>
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.showSection('company-requests')" title="عرض إيرادات الشركات">
+                    <div class="stat-icon success" style="background: rgba(16, 185, 129, 0.2);">
+                        <i class="fas fa-dollar-sign" style="color: #10b981;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>${Utils.formatCurrency(stats.companyRevenue)}</h3>
+                        <p>إيرادات الشركات</p>
+                    </div>
+                    <i class="fas fa-arrow-left stat-arrow"></i>
+                </div>
                 <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('users','All')" title="عرض المستخدمين">
                     <div class="stat-icon">
                         <i class="fas fa-users"></i>
@@ -660,28 +680,40 @@ class AdminManager {
             .filter(r => r.cost && r.cost > 0)
             .reduce((sum, r) => sum + (r.cost || 0), 0);
 
-        // Add company requests revenue
+        // Company requests stats (separate)
         const companyRevenue = this.companyRequests
             .filter(r => r.cost && r.cost > 0)
             .reduce((sum, r) => sum + (r.cost || 0), 0);
 
-        // Combine all requests for stats
-        const allRequests = [...this.requests, ...this.companyRequests];
-        const allOpenRequests = allRequests.filter(r =>
+        const companyOpenRequests = this.companyRequests.filter(r =>
             ['Received', 'Waiting Inspection', 'Under Maintenance', 'Waiting Parts'].includes(r.status)
         );
-        const allCompletedRequests = allRequests.filter(r => r.status === 'Delivered');
+        const companyCompletedRequests = this.companyRequests.filter(r => r.status === 'Delivered');
+
+        // Normal requests stats (separate)
+        const openRequests = this.requests.filter(r =>
+            ['Received', 'Waiting Inspection', 'Under Maintenance', 'Waiting Parts'].includes(r.status)
+        );
+        const completedRequests = this.requests.filter(r => r.status === 'Delivered');
 
         return {
-            totalRequests: allRequests.length,
-            openRequests: allOpenRequests.length,
-            completedRequests: allCompletedRequests.length,
+            // Normal requests stats
+            totalRequests: this.requests.length,
+            openRequests: openRequests.length,
+            completedRequests: completedRequests.length,
             todayOrders: todayOrders.length,
-            totalRevenue: totalRevenue + companyRevenue,
+            totalRevenue: totalRevenue,
+            
+            // Company requests stats (separate)
+            companyTotalRequests: this.companyRequests.length,
+            companyOpenRequests: companyOpenRequests.length,
+            companyCompletedRequests: companyCompletedRequests.length,
+            companyRevenue: companyRevenue,
+            
+            // Other stats
             totalProducts: this.products.length,
             totalOrders: this.orders.length,
-            bulkRequestsCount: this.bulkRequests.length,
-            companyRequestsCount: this.companyRequests.length
+            bulkRequestsCount: this.bulkRequests.length
         };
     }
 
@@ -1606,9 +1638,9 @@ class AdminManager {
         // Search filter
         if (searchTerm) {
             filtered = filtered.filter(r => 
-                r.companyName.toLowerCase().includes(searchTerm) ||
-                r.companyPhone.includes(searchTerm) ||
-                r.requestNumber.toLowerCase().includes(searchTerm)
+                (r.fullName && r.fullName.toLowerCase().includes(searchTerm)) ||
+                (r.phone && r.phone.includes(searchTerm)) ||
+                (r.requestNumber && r.requestNumber.toLowerCase().includes(searchTerm))
             );
         }
 
@@ -1748,7 +1780,7 @@ class AdminManager {
      * Delete company request
      */
     async deleteCompanyRequest(companyRequestId) {
-        if (!confirm('هل أنت متأكد من حذف طلب الشركة؟')) {
+        if (!confirm('هل أنت متأكد من حذف الطلب؟')) {
             return;
         }
 
@@ -1758,15 +1790,17 @@ class AdminManager {
             });
 
             if (response.ok) {
-                toast.success('تم حذف طلب الشركة بنجاح');
+                toast.success('تم حذف الطلب بنجاح');
                 await this.loadData();
                 this.renderCompanyRequests();
             } else {
-                throw new Error('Failed to delete company request');
+                const errorText = await response.text();
+                console.error('Delete failed:', errorText);
+                toast.error('فشل حذف الطلب');
             }
         } catch (error) {
             console.error('Error deleting company request:', error);
-            toast.error('فشل في حذف طلب الشركة');
+            toast.error('فشل حذف الطلب');
         }
     }
     groupBulkRequestsByCustomer(requests) {
