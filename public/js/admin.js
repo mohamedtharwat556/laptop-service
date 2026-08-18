@@ -523,11 +523,12 @@ class AdminManager {
             console.log('📡 Fetching data from API...');
             // Use same-origin API (Vercel handles both frontend and backend)
             const apiUrl = '/api';
-            const [usersRes, requestsRes, ordersRes, productsRes] = await Promise.all([
+            const [usersRes, requestsRes, ordersRes, productsRes, bulkRequestsRes] = await Promise.all([
                 fetch(`${apiUrl}/users`).then(r => r.json()).catch(() => []),
                 fetch(`${apiUrl}/requests`).then(r => r.json()).catch(() => []),
                 fetch(`${apiUrl}/orders`).then(r => r.json()).catch(() => []),
-                fetch(`${apiUrl}/products`).then(r => r.json()).catch(() => [])
+                fetch(`${apiUrl}/products`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/bulk-requests`).then(r => r.json()).catch(() => [])
             ]);
             
             // Convert from snake_case to camelCase
@@ -535,6 +536,7 @@ class AdminManager {
             this.requests = this.convertToCamelCase(Array.isArray(requestsRes) ? requestsRes : []);
             this.orders = this.convertToCamelCase(Array.isArray(ordersRes) ? ordersRes : []);
             this.products = this.convertToCamelCase(Array.isArray(productsRes) ? productsRes : []);
+            this.bulkRequests = Array.isArray(bulkRequestsRes) ? bulkRequestsRes : [];
 
             // Debug: Check first request for new fields
             if (this.requests.length > 0) {
@@ -546,7 +548,7 @@ class AdminManager {
                 console.log('🔍 serialNumber:', this.requests[0].serialNumber);
             }
 
-            console.log(`✅ Data loaded: ${this.requests.length} requests, ${this.products.length} products`);
+            console.log(`✅ Data loaded: ${this.requests.length} requests, ${this.products.length} products, ${this.bulkRequests.length} bulk requests`);
         } catch (error) {
             console.error('Failed to load data from API:', error);
             // Fallback to localStorage
@@ -554,6 +556,7 @@ class AdminManager {
             this.requests = storage.getRequests();
             this.orders = storage.getOrders();
             this.products = storage.getProducts();
+            this.bulkRequests = [];
         }
     }
 
@@ -1430,8 +1433,8 @@ class AdminManager {
         const container = document.getElementById('bulkRequestsContainer');
         if (!container) return;
 
-        // Filter only bulk requests
-        const bulkRequests = this.requests.filter(r => r.requestType === 'bulk');
+        // Use bulk requests from separate table
+        const bulkRequests = this.bulkRequests || [];
         const filteredRequests = this.filterBulkRequests(bulkRequests);
         const { data, pages } = this.paginate(filteredRequests);
 
@@ -1445,35 +1448,34 @@ class AdminManager {
             return;
         }
 
-        // Group bulk requests by customer (phone number)
-        const groupedByCustomer = this.groupBulkRequestsByCustomer(data);
-
         container.innerHTML = `
             <div style="overflow-x: auto;">
                 <table class="table">
                     <thead>
                         <tr>
+                            <th>رقم الطلب</th>
                             <th>العميل</th>
                             <th>الهاتف</th>
                             <th>عدد اللابتوبات</th>
-                            <th>أرقام الطلبات</th>
                             <th>الحالة</th>
+                            <th>الأولوية</th>
                             <th>التاريخ</th>
                             <th>إجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${groupedByCustomer.map(group => `
+                        ${data.map(bulkRequest => `
                             <tr style="transition: background-color 0.2s;">
-                                <td style="font-weight: 600;">${group.customerName}</td>
-                                <td dir="ltr">${group.customerPhone}</td>
-                                <td style="font-weight: 600; color: #3b82f6;">${group.deviceCount}</td>
-                                <td dir="ltr" style="font-size: 0.8rem; color: #94a3b8;">${group.requestNumbers.join(', ')}</td>
-                                <td><span class="status-badge ${this.getStatusClass(group.status)}">${this.translateStatus(group.status)}</span></td>
-                                <td>${Utils.formatDate(group.createdAt)}</td>
+                                <td style="font-weight: 600; color: #3b82f6;">${bulkRequest.requestNumber}</td>
+                                <td style="font-weight: 600;">${bulkRequest.customerName}</td>
+                                <td dir="ltr">${bulkRequest.customerPhone}</td>
+                                <td style="font-weight: 600; color: #3b82f6;">${bulkRequest.deviceCount}</td>
+                                <td><span class="status-badge ${this.getStatusClass(bulkRequest.status)}">${this.translateStatus(bulkRequest.status)}</span></td>
+                                <td><span class="priority-badge ${this.getPriorityClass(bulkRequest.priority)}">${this.translatePriority(bulkRequest.priority)}</span></td>
+                                <td>${Utils.formatDate(bulkRequest.createdAt)}</td>
                                 <td>
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
-                                            onclick="adminManager.viewBulkRequest('${group.customerPhone}')">
+                                            onclick="adminManager.viewBulkRequest(${bulkRequest.id})">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </td>
@@ -1525,8 +1527,8 @@ class AdminManager {
         // Search filter
         if (searchTerm) {
             filtered = filtered.filter(r => 
-                r.fullName.toLowerCase().includes(searchTerm) ||
-                r.phone.toLowerCase().includes(searchTerm) ||
+                r.customerName.toLowerCase().includes(searchTerm) ||
+                r.customerPhone.includes(searchTerm) ||
                 r.requestNumber.toLowerCase().includes(searchTerm)
             );
         }
@@ -1542,83 +1544,83 @@ class AdminManager {
     /**
      * View bulk request details
      */
-    viewBulkRequest(customerPhone) {
-        const bulkRequests = this.requests.filter(r => r.requestType === 'bulk' && r.phone === customerPhone);
-        
-        if (bulkRequests.length === 0) return;
+    async viewBulkRequest(bulkRequestId) {
+        try {
+            const response = await fetch(`/api/bulk-requests/${bulkRequestId}`);
+            if (!response.ok) throw new Error('Failed to fetch bulk request details');
+            
+            const bulkRequest = await response.json();
+            
+            const container = document.getElementById('bulkRequestsContainer');
 
-        const container = document.getElementById('bulkRequestsContainer');
-        const firstRequest = bulkRequests[0];
-
-        container.innerHTML = `
-            <div class="glass-card" style="margin-bottom: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <h3 style="margin: 0;">تفاصيل طلب الجملة</h3>
-                    <button class="btn btn-secondary" onclick="adminManager.renderBulkRequests()">
-                        <i class="fas fa-arrow-right"></i> رجوع
-                    </button>
-                </div>
-                
-                <div style="background: rgba(59, 130, 246, 0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(59, 130, 246, 0.2);">
-                    <h4 style="color: #3b82f6; margin-bottom: 1rem;"><i class="fas fa-user"></i> معلومات العميل</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div>
-                            <strong style="color: #94a3b8;">الاسم:</strong>
-                            <span>${firstRequest.fullName}</span>
-                        </div>
-                        <div>
-                            <strong style="color: #94a3b8;">الهاتف:</strong>
-                            <span dir="ltr">${firstRequest.phone}</span>
-                        </div>
-                        <div>
-                            <strong style="color: #94a3b8;">البريد:</strong>
-                            <span>${firstRequest.email || '—'}</span>
-                        </div>
-                        <div>
-                            <strong style="color: #94a3b8;">عدد اللابتوبات:</strong>
-                            <span style="color: #3b82f6; font-weight: 600;">${bulkRequests.length}</span>
+            container.innerHTML = `
+                <div class="glass-card" style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0;">تفاصيل طلب الجملة - ${bulkRequest.requestNumber}</h3>
+                        <button class="btn btn-secondary" onclick="adminManager.renderBulkRequests()">
+                            <i class="fas fa-arrow-right"></i> رجوع
+                        </button>
+                    </div>
+                    
+                    <div style="background: rgba(59, 130, 246, 0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(59, 130, 246, 0.2);">
+                        <h4 style="color: #3b82f6; margin-bottom: 1rem;"><i class="fas fa-user"></i> معلومات العميل</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <strong style="color: #94a3b8;">الاسم:</strong>
+                                <span>${bulkRequest.customerName}</span>
+                            </div>
+                            <div>
+                                <strong style="color: #94a3b8;">الهاتف:</strong>
+                                <span dir="ltr">${bulkRequest.customerPhone}</span>
+                            </div>
+                            <div>
+                                <strong style="color: #94a3b8;">البريد:</strong>
+                                <span>${bulkRequest.customerEmail || '—'}</span>
+                            </div>
+                            <div>
+                                <strong style="color: #94a3b8;">عدد اللابتوبات:</strong>
+                                <span style="color: #3b82f6; font-weight: 600;">${bulkRequest.deviceCount}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <h4 style="margin-bottom: 1rem;"><i class="fas fa-laptop"></i> اللابتوبات (${bulkRequests.length})</h4>
-                <div style="overflow-x: auto;">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>رقم الطلب</th>
-                                <th>الماركة</th>
-                                <th>الموديل</th>
-                                <th>الرقم التسلسلي</th>
-                                <th>المشكلة</th>
-                                <th>الحالة</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${bulkRequests.map((request, index) => `
+                    <h4 style="margin-bottom: 1rem;"><i class="fas fa-laptop"></i> اللابتوبات (${bulkRequest.devices?.length || 0})</h4>
+                    <div style="overflow-x: auto;">
+                        <table class="table">
+                            <thead>
                                 <tr>
-                                    <td style="font-weight: 600;">${index + 1}</td>
-                                    <td style="font-weight: 600; color: #3b82f6;">${request.requestNumber}</td>
-                                    <td>${request.laptopBrand}</td>
-                                    <td>${request.laptopModel || '—'}</td>
-                                    <td dir="ltr" style="color: #94a3b8;">${request.serialNumber || '—'}</td>
-                                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${request.problemDescription}</td>
-                                    <td><span class="status-badge ${this.getStatusClass(request.status)}">${this.translateStatus(request.status)}</span></td>
-                                    <td>
-                                        <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
-                                                onclick="adminManager.viewRequest(${request.id})">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </td>
+                                    <th>#</th>
+                                    <th>الماركة</th>
+                                    <th>الموديل</th>
+                                    <th>الرقم التسلسلي</th>
+                                    <th>تاريخ الاستلام</th>
+                                    <th>الأولوية</th>
+                                    <th>المشكلة</th>
+                                    <th>الحالة</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                ${(bulkRequest.devices || []).map((device, index) => `
+                                    <tr>
+                                        <td style="font-weight: 600;">${device.deviceNumber}</td>
+                                        <td>${device.laptopBrand}</td>
+                                        <td>${device.laptopModel}</td>
+                                        <td dir="ltr" style="color: #94a3b8;">${device.serialNumber || '—'}</td>
+                                        <td>${device.receivedDate ? Utils.formatDate(device.receivedDate) : '—'}</td>
+                                        <td><span class="priority-badge ${this.getPriorityClass(device.priority)}">${this.translatePriority(device.priority)}</span></td>
+                                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${device.problemDescription}</td>
+                                        <td><span class="status-badge ${this.getStatusClass(device.status)}">${this.translateStatus(device.status)}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        } catch (error) {
+            console.error('Error viewing bulk request:', error);
+            toast.error('فشل في تحميل تفاصيل طلب الجملة');
+        }
     }
 
     /**
@@ -2119,15 +2121,14 @@ class AdminManager {
         const reportType = document.getElementById('reportType');
 
         let filteredRequests = [];
-        const allRequests = this.requests;
 
         // Filter by request type
         const type = reportType ? reportType.value : 'single';
-        let requestsByType = allRequests;
+        let requestsByType;
         if (type === 'bulk') {
-            requestsByType = allRequests.filter(r => r.requestType === 'bulk');
+            requestsByType = this.bulkRequests || [];
         } else {
-            requestsByType = allRequests.filter(r => r.requestType === 'single' || !r.requestType);
+            requestsByType = this.requests;
         }
 
         const period = reportPeriod ? reportPeriod.value : 'today';
@@ -2184,41 +2185,41 @@ class AdminManager {
             return;
         }
 
-        // For bulk requests, group by customer
+        // For bulk requests, use the bulk request data directly
         if (type === 'bulk') {
-            const groupedByCustomer = this.groupBulkRequestsByCustomer(requests);
-            
             container.innerHTML = `
                 <div class="glass-card">
                     <div style="overflow-x: auto;">
                         <table class="table">
                             <thead>
                                 <tr>
+                                    <th>رقم الطلب</th>
                                     <th>العميل</th>
                                     <th>الهاتف</th>
                                     <th>عدد اللابتوبات</th>
-                                    <th>أرقام الطلبات</th>
                                     <th>الحالة</th>
+                                    <th>الأولوية</th>
                                     <th>التاريخ</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${groupedByCustomer.map(group => `
+                                ${requests.map(r => `
                                     <tr>
-                                        <td style="font-weight: 600;">${group.customerName}</td>
-                                        <td dir="ltr">${group.customerPhone}</td>
-                                        <td style="font-weight: 600; color: #3b82f6;">${group.deviceCount}</td>
-                                        <td dir="ltr" style="font-size: 0.8rem; color: #94a3b8;">${group.requestNumbers.join(', ')}</td>
-                                        <td><span class="status-badge ${this.getStatusClass(group.status)}">${this.translateStatus(group.status)}</span></td>
-                                        <td>${Utils.formatDate(group.createdAt)}</td>
+                                        <td style="font-weight: 600; color: #3b82f6;">${r.requestNumber}</td>
+                                        <td style="font-weight: 600;">${r.customerName}</td>
+                                        <td dir="ltr">${r.customerPhone}</td>
+                                        <td style="font-weight: 600; color: #3b82f6;">${r.deviceCount}</td>
+                                        <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
+                                        <td><span class="priority-badge ${this.getPriorityClass(r.priority)}">${this.translatePriority(r.priority)}</span></td>
+                                        <td>${Utils.formatDate(r.createdAt)}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     </div>
                     <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
-                        <strong>إجمالي العملاء:</strong> ${groupedByCustomer.length} | 
-                        <strong>إجمالي اللابتوبات:</strong> ${groupedByCustomer.reduce((sum, g) => sum + g.deviceCount, 0)}
+                        <strong>إجمالي الطلبات:</strong> ${requests.length} | 
+                        <strong>إجمالي اللابتوبات:</strong> ${requests.reduce((sum, r) => sum + r.deviceCount, 0)}
                     </div>
                 </div>
             `;
@@ -2283,15 +2284,14 @@ class AdminManager {
         const reportType = document.getElementById('reportType');
 
         let filteredRequests = [];
-        const allRequests = this.requests;
 
         // Filter by request type
         const type = reportType ? reportType.value : 'single';
-        let requestsByType = allRequests;
+        let requestsByType;
         if (type === 'bulk') {
-            requestsByType = allRequests.filter(r => r.requestType === 'bulk');
+            requestsByType = this.bulkRequests || [];
         } else {
-            requestsByType = allRequests.filter(r => r.requestType === 'single' || !r.requestType);
+            requestsByType = this.requests;
         }
 
         const period = reportPeriod ? reportPeriod.value : 'today';
@@ -2345,18 +2345,18 @@ class AdminManager {
 
         let data;
         if (type === 'bulk') {
-            // Group bulk requests by customer for Excel export
-            const groupedByCustomer = this.groupBulkRequestsByCustomer(filteredRequests);
+            // For bulk requests, use the bulk request data directly
             data = [
-                ['#', 'اسم العميل', 'الهاتف', 'عدد اللابتوبات', 'أرقام الطلبات', 'الحالة', 'التاريخ'],
-                ...groupedByCustomer.map((group, i) => [
+                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'عدد اللابتوبات', 'الحالة', 'الأولوية', 'التاريخ'],
+                ...filteredRequests.map((r, i) => [
                     i + 1,
-                    group.customerName,
-                    group.customerPhone,
-                    group.deviceCount,
-                    group.requestNumbers.join(', '),
-                    this.translateStatus(group.status),
-                    Utils.formatDate(group.createdAt)
+                    r.requestNumber,
+                    r.customerName,
+                    r.customerPhone,
+                    r.deviceCount,
+                    this.translateStatus(r.status),
+                    this.translatePriority(r.priority),
+                    Utils.formatDate(r.createdAt)
                 ])
             ];
         } else {
@@ -2386,7 +2386,7 @@ class AdminManager {
         // Column widths
         if (type === 'bulk') {
             ws['!cols'] = [
-                {wch:4},{wch:20},{wch:14},{wch:10},{wch:25},{wch:18},{wch:20}
+                {wch:4},{wch:14},{wch:20},{wch:14},{wch:10},{wch:18},{wch:18},{wch:20}
             ];
         } else {
             ws['!cols'] = [

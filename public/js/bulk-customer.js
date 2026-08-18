@@ -210,46 +210,43 @@ class BulkCustomerManager {
             console.log('Customer data:', customerData);
             console.log('Devices data:', devicesData);
 
-            // Create individual requests for each device
-            const requests = [];
-            for (let i = 0; i < devicesData.length; i++) {
-                const device = devicesData[i];
-                const requestData = {
-                    ...customerData,
-                    ...device,
-                    requestType: 'bulk',
-                    status: 'Received'
-                };
+            // Create bulk request with all devices
+            const requestData = {
+                customerName: customerData.fullName,
+                customerPhone: customerData.phone,
+                customerEmail: customerData.email,
+                deviceCount: customerData.deviceCount,
+                devices: devicesData,
+                status: 'Received',
+                priority: 'Medium'
+            };
 
-                console.log(`📤 Sending request ${i + 1}/${devicesData.length}:`, requestData);
+            console.log('📤 Sending bulk request:', requestData);
 
-                const response = await fetch('/api/requests', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestData)
-                });
+            const response = await fetch('/api/bulk-requests', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
 
-                console.log(`📥 Response ${i + 1} status:`, response.status);
+            console.log('📥 Response status:', response.status);
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error(`❌ Request ${i + 1} failed:`, errorText);
-                    throw new Error(`Failed to create request ${i + 1}: ${errorText}`);
-                }
-                
-                const result = await response.json();
-                console.log(`✅ Request ${i + 1} created:`, result);
-                requests.push(result);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Bulk request failed:', errorText);
+                throw new Error(`Failed to create bulk request: ${errorText}`);
             }
+            
+            const result = await response.json();
+            console.log('✅ Bulk request created:', result);
 
-            // Show success message with all request numbers
-            const requestNumbers = requests.map(r => r.request_number).join(', ');
-            alert(`تم إرسال طلب الجملة بنجاح!\n\nأرقام الطلبات: ${requestNumbers}\nعدد اللابتوبات: ${requests.length}\n\nسيتم التواصل معك قريباً لتأكيد الحجز.`);
+            // Show success message with request number
+            alert(`تم إرسال طلب الجملة بنجاح!\n\nرقم الطلب: ${result.requestNumber}\nعدد اللابتوبات: ${result.deviceCount}\n\nسيتم التواصل معك قريباً لتأكيد الحجز.`);
 
             // Redirect to WhatsApp
-            const message = `طلب صيانة جملة:\nالاسم: ${customerData.fullName}\nالهاتف: ${customerData.phone}\nعدد اللابتوبات: ${customerData.deviceCount}\nأرقام الطلبات: ${requestNumbers}`;
+            const message = `طلب صيانة جملة:\nالاسم: ${customerData.fullName}\nالهاتف: ${customerData.phone}\nعدد اللابتوبات: ${customerData.deviceCount}\nرقم الطلب: ${result.requestNumber}`;
             const waUrl = `https://wa.me/201069143785?text=${encodeURIComponent(message)}`;
             window.location.href = waUrl;
 
