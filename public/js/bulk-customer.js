@@ -70,39 +70,103 @@ class BulkCustomerManager {
                         </button>
                     ` : ''}
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label class="form-label">ماركة اللابتوب *</label>
-                        <select class="form-select" name="laptopBrand_${device.id}" required>
-                            <option value="">اختر الماركة</option>
-                            <option value="HP">HP</option>
-                            <option value="Dell">Dell</option>
-                            <option value="Lenovo">Lenovo</option>
-                            <option value="Asus">Asus</option>
-                            <option value="Acer">Acer</option>
-                            <option value="Toshiba">Toshiba</option>
-                            <option value="Samsung">Samsung</option>
-                            <option value="Sony">Sony</option>
-                            <option value="MSI">MSI</option>
-                            <option value="Apple">Apple (MacBook)</option>
-                            <option value="Other">أخرى</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">الموديل</label>
-                        <input type="text" class="form-input" name="laptopModel_${device.id}" placeholder="مثال: Pavilion 15">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">الرقم التسلسلي</label>
-                        <input type="text" class="form-input" name="serialNumber_${device.id}" placeholder="SN: ..." dir="ltr">
-                    </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label class="form-label">وصف المشكلة *</label>
-                        <textarea class="form-textarea" name="problemDescription_${device.id}" rows="3" required placeholder="اشرح المشكلة بالتفصيل..."></textarea>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">ماركة اللابتوب *</label>
+                    <select class="form-input" name="laptopBrand_${device.id}" required id="laptopBrandSelect_${device.id}">
+                        <option value="">اختر ماركة اللابتوب</option>
+                        <option value="Acer">Acer</option>
+                        <option value="Apple">Apple (MacBook)</option>
+                        <option value="Asus">Asus</option>
+                        <option value="Dell">Dell</option>
+                        <option value="HP">HP</option>
+                        <option value="Lenovo">Lenovo</option>
+                        <option value="MSI">MSI</option>
+                        <option value="Microsoft">Microsoft Surface</option>
+                        <option value="Samsung">Samsung</option>
+                        <option value="Sony">Sony Vaio</option>
+                        <option value="Toshiba">Toshiba</option>
+                        <option value="LG">LG</option>
+                        <option value="Razer">Razer</option>
+                        <option value="Gigabyte">Gigabyte</option>
+                        <option value="Huawei">Huawei</option>
+                        <option value="Xiaomi">Xiaomi</option>
+                        <option value="Fujitsu">Fujitsu</option>
+                        <option value="Panasonic">Panasonic</option>
+                        <option value="Medion">Medion</option>
+                        <option value="Packard Bell">Packard Bell</option>
+                        <option value="Gateway">Gateway</option>
+                        <option value="eMachines">eMachines</option>
+                        <option value="Compaq">Compaq</option>
+                        <option value="IBM">IBM (Lenovo)</option>
+                        <option value="NEC">NEC</option>
+                        <option value="Sharp">Sharp</option>
+                        <option value="BenQ">BenQ</option>
+                        <option value="Sager">Sager</option>
+                        <option value="Clevo">Clevo</option>
+                        <option value="Origin PC">Origin PC</option>
+                        <option value="Alienware">Alienware (Dell)</option>
+                        <option value="Other">أخرى</option>
+                    </select>
+                    <input type="text" class="form-input" name="laptopBrandOther_${device.id}" id="laptopBrandOther_${device.id}" placeholder="أدخل اسم الماركة" style="display: none; margin-top: 0.5rem;"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">موديل اللابتوب *</label>
+                    <input type="text" class="form-input" name="laptopModel_${device.id}" required placeholder="أدخل موديل اللابتوب"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الرقم التسلسلي (السيريال)</label>
+                    <input type="text" class="form-input" name="serialNumber_${device.id}" placeholder="أدخل الرقم التسلسلي الموجود على اللابتوب"/>
+                    <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">موجود عادة على ملصق أسفل اللابتوب أو في البطارية</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">تاريخ الاستلام *</label>
+                    <input type="date" class="form-input" name="receivedDate_${device.id}" required id="receivedDate_${device.id}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الأولوية *</label>
+                    <select class="form-input" name="priority_${device.id}" required>
+                        <option value="Low">منخفضة</option>
+                        <option value="Medium" selected>متوسطة</option>
+                        <option value="High">عالية</option>
+                        <option value="Urgent">عاجلة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">وصف المشكلة *</label>
+                    <textarea class="form-textarea" name="problemDescription_${device.id}" rows="3" required placeholder="يرجى وصف المشكلة التي تواجهها مع جهازك..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">صورة الجهاز (اختياري)</label>
+                    <input type="file" class="form-input" name="deviceImage_${device.id}" accept="image/*">
+                    <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">قم برفع صورة للجهاز أو للمشكلة</p>
                 </div>
             </div>
         `).join('');
+
+        // Set today's date as default for received date
+        this.devices.forEach((device, index) => {
+            const receivedDate = document.getElementById(`receivedDate_${device.id}`);
+            if (receivedDate) {
+                receivedDate.value = new Date().toISOString().slice(0, 10);
+            }
+            
+            // Handle laptop brand selection
+            const laptopBrandSelect = document.getElementById(`laptopBrandSelect_${device.id}`);
+            const laptopBrandOther = document.getElementById(`laptopBrandOther_${device.id}`);
+            
+            if (laptopBrandSelect && laptopBrandOther) {
+                laptopBrandSelect.addEventListener('change', () => {
+                    if (laptopBrandSelect.value === 'Other') {
+                        laptopBrandOther.style.display = 'block';
+                        laptopBrandOther.required = true;
+                    } else {
+                        laptopBrandOther.style.display = 'none';
+                        laptopBrandOther.required = false;
+                        laptopBrandOther.value = '';
+                    }
+                });
+            }
+        });
     }
 
     async handleSubmit(e) {
@@ -120,15 +184,23 @@ class BulkCustomerManager {
         };
 
         // Collect devices data
-        const devicesData = this.devices.map(device => ({
-            laptopBrand: formData.get(`laptopBrand_${device.id}`),
-            laptopModel: formData.get(`laptopModel_${device.id}`),
-            serialNumber: formData.get(`serialNumber_${device.id}`),
-            problemDescription: formData.get(`problemDescription_${device.id}`)
-        }));
+        const devicesData = this.devices.map(device => {
+            const laptopBrand = formData.get(`laptopBrand_${device.id}`);
+            const laptopBrandOther = formData.get(`laptopBrandOther_${device.id}`);
+            
+            return {
+                laptopBrand: laptopBrand === 'Other' ? laptopBrandOther : laptopBrand,
+                laptopModel: formData.get(`laptopModel_${device.id}`),
+                serialNumber: formData.get(`serialNumber_${device.id}`),
+                receivedDate: formData.get(`receivedDate_${device.id}`),
+                priority: formData.get(`priority_${device.id}`),
+                problemDescription: formData.get(`problemDescription_${device.id}`),
+                deviceImage: null // Will handle file upload separately if needed
+            };
+        });
 
         // Validate
-        if (devicesData.some(d => !d.laptopBrand || !d.problemDescription)) {
+        if (devicesData.some(d => !d.laptopBrand || !d.laptopModel || !d.problemDescription)) {
             alert('يرجى ملء جميع الحقول المطلوبة لكل لابتوب');
             return;
         }
@@ -142,8 +214,7 @@ class BulkCustomerManager {
                     ...customerData,
                     ...device,
                     requestType: 'bulk',
-                    status: 'Received',
-                    priority: 'Medium'
+                    status: 'Received'
                 };
 
                 const response = await fetch('/api/requests', {
