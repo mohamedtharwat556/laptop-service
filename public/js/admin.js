@@ -1464,6 +1464,7 @@ class AdminManager {
                             <th>عدد اللابتوبات</th>
                             <th>الحالة</th>
                             <th>الأولوية</th>
+                            <th>رد الإدارة</th>
                             <th>التاريخ</th>
                             <th>إجراءات</th>
                         </tr>
@@ -1477,6 +1478,7 @@ class AdminManager {
                                 <td style="font-weight: 600; color: #3b82f6;">${bulkRequest.deviceCount}</td>
                                 <td><span class="status-badge ${this.getStatusClass(bulkRequest.status)}">${this.translateStatus(bulkRequest.status)}</span></td>
                                 <td><span class="priority-badge ${this.getPriorityClass(bulkRequest.priority)}">${this.translatePriority(bulkRequest.priority)}</span></td>
+                                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${bulkRequest.adminReply || '—'}</td>
                                 <td>${Utils.formatDate(bulkRequest.createdAt)}</td>
                                 <td>
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
