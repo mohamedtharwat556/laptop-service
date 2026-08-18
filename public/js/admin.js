@@ -1657,10 +1657,14 @@ class AdminManager {
      */
     async viewCompanyRequest(companyRequestId) {
         try {
+            console.log('🔍 Fetching company request:', companyRequestId);
+            console.log('🔍 modalManager exists:', typeof modalManager);
+            
             const response = await fetch(`/api/company-requests/${companyRequestId}`);
             if (!response.ok) throw new Error('Failed to fetch company request details');
             
             const companyRequest = await response.json();
+            console.log('📊 Company request data:', companyRequest);
             
             const content = `
                 <div style="max-height: 70vh; overflow-y: auto;">
@@ -1729,15 +1733,19 @@ class AdminManager {
                 </div>
             `;
             
+            console.log('🎨 Creating modal...');
             modalManager.create('view-company-request', 'تفاصيل الطلب', content);
+            console.log('🚀 Opening modal...');
             modalManager.open('view-company-request');
+            console.log('✅ Modal should be open now');
 
             setTimeout(() => {
                 const form = document.getElementById('editCompanyRequestForm');
                 if (!form) {
-                    console.error('Form not found');
+                    console.error('❌ Form not found');
                     return;
                 }
+                console.log('✅ Form found, attaching event listener');
                 
                 form.addEventListener('submit', async (e) => {
                     e.preventDefault();
@@ -1778,7 +1786,7 @@ class AdminManager {
                 });
             }, 100);
         } catch (error) {
-            console.error('Error viewing company request:', error);
+            console.error('❌ Error viewing company request:', error);
             toast.error('فشل تحميل تفاصيل الطلب');
         }
     }
