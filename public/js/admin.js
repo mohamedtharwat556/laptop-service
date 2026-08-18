@@ -2115,6 +2115,16 @@ class AdminManager {
         return priorityMap[priority] || priority;
     }
 
+    getPriorityClass(priority) {
+        const classes = {
+            'Low': 'priority-low',
+            'Medium': 'priority-medium',
+            'High': 'priority-high',
+            'Urgent': 'priority-urgent'
+        };
+        return classes[priority] || 'priority-medium';
+    }
+
     /**
      * Generate report based on selected period
      */
