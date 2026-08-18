@@ -1560,40 +1560,23 @@ class AdminManager {
             
             const bulkRequest = await response.json();
             
-            const container = document.getElementById('bulkRequestsContainer');
-
-            container.innerHTML = `
-                <div class="glass-card" style="margin-bottom: 1.5rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h3 style="margin: 0;">تفاصيل طلب الجملة - ${bulkRequest.requestNumber}</h3>
-                        <button class="btn btn-secondary" onclick="adminManager.renderBulkRequests()">
-                            <i class="fas fa-arrow-right"></i> رجوع
-                        </button>
-                    </div>
-                    
-                    <div style="background: rgba(59, 130, 246, 0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(59, 130, 246, 0.2);">
-                        <h4 style="color: #3b82f6; margin-bottom: 1rem;"><i class="fas fa-user"></i> معلومات العميل</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                            <div>
-                                <strong style="color: #94a3b8;">الاسم:</strong>
-                                <span>${bulkRequest.customerName}</span>
-                            </div>
-                            <div>
-                                <strong style="color: #94a3b8;">الهاتف:</strong>
-                                <span dir="ltr">${bulkRequest.customerPhone}</span>
-                            </div>
-                            <div>
-                                <strong style="color: #94a3b8;">البريد:</strong>
-                                <span>${bulkRequest.customerEmail || '—'}</span>
-                            </div>
-                            <div>
-                                <strong style="color: #94a3b8;">عدد اللابتوبات:</strong>
-                                <span style="color: #3b82f6; font-weight: 600;">${bulkRequest.deviceCount}</span>
-                            </div>
+            const content = `
+                <div style="max-height: 70vh; overflow-y: auto;">
+                    <div class="request-card-header">
+                        <div>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${bulkRequest.requestNumber}</h3>
+                            <span class="status-badge ${this.getStatusClass(bulkRequest.status)}">${this.translateStatus(bulkRequest.status)}</span>
                         </div>
                     </div>
-
-                    <h4 style="margin-bottom: 1rem;"><i class="fas fa-laptop"></i> اللابتوبات (${bulkRequest.devices?.length || 0})</h4>
+                    <div class="request-details">
+                        <div class="request-detail-item"><span class="request-detail-label">اسم العميل</span><span class="request-detail-value">${bulkRequest.customerName}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value" dir="ltr">${bulkRequest.customerPhone}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">البريد</span><span class="request-detail-value">${bulkRequest.customerEmail || '—'}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">عدد اللابتوبات</span><span class="request-detail-value" style="color: #3b82f6; font-weight: 600;">${bulkRequest.deviceCount}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(bulkRequest.createdAt)}</span></div>
+                    </div>
+                    
+                    <h4 style="margin: 1.5rem 0 1rem 0; color: #3b82f6;"><i class="fas fa-laptop"></i> اللابتوبات (${bulkRequest.devices?.length || 0})</h4>
                     <div style="overflow-x: auto; margin-bottom: 1.5rem;">
                         <table class="table">
                             <thead>
@@ -1631,6 +1614,29 @@ class AdminManager {
                             <textarea class="form-textarea" name="adminReply" rows="3">${bulkRequest.adminReply || ''}</textarea>
                         </div>
                         <div class="form-group">
+                            <label class="form-label">الفني المسؤول</label>
+                            <select class="form-select" name="technician">
+                                <option value="">اختر الفني</option>
+                                <option value="استاذ ابراهيم" ${bulkRequest.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
+                                <option value="علياء" ${bulkRequest.technician === 'علياء' ? 'selected' : ''}>علياء</option>
+                                <option value="سلمي" ${bulkRequest.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
+                                <option value="استاذة سهير رمزي" ${bulkRequest.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
+                                <option value="استاذة ناديه" ${bulkRequest.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
+                                <option value="استاذة ام كلثوم" ${bulkRequest.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
+                                <option value="استاذة اسماء" ${bulkRequest.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
+                                <option value="استاذ خالد و عبدالله رضا" ${bulkRequest.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
+                                <option value="استاذ محمد علي و عم وليد" ${bulkRequest.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
+                                <option value="الاستاذ عبد الدالي" ${bulkRequest.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
+                                <option value="الاستاذ نادر" ${bulkRequest.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
+                                <option value="الاستاذ عبدالله موسي" ${bulkRequest.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
+                                <option value="استاذ احمد اسلام و احمد طه" ${bulkRequest.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
+                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${bulkRequest.estimatedCompletionDate ? new Date(bulkRequest.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">تحديث الحالة</label>
                             <select class="form-select" name="status">
                                 <option value="Received" ${bulkRequest.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
@@ -1645,13 +1651,27 @@ class AdminManager {
                     </form>
                 </div>
             `;
+            
+            modalManager.create('view-bulk-request', 'تفاصيل طلب الجملة', content);
+            modalManager.open('view-bulk-request');
 
             const form = document.getElementById('editBulkRequestForm');
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
+                const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+                let estimatedCompletionDate = null;
+                if (estimatedCompletionDateValue) {
+                    const dateObj = new Date(estimatedCompletionDateValue);
+                    if (!isNaN(dateObj.getTime())) {
+                        estimatedCompletionDate = dateObj.toISOString();
+                    }
+                }
+                
                 const updateData = {
                     adminReply: form.adminReply.value,
+                    technician: form.technician.value,
+                    estimatedCompletionDate: estimatedCompletionDate,
                     status: form.status.value
                 };
 
@@ -1664,6 +1684,7 @@ class AdminManager {
 
                     if (response.ok) {
                         toast.success('تم تحديث طلب الجملة بنجاح');
+                        modalManager.close('view-bulk-request');
                         await this.loadData();
                         this.renderBulkRequests();
                     } else {

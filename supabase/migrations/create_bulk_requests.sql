@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS bulk_requests (
     priority VARCHAR(50) DEFAULT 'Medium',
     cost DECIMAL(10, 2) DEFAULT 0,
     notes TEXT,
+    admin_reply TEXT,
+    technician VARCHAR(255),
+    estimated_completion_date TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

@@ -174,6 +174,9 @@ router.put('/:id', async (req, res) => {
             else if (key === 'customerPhone') snakeCaseData.customer_phone = req.body[key];
             else if (key === 'customerEmail') snakeCaseData.customer_email = req.body[key];
             else if (key === 'deviceCount') snakeCaseData.device_count = req.body[key];
+            else if (key === 'adminReply') snakeCaseData.admin_reply = req.body[key];
+            else if (key === 'technician') snakeCaseData.technician = req.body[key];
+            else if (key === 'estimatedCompletionDate') snakeCaseData.estimated_completion_date = req.body[key];
             else snakeCaseData[key] = req.body[key];
         });
         
