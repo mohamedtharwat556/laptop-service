@@ -38,6 +38,9 @@
         playNotification() {
             try {
                 this.init();
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
                 const now = this.ctx.currentTime;
                 
                 // Synth chime double beep
@@ -61,6 +64,9 @@
         playKeypress() {
             try {
                 this.init();
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.connect(gain);

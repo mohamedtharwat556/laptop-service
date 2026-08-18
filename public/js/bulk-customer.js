@@ -206,6 +206,10 @@ class BulkCustomerManager {
         }
 
         try {
+            console.log('📦 Submitting bulk request...');
+            console.log('Customer data:', customerData);
+            console.log('Devices data:', devicesData);
+
             // Create individual requests for each device
             const requests = [];
             for (let i = 0; i < devicesData.length; i++) {
@@ -217,6 +221,8 @@ class BulkCustomerManager {
                     status: 'Received'
                 };
 
+                console.log(`📤 Sending request ${i + 1}/${devicesData.length}:`, requestData);
+
                 const response = await fetch('/api/requests', {
                     method: 'POST',
                     headers: {
@@ -225,9 +231,16 @@ class BulkCustomerManager {
                     body: JSON.stringify(requestData)
                 });
 
-                if (!response.ok) throw new Error('Failed to create request');
+                console.log(`📥 Response ${i + 1} status:`, response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`❌ Request ${i + 1} failed:`, errorText);
+                    throw new Error(`Failed to create request ${i + 1}: ${errorText}`);
+                }
                 
                 const result = await response.json();
+                console.log(`✅ Request ${i + 1} created:`, result);
                 requests.push(result);
             }
 
@@ -241,8 +254,8 @@ class BulkCustomerManager {
             window.location.href = waUrl;
 
         } catch (error) {
-            console.error('Error submitting bulk request:', error);
-            alert('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.');
+            console.error('❌ Error submitting bulk request:', error);
+            alert(`حدث خطأ أثناء إرسال الطلب: ${error.message}`);
         }
     }
 }
