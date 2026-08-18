@@ -123,21 +123,22 @@ class CustomerManager {
             const response = await fetch(apiUrl);
             const bulkRequests = await response.json();
 
+            console.log('🔍 Bulk requests from API:', bulkRequests);
+            console.log('🔍 Search term:', searchTerm);
+            console.log('🔍 Search type:', searchType);
+
             let bulkRequest;
             if (searchType === 'phone') {
-                bulkRequest = bulkRequests.filter(r => r.customer_phone === searchTerm);
+                bulkRequest = bulkRequests.filter(r => r.customerPhone === searchTerm);
                 bulkRequest = bulkRequest.length > 0 ? bulkRequest[bulkRequest.length - 1] : null;
             } else if (searchType === 'name') {
-                bulkRequest = bulkRequests.filter(r => r.customer_name.toLowerCase() === searchTerm.toLowerCase());
+                bulkRequest = bulkRequests.filter(r => r.customerName.toLowerCase() === searchTerm.toLowerCase());
                 bulkRequest = bulkRequest.length > 0 ? bulkRequest[bulkRequest.length - 1] : null;
             } else {
-                bulkRequest = bulkRequests.find(r => r.request_number === searchTerm);
+                bulkRequest = bulkRequests.find(r => r.requestNumber === searchTerm);
             }
 
-            // Convert snake_case to camelCase
-            if (bulkRequest) {
-                bulkRequest = this.convertToCamelCase(bulkRequest);
-            }
+            console.log('🔍 Found bulk request:', bulkRequest);
 
             // Store current search for refresh
             this.currentSearchTerm = searchTerm;
