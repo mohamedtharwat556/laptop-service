@@ -1639,13 +1639,13 @@ class AdminManager {
                         </div>
                     </div>
                     <div class="request-details">
-                        <div class="request-detail-item"><span class="request-detail-label">الاسم</span><span class="request-detail-value">${companyRequest.fullName}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${companyRequest.phone}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptopBrand} ${companyRequest.laptopModel || ''}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">الاسم</span><span class="request-detail-value">${companyRequest.fullName || ''}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${companyRequest.phone || ''}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptopBrand || ''} ${companyRequest.laptopModel || ''}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${companyRequest.serialNumber || '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${companyRequest.receivedDate ? Utils.formatDate(companyRequest.receivedDate) : '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(companyRequest.createdAt)}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${companyRequest.problemDescription}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${companyRequest.problemDescription || ''}</span></div>
                     </div>
 
                     <form id="editCompanyRequestForm" style="margin-top: 1.5rem;">
@@ -1697,7 +1697,7 @@ class AdminManager {
                 </div>
             `;
             
-            modalManager.create('view-company-request', 'تفاصيل طلب الشركة', content);
+            modalManager.create('view-company-request', 'تفاصيل الطلب', content);
             modalManager.open('view-company-request');
 
             const form = document.getElementById('editCompanyRequestForm');
@@ -1730,17 +1730,17 @@ class AdminManager {
 
                     if (!response.ok) throw new Error('Failed to update company request');
 
-                    toast.success('تم تحديث طلب الشركة بنجاح');
+                    toast.success('تم تحديث الطلب بنجاح');
                     modalManager.close('view-company-request');
                     await this.loadData();
                 } catch (error) {
                     console.error('Error updating company request:', error);
-                    toast.error('فشل تحديث طلب الشركة');
+                    toast.error('فشل تحديث الطلب');
                 }
             });
         } catch (error) {
             console.error('Error viewing company request:', error);
-            toast.error('فشل تحميل تفاصيل طلب الشركة');
+            toast.error('فشل تحميل تفاصيل الطلب');
         }
     }
 
