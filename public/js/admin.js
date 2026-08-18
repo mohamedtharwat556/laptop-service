@@ -1554,7 +1554,7 @@ class AdminManager {
                             <th>رقم الطلب</th>
                             <th>اسم الشركة</th>
                             <th>الهاتف</th>
-                            <th>عدد الأجهزة</th>
+                            <th>الجهاز</th>
                             <th>الحالة</th>
                             <th>الأولوية</th>
                             <th>رد الإدارة</th>
@@ -1568,7 +1568,7 @@ class AdminManager {
                                 <td style="font-weight: 600; color: #3b82f6;">${companyRequest.requestNumber}</td>
                                 <td style="font-weight: 600;">${companyRequest.companyName}</td>
                                 <td dir="ltr">${companyRequest.companyPhone}</td>
-                                <td style="font-weight: 600; color: #10b981;">${companyRequest.deviceCount}</td>
+                                <td>${companyRequest.laptopBrand} ${companyRequest.laptopModel || ''}</td>
                                 <td><span class="status-badge ${this.getStatusClass(companyRequest.status)}">${this.translateStatus(companyRequest.status)}</span></td>
                                 <td><span class="priority-badge ${this.getPriorityClass(companyRequest.priority)}">${this.translatePriority(companyRequest.priority)}</span></td>
                                 <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${companyRequest.adminReply || '—'}</td>
@@ -1630,38 +1630,6 @@ class AdminManager {
             
             const companyRequest = await response.json();
             
-            const devicesHtml = companyRequest.devices && companyRequest.devices.length > 0 ? `
-                <h4 style="margin: 1.5rem 0 1rem; color: #10b981;">الأجهزة المرسلة (${companyRequest.devices.length})</h4>
-                <div style="overflow-x: auto;">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>الماركة</th>
-                                <th>الموديل</th>
-                                <th>السيريال</th>
-                                <th>تاريخ الاستلام</th>
-                                <th>الأولوية</th>
-                                <th>الحالة</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${companyRequest.devices.map((device, index) => `
-                                <tr>
-                                    <td style="font-weight: 600;">${device.deviceNumber}</td>
-                                    <td>${device.laptopBrand}</td>
-                                    <td>${device.laptopModel}</td>
-                                    <td dir="ltr" style="color: #94a3b8;">${device.serialNumber || '—'}</td>
-                                    <td>${device.receivedDate ? Utils.formatDate(device.receivedDate) : '—'}</td>
-                                    <td><span class="priority-badge ${this.getPriorityClass(device.priority)}">${this.translatePriority(device.priority)}</span></td>
-                                    <td><span class="status-badge ${this.getStatusClass(device.status)}">${this.translateStatus(device.status)}</span></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            ` : '';
-            
             const content = `
                 <div style="max-height: 70vh; overflow-y: auto;">
                     <div class="request-card-header">
@@ -1677,11 +1645,12 @@ class AdminManager {
                         <div class="request-detail-item"><span class="request-detail-label">السجل التجاري</span><span class="request-detail-value">${companyRequest.commercialRegister || '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الشخص المسؤول</span><span class="request-detail-value">${companyRequest.contactPerson || '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">هاتف الشخص المسؤول</span><span class="request-detail-value">${companyRequest.contactPersonPhone || '—'}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">عدد الأجهزة</span><span class="request-detail-value">${companyRequest.deviceCount}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptopBrand} ${companyRequest.laptopModel || ''}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${companyRequest.serialNumber || '—'}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${companyRequest.receivedDate ? Utils.formatDate(companyRequest.receivedDate) : '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(companyRequest.createdAt)}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${companyRequest.problemDescription}</span></div>
                     </div>
-
-                    ${devicesHtml}
 
                     <form id="editCompanyRequestForm" style="margin-top: 1.5rem;">
                         <div class="form-group">

@@ -8,9 +8,13 @@ CREATE TABLE IF NOT EXISTS company_requests (
     commercial_register VARCHAR(100),
     contact_person VARCHAR(255),
     contact_person_phone VARCHAR(20),
-    device_count INTEGER DEFAULT 1,
-    status VARCHAR(50) DEFAULT 'Received',
+    laptop_brand VARCHAR(100) NOT NULL,
+    laptop_model VARCHAR(100) NOT NULL,
+    serial_number VARCHAR(100),
+    received_date DATE NOT NULL,
+    problem_description TEXT NOT NULL,
     priority VARCHAR(20) DEFAULT 'Medium',
+    status VARCHAR(50) DEFAULT 'Received',
     admin_reply TEXT,
     technician VARCHAR(255),
     technician_notes TEXT,
@@ -20,60 +24,29 @@ CREATE TABLE IF NOT EXISTS company_requests (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create company_request_devices table
-CREATE TABLE IF NOT EXISTS company_request_devices (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    bulk_request_id UUID REFERENCES company_requests(id) ON DELETE CASCADE,
-    device_number INTEGER NOT NULL,
-    laptop_brand VARCHAR(100) NOT NULL,
-    laptop_model VARCHAR(100) NOT NULL,
-    serial_number VARCHAR(100),
-    received_date DATE NOT NULL,
-    problem_description TEXT NOT NULL,
-    priority VARCHAR(20) DEFAULT 'Medium',
-    device_image TEXT,
-    status VARCHAR(50) DEFAULT 'Received',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create index on request_number
+-- Create index on request_number for faster lookups
 CREATE INDEX IF NOT EXISTS idx_company_requests_request_number ON company_requests(request_number);
-
--- Create index on company_phone
 CREATE INDEX IF NOT EXISTS idx_company_requests_company_phone ON company_requests(company_phone);
-
--- Create index on status
 CREATE INDEX IF NOT EXISTS idx_company_requests_status ON company_requests(status);
-
--- Create index on created_at
-CREATE INDEX IF NOT EXISTS idx_company_requests_created_at ON company_requests(created_at DESC);
-
--- Create index on bulk_request_id
-CREATE INDEX IF NOT EXISTS idx_company_request_devices_bulk_request_id ON company_request_devices(bulk_request_id);
 
 -- Enable Row Level Security
 ALTER TABLE company_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE company_request_devices ENABLE ROW LEVEL SECURITY;
 
--- Create policy to allow read access to all (for public tracking)
-CREATE POLICY "Allow read access to all" ON company_requests FOR SELECT USING (true);
-CREATE POLICY "Allow read access to all" ON company_request_devices FOR SELECT USING (true);
+-- Create policies for company_requests
+CREATE POLICY "Public read access for company requests" ON company_requests
+    FOR SELECT USING (true);
 
--- Create policy to allow insert (for form submissions)
-CREATE POLICY "Allow insert for all" ON company_requests FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow insert for all" ON company_request_devices FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public insert for company requests" ON company_requests
+    FOR INSERT WITH CHECK (true);
 
--- Create policy to allow update (for admin)
-CREATE POLICY "Allow update for all" ON company_requests FOR UPDATE USING (true);
-CREATE POLICY "Allow update for all" ON company_request_devices FOR UPDATE USING (true);
+CREATE POLICY "Public update for company requests" ON company_requests
+    FOR UPDATE USING (true);
 
--- Create policy to allow delete (for admin)
-CREATE POLICY "Allow delete for all" ON company_requests FOR DELETE USING (true);
-CREATE POLICY "Allow delete for all" ON company_request_devices FOR DELETE USING (true);
+CREATE POLICY "Public delete for company requests" ON company_requests
+    FOR DELETE USING (true);
 
 -- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_company_requests_updated_at()
+CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
@@ -82,22 +55,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger to automatically update updated_at
-CREATE TRIGGER trigger_update_company_requests_updated_at
+CREATE TRIGGER update_company_requests_updated_at
     BEFORE UPDATE ON company_requests
     FOR EACH ROW
-    EXECUTE FUNCTION update_company_requests_updated_at();
-
--- Function to update company_request_devices updated_at
-CREATE OR REPLACE FUNCTION update_company_request_devices_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to automatically update updated_at
-CREATE TRIGGER trigger_update_company_request_devices_updated_at
-    BEFORE UPDATE ON company_request_devices
-    FOR EACH ROW
-    EXECUTE FUNCTION update_company_request_devices_updated_at();
+    EXECUTE FUNCTION update_updated_at_column();
