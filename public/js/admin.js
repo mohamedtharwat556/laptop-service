@@ -2060,52 +2060,58 @@ class AdminManager {
             </div>
         `;
         
-        modalManager.create('view-bulk-request', 'تفاصيل طلب الجملة', content);
-        modalManager.open('view-bulk-request');
+        const modalId = `view-bulk-request-${bulkRequestId}`;
+        modalManager.create(modalId, 'تفاصيل طلب الجملة', content);
+        modalManager.open(modalId);
 
-        const form = document.getElementById('editBulkRequestForm');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
-            let estimatedCompletionDate = null;
-            if (estimatedCompletionDateValue) {
-                const dateObj = new Date(estimatedCompletionDateValue);
-                if (!isNaN(dateObj.getTime())) {
-                    estimatedCompletionDate = dateObj.toISOString();
-                }
+        setTimeout(() => {
+            const form = document.getElementById('editBulkRequestForm');
+            if (!form) {
+                console.error('Form not found');
+                return;
             }
             
-            const updateData = {
-                adminReply: form.adminReply.value,
-                cost: form.cost.value ? parseFloat(form.cost.value) : 0,
-                technician: form.technician.value,
-                estimatedCompletionDate: estimatedCompletionDate,
-                status: form.status.value
-            };
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+                let estimatedCompletionDate = null;
+                if (estimatedCompletionDateValue) {
+                    const dateObj = new Date(estimatedCompletionDateValue);
+                    if (!isNaN(dateObj.getTime())) {
+                        estimatedCompletionDate = dateObj.toISOString();
+                    }
+                }
+                
+                const updateData = {
+                    adminReply: form.adminReply.value,
+                    cost: form.cost.value ? parseFloat(form.cost.value) : 0,
+                    technician: form.technician.value,
+                    estimatedCompletionDate: estimatedCompletionDate,
+                    status: form.status.value
+                };
 
-            try {
-                const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updateData)
-                });
+                try {
+                    const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updateData)
+                    });
 
-                if (response.ok) {
-                    toast.success('تم تحديث طلب الجملة بنجاح');
-                    modalManager.close('view-bulk-request');
+                    if (!response.ok) throw new Error('Failed to update bulk request');
+
+                    toast.success('تم تحديث الطلب بنجاح');
+                    modalManager.close(modalId);
                     await this.loadData();
                     this.renderBulkRequests();
-                } else {
-                    throw new Error('Failed to update bulk request');
+                } catch (error) {
+                    console.error('Error updating bulk request:', error);
+                    toast.error('فشل تحديث الطلب');
                 }
-            } catch (error) {
-                console.error('Error updating bulk request:', error);
-                toast.error('فشل في تحديث طلب الجملة');
-            }
-        });
+            });
+        }, 100);
         } catch (error) {
             console.error('Error viewing bulk request:', error);
             toast.error('فشل في تحميل تفاصيل طلب الجملة');

@@ -91,6 +91,9 @@ router.get('/:id', async (req, res) => {
             priority: bulkRequest.priority,
             cost: bulkRequest.cost,
             notes: bulkRequest.notes,
+            adminReply: bulkRequest.admin_reply,
+            technician: bulkRequest.technician,
+            estimatedCompletionDate: bulkRequest.estimated_completion_date,
             createdAt: bulkRequest.created_at,
             updatedAt: bulkRequest.updated_at,
             devices: (devices || []).map(device => ({
