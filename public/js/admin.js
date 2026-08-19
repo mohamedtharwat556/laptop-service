@@ -1933,7 +1933,8 @@ class AdminManager {
             filtered = filtered.filter(r => 
                 r.customerName.toLowerCase().includes(searchTerm) ||
                 r.customerPhone.includes(searchTerm) ||
-                r.requestNumber.toLowerCase().includes(searchTerm)
+                r.requestNumber.toLowerCase().includes(searchTerm) ||
+                (r.devices && r.devices.some(d => d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm)))
             );
         }
 
