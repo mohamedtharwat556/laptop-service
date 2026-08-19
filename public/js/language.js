@@ -219,7 +219,7 @@ class LanguageManager {
                 qualityParts: 'قطع عالية الجودة',
                 qualityPartsDesc: 'نستخدم فقط قطع أصلية وعالية الجودة للاستبدال.',
                 warranty: 'الضمان',
-                warrantyDesc: 'ضمان 90 يوم على جميع الإصلاحات والقطع لراحتك.',
+                warrantyDesc: 'ضمان يختلف حسب حالة اللاب ونوع الإصلاح لضمان راحتك.',
                 convenientLocation: 'موقع مريح',
                 convenientLocationDesc: 'موقع سهل الوصول مع خدمات التسليم والاستلام.',
                 
