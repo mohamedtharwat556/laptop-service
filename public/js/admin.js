@@ -2938,7 +2938,7 @@ class AdminManager {
 
         let data;
         if (type === 'bulk') {
-            // For bulk requests, expand to show each device as a row
+            // For bulk requests, expand to show each device as a row with full details
             const deviceRows = [];
             filteredRequests.forEach(bulkRequest => {
                 if (bulkRequest.devices && bulkRequest.devices.length > 0) {
@@ -2950,11 +2950,13 @@ class AdminManager {
                             laptopBrand: device.laptopBrand,
                             laptopModel: device.laptopModel,
                             serialNumber: device.serialNumber,
+                            receivedDate: device.receivedDate,
                             problemDescription: device.problemDescription,
                             status: device.status,
                             cost: bulkRequest.cost || 0,
                             technician: bulkRequest.technician || '—',
                             adminReply: bulkRequest.adminReply || '—',
+                            estimatedCompletionDate: bulkRequest.estimatedCompletionDate,
                             createdAt: bulkRequest.createdAt
                         });
                     });
@@ -2962,7 +2964,7 @@ class AdminManager {
             });
 
             data = [
-                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'الحالة', 'التكلفة', 'الفني', 'رد الإدارة', 'تاريخ الطلب'],
+                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
                 ...deviceRows.map((r, i) => [
                     i + 1,
                     r.requestNumber,
@@ -2971,10 +2973,12 @@ class AdminManager {
                     `${r.laptopBrand}${r.laptopModel ? ' ' + r.laptopModel : ''}`,
                     r.serialNumber || '—',
                     r.problemDescription,
+                    r.adminReply,
                     this.translateStatus(r.status),
                     r.cost > 0 ? r.cost : 0,
                     r.technician,
-                    r.adminReply,
+                    r.receivedDate ? Utils.formatDate(r.receivedDate) : '—',
+                    r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—',
                     Utils.formatDate(r.createdAt)
                 ])
             ];
@@ -3023,23 +3027,11 @@ class AdminManager {
         }
 
         const ws = XLSX.utils.aoa_to_sheet(data);
-        // Column widths
-        if (type === 'bulk') {
-            ws['!cols'] = [
-                {wch:4},{wch:14},{wch:20},{wch:14},{wch:18},{wch:15},
-                {wch:35},{wch:18},{wch:10},{wch:15},{wch:25},{wch:20}
-            ];
-        } else if (type === 'company') {
-            ws['!cols'] = [
-                {wch:4},{wch:14},{wch:20},{wch:14},{wch:18},{wch:15},
-                {wch:35},{wch:25},{wch:18},{wch:10},{wch:15},{wch:18},{wch:18},{wch:20}
-            ];
-        } else {
-            ws['!cols'] = [
-                {wch:4},{wch:14},{wch:20},{wch:14},{wch:18},{wch:15},
-                {wch:35},{wch:25},{wch:18},{wch:10},{wch:15},{wch:18},{wch:18},{wch:20}
-            ];
-        }
+        // Column widths - same for all types now
+        ws['!cols'] = [
+            {wch:4},{wch:14},{wch:20},{wch:14},{wch:18},{wch:15},
+            {wch:35},{wch:25},{wch:18},{wch:10},{wch:15},{wch:18},{wch:18},{wch:20}
+        ];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'التقرير');
         XLSX.writeFile(wb, `YAS-${fileName}.xlsx`);
