@@ -245,14 +245,14 @@ router.delete('/:id', async (req, res) => {
 router.delete('/', async (req, res) => {
     try {
         // First delete all devices from bulk_request_devices
-        const { error: devicesError } = await supabase.from('bulk_request_devices').delete().neq('bulk_request_id', null);
+        const { error: devicesError } = await supabase.from('bulk_request_devices').delete().not('bulk_request_id', 'is', null);
         if (devicesError) {
             console.error('Error deleting bulk request devices:', devicesError);
             // Continue anyway to try deleting the main requests
         }
 
         // Then delete all bulk requests
-        const { error } = await supabase.from('bulk_requests').delete().neq('id', null);
+        const { error } = await supabase.from('bulk_requests').delete().not('id', 'is', null);
         if (error) throw error;
         
         res.json({ message: 'All bulk requests deleted successfully' });

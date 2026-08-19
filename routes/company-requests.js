@@ -232,7 +232,7 @@ router.delete('/', async (req, res) => {
         const { error } = await supabase
             .from('company_requests')
             .delete()
-            .neq('id', null);
+            .not('id', 'is', null);
 
         if (error) throw error;
 
