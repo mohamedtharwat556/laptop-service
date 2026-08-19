@@ -170,6 +170,24 @@ class AdminManager {
                 });
             }
 
+            // Setup company requests search and filters
+            const companySearchInput = document.getElementById('companySearchInput');
+            const companyStatusFilter = document.getElementById('companyStatusFilter');
+
+            if (companySearchInput) {
+                companySearchInput.addEventListener('input', Utils.debounce(() => {
+                    this.currentPage = 1;
+                    this.renderCompanyRequests();
+                }, 300));
+            }
+
+            if (companyStatusFilter) {
+                companyStatusFilter.addEventListener('change', () => {
+                    this.currentPage = 1;
+                    this.renderCompanyRequests();
+                });
+            }
+
             if (dateFrom) {
                 dateFrom.addEventListener('change', () => {
                     this.currentPage = 1;
