@@ -1557,6 +1557,7 @@ class AdminManager {
                             <th>الحالة</th>
                             <th>الأولوية</th>
                             <th>رد الإدارة</th>
+                            <th>تاريخ الاستلام المتوقع</th>
                             <th>التاريخ</th>
                             <th>إجراءات</th>
                         </tr>
@@ -1571,6 +1572,7 @@ class AdminManager {
                                 <td><span class="status-badge ${this.getStatusClass(bulkRequest.status)}">${this.translateStatus(bulkRequest.status)}</span></td>
                                 <td><span class="priority-badge ${this.getPriorityClass(bulkRequest.priority)}">${this.translatePriority(bulkRequest.priority)}</span></td>
                                 <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${bulkRequest.adminReply || '—'}</td>
+                                <td>${bulkRequest.estimatedCompletionDate ? Utils.formatDate(bulkRequest.estimatedCompletionDate) : '—'}</td>
                                 <td>${Utils.formatDate(bulkRequest.createdAt)}</td>
                                 <td>
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
@@ -2944,46 +2946,19 @@ class AdminManager {
 
         let data;
         if (type === 'bulk') {
-            // For bulk requests, expand to show each device as a row with full details
-            const deviceRows = [];
-            filteredRequests.forEach(bulkRequest => {
-                if (bulkRequest.devices && bulkRequest.devices.length > 0) {
-                    bulkRequest.devices.forEach((device, index) => {
-                        deviceRows.push({
-                            requestNumber: bulkRequest.requestNumber,
-                            customerName: bulkRequest.customerName,
-                            customerPhone: bulkRequest.customerPhone,
-                            laptopBrand: device.laptopBrand,
-                            laptopModel: device.laptopModel,
-                            serialNumber: device.serialNumber,
-                            receivedDate: device.receivedDate,
-                            problemDescription: device.problemDescription,
-                            status: device.status,
-                            cost: bulkRequest.cost || 0,
-                            technician: bulkRequest.technician || '—',
-                            adminReply: bulkRequest.adminReply || '—',
-                            estimatedCompletionDate: bulkRequest.estimatedCompletionDate,
-                            createdAt: bulkRequest.createdAt
-                        });
-                    });
-                }
-            });
-
+            // For bulk requests, show each request as a row with summary info
             data = [
-                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
-                ...deviceRows.map((r, i) => [
+                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'عدد اللابتوبات', 'الحالة', 'التكلفة', 'الفني', 'رد الإدارة', 'تاريخ الاستلام المتوقع', 'تاريخ الطلب'],
+                ...filteredRequests.map((r, i) => [
                     i + 1,
                     r.requestNumber,
                     r.customerName,
                     r.customerPhone,
-                    `${r.laptopBrand}${r.laptopModel ? ' ' + r.laptopModel : ''}`,
-                    r.serialNumber || '—',
-                    r.problemDescription,
-                    r.adminReply,
+                    r.deviceCount,
                     this.translateStatus(r.status),
                     r.cost > 0 ? r.cost : 0,
-                    r.technician,
-                    r.receivedDate ? Utils.formatDate(r.receivedDate) : '—',
+                    r.technician || '—',
+                    r.adminReply || '—',
                     r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—',
                     Utils.formatDate(r.createdAt)
                 ])
@@ -3035,8 +3010,7 @@ class AdminManager {
         const ws = XLSX.utils.aoa_to_sheet(data);
         // Column widths - same for all types now
         ws['!cols'] = [
-            {wch:4},{wch:14},{wch:20},{wch:14},{wch:18},{wch:15},
-            {wch:35},{wch:25},{wch:18},{wch:10},{wch:15},{wch:18},{wch:18},{wch:20}
+            {wch:4},{wch:14},{wch:20},{wch:14},{wch:15},{wch:18},{wch:10},{wch:15},{wch:25},{wch:18},{wch:20}
         ];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'التقرير');
