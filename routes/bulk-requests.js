@@ -56,6 +56,10 @@ router.get('/', async (req, res) => {
                 problemDescription: device.problem_description,
                 deviceImage: device.device_image,
                 status: device.status,
+                adminReply: device.admin_reply,
+                cost: device.cost,
+                technician: device.technician,
+                estimatedCompletionDate: device.estimated_completion_date,
                 createdAt: device.created_at,
                 updatedAt: device.updated_at
             }))
@@ -107,6 +111,10 @@ router.get('/:id', async (req, res) => {
                 problemDescription: device.problem_description,
                 deviceImage: device.device_image,
                 status: device.status,
+                adminReply: device.admin_reply,
+                cost: device.cost,
+                technician: device.technician,
+                estimatedCompletionDate: device.estimated_completion_date,
                 createdAt: device.created_at,
                 updatedAt: device.updated_at
             }))
@@ -175,6 +183,10 @@ router.post('/', async (req, res) => {
                 problem_description: device.problemDescription,
                 device_image: device.deviceImage || null,
                 status: device.status || 'Received',
+                admin_reply: device.adminReply || null,
+                cost: device.cost || 0,
+                technician: device.technician || null,
+                estimated_completion_date: device.estimatedCompletionDate || null,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
@@ -199,14 +211,23 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Update bulk request device status
+// Update bulk request device status and fields
 router.put('/devices/:id', async (req, res) => {
     try {
-        console.log('📝 PUT /api/bulk-request-devices/:id - Request body:', req.body);
+        console.log('📝 PUT /api/bulk-requests/devices/:id - Request body:', req.body);
+        
+        // Convert camelCase to snake_case for Supabase
+        const snakeCaseData = {};
+        const bodyKeys = Object.keys(req.body);
+        
+        bodyKeys.forEach(key => {
+            const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+            snakeCaseData[snakeKey] = req.body[key];
+        });
         
         const { data, error } = await supabase.from('bulk_request_devices')
             .update({ 
-                status: req.body.status,
+                ...snakeCaseData,
                 updated_at: new Date().toISOString()
             })
             .eq('id', req.params.id)
@@ -215,9 +236,30 @@ router.put('/devices/:id', async (req, res) => {
         if (error) throw error;
         if (!data || data.length === 0) return res.status(404).json({ error: 'Device not found' });
         
-        res.json(data[0]);
+        // Convert back to camelCase
+        const converted = {
+            id: data[0].id,
+            bulkRequestId: data[0].bulk_request_id,
+            deviceNumber: data[0].device_number,
+            laptopBrand: data[0].laptop_brand,
+            laptopModel: data[0].laptop_model,
+            serialNumber: data[0].serial_number,
+            receivedDate: data[0].received_date,
+            priority: data[0].priority,
+            problemDescription: data[0].problem_description,
+            deviceImage: data[0].device_image,
+            status: data[0].status,
+            adminReply: data[0].admin_reply,
+            cost: data[0].cost,
+            technician: data[0].technician,
+            estimatedCompletionDate: data[0].estimated_completion_date,
+            createdAt: data[0].created_at,
+            updatedAt: data[0].updated_at
+        };
+        
+        res.json(converted);
     } catch (error) {
-        console.error('Error updating device status:', error);
+        console.error('Error updating device:', error);
         res.status(500).json({ error: error.message });
     }
 });

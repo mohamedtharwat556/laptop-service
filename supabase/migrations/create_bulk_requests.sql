@@ -30,6 +30,10 @@ CREATE TABLE IF NOT EXISTS bulk_request_devices (
     problem_description TEXT NOT NULL,
     device_image TEXT,
     status VARCHAR(50) DEFAULT 'Received',
+    admin_reply TEXT,
+    cost DECIMAL(10, 2) DEFAULT 0,
+    technician VARCHAR(255),
+    estimated_completion_date TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

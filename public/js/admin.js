@@ -1980,6 +1980,10 @@ class AdminManager {
                                         <th>الموديل</th>
                                         <th>الرقم التسلسلي</th>
                                         <th>الحالة</th>
+                                        <th>رد الإدارة</th>
+                                        <th>التكلفة</th>
+                                        <th>الفني</th>
+                                        <th>تاريخ الاستلام المتوقع</th>
                                         <th>إجراءات</th>
                                     </tr>
                                 </thead>
@@ -1991,6 +1995,10 @@ class AdminManager {
                                             <td>${device.laptopModel}</td>
                                             <td dir="ltr" style="color: #94a3b8;">${device.serialNumber || '—'}</td>
                                             <td><span class="status-badge ${this.getStatusClass(device.status)}">${this.translateStatus(device.status)}</span></td>
+                                            <td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${device.adminReply || '—'}</td>
+                                            <td>${device.cost > 0 ? device.cost : '—'}</td>
+                                            <td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${device.technician || '—'}</td>
+                                            <td>${device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : '—'}</td>
                                             <td>
                                                 <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
                                                         onclick="adminManager.viewBulkDevice(${bulkRequestId}, ${device.id})">
@@ -2051,35 +2059,35 @@ class AdminManager {
                     <form id="editBulkDeviceForm" style="margin-top: 1.5rem;">
                         <div class="form-group">
                             <label class="form-label">رد الإدارة</label>
-                            <textarea class="form-textarea" name="adminReply" rows="3">${bulkRequest.adminReply || ''}</textarea>
+                            <textarea class="form-textarea" name="adminReply" rows="3">${device.adminReply || ''}</textarea>
                         </div>
                         <div class="form-group">
                             <label class="form-label">تكلفة الصيانة (ج.م)</label>
-                            <input type="number" class="form-input" name="cost" value="${bulkRequest.cost || ''}" placeholder="أدخل تكلفة الصيانة" min="0" step="0.01">
+                            <input type="number" class="form-input" name="cost" value="${device.cost || ''}" placeholder="أدخل تكلفة الصيانة" min="0" step="0.01">
                         </div>
                         <div class="form-group">
                             <label class="form-label">الفني المسؤول</label>
                             <select class="form-select" name="technician">
                                 <option value="">اختر الفني</option>
-                                <option value="استاذ ابراهيم" ${bulkRequest.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
-                                <option value="علياء" ${bulkRequest.technician === 'علياء' ? 'selected' : ''}>علياء</option>
-                                <option value="سلمي" ${bulkRequest.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
-                                <option value="استاذة سهير رمزي" ${bulkRequest.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
-                                <option value="استاذة ناديه" ${bulkRequest.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
-                                <option value="استاذة ام كلثوم" ${bulkRequest.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
-                                <option value="استاذة اسماء" ${bulkRequest.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
-                                <option value="استاذ خالد و عبدالله رضا" ${bulkRequest.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
-                                <option value="استاذ محمد علي و عم وليد" ${bulkRequest.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
-                                <option value="الاستاذ عبد الدالي" ${bulkRequest.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
-                                <option value="الاستاذ نادر" ${bulkRequest.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
-                                <option value="الاستاذ عبدالله موسي" ${bulkRequest.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
-                                <option value="استاذ احمد اسلام و احمد طه" ${bulkRequest.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
-                                <option value="المهندس عبد الفتاح وادم" ${bulkRequest.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
+                                <option value="استاذ ابراهيم" ${device.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
+                                <option value="علياء" ${device.technician === 'علياء' ? 'selected' : ''}>علياء</option>
+                                <option value="سلمي" ${device.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
+                                <option value="استاذة سهير رمزي" ${device.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
+                                <option value="استاذة ناديه" ${device.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
+                                <option value="استاذة ام كلثوم" ${device.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
+                                <option value="استاذة اسماء" ${device.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
+                                <option value="استاذ خالد و عبدالله رضا" ${device.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
+                                <option value="استاذ محمد علي و عم وليد" ${device.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
+                                <option value="الاستاذ عبد الدالي" ${device.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
+                                <option value="الاستاذ نادر" ${device.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
+                                <option value="الاستاذ عبدالله موسي" ${device.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
+                                <option value="استاذ احمد اسلام و احمد طه" ${device.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
+                                <option value="المهندس عبد الفتاح وادم" ${device.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
-                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${bulkRequest.estimatedCompletionDate ? new Date(bulkRequest.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
+                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${device.estimatedCompletionDate ? new Date(device.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
                         </div>
                         <div class="form-group">
                             <label class="form-label">حالة الطلب</label>
@@ -2120,21 +2128,17 @@ class AdminManager {
                         }
                     }
                     
-                    // Update device status
+                    // Update device with all fields
                     const deviceUpdateData = {
-                        status: form.status.value
-                    };
-
-                    // Update bulk request fields
-                    const bulkUpdateData = {
                         adminReply: form.adminReply.value,
                         cost: form.cost.value ? parseFloat(form.cost.value) : 0,
                         technician: form.technician.value,
-                        estimatedCompletionDate: estimatedCompletionDate
+                        estimatedCompletionDate: estimatedCompletionDate,
+                        status: form.status.value
                     };
 
                     try {
-                        // Update device status
+                        // Update device with all fields
                         const deviceResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
                             method: 'PUT',
                             headers: {
@@ -2143,40 +2147,25 @@ class AdminManager {
                             body: JSON.stringify(deviceUpdateData)
                         });
 
-                        if (!deviceResponse.ok) throw new Error('Failed to update device status');
+                        if (!deviceResponse.ok) throw new Error('Failed to update device');
 
-                        // Update bulk request
-                        const bulkResponse = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(bulkUpdateData)
-                        });
-
-                        if (!bulkResponse.ok) throw new Error('Failed to update bulk request');
-
-                        // Update local data instead of reloading
+                        // Update local data
                         const bulkRequestIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
                         if (bulkRequestIndex !== -1) {
-                            this.bulkRequests[bulkRequestIndex] = {
-                                ...this.bulkRequests[bulkRequestIndex],
-                                adminReply: bulkUpdateData.adminReply,
-                                cost: bulkUpdateData.cost,
-                                technician: bulkUpdateData.technician,
-                                estimatedCompletionDate: bulkUpdateData.estimatedCompletionDate
-                            };
-                            
                             const deviceIndex = this.bulkRequests[bulkRequestIndex].devices.findIndex(d => d.id === deviceId);
                             if (deviceIndex !== -1) {
                                 this.bulkRequests[bulkRequestIndex].devices[deviceIndex] = {
                                     ...this.bulkRequests[bulkRequestIndex].devices[deviceIndex],
+                                    adminReply: deviceUpdateData.adminReply,
+                                    cost: deviceUpdateData.cost,
+                                    technician: deviceUpdateData.technician,
+                                    estimatedCompletionDate: deviceUpdateData.estimatedCompletionDate,
                                     status: deviceUpdateData.status
                                 };
                             }
                         }
 
-                        toast.success('تم تحديث الجهاز والطلب بنجاح');
+                        toast.success('تم تحديث الجهاز بنجاح');
                         modalManager.close(modalId);
                         this.renderBulkRequests();
                     } catch (error) {
