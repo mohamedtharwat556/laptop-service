@@ -650,6 +650,26 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('bulk-requests')" title="عرض طلبات الجملة">
+                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2);">
+                        <i class="fas fa-boxes" style="color: #f59e0b;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>${stats.bulkTotalRequests}</h3>
+                        <p>طلبات الجملة</p>
+                    </div>
+                    <i class="fas fa-arrow-left stat-arrow"></i>
+                </div>
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('bulk-requests')" title="عرض إيرادات الجملة">
+                    <div class="stat-icon success" style="background: rgba(245, 158, 11, 0.2);">
+                        <i class="fas fa-dollar-sign" style="color: #f59e0b;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>${Utils.formatCurrency(stats.bulkRevenue)}</h3>
+                        <p>إيرادات الجملة</p>
+                    </div>
+                    <i class="fas fa-arrow-left stat-arrow"></i>
+                </div>
                 <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('users','All')" title="عرض المستخدمين">
                     <div class="stat-icon">
                         <i class="fas fa-users"></i>
@@ -690,6 +710,16 @@ class AdminManager {
         );
         const companyCompletedRequests = this.companyRequests.filter(r => r.status === 'Delivered');
 
+        // Bulk requests stats (separate)
+        const bulkRevenue = this.bulkRequests
+            .filter(r => r.cost && r.cost > 0)
+            .reduce((sum, r) => sum + (r.cost || 0), 0);
+
+        const bulkOpenRequests = this.bulkRequests.filter(r =>
+            ['Received', 'Waiting Inspection', 'Under Maintenance', 'Waiting Parts'].includes(r.status)
+        );
+        const bulkCompletedRequests = this.bulkRequests.filter(r => r.status === 'Delivered');
+
         // Normal requests stats (separate)
         const openRequests = this.requests.filter(r =>
             ['Received', 'Waiting Inspection', 'Under Maintenance', 'Waiting Parts'].includes(r.status)
@@ -709,6 +739,12 @@ class AdminManager {
             companyOpenRequests: companyOpenRequests.length,
             companyCompletedRequests: companyCompletedRequests.length,
             companyRevenue: companyRevenue,
+            
+            // Bulk requests stats (separate)
+            bulkTotalRequests: this.bulkRequests.length,
+            bulkOpenRequests: bulkOpenRequests.length,
+            bulkCompletedRequests: bulkCompletedRequests.length,
+            bulkRevenue: bulkRevenue,
             
             // Other stats
             totalProducts: this.products.length,

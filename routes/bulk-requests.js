@@ -241,4 +241,16 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+// Delete all bulk requests
+router.delete('/', async (req, res) => {
+    try {
+        const { error } = await supabase.from('bulk_requests').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        if (error) throw error;
+        res.json({ message: 'All bulk requests deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting all bulk requests:', error);
+        res.status(500).json({ error: 'Failed to delete all bulk requests' });
+    }
+});
+
 module.exports = router;
