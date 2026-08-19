@@ -199,6 +199,29 @@ router.post('/', async (req, res) => {
     }
 });
 
+// Update bulk request device status
+router.put('/devices/:id', async (req, res) => {
+    try {
+        console.log('📝 PUT /api/bulk-request-devices/:id - Request body:', req.body);
+        
+        const { data, error } = await supabase.from('bulk_request_devices')
+            .update({ 
+                status: req.body.status,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', req.params.id)
+            .select();
+        
+        if (error) throw error;
+        if (!data || data.length === 0) return res.status(404).json({ error: 'Device not found' });
+        
+        res.json(data[0]);
+    } catch (error) {
+        console.error('Error updating device status:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Update bulk request
 router.put('/:id', async (req, res) => {
     try {
