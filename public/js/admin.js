@@ -2050,7 +2050,39 @@ class AdminManager {
 
                     <form id="editBulkDeviceForm" style="margin-top: 1.5rem;">
                         <div class="form-group">
-                            <label class="form-label">تحديث الحالة</label>
+                            <label class="form-label">رد الإدارة</label>
+                            <textarea class="form-textarea" name="adminReply" rows="3">${bulkRequest.adminReply || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تكلفة الصيانة (ج.م)</label>
+                            <input type="number" class="form-input" name="cost" value="${bulkRequest.cost || ''}" placeholder="أدخل تكلفة الصيانة" min="0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">الفني المسؤول</label>
+                            <select class="form-select" name="technician">
+                                <option value="">اختر الفني</option>
+                                <option value="استاذ ابراهيم" ${bulkRequest.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
+                                <option value="علياء" ${bulkRequest.technician === 'علياء' ? 'selected' : ''}>علياء</option>
+                                <option value="سلمي" ${bulkRequest.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
+                                <option value="استاذة سهير رمزي" ${bulkRequest.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
+                                <option value="استاذة ناديه" ${bulkRequest.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
+                                <option value="استاذة ام كلثوم" ${bulkRequest.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
+                                <option value="استاذة اسماء" ${bulkRequest.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
+                                <option value="استاذ خالد و عبدالله رضا" ${bulkRequest.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
+                                <option value="استاذ محمد علي و عم وليد" ${bulkRequest.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
+                                <option value="الاستاذ عبد الدالي" ${bulkRequest.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
+                                <option value="الاستاذ نادر" ${bulkRequest.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
+                                <option value="الاستاذ عبدالله موسي" ${bulkRequest.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
+                                <option value="استاذ احمد اسلام و احمد طه" ${bulkRequest.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
+                                <option value="المهندس عبد الفتاح وادم" ${bulkRequest.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
+                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${bulkRequest.estimatedCompletionDate ? new Date(bulkRequest.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">حالة الطلب</label>
                             <select class="form-select" name="status">
                                 <option value="Received" ${device.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
                                 <option value="Waiting Inspection" ${device.status === 'Waiting Inspection' ? 'selected' : ''}>بانتظار الفحص</option>
@@ -2079,28 +2111,58 @@ class AdminManager {
                 form.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     
-                    const updateData = {
+                    const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+                    let estimatedCompletionDate = null;
+                    if (estimatedCompletionDateValue) {
+                        const dateObj = new Date(estimatedCompletionDateValue);
+                        if (!isNaN(dateObj.getTime())) {
+                            estimatedCompletionDate = dateObj.toISOString();
+                        }
+                    }
+                    
+                    // Update device status
+                    const deviceUpdateData = {
                         status: form.status.value
                     };
 
+                    // Update bulk request fields
+                    const bulkUpdateData = {
+                        adminReply: form.adminReply.value,
+                        cost: form.cost.value ? parseFloat(form.cost.value) : 0,
+                        technician: form.technician.value,
+                        estimatedCompletionDate: estimatedCompletionDate
+                    };
+
                     try {
-                        const response = await fetch(`/api/bulk-request-devices/${deviceId}`, {
+                        // Update device status
+                        const deviceResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify(updateData)
+                            body: JSON.stringify(deviceUpdateData)
                         });
 
-                        if (!response.ok) throw new Error('Failed to update device status');
+                        if (!deviceResponse.ok) throw new Error('Failed to update device status');
 
-                        toast.success('تم تحديث حالة الجهاز بنجاح');
+                        // Update bulk request
+                        const bulkResponse = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(bulkUpdateData)
+                        });
+
+                        if (!bulkResponse.ok) throw new Error('Failed to update bulk request');
+
+                        toast.success('تم تحديث الجهاز والطلب بنجاح');
                         modalManager.close(modalId);
                         await this.loadData();
                         this.renderBulkRequests();
                     } catch (error) {
-                        console.error('Error updating device status:', error);
-                        toast.error('فشل تحديث حالة الجهاز');
+                        console.error('Error updating device:', error);
+                        toast.error('فشل تحديث الجهاز');
                     }
                 });
             }, 100);
