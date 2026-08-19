@@ -794,7 +794,7 @@ class CustomerManager {
                 <div class="tracking-header">
                     <div>
                         <h2>${companyRequest.requestNumber}</h2>
-                        <span style="color: #94a3b8; font-size: 0.875rem;">طلب شركة</span>
+                        <span style="color: #94a3b8; font-size: 0.875rem;">موظفي الشركة</span>
                     </div>
                     <div class="date-info">
                         <p class="tracking-info-label">تاريخ التقديم</p>
