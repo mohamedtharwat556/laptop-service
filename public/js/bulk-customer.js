@@ -179,7 +179,6 @@ class BulkCustomerManager {
         const customerData = {
             fullName: formData.get('fullName'),
             phone: formData.get('phone'),
-            email: formData.get('email'),
             deviceCount: parseInt(formData.get('deviceCount'))
         };
 
@@ -214,7 +213,6 @@ class BulkCustomerManager {
             const requestData = {
                 customerName: customerData.fullName,
                 customerPhone: customerData.phone,
-                customerEmail: customerData.email,
                 deviceCount: customerData.deviceCount,
                 devices: devicesData,
                 status: 'Received',
