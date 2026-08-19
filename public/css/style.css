@@ -217,6 +217,31 @@ body.light-mode .modal-content .status-badge {
     background: rgba(15, 23, 42, 0.8);
 }
 
+/* Mobile Menu Toggle */
+.mobile-menu-toggle {
+    display: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--glass-border);
+    color: var(--white);
+    font-size: 1.5rem;
+    cursor: pointer;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.mobile-menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+body.light-mode .mobile-menu-toggle {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--gray-700);
+}
+
 /* Navigation */
 .navbar {
     position: fixed;

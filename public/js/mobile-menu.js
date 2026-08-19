@@ -1,12 +1,19 @@
 // Mobile Menu Toggle Functionality
-(function() {
+document.addEventListener('DOMContentLoaded', function() {
     const mobileToggle = document.querySelector('.mobile-menu-toggle');
     const navLinks = document.querySelector('.nav-links');
-    
+
+    console.log('Mobile menu script loaded');
+    console.log('Mobile toggle:', mobileToggle);
+    console.log('Nav links:', navLinks);
+
     if (mobileToggle && navLinks) {
-        mobileToggle.addEventListener('click', () => {
+        mobileToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Mobile toggle clicked');
             navLinks.classList.toggle('active');
-            
+
             // Toggle icon
             const icon = mobileToggle.querySelector('i');
             if (icon) {
@@ -19,9 +26,9 @@
                 }
             }
         });
-        
+
         // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
+        document.addEventListener('click', function(e) {
             if (!navLinks.contains(e.target) && !mobileToggle.contains(e.target)) {
                 navLinks.classList.remove('active');
                 const icon = mobileToggle.querySelector('i');
@@ -31,11 +38,11 @@
                 }
             }
         });
-        
+
         // Close menu when clicking on a link
         const links = navLinks.querySelectorAll('.nav-link');
-        links.forEach(link => {
-            link.addEventListener('click', () => {
+        links.forEach(function(link) {
+            link.addEventListener('click', function() {
                 navLinks.classList.remove('active');
                 const icon = mobileToggle.querySelector('i');
                 if (icon) {
@@ -44,5 +51,7 @@
                 }
             });
         });
+    } else {
+        console.error('Mobile menu elements not found');
     }
-})();
+});
