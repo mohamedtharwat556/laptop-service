@@ -648,13 +648,13 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('company-requests')" title="عرض طلبات الشركات">
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('company-requests')" title="عرض موظفي الشركة">
                     <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2);">
                         <i class="fas fa-building" style="color: #10b981;"></i>
                     </div>
                     <div class="stat-info">
                         <h3>${stats.companyTotalRequests}</h3>
-                        <p>طلبات الشركات</p>
+                        <p>موظفي الشركة</p>
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
@@ -1628,7 +1628,7 @@ class AdminManager {
             container.innerHTML = `
                 <div class="glass-card" style="text-align: center; padding: 3rem;">
                     <i class="fas fa-building" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
-                    <p style="color: #94a3b8;">لا توجد طلبات شركات حالياً</p>
+                    <p style="color: #94a3b8;">لا توجد طلبات موظفي الشركة حالياً</p>
                 </div>
             `;
             return;
@@ -1750,6 +1750,7 @@ class AdminManager {
                             <select class="form-select" name="technician">
                                 <option value="">اختر الفني</option>
                                 <option value="استاذ ابراهيم" ${companyRequest.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
+                                <option value="استاذ محمد شاهين" ${companyRequest.technician === 'استاذ محمد شاهين' ? 'selected' : ''}>استاذ محمد شاهين</option>
                                 <option value="علياء" ${companyRequest.technician === 'علياء' ? 'selected' : ''}>علياء</option>
                                 <option value="سلمي" ${companyRequest.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
                                 <option value="استاذة سهير رمزي" ${companyRequest.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
@@ -1864,7 +1865,7 @@ class AdminManager {
      * Delete all company requests
      */
     async deleteAllCompanyRequests() {
-        if (!confirm('هل أنت متأكد من حذف جميع طلبات الشركات؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+        if (!confirm('هل أنت متأكد من حذف جميع طلبات موظفي الشركة؟ هذا الإجراء لا يمكن التراجع عنه.')) {
             return;
         }
 
@@ -1874,13 +1875,11 @@ class AdminManager {
             });
 
             if (response.ok) {
-                toast.success('تم حذف جميع طلبات الشركات بنجاح');
+                toast.success('تم حذف جميع طلبات موظفي الشركة بنجاح');
                 await this.loadData();
                 this.renderCompanyRequests();
             } else {
-                const errorText = await response.text();
-                console.error('Delete all failed:', errorText);
-                toast.error('فشل حذف جميع الطلبات');
+                toast.error('فشل حذف الطلبات');
             }
         } catch (error) {
             console.error('Error deleting all company requests:', error);
@@ -2089,6 +2088,7 @@ class AdminManager {
                             <select class="form-select" name="technician">
                                 <option value="">اختر الفني</option>
                                 <option value="استاذ ابراهيم" ${device.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
+                                <option value="استاذ محمد شاهين" ${device.technician === 'استاذ محمد شاهين' ? 'selected' : ''}>استاذ محمد شاهين</option>
                                 <option value="علياء" ${device.technician === 'علياء' ? 'selected' : ''}>علياء</option>
                                 <option value="سلمي" ${device.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
                                 <option value="استاذة سهير رمزي" ${device.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
@@ -2278,6 +2278,7 @@ class AdminManager {
                         <select class="form-select" name="technician">
                             <option value="">اختر الفني</option>
                             <option value="استاذ ابراهيم" ${bulkRequest.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
+                            <option value="استاذ محمد شاهين" ${bulkRequest.technician === 'استاذ محمد شاهين' ? 'selected' : ''}>استاذ محمد شاهين</option>
                             <option value="علياء" ${bulkRequest.technician === 'علياء' ? 'selected' : ''}>علياء</option>
                             <option value="سلمي" ${bulkRequest.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
                             <option value="استاذة سهير رمزي" ${bulkRequest.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
@@ -2660,6 +2661,7 @@ class AdminManager {
                         <select class="form-select" name="technician">
                             <option value="">اختر الفني</option>
                             <option value="استاذ ابراهيم" ${request.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
+                            <option value="استاذ محمد شاهين" ${request.technician === 'استاذ محمد شاهين' ? 'selected' : ''}>استاذ محمد شاهين</option>
                             <option value="علياء" ${request.technician === 'علياء' ? 'selected' : ''}>علياء</option>
                             <option value="سلمي" ${request.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
                             <option value="استاذة سهير رمزي" ${request.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
