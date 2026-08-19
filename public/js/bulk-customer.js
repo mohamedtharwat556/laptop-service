@@ -29,10 +29,11 @@ class BulkCustomerManager {
                 this.addDevice();
             }
         } else if (numDevices < currentDevices) {
-            // Remove devices
+            // Remove devices from the end
             this.devices = this.devices.slice(0, numDevices);
             this.renderDevices();
         }
+        // If equal, do nothing to preserve existing data
     }
 
     addDevice() {
@@ -44,7 +45,127 @@ class BulkCustomerManager {
             serialNumber: '',
             problemDescription: ''
         });
-        this.renderDevices();
+        
+        // Only render if this is the first device or if we need to re-render
+        // Otherwise, just append the new device to preserve existing data
+        if (this.devices.length === 1) {
+            this.renderDevices();
+        } else {
+            this.appendDevice(deviceId, this.devices.length - 1);
+        }
+        
+        // Update device count input
+        document.getElementById('deviceCount').value = this.devices.length;
+    }
+
+    appendDevice(deviceId, index) {
+        const container = document.getElementById('devicesContainer');
+        
+        const deviceHtml = `
+            <div class="device-card" style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h4 style="color: #3b82f6; margin: 0;"><i class="fas fa-laptop"></i> اللابتوب #${index + 1}</h4>
+                    <button type="button" onclick="bulkCustomerManager.removeDevice(${deviceId})" class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ماركة اللابتوب *</label>
+                    <select class="form-input" name="laptopBrand_${deviceId}" required id="laptopBrandSelect_${deviceId}">
+                        <option value="">اختر ماركة اللابتوب</option>
+                        <option value="Acer">Acer</option>
+                        <option value="Apple">Apple (MacBook)</option>
+                        <option value="Asus">Asus</option>
+                        <option value="Dell">Dell</option>
+                        <option value="HP">HP</option>
+                        <option value="Lenovo">Lenovo</option>
+                        <option value="MSI">MSI</option>
+                        <option value="Microsoft">Microsoft Surface</option>
+                        <option value="Samsung">Samsung</option>
+                        <option value="Sony">Sony Vaio</option>
+                        <option value="Toshiba">Toshiba</option>
+                        <option value="LG">LG</option>
+                        <option value="Razer">Razer</option>
+                        <option value="Gigabyte">Gigabyte</option>
+                        <option value="Huawei">Huawei</option>
+                        <option value="Xiaomi">Xiaomi</option>
+                        <option value="Fujitsu">Fujitsu</option>
+                        <option value="Panasonic">Panasonic</option>
+                        <option value="Medion">Medion</option>
+                        <option value="Packard Bell">Packard Bell</option>
+                        <option value="Gateway">Gateway</option>
+                        <option value="eMachines">eMachines</option>
+                        <option value="Compaq">Compaq</option>
+                        <option value="IBM">IBM (Lenovo)</option>
+                        <option value="NEC">NEC</option>
+                        <option value="Sharp">Sharp</option>
+                        <option value="BenQ">BenQ</option>
+                        <option value="Sager">Sager</option>
+                        <option value="Clevo">Clevo</option>
+                        <option value="Origin PC">Origin PC</option>
+                        <option value="Alienware">Alienware (Dell)</option>
+                        <option value="Other">أخرى</option>
+                    </select>
+                    <input type="text" class="form-input" name="laptopBrandOther_${deviceId}" id="laptopBrandOther_${deviceId}" placeholder="أدخل اسم الماركة" style="display: none; margin-top: 0.5rem;"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">موديل اللابتوب *</label>
+                    <input type="text" class="form-input" name="laptopModel_${deviceId}" required placeholder="أدخل موديل اللابتوب"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الرقم التسلسلي (السيريال)</label>
+                    <input type="text" class="form-input" name="serialNumber_${deviceId}" placeholder="أدخل الرقم التسلسلي الموجود على اللابتوب"/>
+                    <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">موجود عادة على ملصق أسفل اللابتوب أو في البطارية</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">تاريخ الاستلام *</label>
+                    <input type="date" class="form-input" name="receivedDate_${deviceId}" required id="receivedDate_${deviceId}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الأولوية *</label>
+                    <select class="form-input" name="priority_${deviceId}" required>
+                        <option value="Low">منخفضة</option>
+                        <option value="Medium" selected>متوسطة</option>
+                        <option value="High">عالية</option>
+                        <option value="Urgent">عاجلة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">وصف المشكلة *</label>
+                    <textarea class="form-textarea" name="problemDescription_${deviceId}" rows="3" required placeholder="يرجى وصف المشكلة التي تواجهها مع جهازك..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">صورة الجهاز (اختياري)</label>
+                    <input type="file" class="form-input" name="deviceImage_${deviceId}" accept="image/*">
+                    <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">قم برفع صورة للجهاز أو للمشكلة</p>
+                </div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', deviceHtml);
+        
+        // Set today's date as default for received date
+        const receivedDate = document.getElementById(`receivedDate_${deviceId}`);
+        if (receivedDate) {
+            receivedDate.value = new Date().toISOString().slice(0, 10);
+        }
+        
+        // Handle laptop brand selection
+        const laptopBrandSelect = document.getElementById(`laptopBrandSelect_${deviceId}`);
+        const laptopBrandOther = document.getElementById(`laptopBrandOther_${deviceId}`);
+        
+        if (laptopBrandSelect && laptopBrandOther) {
+            laptopBrandSelect.addEventListener('change', () => {
+                if (laptopBrandSelect.value === 'Other') {
+                    laptopBrandOther.style.display = 'block';
+                    laptopBrandOther.required = true;
+                } else {
+                    laptopBrandOther.style.display = 'none';
+                    laptopBrandOther.required = false;
+                    laptopBrandOther.value = '';
+                }
+            });
+        }
     }
 
     removeDevice(deviceId) {
