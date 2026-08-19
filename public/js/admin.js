@@ -1532,31 +1532,8 @@ class AdminManager {
 
         // Use bulk requests from separate table
         const bulkRequests = this.bulkRequests || [];
-        
-        // Flatten devices from all bulk requests
-        const allDevices = [];
-        bulkRequests.forEach(bulkRequest => {
-            if (bulkRequest.devices && bulkRequest.devices.length > 0) {
-                bulkRequest.devices.forEach(device => {
-                    allDevices.push({
-                        ...device,
-                        bulkRequestId: bulkRequest.id,
-                        requestNumber: bulkRequest.requestNumber,
-                        customerName: bulkRequest.customerName,
-                        customerPhone: bulkRequest.customerPhone,
-                        bulkStatus: bulkRequest.status,
-                        bulkPriority: bulkRequest.priority,
-                        adminReply: bulkRequest.adminReply,
-                        technician: bulkRequest.technician,
-                        cost: bulkRequest.cost,
-                        estimatedCompletionDate: bulkRequest.estimatedCompletionDate
-                    });
-                });
-            }
-        });
-
-        const filteredDevices = this.filterBulkRequests(allDevices);
-        const { data, pages } = this.paginate(filteredDevices);
+        const filteredRequests = this.filterBulkRequests(bulkRequests);
+        const { data, pages } = this.paginate(filteredRequests);
 
         if (data.length === 0) {
             container.innerHTML = `
@@ -1576,31 +1553,35 @@ class AdminManager {
                             <th>رقم الطلب</th>
                             <th>العميل</th>
                             <th>الهاتف</th>
-                            <th>الجهاز</th>
-                            <th>الرقم التسلسلي</th>
+                            <th>عدد اللابتوبات</th>
                             <th>الحالة</th>
                             <th>الأولوية</th>
                             <th>رد الإدارة</th>
                             <th>تاريخ الاستلام المتوقع</th>
+                            <th>التاريخ</th>
                             <th>إجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${data.map(device => `
+                        ${data.map(bulkRequest => `
                             <tr style="transition: background-color 0.2s;">
-                                <td style="font-weight: 600; color: #3b82f6;">${device.requestNumber}</td>
-                                <td style="font-weight: 600;">${device.customerName}</td>
-                                <td dir="ltr">${device.customerPhone}</td>
-                                <td>${device.laptopBrand} ${device.laptopModel || ''}</td>
-                                <td dir="ltr">${device.serialNumber || '—'}</td>
-                                <td><span class="status-badge ${this.getStatusClass(device.status)}">${this.translateStatus(device.status)}</span></td>
-                                <td><span class="priority-badge ${this.getPriorityClass(device.priority)}">${this.translatePriority(device.priority)}</span></td>
-                                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${device.adminReply || '—'}</td>
-                                <td>${device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : '—'}</td>
+                                <td style="font-weight: 600; color: #3b82f6;">${bulkRequest.requestNumber}</td>
+                                <td style="font-weight: 600;">${bulkRequest.customerName}</td>
+                                <td dir="ltr">${bulkRequest.customerPhone}</td>
+                                <td style="font-weight: 600; color: #3b82f6;">${bulkRequest.deviceCount}</td>
+                                <td><span class="status-badge ${this.getStatusClass(bulkRequest.status)}">${this.translateStatus(bulkRequest.status)}</span></td>
+                                <td><span class="priority-badge ${this.getPriorityClass(bulkRequest.priority)}">${this.translatePriority(bulkRequest.priority)}</span></td>
+                                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${bulkRequest.adminReply || '—'}</td>
+                                <td>${bulkRequest.estimatedCompletionDate ? Utils.formatDate(bulkRequest.estimatedCompletionDate) : '—'}</td>
+                                <td>${Utils.formatDate(bulkRequest.createdAt)}</td>
                                 <td>
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
-                                            onclick="adminManager.viewBulkDevice(${device.bulkRequestId}, ${device.id})">
-                                        <i class="fas fa-eye"></i>
+                                            onclick="adminManager.viewBulkRequestDevices(${bulkRequest.id})">
+                                        <i class="fas fa-eye"></i> عرض الأجهزة
+                                    </button>
+                                    <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.deleteBulkRequest(${bulkRequest.id})">
+                                        <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -1942,7 +1923,7 @@ class AdminManager {
      * Filter bulk requests
      */
     filterBulkRequests(requests) {
-        const searchTerm = document.getElementById('bulkRequestSearch')?.value?.toLowerCase() || '';
+        const searchTerm = document.getElementById('bulkSearchInput')?.value?.toLowerCase() || '';
         const statusFilter = document.getElementById('bulkStatusFilter')?.value || 'All';
 
         let filtered = [...requests];
@@ -1965,8 +1946,75 @@ class AdminManager {
     }
 
     /**
-     * View bulk request details
+     * View all devices in a bulk request
      */
+    async viewBulkRequestDevices(bulkRequestId) {
+        try {
+            const response = await fetch(`/api/bulk-requests/${bulkRequestId}`);
+            if (!response.ok) throw new Error('Failed to fetch bulk request details');
+            
+            const bulkRequest = await response.json();
+            
+            const content = `
+                <div style="max-height: 70vh; overflow-y: auto;">
+                    <div class="request-card-header">
+                        <div>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${bulkRequest.requestNumber} - جميع الأجهزة</h3>
+                            <span class="status-badge ${this.getStatusClass(bulkRequest.status)}">${this.translateStatus(bulkRequest.status)}</span>
+                        </div>
+                    </div>
+                    <div class="request-details">
+                        <div class="request-detail-item"><span class="request-detail-label">اسم العميل</span><span class="request-detail-value">${bulkRequest.customerName}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${bulkRequest.customerPhone}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">عدد الأجهزة</span><span class="request-detail-value">${bulkRequest.deviceCount}</span></div>
+                    </div>
+
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem; color: #94a3b8;">الأجهزة</h4>
+                        <div style="overflow-x: auto;">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>الماركة</th>
+                                        <th>الموديل</th>
+                                        <th>الرقم التسلسلي</th>
+                                        <th>الحالة</th>
+                                        <th>إجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${bulkRequest.devices.map((device, index) => `
+                                        <tr>
+                                            <td style="font-weight: 600;">${device.deviceNumber}</td>
+                                            <td>${device.laptopBrand}</td>
+                                            <td>${device.laptopModel}</td>
+                                            <td dir="ltr" style="color: #94a3b8;">${device.serialNumber || '—'}</td>
+                                            <td><span class="status-badge ${this.getStatusClass(device.status)}">${this.translateStatus(device.status)}</span></td>
+                                            <td>
+                                                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
+                                                        onclick="adminManager.viewBulkDevice(${bulkRequestId}, ${device.id})">
+                                                    <i class="fas fa-edit"></i> تعديل
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const modalId = `view-bulk-devices-${bulkRequestId}`;
+            modalManager.create(modalId, 'أجهزة طلب الجملة', content);
+            modalManager.open(modalId);
+        } catch (error) {
+            console.error('Error viewing bulk request devices:', error);
+            toast.error('فشل في تحميل الأجهزة');
+        }
+    }
+
     /**
      * View bulk device details
      */
