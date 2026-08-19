@@ -2881,6 +2881,8 @@ class AdminManager {
         let requestsByType;
         if (type === 'bulk') {
             requestsByType = this.bulkRequests || [];
+        } else if (type === 'company') {
+            requestsByType = this.companyRequests || [];
         } else {
             requestsByType = this.requests;
         }
@@ -2893,7 +2895,7 @@ class AdminManager {
 
         if (period === 'all') {
             filteredRequests = requestsByType;
-            fileName = type === 'bulk' ? 'تقرير-طلبات-جملة' : 'تقرير-كل-الطلبات';
+            fileName = type === 'bulk' ? 'تقرير-طلبات-جملة' : type === 'company' ? 'تقرير-طلبات-شركات' : 'تقرير-كل-الطلبات';
             console.log('📊 Showing all requests:', filteredRequests.length);
         } else if (period === 'today') {
             const today = new Date().toISOString().slice(0, 10);
@@ -2901,7 +2903,7 @@ class AdminManager {
                 const d = new Date(r.createdAt);
                 return d.toISOString().slice(0, 10) === today;
             });
-            fileName = type === 'bulk' ? `تقرير-جملة-${today}` : `تقرير-${today}`;
+            fileName = type === 'bulk' ? `تقرير-جملة-${today}` : type === 'company' ? `تقرير-شركات-${today}` : `تقرير-${today}`;
         } else if (period === 'yesterday') {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
@@ -2910,7 +2912,7 @@ class AdminManager {
                 const d = new Date(r.createdAt);
                 return d.toISOString().slice(0, 10) === yesterdayStr;
             });
-            fileName = type === 'bulk' ? `تقرير-جملة-${yesterdayStr}` : `تقرير-${yesterdayStr}`;
+            fileName = type === 'bulk' ? `تقرير-جملة-${yesterdayStr}` : type === 'company' ? `تقرير-شركات-${yesterdayStr}` : `تقرير-${yesterdayStr}`;
         } else if (period === 'lastWeek') {
             const today = new Date();
             const lastWeek = new Date();
@@ -2919,14 +2921,14 @@ class AdminManager {
                 const d = new Date(r.createdAt);
                 return d >= lastWeek && d <= today;
             });
-            fileName = type === 'bulk' ? 'تقرير-جملة-آخر-أسبوع' : `تقرير-آخر-أسبوع`;
+            fileName = type === 'bulk' ? 'تقرير-جملة-آخر-أسبوع' : type === 'company' ? 'تقرير-شركات-آخر-أسبوع' : `تقرير-آخر-أسبوع`;
         } else if (period === 'custom') {
             const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
             filteredRequests = requestsByType.filter(r => {
                 const d = new Date(r.createdAt);
                 return d.toISOString().slice(0, 10) === selectedDate;
             });
-            fileName = type === 'bulk' ? `تقرير-جملة-${selectedDate}` : `تقرير-${selectedDate}`;
+            fileName = type === 'bulk' ? `تقرير-جملة-${selectedDate}` : type === 'company' ? `تقرير-شركات-${selectedDate}` : `تقرير-${selectedDate}`;
         }
 
         if (filteredRequests.length === 0) {
@@ -2952,6 +2954,7 @@ class AdminManager {
                             status: device.status,
                             cost: bulkRequest.cost || 0,
                             technician: bulkRequest.technician || '—',
+                            adminReply: bulkRequest.adminReply || '—',
                             createdAt: bulkRequest.createdAt
                         });
                     });
@@ -2959,7 +2962,7 @@ class AdminManager {
             });
 
             data = [
-                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الطلب'],
+                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'الحالة', 'التكلفة', 'الفني', 'رد الإدارة', 'تاريخ الطلب'],
                 ...deviceRows.map((r, i) => [
                     i + 1,
                     r.requestNumber,
@@ -2971,7 +2974,29 @@ class AdminManager {
                     this.translateStatus(r.status),
                     r.cost > 0 ? r.cost : 0,
                     r.technician,
+                    r.adminReply,
                     Utils.formatDate(r.createdAt)
+                ])
+            ];
+        } else if (type === 'company') {
+            // Company requests
+            data = [
+                ['#', 'رقم الطلب', 'الاسم', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
+                ...filteredRequests.map((r, i) => [
+                    i + 1,
+                    r.requestNumber || r.request_number,
+                    r.fullName || r.full_name,
+                    r.phone,
+                    `${r.laptopBrand || r.laptop_brand}${r.laptopModel || r.laptop_model ? ' ' + (r.laptopModel || r.laptop_model) : ''}`,
+                    r.serialNumber || r.serial_number || '—',
+                    r.problemDescription || r.problem_description,
+                    r.adminReply || r.admin_reply || '—',
+                    this.translateStatus(r.status),
+                    r.cost > 0 ? r.cost : 0,
+                    r.technician || '—',
+                    r.receivedDate || r.received_date ? Utils.formatDate(r.receivedDate || r.received_date) : '—',
+                    r.estimatedCompletionDate || r.estimated_completion_date ? Utils.formatDate(r.estimatedCompletionDate || r.estimated_completion_date) : '—',
+                    Utils.formatDate(r.createdAt || r.created_at)
                 ])
             ];
         } else {
@@ -3002,7 +3027,12 @@ class AdminManager {
         if (type === 'bulk') {
             ws['!cols'] = [
                 {wch:4},{wch:14},{wch:20},{wch:14},{wch:18},{wch:15},
-                {wch:35},{wch:18},{wch:10},{wch:15},{wch:20}
+                {wch:35},{wch:18},{wch:10},{wch:15},{wch:25},{wch:20}
+            ];
+        } else if (type === 'company') {
+            ws['!cols'] = [
+                {wch:4},{wch:14},{wch:20},{wch:14},{wch:18},{wch:15},
+                {wch:35},{wch:25},{wch:18},{wch:10},{wch:15},{wch:18},{wch:18},{wch:20}
             ];
         } else {
             ws['!cols'] = [
