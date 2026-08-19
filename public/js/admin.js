@@ -153,7 +153,7 @@ class AdminManager {
             }
 
             // Setup bulk requests search and filters
-            const bulkSearchInput = document.getElementById('bulkRequestSearch');
+            const bulkSearchInput = document.getElementById('bulkSearchInput');
             const bulkStatusFilter = document.getElementById('bulkStatusFilter');
 
             if (bulkSearchInput) {
@@ -2156,9 +2156,28 @@ class AdminManager {
 
                         if (!bulkResponse.ok) throw new Error('Failed to update bulk request');
 
+                        // Update local data instead of reloading
+                        const bulkRequestIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                        if (bulkRequestIndex !== -1) {
+                            this.bulkRequests[bulkRequestIndex] = {
+                                ...this.bulkRequests[bulkRequestIndex],
+                                adminReply: bulkUpdateData.adminReply,
+                                cost: bulkUpdateData.cost,
+                                technician: bulkUpdateData.technician,
+                                estimatedCompletionDate: bulkUpdateData.estimatedCompletionDate
+                            };
+                            
+                            const deviceIndex = this.bulkRequests[bulkRequestIndex].devices.findIndex(d => d.id === deviceId);
+                            if (deviceIndex !== -1) {
+                                this.bulkRequests[bulkRequestIndex].devices[deviceIndex] = {
+                                    ...this.bulkRequests[bulkRequestIndex].devices[deviceIndex],
+                                    status: deviceUpdateData.status
+                                };
+                            }
+                        }
+
                         toast.success('تم تحديث الجهاز والطلب بنجاح');
                         modalManager.close(modalId);
-                        await this.loadData();
                         this.renderBulkRequests();
                     } catch (error) {
                         console.error('Error updating device:', error);
