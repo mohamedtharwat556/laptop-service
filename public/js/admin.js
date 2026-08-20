@@ -244,6 +244,8 @@ class AdminManager {
                 this.renderUsers();
             } else if (this.currentSection === 'products') {
                 this.renderProductsManagement();
+            } else if (this.currentSection === 'technicians') {
+                this.renderTechnicians();
             }
         }, 10000);
     }
@@ -761,13 +763,14 @@ class AdminManager {
             console.log('📡 Fetching data from API...');
             // Use same-origin API (Vercel handles both frontend and backend)
             const apiUrl = '/api';
-            const [usersRes, requestsRes, ordersRes, productsRes, bulkRequestsRes, companyRequestsRes] = await Promise.all([
+            const [usersRes, requestsRes, ordersRes, productsRes, bulkRequestsRes, companyRequestsRes, techniciansRes] = await Promise.all([
                 fetch(`${apiUrl}/users`).then(r => r.json()).catch(() => []),
                 fetch(`${apiUrl}/requests`).then(r => r.json()).catch(() => []),
                 fetch(`${apiUrl}/orders`).then(r => r.json()).catch(() => []),
                 fetch(`${apiUrl}/products`).then(r => r.json()).catch(() => []),
                 fetch(`${apiUrl}/bulk-requests`).then(r => r.json()).catch(() => []),
-                fetch(`${apiUrl}/company-requests`).then(r => r.json()).catch(() => [])
+                fetch(`${apiUrl}/company-requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/technicians`).then(r => r.json()).catch(() => [])
             ]);
             
             console.log('📊 Bulk requests API response:', bulkRequestsRes);
@@ -780,6 +783,7 @@ class AdminManager {
             this.products = this.convertToCamelCase(Array.isArray(productsRes) ? productsRes : []);
             this.bulkRequests = this.convertToCamelCase(Array.isArray(bulkRequestsRes) ? bulkRequestsRes : []);
             this.companyRequests = this.convertToCamelCase(Array.isArray(companyRequestsRes) ? companyRequestsRes : []);
+            this.technicians = this.convertToCamelCase(Array.isArray(techniciansRes) ? techniciansRes : []);
 
             console.log('📊 Loaded bulk requests:', this.bulkRequests);
             console.log('📊 Bulk requests count:', this.bulkRequests.length);
@@ -1419,6 +1423,297 @@ class AdminManager {
     }
 
     /**
+     * Render technicians management
+     */
+    renderTechnicians() {
+        const container = document.getElementById('techniciansContainer');
+        if (!container) return;
+
+        if (this.technicians.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-user-cog"></i>
+                    <h3>لا يوجد فنيين</h3>
+                    <p>لا يوجد فنيين في النظام حالياً.</p>
+                    <button class="btn btn-primary" onclick="adminManager.showAddTechnicianModal()">
+                        <i class="fas fa-plus"></i> إضافة فني جديد
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                <button class="btn btn-primary" onclick="adminManager.showAddTechnicianModal()">
+                    <i class="fas fa-plus"></i> إضافة فني جديد
+                </button>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>رقم الهاتف</th>
+                            <th>التخصص</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${this.technicians.map(technician => `
+                            <tr>
+                                <td style="font-weight: 600;">${technician.name}</td>
+                                <td>${technician.email || '—'}</td>
+                                <td dir="ltr">${technician.phone || '—'}</td>
+                                <td>${technician.specialization || '—'}</td>
+                                <td>
+                                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
+                                            onclick="adminManager.viewTechnician(${technician.id})">
+                                        <i class="fas fa-chart-line"></i> الإحصائيات
+                                    </button>
+                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.showEditTechnicianModal(${technician.id})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.confirmDeleteTechnician(${technician.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    /**
+     * Show add technician modal
+     */
+    showAddTechnicianModal() {
+        const content = `
+            <form id="addTechnicianForm">
+                <div class="form-group">
+                    <label class="form-label">الاسم *</label>
+                    <input type="text" class="form-input" name="name" required placeholder="أدخل اسم الفني">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">البريد الإلكتروني</label>
+                    <input type="email" class="form-input" name="email" placeholder="أدخل البريد الإلكتروني">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">رقم الهاتف</label>
+                    <input type="tel" class="form-input" name="phone" placeholder="أدخل رقم الهاتف">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">التخصص</label>
+                    <input type="text" class="form-input" name="specialization" placeholder="أدخل التخصص">
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ</button>
+            </form>
+        `;
+        modalManager.create('add-technician', 'إضافة فني جديد', content);
+        modalManager.open('add-technician');
+
+        const form = document.getElementById('addTechnicianForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const technicianData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                specialization: formData.get('specialization')
+            };
+
+            try {
+                const response = await fetch('/api/technicians', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(technicianData)
+                });
+
+                if (response.ok) {
+                    await this.loadData();
+                    this.renderTechnicians();
+                    modalManager.close('add-technician');
+                    toast.success('تم إضافة الفني بنجاح');
+                } else {
+                    throw new Error('Failed to add technician');
+                }
+            } catch (error) {
+                console.error('Error adding technician:', error);
+                toast.error('فشل إضافة الفني');
+            }
+        });
+    }
+
+    /**
+     * Show edit technician modal
+     */
+    showEditTechnicianModal(technicianId) {
+        const technician = this.technicians.find(t => t.id === technicianId);
+        if (!technician) return;
+
+        const content = `
+            <form id="editTechnicianForm">
+                <div class="form-group">
+                    <label class="form-label">الاسم *</label>
+                    <input type="text" class="form-input" name="name" required value="${technician.name}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">البريد الإلكتروني</label>
+                    <input type="email" class="form-input" name="email" value="${technician.email || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">رقم الهاتف</label>
+                    <input type="tel" class="form-input" name="phone" value="${technician.phone || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">التخصص</label>
+                    <input type="text" class="form-input" name="specialization" value="${technician.specialization || ''}">
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
+            </form>
+        `;
+        modalManager.create('edit-technician', 'تعديل الفني', content);
+        modalManager.open('edit-technician');
+
+        const form = document.getElementById('editTechnicianForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const technicianData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                specialization: formData.get('specialization')
+            };
+
+            try {
+                const response = await fetch(`/api/technicians/${technicianId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(technicianData)
+                });
+
+                if (response.ok) {
+                    await this.loadData();
+                    this.renderTechnicians();
+                    modalManager.close('edit-technician');
+                    toast.success('تم تحديث الفني بنجاح');
+                } else {
+                    throw new Error('Failed to update technician');
+                }
+            } catch (error) {
+                console.error('Error updating technician:', error);
+                toast.error('فشل تحديث الفني');
+            }
+        });
+    }
+
+    /**
+     * Confirm delete technician
+     */
+    confirmDeleteTechnician(technicianId) {
+        const technician = this.technicians.find(t => t.id === technicianId);
+        if (!technician) return;
+
+        const content = `
+            <p>هل أنت متأكد من حذف الفني "${technician.name}"؟</p>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button class="btn btn-danger" onclick="adminManager.deleteTechnician(${technicianId})">
+                    <i class="fas fa-trash"></i> نعم، احذف
+                </button>
+                <button class="btn btn-secondary" onclick="modalManager.close('delete-technician')">
+                    إلغاء
+                </button>
+            </div>
+        `;
+        modalManager.create('delete-technician', 'تأكيد الحذف', content);
+        modalManager.open('delete-technician');
+    }
+
+    /**
+     * Delete technician
+     */
+    async deleteTechnician(technicianId) {
+        try {
+            const response = await fetch(`/api/technicians/${technicianId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                await this.loadData();
+                this.renderTechnicians();
+                modalManager.close('delete-technician');
+                toast.success('تم حذف الفني بنجاح');
+            } else {
+                throw new Error('Failed to delete technician');
+            }
+        } catch (error) {
+            console.error('Error deleting technician:', error);
+            toast.error('فشل حذف الفني');
+        }
+    }
+
+    /**
+     * View technician statistics
+     */
+    async viewTechnician(technicianId) {
+        try {
+            const response = await fetch(`/api/technicians/${technicianId}/stats`);
+            if (!response.ok) throw new Error('Failed to fetch technician stats');
+            
+            const stats = await response.json();
+            const technician = this.technicians.find(t => t.id === technicianId);
+            
+            const content = `
+                <div style="max-height: 70vh; overflow-y: auto;">
+                    <div class="request-card-header">
+                        <div>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${technician.name}</h3>
+                            <span style="color: #94a3b8;">${technician.specialization || 'بدون تخصص'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="request-details">
+                        <div class="request-detail-item"><span class="request-detail-label">الطلبات المكتملة</span><span class="request-detail-value">${stats.completedRequests}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">عدد التقييمات</span><span class="request-detail-value">${stats.totalRatings}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">متوسط التقييم</span><span class="request-detail-value">${stats.averageRating} / 5</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">متوسط وقت الإنجاز</span><span class="request-detail-value">${stats.averageCompletionTime} ساعة</span></div>
+                    </div>
+
+                    ${stats.recentRatings.length > 0 ? `
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem; color: #94a3b8;">أحدث التقييمات</h4>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            ${stats.recentRatings.map(rating => `
+                                <div class="glass-card" style="padding: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                        <span style="color: #fbbf24;">${'★'.repeat(rating.rating)}${'☆'.repeat(5 - rating.rating)}</span>
+                                        <span style="font-size: 0.875rem; color: #94a3b8;">${new Date(rating.createdAt).toLocaleDateString('ar-EG')}</span>
+                                    </div>
+                                    ${rating.comment ? `<p style="color: #94a3b8; font-size: 0.875rem;">${rating.comment}</p>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            modalManager.create('view-technician', 'إحصائيات الفني', content);
+            modalManager.open('view-technician');
+        } catch (error) {
+            console.error('Error viewing technician:', error);
+            toast.error('فشل عرض الإحصائيات');
+        }
+    }
+
+    /**
      * Render products management
      */
     renderProductsManagement() {
@@ -1756,6 +2051,9 @@ class AdminManager {
             case 'products':
                 this.renderProductsManagement();
                 break;
+            case 'technicians':
+                this.renderTechnicians();
+                break;
         }
     }
 
@@ -1973,23 +2271,11 @@ class AdminManager {
                         </div>
                         <div class="form-group">
                             <label class="form-label">الفني المسؤول</label>
-                            <select class="form-select" name="technician">
+                            <select class="form-select" name="technician_id">
                                 <option value="">اختر الفني</option>
-                                <option value="استاذ ابراهيم" ${companyRequest.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
-                                <option value="استاذ محمد شاهين" ${companyRequest.technician === 'استاذ محمد شاهين' ? 'selected' : ''}>استاذ محمد شاهين</option>
-                                <option value="علياء" ${companyRequest.technician === 'علياء' ? 'selected' : ''}>علياء</option>
-                                <option value="سلمي" ${companyRequest.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
-                                <option value="استاذة سهير رمزي" ${companyRequest.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
-                                <option value="استاذة ناديه" ${companyRequest.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
-                                <option value="استاذة ام كلثوم" ${companyRequest.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
-                                <option value="استاذة اسماء" ${companyRequest.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
-                                <option value="استاذ خالد و عبدالله رضا" ${companyRequest.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
-                                <option value="استاذ محمد علي و عم وليد" ${companyRequest.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
-                                <option value="الاستاذ عبد الدالي" ${companyRequest.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
-                                <option value="الاستاذ نادر" ${companyRequest.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
-                                <option value="الاستاذ عبدالله موسي" ${companyRequest.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
-                                <option value="استاذ احمد اسلام و احمد طه" ${companyRequest.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
-                                <option value="المهندس عبد الفتاح وادم" ${companyRequest.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
+                                ${this.technicians.map(tech => `
+                                    <option value="${tech.id}" ${companyRequest.technicianId === tech.id ? 'selected' : ''}>${tech.name}</option>
+                                `).join('')}
                             </select>
                         </div>
                         <div class="form-group">
@@ -2311,23 +2597,11 @@ class AdminManager {
                         </div>
                         <div class="form-group">
                             <label class="form-label">الفني المسؤول</label>
-                            <select class="form-select" name="technician">
+                            <select class="form-select" name="technician_id">
                                 <option value="">اختر الفني</option>
-                                <option value="استاذ ابراهيم" ${device.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
-                                <option value="استاذ محمد شاهين" ${device.technician === 'استاذ محمد شاهين' ? 'selected' : ''}>استاذ محمد شاهين</option>
-                                <option value="علياء" ${device.technician === 'علياء' ? 'selected' : ''}>علياء</option>
-                                <option value="سلمي" ${device.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
-                                <option value="استاذة سهير رمزي" ${device.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
-                                <option value="استاذة ناديه" ${device.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
-                                <option value="استاذة ام كلثوم" ${device.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
-                                <option value="استاذة اسماء" ${device.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
-                                <option value="استاذ خالد و عبدالله رضا" ${device.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
-                                <option value="استاذ محمد علي و عم وليد" ${device.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
-                                <option value="الاستاذ عبد الدالي" ${device.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
-                                <option value="الاستاذ نادر" ${device.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
-                                <option value="الاستاذ عبدالله موسي" ${device.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
-                                <option value="استاذ احمد اسلام و احمد طه" ${device.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
-                                <option value="المهندس عبد الفتاح وادم" ${device.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
+                                ${this.technicians.map(tech => `
+                                    <option value="${tech.id}" ${device.technicianId === tech.id ? 'selected' : ''}>${tech.name}</option>
+                                `).join('')}
                             </select>
                         </div>
                         <div class="form-group">
@@ -2509,23 +2783,11 @@ class AdminManager {
                     </div>
                     <div class="form-group">
                         <label class="form-label">الفني المسؤول</label>
-                        <select class="form-select" name="technician">
+                        <select class="form-select" name="technician_id">
                             <option value="">اختر الفني</option>
-                            <option value="استاذ ابراهيم" ${bulkRequest.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
-                            <option value="استاذ محمد شاهين" ${bulkRequest.technician === 'استاذ محمد شاهين' ? 'selected' : ''}>استاذ محمد شاهين</option>
-                            <option value="علياء" ${bulkRequest.technician === 'علياء' ? 'selected' : ''}>علياء</option>
-                            <option value="سلمي" ${bulkRequest.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
-                            <option value="استاذة سهير رمزي" ${bulkRequest.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
-                            <option value="استاذة ناديه" ${bulkRequest.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
-                            <option value="استاذة ام كلثوم" ${bulkRequest.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
-                            <option value="استاذة اسماء" ${bulkRequest.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
-                            <option value="استاذ خالد و عبدالله رضا" ${bulkRequest.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
-                            <option value="استاذ محمد علي و عم وليد" ${bulkRequest.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
-                            <option value="الاستاذ عبد الدالي" ${bulkRequest.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
-                            <option value="الاستاذ نادر" ${bulkRequest.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
-                            <option value="الاستاذ عبدالله موسي" ${bulkRequest.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
-                            <option value="استاذ احمد اسلام و احمد طه" ${bulkRequest.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
-                            <option value="المهندس عبد الفتاح وادم" ${bulkRequest.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
+                            ${this.technicians.map(tech => `
+                                <option value="${tech.id}" ${bulkRequest.technicianId === tech.id ? 'selected' : ''}>${tech.name}</option>
+                            `).join('')}
                         </select>
                     </div>
                     <div class="form-group">
@@ -2900,23 +3162,11 @@ class AdminManager {
                     </div>
                     <div class="form-group">
                         <label class="form-label">الفني المسؤول</label>
-                        <select class="form-select" name="technician">
+                        <select class="form-select" name="technician_id">
                             <option value="">اختر الفني</option>
-                            <option value="استاذ ابراهيم" ${request.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
-                            <option value="استاذ محمد شاهين" ${request.technician === 'استاذ محمد شاهين' ? 'selected' : ''}>استاذ محمد شاهين</option>
-                            <option value="علياء" ${request.technician === 'علياء' ? 'selected' : ''}>علياء</option>
-                            <option value="سلمي" ${request.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
-                            <option value="استاذة سهير رمزي" ${request.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
-                            <option value="استاذة ناديه" ${request.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
-                            <option value="استاذة ام كلثوم" ${request.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
-                            <option value="استاذة اسماء" ${request.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
-                            <option value="استاذ خالد و عبدالله رضا" ${request.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
-                            <option value="استاذ محمد علي و عم وليد" ${request.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
-                            <option value="الاستاذ عبد الدالي" ${request.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
-                            <option value="الاستاذ نادر" ${request.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
-                            <option value="الاستاذ عبدالله موسي" ${request.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
-                            <option value="استاذ احمد اسلام و احمد طه" ${request.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
-                            <option value="المهندس عبد الفتاح وادم" ${request.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
+                            ${this.technicians.map(tech => `
+                                <option value="${tech.id}" ${request.technicianId === tech.id ? 'selected' : ''}>${tech.name}</option>
+                            `).join('')}
                         </select>
                     </div>
                     <div class="form-group">
