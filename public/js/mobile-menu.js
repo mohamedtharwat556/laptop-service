@@ -3,15 +3,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const mobileToggle = document.querySelector('.mobile-menu-toggle');
     const navLinks = document.querySelector('.nav-links');
 
-    console.log('Mobile menu script loaded');
-    console.log('Mobile toggle:', mobileToggle);
-    console.log('Nav links:', navLinks);
-
     if (mobileToggle && navLinks) {
         mobileToggle.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Mobile toggle clicked');
             navLinks.classList.toggle('active');
 
             // Toggle icon
@@ -51,7 +46,5 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
-    } else {
-        console.error('Mobile menu elements not found');
     }
 });

@@ -105,6 +105,7 @@
 
     .nav-container {
         flex-wrap: wrap;
+        position: relative;
     }
 
     .nav-links {
@@ -121,11 +122,11 @@
         position: absolute;
         top: 100%;
         right: 0;
-        z-index: 1000;
+        z-index: 999;
     }
 
     .nav-links.active {
-        display: flex;
+        display: flex !important;
         animation: slideDown 0.3s ease;
     }
 
@@ -155,7 +156,7 @@
     }
 
     .mobile-menu-toggle {
-        display: flex;
+        display: flex !important;
         background: rgba(255, 255, 255, 0.1);
         border: 1px solid var(--glass-border);
         color: var(--white);
@@ -168,6 +169,7 @@
         justify-content: center;
         transition: var(--transition);
         z-index: 1001;
+        position: relative;
     }
 
     .mobile-menu-toggle:hover {

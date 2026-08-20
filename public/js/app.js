@@ -524,25 +524,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!document.querySelector('.dark-mode-toggle')) {
         darkMode.createToggle();
     }
-    
-    // Mobile menu toggle
-    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-    const navLinks = document.querySelector('.nav-links');
-    
-    if (mobileMenuToggle && navLinks) {
-        mobileMenuToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-        });
-    }
-    
-    // Close mobile menu when clicking outside
-    document.addEventListener('click', (e) => {
-        if (mobileMenuToggle && navLinks && 
-            !mobileMenuToggle.contains(e.target) && 
-            !navLinks.contains(e.target)) {
-            navLinks.classList.remove('active');
-        }
-    });
+
+    // Mobile menu toggle functionality is now in mobile-menu.js
     
     // Sidebar toggle for dashboard
     const sidebarToggle = document.querySelector('.sidebar-toggle');
