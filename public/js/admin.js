@@ -2317,7 +2317,7 @@ class AdminManager {
                 const updateData = {
                     admin_reply: form.adminReply.value,
                     cost: parseFloat(form.cost.value) || 0,
-                    technician: form.technician.value,
+                    technician_id: form.technician_id ? parseInt(form.technician_id.value) : null,
                     estimated_completion_date: estimatedCompletionDate,
                     status: form.status.value
                 };
@@ -2651,7 +2651,7 @@ class AdminManager {
                     const deviceUpdateData = {
                         adminReply: form.adminReply.value,
                         cost: form.cost.value ? parseFloat(form.cost.value) : 0,
-                        technician: form.technician.value,
+                        technician_id: form.technician_id ? parseInt(form.technician_id.value) : null,
                         estimatedCompletionDate: estimatedCompletionDate,
                         status: form.status.value
                     };
@@ -2836,7 +2836,7 @@ class AdminManager {
                 const updateData = {
                     adminReply: form.adminReply.value,
                     cost: form.cost.value ? parseFloat(form.cost.value) : 0,
-                    technician: form.technician.value,
+                    technician_id: form.technician_id ? parseInt(form.technician_id.value) : null,
                     estimatedCompletionDate: estimatedCompletionDate,
                     status: form.status.value
                 };
