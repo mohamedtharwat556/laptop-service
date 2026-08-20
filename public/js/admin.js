@@ -2171,10 +2171,13 @@ class AdminManager {
 
         let filtered = [...requests];
 
-        // Search filter - only by serial number
+        // Search filter - by brand and serial number
         if (searchTerm) {
             filtered = filtered.filter(r => 
-                r.devices && r.devices.some(d => d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm))
+                r.devices && r.devices.some(d => 
+                    (d.laptopBrand && d.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                    (d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm))
+                )
             );
         }
 
