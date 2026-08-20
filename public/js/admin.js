@@ -647,16 +647,33 @@ class AdminManager {
             const dropdown = document.getElementById('notificationDropdown');
             if (dropdown) dropdown.style.display = 'none';
             
-            // Navigate to request
-            this.switchSection('requests');
-            
-            // Find and open the request
-            setTimeout(() => {
-                const request = this.requests.find(r => r.id === notificationId);
-                if (request) {
-                    this.viewRequest(notificationId);
-                }
-            }, 100);
+            // Navigate to appropriate section based on notification type
+            if (notification.type === 'bulk_request') {
+                this.switchSection('bulk-requests');
+                setTimeout(() => {
+                    const request = this.bulkRequests.find(r => r.id === notificationId);
+                    if (request) {
+                        this.viewBulkRequest(notificationId);
+                    }
+                }, 100);
+            } else if (notification.type === 'company_request') {
+                this.switchSection('company-requests');
+                setTimeout(() => {
+                    const request = this.companyRequests.find(r => r.id === notificationId);
+                    if (request) {
+                        this.viewCompanyRequest(notificationId);
+                    }
+                }, 100);
+            } else {
+                // Regular request
+                this.switchSection('requests');
+                setTimeout(() => {
+                    const request = this.requests.find(r => r.id === notificationId);
+                    if (request) {
+                        this.viewRequest(notificationId);
+                    }
+                }, 100);
+            }
         }
     }
 
