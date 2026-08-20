@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>طلب صيانة جملة - مركز خدمة لابتوب YAS</title>
+    <title>المنتجات - مركز خدمة لابتوب YAS</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/ai-animations.css">
@@ -36,10 +36,10 @@
             <ul class="nav-links">
                 <li><a href="index.html" class="nav-link">الرئيسية</a></li>
                 <li><a href="customer.html" class="nav-link">تقديم طلب</a></li>
-                <li><a href="bulk-customer.html" class="nav-link active">طلب جملة</a></li>
+                <li><a href="bulk-customer.html" class="nav-link">طلب جملة</a></li>
                 <li><a href="company-customer.html" class="nav-link">موظفي الشركة</a></li>
                 <li><a href="track.html" class="nav-link">متابعة الطلب</a></li>
-                <li><a href="products.html" class="nav-link">المنتجات</a></li>
+                <li><a href="products.html" class="nav-link active">المنتجات</a></li>
                 <li><button class="dark-mode-toggle" id="darkModeToggle" title="تبديل الوضع الليلي">
                     <i class="fas fa-moon"></i>
                 </button></li>
@@ -49,46 +49,9 @@
 
     <!-- Main Content -->
     <section class="section animate__animated animate__fadeInUp" style="padding-top: 120px;">
-        <h2 class="section-title">طلب صيانة جملة</h2>
-        <div class="form-container glass-card">
-            <form id="bulkRequestForm">
-                <!-- Customer Information -->
-                <div style="background: rgba(59, 130, 246, 0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid rgba(59, 130, 246, 0.2);">
-                    <h3 style="color: #3b82f6; margin-bottom: 1rem;"><i class="fas fa-user"></i> معلومات العميل</h3>
-                    <div class="form-group">
-                        <label class="form-label">الاسم الكامل *</label>
-                        <input type="text" class="form-input" name="fullName" required placeholder="أدخل اسمك الكامل">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">رقم الهاتف *</label>
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="tel" class="form-input" name="phone" required placeholder="أدخل رقم هاتفك" id="phoneInput" readonly>
-                            <button type="button" onclick="enablePhoneEdit()" class="btn" style="padding: 0.5rem 1rem; white-space: nowrap; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.5);">
-                                <i class="fas fa-edit"></i> تعديل
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">عدد اللابتوبات *</label>
-                        <input type="number" class="form-input" name="deviceCount" id="deviceCount" required min="2" max="100" value="2">
-                    </div>
-                </div>
-
-                <!-- Devices Section -->
-                <div id="devicesContainer">
-                    <!-- Devices will be added dynamically here -->
-                </div>
-
-                <button type="button" id="addDeviceBtn" class="btn btn-secondary" style="width: 100%; margin: 1rem 0;">
-                    <i class="fas fa-plus"></i> إضافة لابتوب آخر
-                </button>
-
-                <!-- Submit Button -->
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    <i class="fas fa-paper-plane"></i>
-                     إرسال طلب الجملة
-                </button>
-            </form>
+        <h2 class="section-title">المنتجات</h2>
+        <div id="productsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem;">
+            <!-- Products will be loaded here -->
         </div>
     </section>
 
@@ -118,21 +81,53 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script src="js/storage-api.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/bulk-customer.js"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/darkmode.js"></script>
     <script src="js/mobile-menu.js"></script>
     <script>
-        // Enable phone number editing
-        window.enablePhoneEdit = function() {
-            const phoneInput = document.getElementById('phoneInput');
-            if (phoneInput) {
-                phoneInput.readOnly = false;
-                phoneInput.focus();
-                phoneInput.style.background = 'rgba(59, 130, 246, 0.1)';
-                phoneInput.style.border = '1px solid rgba(59, 130, 246, 0.5)';
+        // Load products from API
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/products');
+                const products = await response.json();
+                
+                const container = document.getElementById('productsContainer');
+                
+                if (products.length === 0) {
+                    container.innerHTML = `
+                        <div class="glass-card" style="text-align: center; padding: 3rem; grid-column: 1 / -1;">
+                            <i class="fas fa-box-open" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+                            <p style="color: #94a3b8;">لا توجد منتجات حالياً</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = products.map(product => `
+                    <div class="glass-card" style="padding: 1.5rem; transition: transform 0.3s, box-shadow 0.3s;">
+                        <div style="text-align: center; margin-bottom: 1rem;">
+                            <i class="fas fa-laptop" style="font-size: 3rem; color: #3b82f6;"></i>
+                        </div>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: #fff;">${product.name}</h3>
+                        <p style="color: #94a3b8; margin-bottom: 1rem; font-size: 0.875rem;">${product.description || 'لا يوجد وصف'}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                            <span style="font-size: 1.25rem; font-weight: 700; color: #10b981;">${product.price ? product.price + ' ج.م' : 'غير محدد'}</span>
+                            <span style="font-size: 0.875rem; color: #94a3b8;">الكمية: ${product.stock || 0}</span>
+                        </div>
+                        ${product.category ? `<div style="margin-top: 0.5rem; padding: 0.25rem 0.75rem; background: rgba(59, 130, 246, 0.2); border-radius: 20px; display: inline-block; font-size: 0.75rem; color: #3b82f6;">${product.category}</div>` : ''}
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading products:', error);
+                const container = document.getElementById('productsContainer');
+                container.innerHTML = `
+                    <div class="glass-card" style="text-align: center; padding: 3rem; grid-column: 1 / -1;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>
+                        <p style="color: #94a3b8;">حدث خطأ في تحميل المنتجات</p>
+                    </div>
+                `;
             }
-        };
+        });
     </script>
 </body>
 </html>
