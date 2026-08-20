@@ -2171,13 +2171,10 @@ class AdminManager {
 
         let filtered = [...requests];
 
-        // Search filter
+        // Search filter - only by serial number
         if (searchTerm) {
             filtered = filtered.filter(r => 
-                r.customerName.toLowerCase().includes(searchTerm) ||
-                r.customerPhone.includes(searchTerm) ||
-                r.requestNumber.toLowerCase().includes(searchTerm) ||
-                (r.devices && r.devices.some(d => d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm)))
+                r.devices && r.devices.some(d => d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm))
             );
         }
 
