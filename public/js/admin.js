@@ -761,8 +761,8 @@ class AdminManager {
             this.requests = this.convertToCamelCase(Array.isArray(requestsRes) ? requestsRes : []);
             this.orders = this.convertToCamelCase(Array.isArray(ordersRes) ? ordersRes : []);
             this.products = this.convertToCamelCase(Array.isArray(productsRes) ? productsRes : []);
-            this.bulkRequests = Array.isArray(bulkRequestsRes) ? bulkRequestsRes : [];
-            this.companyRequests = Array.isArray(companyRequestsRes) ? companyRequestsRes : [];
+            this.bulkRequests = this.convertToCamelCase(Array.isArray(bulkRequestsRes) ? bulkRequestsRes : []);
+            this.companyRequests = this.convertToCamelCase(Array.isArray(companyRequestsRes) ? companyRequestsRes : []);
 
             console.log('📊 Loaded bulk requests:', this.bulkRequests);
             console.log('📊 Bulk requests count:', this.bulkRequests.length);
