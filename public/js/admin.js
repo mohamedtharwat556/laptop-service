@@ -18,6 +18,8 @@ class AdminManager {
         this.itemsPerPage = 10;
         this.autoRefreshInterval = null;
         this.lastSeenRequestId = parseInt(localStorage.getItem('lastSeenRequestId') || '0');
+        this.lastSeenBulkRequestId = parseInt(localStorage.getItem('lastSeenBulkRequestId') || '0');
+        this.lastSeenCompanyRequestId = parseInt(localStorage.getItem('lastSeenCompanyRequestId') || '0');
         this.newRequestNotifications = [];
         this.unreadNotifications = JSON.parse(localStorage.getItem('unreadNotifications') || '[]');
     }
@@ -220,16 +222,24 @@ class AdminManager {
         }
         this.autoRefreshInterval = setInterval(async () => {
             const oldRequests = [...this.requests];
+            const oldBulkRequests = [...this.bulkRequests];
+            const oldCompanyRequests = [...this.companyRequests];
             await this.loadData();
             
             // Check for new requests
             this.checkForNewRequests(oldRequests);
+            this.checkForNewBulkRequests(oldBulkRequests);
+            this.checkForNewCompanyRequests(oldCompanyRequests);
             
             if (this.currentSection === 'dashboard') {
                 this.renderStats();
                 this.renderCharts();
             } else if (this.currentSection === 'requests') {
                 this.renderRequests();
+            } else if (this.currentSection === 'bulk-requests') {
+                this.renderBulkRequests();
+            } else if (this.currentSection === 'company-requests') {
+                this.renderCompanyRequests();
             } else if (this.currentSection === 'users') {
                 this.renderUsers();
             } else if (this.currentSection === 'products') {
@@ -277,6 +287,82 @@ class AdminManager {
     }
 
     /**
+     * Check for new bulk requests and show notifications
+     */
+    checkForNewBulkRequests(oldBulkRequests) {
+        const newBulkRequests = this.bulkRequests.filter(r => r.id > this.lastSeenBulkRequestId);
+        
+        if (newBulkRequests.length > 0) {
+            // Update last seen bulk request ID
+            const maxId = Math.max(...this.bulkRequests.map(r => r.id));
+            this.lastSeenBulkRequestId = maxId;
+            localStorage.setItem('lastSeenBulkRequestId', maxId.toString());
+            
+            // Add to unread notifications
+            newBulkRequests.forEach(request => {
+                const notification = {
+                    id: request.id,
+                    type: 'bulk_request',
+                    requestNumber: request.requestNumber,
+                    fullName: request.customer_name,
+                    laptopBrand: `طلب جملة (${request.device_count} لابتوب)`,
+                    laptopModel: '',
+                    createdAt: new Date().toISOString(),
+                    read: false
+                };
+                this.unreadNotifications.push(notification);
+            });
+            
+            // Save to localStorage
+            localStorage.setItem('unreadNotifications', JSON.stringify(this.unreadNotifications));
+            
+            // Update notification badge
+            this.updateNotificationBadge();
+            
+            // Show toast notification
+            this.showBulkRequestToast(newBulkRequests.length);
+        }
+    }
+
+    /**
+     * Check for new company requests and show notifications
+     */
+    checkForNewCompanyRequests(oldCompanyRequests) {
+        const newCompanyRequests = this.companyRequests.filter(r => r.id > this.lastSeenCompanyRequestId);
+        
+        if (newCompanyRequests.length > 0) {
+            // Update last seen company request ID
+            const maxId = Math.max(...this.companyRequests.map(r => r.id));
+            this.lastSeenCompanyRequestId = maxId;
+            localStorage.setItem('lastSeenCompanyRequestId', maxId.toString());
+            
+            // Add to unread notifications
+            newCompanyRequests.forEach(request => {
+                const notification = {
+                    id: request.id,
+                    type: 'company_request',
+                    requestNumber: request.request_number,
+                    fullName: request.full_name,
+                    laptopBrand: request.laptop_brand,
+                    laptopModel: request.laptop_model,
+                    createdAt: new Date().toISOString(),
+                    read: false
+                };
+                this.unreadNotifications.push(notification);
+            });
+            
+            // Save to localStorage
+            localStorage.setItem('unreadNotifications', JSON.stringify(this.unreadNotifications));
+            
+            // Update notification badge
+            this.updateNotificationBadge();
+            
+            // Show toast notification
+            this.showCompanyRequestToast(newCompanyRequests.length);
+        }
+    }
+
+    /**
      * Show toast notification for new requests
      */
     showNewRequestToast(count) {
@@ -311,6 +397,106 @@ class AdminManager {
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+        `;
+        
+        toast.onclick = () => {
+            this.toggleNotificationDropdown();
+            toast.remove();
+        };
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.5s ease-out';
+            setTimeout(() => toast.remove(), 500);
+        }, 5000);
+        
+        this.playNotificationSound();
+    }
+
+    /**
+     * Show toast notification for new bulk requests
+     */
+    showBulkRequestToast(count) {
+        const toast = document.createElement('div');
+        toast.className = 'notification-toast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            cursor: pointer;
+            animation: slideIn 0.5s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 300px;
+        `;
+        
+        toast.innerHTML = `
+            <div style="font-size: 2rem;">📦</div>
+            <div style="flex: 1;">
+                <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">🔔 ${count} طلب جملة جديد${count > 1 ? 'ة' : ''}!</div>
+                <div style="font-size: 0.875rem; opacity: 0.9;">اضغط لعرض الإشعارات</div>
+            </div>
+            <button onclick="event.stopPropagation(); this.closest('.notification-toast').remove();" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer; opacity: 0.7; padding: 0.25rem;">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        toast.onclick = () => {
+            this.toggleNotificationDropdown();
+            toast.remove();
+        };
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.5s ease-out';
+            setTimeout(() => toast.remove(), 500);
+        }, 5000);
+        
+        this.playNotificationSound();
+    }
+
+    /**
+     * Show toast notification for new company requests
+     */
+    showCompanyRequestToast(count) {
+        const toast = document.createElement('div');
+        toast.className = 'notification-toast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            cursor: pointer;
+            animation: slideIn 0.5s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 300px;
+        `;
+        
+        toast.innerHTML = `
+            <div style="font-size: 2rem;">🏢</div>
+            <div style="flex: 1;">
+                <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">🔔 ${count} طلب موظف جديد${count > 1 ? 'ة' : ''}!</div>
+                <div style="font-size: 0.875rem; opacity: 0.9;">اضغط لعرض الإشعارات</div>
+            </div>
+            <button onclick="event.stopPropagation(); this.closest('.notification-toast').remove();" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer; opacity: 0.7; padding: 0.25rem;">
+                <i class="fas fa-times"></i>
+            </button>
         `;
         
         toast.onclick = () => {
@@ -404,22 +590,37 @@ class AdminManager {
 
         dropdown.innerHTML = `
             <div style="max-height: 400px; overflow-y: auto;">
-                ${unreadNotifications.reverse().map(notification => `
+                ${unreadNotifications.reverse().map(notification => {
+                    let icon, iconColor, bgColor;
+                    if (notification.type === 'bulk_request') {
+                        icon = 'fa-boxes';
+                        iconColor = '#f59e0b';
+                        bgColor = 'rgba(245, 158, 11, 0.2)';
+                    } else if (notification.type === 'company_request') {
+                        icon = 'fa-building';
+                        iconColor = '#8b5cf6';
+                        bgColor = 'rgba(139, 92, 246, 0.2)';
+                    } else {
+                        icon = 'fa-laptop';
+                        iconColor = '#10b981';
+                        bgColor = 'rgba(16, 185, 129, 0.2)';
+                    }
+                    return `
                     <div class="notification-item" style="padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: background 0.2s;"
                          onclick="adminManager.openNotification(${notification.id})">
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <div style="background: rgba(16, 185, 129, 0.2); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-laptop" style="color: #10b981; font-size: 1rem;"></i>
+                            <div style="background: ${bgColor}; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas ${icon}" style="color: ${iconColor}; font-size: 1rem;"></i>
                             </div>
                             <div style="flex: 1;">
                                 <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">${notification.fullName}</div>
                                 <div style="font-size: 0.75rem; color: #94a3b8;">${notification.laptopBrand} ${notification.laptopModel || ''}</div>
                                 <div style="font-size: 0.7rem; color: #64748b; margin-top: 0.25rem;">رقم الطلب: ${notification.requestNumber}</div>
                             </div>
-                            <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></div>
+                            <div style="width: 8px; height: 8px; background: ${iconColor}; border-radius: 50%;"></div>
                         </div>
                     </div>
-                `).join('')}
+                `}).join('')}
             </div>
             <div style="padding: 0.75rem; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1);">
                 <button onclick="adminManager.markAllAsRead()" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.875rem;">
