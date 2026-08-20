@@ -169,12 +169,12 @@ class BulkCustomerManager {
     }
 
     removeDevice(deviceId) {
-        if (this.devices.length > 2) {
+        if (this.devices.length > 1) {
             this.devices = this.devices.filter(d => d.id !== deviceId);
             this.renderDevices();
             document.getElementById('deviceCount').value = this.devices.length;
         } else {
-            alert('يجب أن يكون هناك على الأقل 2 لابتوب في طلب الجملة');
+            alert('يجب أن يكون هناك على الأقل 1 لابتوب في طلب الجملة');
         }
     }
 
