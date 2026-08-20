@@ -2850,7 +2850,15 @@ class AdminManager {
                 </div>
                 <div class="request-details">
                     <div class="request-detail-item"><span class="request-detail-label">اسم العميل</span><span class="request-detail-value">${request.fullName}</span></div>
-                    <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${request.phone}</span></div>
+                    <div class="request-detail-item">
+                        <span class="request-detail-label">رقم الهاتف</span>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="request-detail-value" id="requestPhone_${request.id}">${request.phone}</span>
+                            <button type="button" onclick="adminManager.enableRequestPhoneEdit(${request.id})" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.5);">
+                                <i class="fas fa-edit"></i> تعديل
+                            </button>
+                        </div>
+                    </div>
                     <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${request.laptopBrand} ${request.laptopModel || ''}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${request.serialNumber || '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${request.receivedDate || '—'}</span></div>
@@ -2950,6 +2958,66 @@ class AdminManager {
 
             this.updateRequest(requestId, updateData);
         });
+    }
+
+    /**
+     * Enable phone number editing in request details
+     */
+    enableRequestPhoneEdit(requestId) {
+        const phoneSpan = document.getElementById(`requestPhone_${requestId}`);
+        if (phoneSpan) {
+            const currentPhone = phoneSpan.textContent;
+            const input = document.createElement('input');
+            input.type = 'tel';
+            input.value = currentPhone;
+            input.className = 'form-input';
+            input.style.padding = '0.25rem 0.5rem';
+            input.style.fontSize = '0.875rem';
+            input.style.minWidth = '150px';
+            
+            phoneSpan.replaceWith(input);
+            input.focus();
+            
+            input.addEventListener('blur', async () => {
+                const newPhone = input.value.trim();
+                if (newPhone && newPhone !== currentPhone) {
+                    try {
+                        const response = await fetch(`/api/requests/${requestId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ phone: newPhone })
+                        });
+                        
+                        if (response.ok) {
+                            const newSpan = document.createElement('span');
+                            newSpan.className = 'request-detail-value';
+                            newSpan.id = `requestPhone_${requestId}`;
+                            newSpan.textContent = newPhone;
+                            input.replaceWith(newSpan);
+                            
+                            // Refresh data
+                            await this.loadData();
+                            this.renderRequests();
+                        }
+                    } catch (error) {
+                        console.error('Error updating phone:', error);
+                        input.value = currentPhone;
+                    }
+                } else {
+                    const newSpan = document.createElement('span');
+                    newSpan.className = 'request-detail-value';
+                    newSpan.id = `requestPhone_${requestId}`;
+                    newSpan.textContent = currentPhone;
+                    input.replaceWith(newSpan);
+                }
+            });
+            
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
+            });
+        }
     }
 
     async updateRequest(requestId, data) {
