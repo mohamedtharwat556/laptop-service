@@ -304,8 +304,8 @@ class AdminManager {
                     id: request.id,
                     type: 'bulk_request',
                     requestNumber: request.requestNumber,
-                    fullName: request.customer_name,
-                    laptopBrand: `طلب جملة (${request.device_count} لابتوب)`,
+                    fullName: request.customerName,
+                    laptopBrand: `طلب جملة (${request.deviceCount} لابتوب)`,
                     laptopModel: '',
                     createdAt: new Date().toISOString(),
                     read: false
@@ -341,10 +341,10 @@ class AdminManager {
                 const notification = {
                     id: request.id,
                     type: 'company_request',
-                    requestNumber: request.request_number,
-                    fullName: request.full_name,
-                    laptopBrand: request.laptop_brand,
-                    laptopModel: request.laptop_model,
+                    requestNumber: request.requestNumber,
+                    fullName: request.fullName,
+                    laptopBrand: request.laptopBrand,
+                    laptopModel: request.laptopModel,
                     createdAt: new Date().toISOString(),
                     read: false
                 };
