@@ -1946,7 +1946,15 @@ class AdminManager {
                     </div>
                     <div class="request-details">
                         <div class="request-detail-item"><span class="request-detail-label">الاسم</span><span class="request-detail-value">${companyRequest.full_name || companyRequest.fullName || ''}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${companyRequest.phone || ''}</span></div>
+                        <div class="request-detail-item">
+                            <span class="request-detail-label">رقم الهاتف</span>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <span class="request-detail-value" id="companyRequestPhone_${companyRequest.id}">${companyRequest.phone || ''}</span>
+                                <button type="button" onclick="adminManager.enableCompanyRequestPhoneEdit(${companyRequest.id})" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.5);">
+                                    <i class="fas fa-edit"></i> تعديل
+                                </button>
+                            </div>
+                        </div>
                         <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptop_brand || companyRequest.laptopBrand || ''} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${companyRequest.serial_number || companyRequest.serialNumber || '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${companyRequest.received_date || companyRequest.receivedDate ? Utils.formatDate(companyRequest.received_date || companyRequest.receivedDate) : '—'}</span></div>
@@ -2437,7 +2445,15 @@ class AdminManager {
                 </div>
                 <div class="request-details">
                     <div class="request-detail-item"><span class="request-detail-label">اسم العميل</span><span class="request-detail-value">${bulkRequest.customerName}</span></div>
-                    <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${bulkRequest.customerPhone}</span></div>
+                    <div class="request-detail-item">
+                        <span class="request-detail-label">رقم الهاتف</span>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="request-detail-value" id="bulkRequestPhone_${bulkRequest.id}">${bulkRequest.customerPhone}</span>
+                            <button type="button" onclick="adminManager.enableBulkRequestPhoneEdit(${bulkRequest.id})" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.5);">
+                                <i class="fas fa-edit"></i> تعديل
+                            </button>
+                        </div>
+                    </div>
                     <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${firstDevice ? `${firstDevice.laptopBrand} ${firstDevice.laptopModel || ''}` : '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${firstDevice ? (firstDevice.serialNumber || '—') : '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${firstDevice ? (firstDevice.receivedDate ? Utils.formatDate(firstDevice.receivedDate) : '—') : '—'}</span></div>
@@ -3007,6 +3023,126 @@ class AdminManager {
                     const newSpan = document.createElement('span');
                     newSpan.className = 'request-detail-value';
                     newSpan.id = `requestPhone_${requestId}`;
+                    newSpan.textContent = currentPhone;
+                    input.replaceWith(newSpan);
+                }
+            });
+            
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
+            });
+        }
+    }
+
+    /**
+     * Enable phone number editing in bulk request details
+     */
+    enableBulkRequestPhoneEdit(bulkRequestId) {
+        const phoneSpan = document.getElementById(`bulkRequestPhone_${bulkRequestId}`);
+        if (phoneSpan) {
+            const currentPhone = phoneSpan.textContent;
+            const input = document.createElement('input');
+            input.type = 'tel';
+            input.value = currentPhone;
+            input.className = 'form-input';
+            input.style.padding = '0.25rem 0.5rem';
+            input.style.fontSize = '0.875rem';
+            input.style.minWidth = '150px';
+            
+            phoneSpan.replaceWith(input);
+            input.focus();
+            
+            input.addEventListener('blur', async () => {
+                const newPhone = input.value.trim();
+                if (newPhone && newPhone !== currentPhone) {
+                    try {
+                        const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ customerPhone: newPhone })
+                        });
+                        
+                        if (response.ok) {
+                            const newSpan = document.createElement('span');
+                            newSpan.className = 'request-detail-value';
+                            newSpan.id = `bulkRequestPhone_${bulkRequestId}`;
+                            newSpan.textContent = newPhone;
+                            input.replaceWith(newSpan);
+                            
+                            // Refresh data
+                            await this.loadData();
+                            this.renderBulkRequests();
+                        }
+                    } catch (error) {
+                        console.error('Error updating phone:', error);
+                        input.value = currentPhone;
+                    }
+                } else {
+                    const newSpan = document.createElement('span');
+                    newSpan.className = 'request-detail-value';
+                    newSpan.id = `bulkRequestPhone_${bulkRequestId}`;
+                    newSpan.textContent = currentPhone;
+                    input.replaceWith(newSpan);
+                }
+            });
+            
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
+            });
+        }
+    }
+
+    /**
+     * Enable phone number editing in company request details
+     */
+    enableCompanyRequestPhoneEdit(companyRequestId) {
+        const phoneSpan = document.getElementById(`companyRequestPhone_${companyRequestId}`);
+        if (phoneSpan) {
+            const currentPhone = phoneSpan.textContent;
+            const input = document.createElement('input');
+            input.type = 'tel';
+            input.value = currentPhone;
+            input.className = 'form-input';
+            input.style.padding = '0.25rem 0.5rem';
+            input.style.fontSize = '0.875rem';
+            input.style.minWidth = '150px';
+            
+            phoneSpan.replaceWith(input);
+            input.focus();
+            
+            input.addEventListener('blur', async () => {
+                const newPhone = input.value.trim();
+                if (newPhone && newPhone !== currentPhone) {
+                    try {
+                        const response = await fetch(`/api/company-requests/${companyRequestId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ phone: newPhone })
+                        });
+                        
+                        if (response.ok) {
+                            const newSpan = document.createElement('span');
+                            newSpan.className = 'request-detail-value';
+                            newSpan.id = `companyRequestPhone_${companyRequestId}`;
+                            newSpan.textContent = newPhone;
+                            input.replaceWith(newSpan);
+                            
+                            // Refresh data
+                            await this.loadData();
+                            this.renderCompanyRequests();
+                        }
+                    } catch (error) {
+                        console.error('Error updating phone:', error);
+                        input.value = currentPhone;
+                    }
+                } else {
+                    const newSpan = document.createElement('span');
+                    newSpan.className = 'request-detail-value';
+                    newSpan.id = `companyRequestPhone_${companyRequestId}`;
                     newSpan.textContent = currentPhone;
                     input.replaceWith(newSpan);
                 }
