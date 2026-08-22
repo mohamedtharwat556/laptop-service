@@ -371,6 +371,7 @@ router.put('/devices/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         console.log('📝 PUT /api/bulk-requests/:id - Request body:', req.body);
+        console.log('📝 customerPhone value:', req.body.customerPhone);
         
         // Convert camelCase to snake_case for Supabase
         const snakeCaseData = {};
@@ -390,6 +391,7 @@ router.put('/:id', async (req, res) => {
         
         const updateData = { ...snakeCaseData, updated_at: new Date().toISOString() };
         console.log('📝 Update data for Supabase:', updateData);
+        console.log('📝 customer_phone in updateData:', updateData.customer_phone);
         
         const { data, error } = await supabase.from('bulk_requests').update(updateData).eq('id', req.params.id).select();
         if (error) throw error;
