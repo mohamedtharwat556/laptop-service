@@ -117,46 +117,6 @@ router.get('/trash', async (req, res) => {
     }
 });
 
-// GET /api/company-requests/:id - Get a single company request
-router.get('/:id', async (req, res) => {
-    try {
-        const { data, error } = await supabase
-            .from('company_requests')
-            .select('*')
-            .eq('id', req.params.id)
-            .single();
-
-        if (error) throw error;
-
-        // Convert to camelCase
-        const camelCaseData = {
-            id: data.id,
-            requestNumber: data.request_number,
-            fullName: data.full_name,
-            phone: data.phone,
-            laptopBrand: data.laptop_brand,
-            laptopModel: data.laptop_model,
-            serialNumber: data.serial_number,
-            receivedDate: data.received_date,
-            problemDescription: data.problem_description,
-            priority: data.priority,
-            status: data.status,
-            adminReply: data.admin_reply,
-            technician: data.technician,
-            technicianNotes: data.technician_notes,
-            cost: data.cost,
-            estimatedCompletionDate: data.estimated_completion_date,
-            createdAt: data.created_at,
-            updatedAt: data.updated_at
-        };
-
-        res.json(camelCaseData);
-    } catch (error) {
-        console.error('Error fetching company request:', error);
-        res.status(500).json({ error: 'Failed to fetch company request' });
-    }
-});
-
 // POST /api/company-requests - Create a new company request
 router.post('/', async (req, res) => {
     try {
@@ -225,46 +185,6 @@ router.post('/', async (req, res) => {
     } catch (error) {
         console.error('Error creating company request:', error);
         res.status(500).json({ error: 'Failed to create company request' });
-    }
-});
-
-// GET /api/company-requests/:id - Get a single company request
-router.get('/:id', async (req, res) => {
-    try {
-        const { data, error } = await supabase
-            .from('company_requests')
-            .select('*')
-            .eq('id', req.params.id)
-            .single();
-
-        if (error) throw error;
-
-        // Convert to camelCase
-        const camelCaseData = {
-            id: data.id,
-            requestNumber: data.request_number,
-            fullName: data.full_name,
-            phone: data.phone,
-            laptopBrand: data.laptop_brand,
-            laptopModel: data.laptop_model,
-            serialNumber: data.serial_number,
-            receivedDate: data.received_date,
-            problemDescription: data.problem_description,
-            priority: data.priority,
-            status: data.status,
-            adminReply: data.admin_reply,
-            technician: data.technician,
-            technicianNotes: data.technician_notes,
-            cost: data.cost,
-            estimatedCompletionDate: data.estimated_completion_date,
-            createdAt: data.created_at,
-            updatedAt: data.updated_at
-        };
-
-        res.json(camelCaseData);
-    } catch (error) {
-        console.error('Error fetching company request:', error);
-        res.status(500).json({ error: 'Failed to fetch company request' });
     }
 });
 
