@@ -651,7 +651,7 @@ class AdminManager {
             
             // Navigate to appropriate section based on notification type
             if (notification.type === 'bulk_request') {
-                await this.switchSection('bulk-requests');
+                this.switchSection('bulk-requests');
                 setTimeout(() => {
                     const request = this.bulkRequests.find(r => r.id === notificationId);
                     if (request) {
@@ -659,7 +659,7 @@ class AdminManager {
                     }
                 }, 100);
             } else if (notification.type === 'company_request') {
-                await this.switchSection('company-requests');
+                this.switchSection('company-requests');
                 setTimeout(() => {
                     const request = this.companyRequests.find(r => r.id === notificationId);
                     if (request) {
@@ -668,7 +668,7 @@ class AdminManager {
                 }, 100);
             } else {
                 // Regular request
-                await this.switchSection('requests');
+                this.switchSection('requests');
                 setTimeout(() => {
                     const request = this.requests.find(r => r.id === notificationId);
                     if (request) {
