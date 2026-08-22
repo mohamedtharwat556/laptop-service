@@ -2788,6 +2788,7 @@ class AdminManager {
                 }
                 
                 const updateData = {
+                    customerPhone: form.customerPhone.value,
                     adminReply: form.adminReply.value,
                     cost: form.cost.value ? parseFloat(form.cost.value) : 0,
                     technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
