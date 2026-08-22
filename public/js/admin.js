@@ -1902,7 +1902,7 @@ class AdminManager {
                                 </td>
                                 <td><span class="priority-badge ${this.getPriorityClass(companyRequest.priority)}">${this.translatePriority(companyRequest.priority)}</span></td>
                                 <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${companyRequest.admin_reply || companyRequest.adminReply || '—'}</td>
-                                <td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${companyRequest.technician || '—'}</td>
+                                <td>${companyRequest.technician || '—'}</td>
                                 <td>${Utils.formatDate(companyRequest.created_at || companyRequest.createdAt)}</td>
                                 <td>
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
