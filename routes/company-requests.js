@@ -9,6 +9,7 @@ router.get('/', async (req, res) => {
         const { data, error } = await supabase
             .from('company_requests')
             .select('*')
+            .is('deleted_at', null)
             .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -32,7 +33,8 @@ router.get('/', async (req, res) => {
             cost: item.cost,
             estimatedCompletionDate: item.estimated_completion_date,
             createdAt: item.created_at,
-            updatedAt: item.updated_at
+            updatedAt: item.updated_at,
+            deletedAt: item.deleted_at
         }));
 
         res.json(camelCaseData);
@@ -240,6 +242,47 @@ router.delete('/', async (req, res) => {
     } catch (error) {
         console.error('Error deleting all company requests:', error);
         res.status(500).json({ error: 'Failed to delete all company requests' });
+    }
+});
+
+// Soft delete company request
+router.put('/:id/soft-delete', async (req, res) => {
+    try {
+        console.log('🗑️ Soft deleting company request:', req.params.id);
+        const { data, error } = await supabase.from('company_requests').update({ deleted_at: new Date().toISOString() }).eq('id', req.params.id).select();
+        if (error) throw error;
+        if (!data || data.length === 0) return res.status(404).json({ error: 'Company request not found' });
+        res.json(data[0]);
+    } catch (error) {
+        console.error('Error soft deleting company request:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Restore company request
+router.put('/:id/restore', async (req, res) => {
+    try {
+        console.log('♻️ Restoring company request:', req.params.id);
+        const { data, error } = await supabase.from('company_requests').update({ deleted_at: null }).eq('id', req.params.id).select();
+        if (error) throw error;
+        if (!data || data.length === 0) return res.status(404).json({ error: 'Company request not found' });
+        res.json(data[0]);
+    } catch (error) {
+        console.error('Error restoring company request:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete all trash (permanently delete items with deleted_at not null)
+router.delete('/trash', async (req, res) => {
+    try {
+        console.log('🗑️ Deleting all trash company requests');
+        const { error } = await supabase.from('company_requests').delete().not('deleted_at', 'is', null);
+        if (error) throw error;
+        res.json({ success: true, message: 'All trash deleted' });
+    } catch (error) {
+        console.error('Error deleting trash:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 

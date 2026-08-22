@@ -231,14 +231,69 @@ app.use((err, req, res, next) => {
 // Start server (only when not running on Vercel)
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`===================================================`);
-    console.log(` YAS Laptop Service Server is running online!`);
-    console.log(` URL: http://localhost:${PORT}`);
-    console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(` Database: Supabase`);
-    console.log(`===================================================`);
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
   });
 }
+
+// Auto-delete items older than 7 days from trash (runs daily)
+async function autoDeleteOldTrash() {
+    try {
+        console.log('🗑️ Running auto-delete for items older than 7 days...');
+        
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        // Delete requests older than 7 days
+        const { error: requestsError } = await supabase
+            .from('requests')
+            .delete()
+            .not('deleted_at', 'is', null)
+            .lt('deleted_at', sevenDaysAgo.toISOString());
+        
+        if (requestsError) {
+            console.error('Error auto-deleting old requests:', requestsError);
+        } else {
+            console.log('✅ Auto-deleted old requests');
+        }
+        
+        // Delete bulk requests older than 7 days
+        const { error: bulkError } = await supabase
+            .from('bulk_requests')
+            .delete()
+            .not('deleted_at', 'is', null)
+            .lt('deleted_at', sevenDaysAgo.toISOString());
+        
+        if (bulkError) {
+            console.error('Error auto-deleting old bulk requests:', bulkError);
+        } else {
+            console.log('✅ Auto-deleted old bulk requests');
+        }
+        
+        // Delete company requests older than 7 days
+        const { error: companyError } = await supabase
+            .from('company_requests')
+            .delete()
+            .not('deleted_at', 'is', null)
+            .lt('deleted_at', sevenDaysAgo.toISOString());
+        
+        if (companyError) {
+            console.error('Error auto-deleting old company requests:', companyError);
+        } else {
+            console.log('✅ Auto-deleted old company requests');
+        }
+        
+        console.log('🗑️ Auto-delete completed');
+    } catch (error) {
+        console.error('Error in auto-delete:', error);
+    }
+}
+
+// Run auto-delete every 24 hours (86400000 ms)
+setInterval(autoDeleteOldTrash, 86400000);
+
+// Run auto-delete on server start (optional)
+setTimeout(autoDeleteOldTrash, 60000); // Run after 1 minute on startup
 
 // Export for Vercel
 module.exports = app;
