@@ -79,7 +79,7 @@ router.get('/trash', async (req, res) => {
         const { data, error } = await supabase
             .from('company_requests')
             .select('*')
-            .not('deleted_at', null)
+            .not('deleted_at', 'is', null)
             .order('deleted_at', { ascending: false });
 
         if (error) {

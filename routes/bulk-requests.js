@@ -105,7 +105,7 @@ router.put('/:id/restore', async (req, res) => {
 router.get('/trash', async (req, res) => {
     try {
         console.log('📋 GET /api/bulk-requests/trash');
-        const { data, error } = await supabase.from('bulk_requests').select('*').not('deleted_at', null).order('deleted_at', { ascending: false });
+        const { data, error } = await supabase.from('bulk_requests').select('*').not('deleted_at', 'is', null).order('deleted_at', { ascending: false });
         if (error) {
             console.error('Supabase error:', error);
             throw error;
