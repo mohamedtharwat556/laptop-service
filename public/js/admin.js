@@ -1805,7 +1805,7 @@ class AdminManager {
                     </thead>
                     <tbody>
                         ${data.map(bulkRequest => `
-                            <tr style="transition: background-color 0.2s; background-color: ${this.getStatusBackgroundColor(bulkRequest.status)};">
+                            <tr style="transition: background-color 0.2s;">
                                 <td style="font-weight: 600; color: #3b82f6;">${bulkRequest.requestNumber}</td>
                                 <td style="font-weight: 600;">${bulkRequest.customerName}</td>
                                 <td dir="ltr">${bulkRequest.customerPhone}</td>
@@ -1885,7 +1885,7 @@ class AdminManager {
                     </thead>
                     <tbody>
                         ${data.map(companyRequest => `
-                            <tr style="transition: background-color 0.2s; background-color: ${this.getStatusBackgroundColor(companyRequest.status)};">
+                            <tr style="transition: background-color 0.2s;">
                                 <td style="font-weight: 600; color: #3b82f6;">${companyRequest.request_number || companyRequest.requestNumber}</td>
                                 <td style="font-weight: 600;">${companyRequest.full_name || companyRequest.fullName}</td>
                                 <td dir="ltr">${companyRequest.phone}</td>
@@ -2285,7 +2285,7 @@ class AdminManager {
                                 </thead>
                                 <tbody>
                                     ${bulkRequest.devices.map((device, index) => `
-                                        <tr style="background-color: ${this.getStatusBackgroundColor(device.status)};">
+                                        <tr>
                                             <td style="font-weight: 600;">${device.deviceNumber}</td>
                                             <td>${device.laptopBrand}</td>
                                             <td>${device.laptopModel}</td>
@@ -2885,7 +2885,7 @@ class AdminManager {
                     </thead>
                     <tbody>
                         ${data.map(request => `
-                            <tr style="background-color: ${this.getStatusBackgroundColor(request.status)};">
+                            <tr>
                                 <td class="table-hide-mobile"><strong>${request.requestNumber}</strong></td>
                                 <td>${request.fullName}</td>
                                 <td class="table-hide-mobile" dir="ltr">${request.phone}</td>
