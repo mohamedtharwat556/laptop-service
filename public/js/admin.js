@@ -3719,7 +3719,7 @@ class AdminManager {
             'Received': 'rgba(59, 130, 246, 0.1)',
             'Waiting Inspection': 'rgba(245, 158, 11, 0.1)',
             'Under Maintenance': 'rgba(139, 92, 246, 0.1)',
-            'Waiting Parts': 'rgba(239, 68, 68, 0.1)',
+            'Waiting Parts': 'rgba(127, 29, 29, 0.15)',
             'Ready': 'rgba(16, 185, 129, 0.1)',
             'Delivered': 'rgba(22, 101, 52, 0.2)'
         };
