@@ -3624,11 +3624,9 @@ class AdminManager {
      * Generate report based on selected period
      */
     generateReport() {
-        const reportPeriod = document.getElementById('reportPeriod');
-        const reportDate = document.getElementById('reportDate');
-        const reportDateFrom = document.getElementById('reportDateFrom');
-        const reportDateTo = document.getElementById('reportDateTo');
         const reportType = document.getElementById('reportType');
+        const reportStartDate = document.getElementById('reportStartDate');
+        const reportEndDate = document.getElementById('reportEndDate');
 
         let filteredRequests = [];
 
@@ -3643,38 +3641,24 @@ class AdminManager {
             requestsByType = this.requests;
         }
 
-        const period = reportPeriod ? reportPeriod.value : 'today';
+        // Filter by date range
+        const startDate = reportStartDate ? reportStartDate.value : null;
+        const endDate = reportEndDate ? reportEndDate.value : null;
 
-        if (period === 'all') {
+        if (startDate && endDate) {
+            filteredRequests = requestsByType.filter(r => {
+                const d = new Date(r.createdAt);
+                const requestDate = d.toISOString().slice(0, 10);
+                return requestDate >= startDate && requestDate <= endDate;
+            });
+        } else if (startDate) {
+            filteredRequests = requestsByType.filter(r => {
+                const d = new Date(r.createdAt);
+                return d.toISOString().slice(0, 10) === startDate;
+            });
+        } else {
+            // If no date selected, show all
             filteredRequests = requestsByType;
-        } else if (period === 'today') {
-            const today = new Date().toISOString().slice(0, 10);
-            filteredRequests = requestsByType.filter(r => {
-                const d = new Date(r.createdAt);
-                return d.toISOString().slice(0, 10) === today;
-            });
-        } else if (period === 'yesterday') {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toISOString().slice(0, 10);
-            filteredRequests = requestsByType.filter(r => {
-                const d = new Date(r.createdAt);
-                return d.toISOString().slice(0, 10) === yesterdayStr;
-            });
-        } else if (period === 'lastWeek') {
-            const today = new Date();
-            const lastWeek = new Date();
-            lastWeek.setDate(lastWeek.getDate() - 7);
-            filteredRequests = requestsByType.filter(r => {
-                const d = new Date(r.createdAt);
-                return d >= lastWeek && d <= today;
-            });
-        } else if (period === 'custom') {
-            const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
-            filteredRequests = requestsByType.filter(r => {
-                const d = new Date(r.createdAt);
-                return d.toISOString().slice(0, 10) === selectedDate;
-            });
         }
 
         this.renderReportTable(filteredRequests, type);
@@ -3684,7 +3668,7 @@ class AdminManager {
      * Render report table
      */
     renderReportTable(requests, type = 'single') {
-        const container = document.getElementById('dailyReportContainer');
+        const container = document.getElementById('reportContainer');
         if (!container) return;
 
         if (requests.length === 0) {
@@ -3855,11 +3839,9 @@ class AdminManager {
      * Export daily report as Excel
      */
     exportDailyReport() {
-        const reportPeriod = document.getElementById('reportPeriod');
-        const reportDate = document.getElementById('reportDate');
-        const reportDateFrom = document.getElementById('reportDateFrom');
-        const reportDateTo = document.getElementById('reportDateTo');
         const reportType = document.getElementById('reportType');
+        const reportStartDate = document.getElementById('reportStartDate');
+        const reportEndDate = document.getElementById('reportEndDate');
 
         let filteredRequests = [];
 
@@ -3874,49 +3856,34 @@ class AdminManager {
             requestsByType = this.requests;
         }
 
-        const period = reportPeriod ? reportPeriod.value : 'today';
-        console.log('📊 Report period:', period);
         console.log('📊 Report type:', type);
         console.log('📊 Total requests:', requestsByType.length);
         let fileName = 'تقرير';
 
-        if (period === 'all') {
+        // Filter by date range
+        const startDate = reportStartDate ? reportStartDate.value : null;
+        const endDate = reportEndDate ? reportEndDate.value : null;
+
+        if (startDate && endDate) {
+            filteredRequests = requestsByType.filter(r => {
+                const d = new Date(r.createdAt);
+                const requestDate = d.toISOString().slice(0, 10);
+                return requestDate >= startDate && requestDate <= endDate;
+            });
+            fileName = type === 'bulk' ? `تقرير-جملة-${startDate}-${endDate}` : type === 'company' ? `تقرير-شركات-${startDate}-${endDate}` : `تقرير-${startDate}-${endDate}`;
+        } else if (startDate) {
+            filteredRequests = requestsByType.filter(r => {
+                const d = new Date(r.createdAt);
+                return d.toISOString().slice(0, 10) === startDate;
+            });
+            fileName = type === 'bulk' ? `تقرير-جملة-${startDate}` : type === 'company' ? `تقرير-شركات-${startDate}` : `تقرير-${startDate}`;
+        } else {
+            // If no date selected, show all
             filteredRequests = requestsByType;
             fileName = type === 'bulk' ? 'تقرير-طلبات-جملة' : type === 'company' ? 'تقرير-طلبات-شركات' : 'تقرير-كل-الطلبات';
-            console.log('📊 Showing all requests:', filteredRequests.length);
-        } else if (period === 'today') {
-            const today = new Date().toISOString().slice(0, 10);
-            filteredRequests = requestsByType.filter(r => {
-                const d = new Date(r.createdAt);
-                return d.toISOString().slice(0, 10) === today;
-            });
-            fileName = type === 'bulk' ? `تقرير-جملة-${today}` : type === 'company' ? `تقرير-شركات-${today}` : `تقرير-${today}`;
-        } else if (period === 'yesterday') {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toISOString().slice(0, 10);
-            filteredRequests = requestsByType.filter(r => {
-                const d = new Date(r.createdAt);
-                return d.toISOString().slice(0, 10) === yesterdayStr;
-            });
-            fileName = type === 'bulk' ? `تقرير-جملة-${yesterdayStr}` : type === 'company' ? `تقرير-شركات-${yesterdayStr}` : `تقرير-${yesterdayStr}`;
-        } else if (period === 'lastWeek') {
-            const today = new Date();
-            const lastWeek = new Date();
-            lastWeek.setDate(lastWeek.getDate() - 7);
-            filteredRequests = requestsByType.filter(r => {
-                const d = new Date(r.createdAt);
-                return d >= lastWeek && d <= today;
-            });
-            fileName = type === 'bulk' ? 'تقرير-جملة-آخر-أسبوع' : type === 'company' ? 'تقرير-شركات-آخر-أسبوع' : `تقرير-آخر-أسبوع`;
-        } else if (period === 'custom') {
-            const selectedDate = reportDate ? reportDate.value : new Date().toISOString().slice(0, 10);
-            filteredRequests = requestsByType.filter(r => {
-                const d = new Date(r.createdAt);
-                return d.toISOString().slice(0, 10) === selectedDate;
-            });
-            fileName = type === 'bulk' ? `تقرير-جملة-${selectedDate}` : type === 'company' ? `تقرير-شركات-${selectedDate}` : `تقرير-${selectedDate}`;
         }
+
+        console.log('📊 Filtered requests:', filteredRequests.length);
 
         if (filteredRequests.length === 0) {
             toast.error('لا توجد طلبات في الفترة المحددة');
