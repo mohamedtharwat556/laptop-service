@@ -2907,7 +2907,7 @@ class AdminManager {
                                 <td class="table-hide-mobile">${this.translatePriority(request.priority)}</td>
                                 <td class="table-hide-mobile">${request.cost > 0 ? Utils.formatCurrency(request.cost) : '—'}</td>
                                 <td>${request.technician || '—'}</td>
-                                <td class="table-hide-mobile">${Utils.formatDate(request.createdAt)}</td>
+                                <td class="table-hide-mobile">${request.createdAt ? Utils.formatDate(request.createdAt) : '—'}</td>
                                 <td>
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
                                             onclick="adminManager.viewRequest(${request.id})">
