@@ -2627,7 +2627,7 @@ class AdminManager {
                     <div class="request-detail-item">
                         <span class="request-detail-label">رقم الهاتف</span>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <span class="request-detail-value" id="bulkRequestPhone_${bulkRequest.id}">${bulkRequest.customerPhone}</span>
+                            <span class="request-detail-value" id="bulkRequestPhone_${bulkRequest.id}" style="font-weight: 600; color: #3b82f6;">${bulkRequest.customerPhone || '—'}</span>
                             <button type="button" onclick="adminManager.enableBulkRequestPhoneEdit(${bulkRequest.id})" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.5);">
                                 <i class="fas fa-edit"></i> تعديل
                             </button>
