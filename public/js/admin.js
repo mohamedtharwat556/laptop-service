@@ -2322,19 +2322,11 @@ class AdminManager {
      */
     async updateBulkRequestStatus(bulkRequestId, newStatus) {
         try {
-            const response = await fetch(`/api/bulk-requests/${bulkRequestId}`);
-            if (!response.ok) throw new Error('Failed to fetch bulk request details');
-
-            const bulkRequest = await response.json();
-
-            // Update bulk request status
-            bulkRequest.status = newStatus;
-
-            // Update the bulk request
+            // Update only the status field
             const updateResponse = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bulkRequest)
+                body: JSON.stringify({ status: newStatus })
             });
 
             if (!updateResponse.ok) throw new Error('Failed to update bulk request status');
@@ -2353,25 +2345,11 @@ class AdminManager {
      */
     async updateDeviceStatus(bulkRequestId, deviceId, newStatus) {
         try {
-            const response = await fetch(`/api/bulk-requests/${bulkRequestId}`);
-            if (!response.ok) throw new Error('Failed to fetch bulk request details');
-
-            const bulkRequest = await response.json();
-            const device = bulkRequest.devices.find(d => d.id === deviceId);
-
-            if (!device) {
-                toast.error('الجهاز غير موجود');
-                return;
-            }
-
-            // Update device status
-            device.status = newStatus;
-
-            // Update the bulk request
-            const updateResponse = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+            // Update device status using the device-specific endpoint
+            const updateResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bulkRequest)
+                body: JSON.stringify({ status: newStatus })
             });
 
             if (!updateResponse.ok) throw new Error('Failed to update device status');
