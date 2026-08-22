@@ -1797,8 +1797,6 @@ class AdminManager {
                             <th>عدد اللابتوبات</th>
                             <th>الحالة</th>
                             <th>الأولوية</th>
-                            <th>رد الإدارة</th>
-                            <th>تاريخ الاستلام المتوقع</th>
                             <th>التاريخ</th>
                             <th>إجراءات</th>
                         </tr>
@@ -1821,8 +1819,6 @@ class AdminManager {
                                     </select>
                                 </td>
                                 <td><span class="priority-badge ${this.getPriorityClass(bulkRequest.priority)}">${this.translatePriority(bulkRequest.priority)}</span></td>
-                                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${bulkRequest.adminReply || '—'}</td>
-                                <td>${bulkRequest.estimatedCompletionDate ? Utils.formatDate(bulkRequest.estimatedCompletionDate) : '—'}</td>
                                 <td>${Utils.formatDate(bulkRequest.createdAt)}</td>
                                 <td>
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
