@@ -2680,6 +2680,10 @@ class AdminManager {
 
                 <form id="editBulkRequestForm" style="margin-top: 1.5rem;">
                     <div class="form-group">
+                        <label class="form-label">رقم الهاتف</label>
+                        <input type="tel" class="form-input" name="customerPhone" value="${bulkRequest.customerPhone || ''}" placeholder="أدخل رقم الهاتف">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">رد الإدارة</label>
                         <textarea class="form-textarea" name="adminReply" rows="3">${bulkRequest.adminReply || ''}</textarea>
                     </div>
@@ -3883,44 +3887,45 @@ class AdminManager {
                 </div>
             `;
         } else if (type === 'company') {
-            // Company requests
+            // Company requests - apply dashboard style
             container.innerHTML = `
-                <div class="glass-card">
-                    <div style="overflow-x: auto;">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>رقم الطلب</th>
-                                    <th>اسم الشركة</th>
-                                    <th>الهاتف</th>
-                                    <th>الجهاز</th>
-                                    <th>المشكلة</th>
-                                    <th>الحالة</th>
-                                    <th>التكلفة</th>
-                                    <th>الفني</th>
-                                    <th>التاريخ</th>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin: 0;">طلبات موظفي الشركة (${requests.length})</h3>
+                </div>
+                <div class="table-container" style="overflow-x: auto;">
+                    <table class="table" style="min-width: 1000px;">
+                        <thead>
+                            <tr>
+                                <th>رقم الطلب</th>
+                                <th>اسم الشركة</th>
+                                <th>الهاتف</th>
+                                <th>الجهاز</th>
+                                <th>المشكلة</th>
+                                <th>الحالة</th>
+                                <th>التكلفة</th>
+                                <th>الفني</th>
+                                <th>التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${requests.map(r => `
+                                <tr style="transition: background-color 0.2s;">
+                                    <td style="font-weight: 600; color: #3b82f6;">${r.requestNumber}</td>
+                                    <td style="font-weight: 600;">${r.companyName}</td>
+                                    <td dir="ltr">${r.companyPhone}</td>
+                                    <td>${r.laptopBrand} ${r.laptopModel || ''}</td>
+                                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription}</td>
+                                    <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
+                                    <td>${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
+                                    <td>${r.technician || '—'}</td>
+                                    <td>${Utils.formatDate(r.createdAt)}</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                ${requests.map(r => `
-                                    <tr>
-                                        <td style="font-weight: 600;">${r.requestNumber}</td>
-                                        <td>${r.companyName}</td>
-                                        <td dir="ltr">${r.companyPhone}</td>
-                                        <td>${r.laptopBrand} ${r.laptopModel || ''}</td>
-                                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription}</td>
-                                        <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
-                                        <td>${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
-                                        <td>${r.technician || '—'}</td>
-                                        <td>${Utils.formatDate(r.createdAt)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
-                        <strong>إجمالي طلبات الشركات:</strong> ${requests.length}
-                    </div>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
+                    <strong>إجمالي طلبات الشركات:</strong> ${requests.length}
                 </div>
             `;
         } else {
