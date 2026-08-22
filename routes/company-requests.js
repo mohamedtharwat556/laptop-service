@@ -155,6 +155,132 @@ router.post('/', async (req, res) => {
     }
 });
 
+// Soft delete company request
+router.put('/:id/soft-delete', async (req, res) => {
+    try {
+        console.log('🗑️ Soft deleting company request:', req.params.id);
+        const { data, error } = await supabase.from('company_requests').update({ deleted_at: new Date().toISOString() }).eq('id', req.params.id).select();
+        if (error) throw error;
+        if (!data || data.length === 0) return res.status(404).json({ error: 'Company request not found' });
+        res.json(data[0]);
+    } catch (error) {
+        console.error('Error soft deleting company request:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Restore company request
+router.put('/:id/restore', async (req, res) => {
+    try {
+        console.log('♻️ Restoring company request:', req.params.id);
+        const { data, error } = await supabase.from('company_requests').update({ deleted_at: null }).eq('id', req.params.id).select();
+        if (error) throw error;
+        if (!data || data.length === 0) return res.status(404).json({ error: 'Company request not found' });
+        res.json(data[0]);
+    } catch (error) {
+        console.error('Error restoring company request:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all trash (deleted items)
+router.get('/trash', async (req, res) => {
+    try {
+        console.log('📋 GET /api/company-requests/trash');
+        const { data, error } = await supabase
+            .from('company_requests')
+            .select('*')
+            .not('deleted_at', 'is', null)
+            .order('deleted_at', { ascending: false });
+
+        if (error) {
+            console.error('Supabase error:', error);
+            throw error;
+        }
+
+        // Convert to camelCase
+        const camelCaseData = data.map(item => ({
+            id: item.id,
+            requestNumber: item.request_number,
+            fullName: item.full_name,
+            phone: item.phone,
+            laptopBrand: item.laptop_brand,
+            laptopModel: item.laptop_model,
+            serialNumber: item.serial_number,
+            receivedDate: item.received_date,
+            problemDescription: item.problem_description,
+            priority: item.priority,
+            status: item.status,
+            adminReply: item.admin_reply,
+            technician: item.technician,
+            technicianNotes: item.technician_notes,
+            cost: item.cost,
+            estimatedCompletionDate: item.estimated_completion_date,
+            createdAt: item.created_at,
+            updatedAt: item.updated_at,
+            deletedAt: item.deleted_at
+        }));
+
+        res.json(camelCaseData);
+    } catch (error) {
+        console.error('Error fetching trash company requests:', error);
+        res.status(500).json({ error: 'Failed to fetch trash company requests' });
+    }
+});
+
+// Delete all trash (permanently delete items with deleted_at not null)
+router.delete('/trash', async (req, res) => {
+    try {
+        console.log('🗑️ Deleting all trash company requests');
+        const { error } = await supabase.from('company_requests').delete().not('deleted_at', 'is', null);
+        if (error) throw error;
+        res.json({ success: true, message: 'All trash deleted' });
+    } catch (error) {
+        console.error('Error deleting trash:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/company-requests/:id - Get a single company request
+router.get('/:id', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('company_requests')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (error) throw error;
+
+        // Convert to camelCase
+        const camelCaseData = {
+            id: data.id,
+            requestNumber: data.request_number,
+            fullName: data.full_name,
+            phone: data.phone,
+            laptopBrand: data.laptop_brand,
+            laptopModel: data.laptop_model,
+            serialNumber: data.serial_number,
+            receivedDate: data.received_date,
+            problemDescription: data.problem_description,
+            priority: data.priority,
+            status: data.status,
+            adminReply: data.admin_reply,
+            technician: data.technician,
+            technicianNotes: data.technician_notes,
+            cost: data.cost,
+            estimatedCompletionDate: data.estimated_completion_date,
+            createdAt: data.created_at,
+            updatedAt: data.updated_at
+        };
+
+        res.json(camelCaseData);
+    } catch (error) {
+        console.error('Error fetching company request:', error);
+        res.status(500).json({ error: 'Failed to fetch company request' });
+    }
+});
+
 // PUT /api/company-requests/:id - Update a company request
 router.put('/:id', async (req, res) => {
     try {
@@ -242,92 +368,6 @@ router.delete('/', async (req, res) => {
     } catch (error) {
         console.error('Error deleting all company requests:', error);
         res.status(500).json({ error: 'Failed to delete all company requests' });
-    }
-});
-
-// Soft delete company request
-router.put('/:id/soft-delete', async (req, res) => {
-    try {
-        console.log('🗑️ Soft deleting company request:', req.params.id);
-        const { data, error } = await supabase.from('company_requests').update({ deleted_at: new Date().toISOString() }).eq('id', req.params.id).select();
-        if (error) throw error;
-        if (!data || data.length === 0) return res.status(404).json({ error: 'Company request not found' });
-        res.json(data[0]);
-    } catch (error) {
-        console.error('Error soft deleting company request:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Restore company request
-router.put('/:id/restore', async (req, res) => {
-    try {
-        console.log('♻️ Restoring company request:', req.params.id);
-        const { data, error } = await supabase.from('company_requests').update({ deleted_at: null }).eq('id', req.params.id).select();
-        if (error) throw error;
-        if (!data || data.length === 0) return res.status(404).json({ error: 'Company request not found' });
-        res.json(data[0]);
-    } catch (error) {
-        console.error('Error restoring company request:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Delete all trash (permanently delete items with deleted_at not null)
-router.delete('/trash', async (req, res) => {
-    try {
-        console.log('🗑️ Deleting all trash company requests');
-        const { error } = await supabase.from('company_requests').delete().not('deleted_at', 'is', null);
-        if (error) throw error;
-        res.json({ success: true, message: 'All trash deleted' });
-    } catch (error) {
-        console.error('Error deleting trash:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Get all trash (deleted items)
-router.get('/trash', async (req, res) => {
-    try {
-        console.log('📋 GET /api/company-requests/trash');
-        const { data, error } = await supabase
-            .from('company_requests')
-            .select('*')
-            .not('deleted_at', 'is', null)
-            .order('deleted_at', { ascending: false });
-
-        if (error) {
-            console.error('Supabase error:', error);
-            throw error;
-        }
-
-        // Convert to camelCase
-        const camelCaseData = data.map(item => ({
-            id: item.id,
-            requestNumber: item.request_number,
-            fullName: item.full_name,
-            phone: item.phone,
-            laptopBrand: item.laptop_brand,
-            laptopModel: item.laptop_model,
-            serialNumber: item.serial_number,
-            receivedDate: item.received_date,
-            problemDescription: item.problem_description,
-            priority: item.priority,
-            status: item.status,
-            adminReply: item.admin_reply,
-            technician: item.technician,
-            technicianNotes: item.technician_notes,
-            cost: item.cost,
-            estimatedCompletionDate: item.estimated_completion_date,
-            createdAt: item.created_at,
-            updatedAt: item.updated_at,
-            deletedAt: item.deleted_at
-        }));
-
-        res.json(camelCaseData);
-    } catch (error) {
-        console.error('Error fetching trash company requests:', error);
-        res.status(500).json({ error: 'Failed to fetch trash company requests' });
     }
 });
 
