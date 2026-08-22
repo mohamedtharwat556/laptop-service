@@ -2300,9 +2300,9 @@ class AdminManager {
                                                     <option value="Delivered" ${device.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم للعميل</option>
                                                 </select>
                                             </td>
-                                            <td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${device.adminReply || '—'}</td>
+                                            <td>${device.adminReply || '—'}</td>
                                             <td>${device.cost > 0 ? device.cost : '—'}</td>
-                                            <td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${device.technician || '—'}</td>
+                                            <td>${device.technician || '—'}</td>
                                             <td>${device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : '—'}</td>
                                             <td>
                                                 <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
