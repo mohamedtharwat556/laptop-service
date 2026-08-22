@@ -3716,14 +3716,14 @@ class AdminManager {
 
     getStatusBackgroundColor(status) {
         const colors = {
-            'Received': 'rgba(59, 130, 246, 0.1)',
-            'Waiting Inspection': 'rgba(245, 158, 11, 0.1)',
-            'Under Maintenance': 'rgba(139, 92, 246, 0.1)',
-            'Waiting Parts': 'rgba(127, 29, 29, 0.15)',
-            'Ready': 'rgba(16, 185, 129, 0.1)',
+            'Received': 'rgba(30, 64, 175, 0.2)',
+            'Waiting Inspection': 'rgba(180, 83, 9, 0.2)',
+            'Under Maintenance': 'rgba(88, 28, 135, 0.2)',
+            'Waiting Parts': 'rgba(127, 29, 29, 0.2)',
+            'Ready': 'rgba(5, 150, 105, 0.2)',
             'Delivered': 'rgba(22, 101, 52, 0.2)'
         };
-        return colors[status] || 'rgba(59, 130, 246, 0.1)';
+        return colors[status] || 'rgba(30, 64, 175, 0.2)';
     }
 
     translateStatus(status) {
