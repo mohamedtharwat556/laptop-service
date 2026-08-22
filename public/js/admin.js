@@ -1977,25 +1977,54 @@ class AdminManager {
                             <input type="number" class="form-input" name="cost" value="${companyRequest.cost || ''}" placeholder="أدخل تكلفة الصيانة" min="0" step="0.01">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">الفني المسؤول</label>
-                            <select class="form-select" name="technician">
-                                <option value="">اختر الفني</option>
-                                <option value="استاذ ابراهيم" ${companyRequest.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
-                                <option value="استاذ محمد شاهين" ${companyRequest.technician === 'استاذ محمد شاهين' ? 'selected' : ''}>استاذ محمد شاهين</option>
-                                <option value="علياء" ${companyRequest.technician === 'علياء' ? 'selected' : ''}>علياء</option>
-                                <option value="سلمي" ${companyRequest.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
-                                <option value="استاذة سهير رمزي" ${companyRequest.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
-                                <option value="استاذة ناديه" ${companyRequest.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
-                                <option value="استاذة ام كلثوم" ${companyRequest.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
-                                <option value="استاذة اسماء" ${companyRequest.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
-                                <option value="استاذ خالد و عبدالله رضا" ${companyRequest.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
-                                <option value="استاذ محمد علي و عم وليد" ${companyRequest.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
-                                <option value="الاستاذ عبد الدالي" ${companyRequest.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
-                                <option value="الاستاذ نادر" ${companyRequest.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
-                                <option value="الاستاذ عبدالله موسي" ${companyRequest.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
-                                <option value="استاذ احمد اسلام و احمد طه" ${companyRequest.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
-                                <option value="المهندس عبد الفتاح وادم" ${companyRequest.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
-                            </select>
+                            <label class="form-label">الفني المسؤول (يمكن اختيار أكثر من فني)</label>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; max-height: 200px; overflow-y: auto; border: 1px solid #374151; border-radius: 0.375rem; padding: 0.5rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذ ابراهيم" ${companyRequest.technician && companyRequest.technician.includes('استاذ ابراهيم') ? 'checked' : ''}> استاذ ابراهيم
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذ محمد شاهين" ${companyRequest.technician && companyRequest.technician.includes('استاذ محمد شاهين') ? 'checked' : ''}> استاذ محمد شاهين
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="علياء" ${companyRequest.technician && companyRequest.technician.includes('علياء') ? 'checked' : ''}> علياء
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="سلمي" ${companyRequest.technician && companyRequest.technician.includes('سلمي') ? 'checked' : ''}> سلمي
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذة سهير رمزي" ${companyRequest.technician && companyRequest.technician.includes('استاذة سهير رمزي') ? 'checked' : ''}> استاذة سهير رمزي
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذة ناديه" ${companyRequest.technician && companyRequest.technician.includes('استاذة ناديه') ? 'checked' : ''}> استاذة ناديه
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذة ام كلثوم" ${companyRequest.technician && companyRequest.technician.includes('استاذة ام كلثوم') ? 'checked' : ''}> استاذة ام كلثوم
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذة اسماء" ${companyRequest.technician && companyRequest.technician.includes('استاذة اسماء') ? 'checked' : ''}> استاذة اسماء
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذ خالد و عبدالله رضا" ${companyRequest.technician && companyRequest.technician.includes('استاذ خالد و عبدالله رضا') ? 'checked' : ''}> استاذ خالد و عبدالله رضا
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذ محمد علي و عم وليد" ${companyRequest.technician && companyRequest.technician.includes('استاذ محمد علي و عم وليد') ? 'checked' : ''}> استاذ محمد علي و عم وليد
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="الاستاذ عبد الدالي" ${companyRequest.technician && companyRequest.technician.includes('الاستاذ عبد الدالي') ? 'checked' : ''}> الاستاذ عبد الدالي
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="الاستاذ نادر" ${companyRequest.technician && companyRequest.technician.includes('الاستاذ نادر') ? 'checked' : ''}> الاستاذ نادر
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="الاستاذ عبدالله موسي" ${companyRequest.technician && companyRequest.technician.includes('الاستاذ عبدالله موسي') ? 'checked' : ''}> الاستاذ عبدالله موسي
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذ احمد اسلام و احمد طه" ${companyRequest.technician && companyRequest.technician.includes('استاذ احمد اسلام و احمد طه') ? 'checked' : ''}> استاذ احمد اسلام و احمد طه
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="المهندس عبد الفتاح وادم" ${companyRequest.technician && companyRequest.technician.includes('المهندس عبد الفتاح وادم') ? 'checked' : ''}> المهندس عبد الفتاح وادم
+                                </label>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
@@ -2036,7 +2065,7 @@ class AdminManager {
                 const updateData = {
                     admin_reply: form.adminReply.value,
                     cost: parseFloat(form.cost.value) || 0,
-                    technician: form.technician.value,
+                    technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
                     estimated_completion_date: estimatedCompletionDate,
                     status: form.status.value
                 };
@@ -2313,25 +2342,54 @@ class AdminManager {
                             <input type="number" class="form-input" name="cost" value="${device.cost || ''}" placeholder="أدخل تكلفة الصيانة" min="0" step="0.01">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">الفني المسؤول</label>
-                            <select class="form-select" name="technician">
-                                <option value="">اختر الفني</option>
-                                <option value="استاذ ابراهيم" ${device.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
-                                <option value="استاذ محمد شاهين" ${device.technician === 'استاذ محمد شاهين' ? 'selected' : ''}>استاذ محمد شاهين</option>
-                                <option value="علياء" ${device.technician === 'علياء' ? 'selected' : ''}>علياء</option>
-                                <option value="سلمي" ${device.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
-                                <option value="استاذة سهير رمزي" ${device.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
-                                <option value="استاذة ناديه" ${device.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
-                                <option value="استاذة ام كلثوم" ${device.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
-                                <option value="استاذة اسماء" ${device.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
-                                <option value="استاذ خالد و عبدالله رضا" ${device.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
-                                <option value="استاذ محمد علي و عم وليد" ${device.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
-                                <option value="الاستاذ عبد الدالي" ${device.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
-                                <option value="الاستاذ نادر" ${device.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
-                                <option value="الاستاذ عبدالله موسي" ${device.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
-                                <option value="استاذ احمد اسلام و احمد طه" ${device.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
-                                <option value="المهندس عبد الفتاح وادم" ${device.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
-                            </select>
+                            <label class="form-label">الفني المسؤول (يمكن اختيار أكثر من فني)</label>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; max-height: 200px; overflow-y: auto; border: 1px solid #374151; border-radius: 0.375rem; padding: 0.5rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذ ابراهيم" ${device.technician && device.technician.includes('استاذ ابراهيم') ? 'checked' : ''}> استاذ ابراهيم
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذ محمد شاهين" ${device.technician && device.technician.includes('استاذ محمد شاهين') ? 'checked' : ''}> استاذ محمد شاهين
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="علياء" ${device.technician && device.technician.includes('علياء') ? 'checked' : ''}> علياء
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="سلمي" ${device.technician && device.technician.includes('سلمي') ? 'checked' : ''}> سلمي
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذة سهير رمزي" ${device.technician && device.technician.includes('استاذة سهير رمزي') ? 'checked' : ''}> استاذة سهير رمزي
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذة ناديه" ${device.technician && device.technician.includes('استاذة ناديه') ? 'checked' : ''}> استاذة ناديه
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذة ام كلثوم" ${device.technician && device.technician.includes('استاذة ام كلثوم') ? 'checked' : ''}> استاذة ام كلثوم
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذة اسماء" ${device.technician && device.technician.includes('استاذة اسماء') ? 'checked' : ''}> استاذة اسماء
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذ خالد و عبدالله رضا" ${device.technician && device.technician.includes('استاذ خالد و عبدالله رضا') ? 'checked' : ''}> استاذ خالد و عبدالله رضا
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذ محمد علي و عم وليد" ${device.technician && device.technician.includes('استاذ محمد علي و عم وليد') ? 'checked' : ''}> استاذ محمد علي و عم وليد
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="الاستاذ عبد الدالي" ${device.technician && device.technician.includes('الاستاذ عبد الدالي') ? 'checked' : ''}> الاستاذ عبد الدالي
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="الاستاذ نادر" ${device.technician && device.technician.includes('الاستاذ نادر') ? 'checked' : ''}> الاستاذ نادر
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="الاستاذ عبدالله موسي" ${device.technician && device.technician.includes('الاستاذ عبدالله موسي') ? 'checked' : ''}> الاستاذ عبدالله موسي
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="استاذ احمد اسلام و احمد طه" ${device.technician && device.technician.includes('استاذ احمد اسلام و احمد طه') ? 'checked' : ''}> استاذ احمد اسلام و احمد طه
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="technician" value="المهندس عبد الفتاح وادم" ${device.technician && device.technician.includes('المهندس عبد الفتاح وادم') ? 'checked' : ''}> المهندس عبد الفتاح وادم
+                                </label>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
@@ -2380,7 +2438,7 @@ class AdminManager {
                     const deviceUpdateData = {
                         adminReply: form.adminReply.value,
                         cost: form.cost.value ? parseFloat(form.cost.value) : 0,
-                        technician: form.technician.value,
+                        technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
                         estimatedCompletionDate: estimatedCompletionDate,
                         status: form.status.value
                     };
@@ -2511,25 +2569,54 @@ class AdminManager {
                         <input type="number" class="form-input" name="cost" value="${bulkRequest.cost || ''}" placeholder="أدخل تكلفة الصيانة" min="0" step="0.01">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">الفني المسؤول</label>
-                        <select class="form-select" name="technician">
-                            <option value="">اختر الفني</option>
-                            <option value="استاذ ابراهيم" ${bulkRequest.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
-                            <option value="استاذ محمد شاهين" ${bulkRequest.technician === 'استاذ محمد شاهين' ? 'selected' : ''}>استاذ محمد شاهين</option>
-                            <option value="علياء" ${bulkRequest.technician === 'علياء' ? 'selected' : ''}>علياء</option>
-                            <option value="سلمي" ${bulkRequest.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
-                            <option value="استاذة سهير رمزي" ${bulkRequest.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
-                            <option value="استاذة ناديه" ${bulkRequest.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
-                            <option value="استاذة ام كلثوم" ${bulkRequest.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
-                            <option value="استاذة اسماء" ${bulkRequest.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
-                            <option value="استاذ خالد و عبدالله رضا" ${bulkRequest.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
-                            <option value="استاذ محمد علي و عم وليد" ${bulkRequest.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
-                            <option value="الاستاذ عبد الدالي" ${bulkRequest.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
-                            <option value="الاستاذ نادر" ${bulkRequest.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
-                            <option value="الاستاذ عبدالله موسي" ${bulkRequest.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
-                            <option value="استاذ احمد اسلام و احمد طه" ${bulkRequest.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
-                            <option value="المهندس عبد الفتاح وادم" ${bulkRequest.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
-                        </select>
+                        <label class="form-label">الفني المسؤول (يمكن اختيار أكثر من فني)</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; max-height: 200px; overflow-y: auto; border: 1px solid #374151; border-radius: 0.375rem; padding: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذ ابراهيم" ${bulkRequest.technician && bulkRequest.technician.includes('استاذ ابراهيم') ? 'checked' : ''}> استاذ ابراهيم
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذ محمد شاهين" ${bulkRequest.technician && bulkRequest.technician.includes('استاذ محمد شاهين') ? 'checked' : ''}> استاذ محمد شاهين
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="علياء" ${bulkRequest.technician && bulkRequest.technician.includes('علياء') ? 'checked' : ''}> علياء
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="سلمي" ${bulkRequest.technician && bulkRequest.technician.includes('سلمي') ? 'checked' : ''}> سلمي
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذة سهير رمزي" ${bulkRequest.technician && bulkRequest.technician.includes('استاذة سهير رمزي') ? 'checked' : ''}> استاذة سهير رمزي
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذة ناديه" ${bulkRequest.technician && bulkRequest.technician.includes('استاذة ناديه') ? 'checked' : ''}> استاذة ناديه
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذة ام كلثوم" ${bulkRequest.technician && bulkRequest.technician.includes('استاذة ام كلثوم') ? 'checked' : ''}> استاذة ام كلثوم
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذة اسماء" ${bulkRequest.technician && bulkRequest.technician.includes('استاذة اسماء') ? 'checked' : ''}> استاذة اسماء
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذ خالد و عبدالله رضا" ${bulkRequest.technician && bulkRequest.technician.includes('استاذ خالد و عبدالله رضا') ? 'checked' : ''}> استاذ خالد و عبدالله رضا
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذ محمد علي و عم وليد" ${bulkRequest.technician && bulkRequest.technician.includes('استاذ محمد علي و عم وليد') ? 'checked' : ''}> استاذ محمد علي و عم وليد
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="الاستاذ عبد الدالي" ${bulkRequest.technician && bulkRequest.technician.includes('الاستاذ عبد الدالي') ? 'checked' : ''}> الاستاذ عبد الدالي
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="الاستاذ نادر" ${bulkRequest.technician && bulkRequest.technician.includes('الاستاذ نادر') ? 'checked' : ''}> الاستاذ نادر
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="الاستاذ عبدالله موسي" ${bulkRequest.technician && bulkRequest.technician.includes('الاستاذ عبدالله موسي') ? 'checked' : ''}> الاستاذ عبدالله موسي
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذ احمد اسلام و احمد طه" ${bulkRequest.technician && bulkRequest.technician.includes('استاذ احمد اسلام و احمد طه') ? 'checked' : ''}> استاذ احمد اسلام و احمد طه
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="المهندس عبد الفتاح وادم" ${bulkRequest.technician && bulkRequest.technician.includes('المهندس عبد الفتاح وادم') ? 'checked' : ''}> المهندس عبد الفتاح وادم
+                            </label>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
@@ -2577,7 +2664,7 @@ class AdminManager {
                 const updateData = {
                     adminReply: form.adminReply.value,
                     cost: form.cost.value ? parseFloat(form.cost.value) : 0,
-                    technician: form.technician.value,
+                    technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
                     estimatedCompletionDate: estimatedCompletionDate,
                     status: form.status.value
                 };
@@ -2902,25 +2989,54 @@ class AdminManager {
                         <input type="number" class="form-input" name="cost" value="${request.cost || ''}" placeholder="أدخل تكلفة الصيانة" min="0" step="0.01">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">الفني المسؤول</label>
-                        <select class="form-select" name="technician">
-                            <option value="">اختر الفني</option>
-                            <option value="استاذ ابراهيم" ${request.technician === 'استاذ ابراهيم' ? 'selected' : ''}>استاذ ابراهيم</option>
-                            <option value="استاذ محمد شاهين" ${request.technician === 'استاذ محمد شاهين' ? 'selected' : ''}>استاذ محمد شاهين</option>
-                            <option value="علياء" ${request.technician === 'علياء' ? 'selected' : ''}>علياء</option>
-                            <option value="سلمي" ${request.technician === 'سلمي' ? 'selected' : ''}>سلمي</option>
-                            <option value="استاذة سهير رمزي" ${request.technician === 'استاذة سهير رمزي' ? 'selected' : ''}>استاذة سهير رمزي</option>
-                            <option value="استاذة ناديه" ${request.technician === 'استاذة ناديه' ? 'selected' : ''}>استاذة ناديه</option>
-                            <option value="استاذة ام كلثوم" ${request.technician === 'استاذة ام كلثوم' ? 'selected' : ''}>استاذة ام كلثوم</option>
-                            <option value="استاذة اسماء" ${request.technician === 'استاذة اسماء' ? 'selected' : ''}>استاذة اسماء</option>
-                            <option value="استاذ خالد و عبدالله رضا" ${request.technician === 'استاذ خالد و عبدالله رضا' ? 'selected' : ''}>استاذ خالد و عبدالله رضا</option>
-                            <option value="استاذ محمد علي و عم وليد" ${request.technician === 'استاذ محمد علي و عم وليد' ? 'selected' : ''}>استاذ محمد علي و عم وليد</option>
-                            <option value="الاستاذ عبد الدالي" ${request.technician === 'الاستاذ عبد الدالي' ? 'selected' : ''}>الاستاذ عبد الدالي</option>
-                            <option value="الاستاذ نادر" ${request.technician === 'الاستاذ نادر' ? 'selected' : ''}>الاستاذ نادر</option>
-                            <option value="الاستاذ عبدالله موسي" ${request.technician === 'الاستاذ عبدالله موسي' ? 'selected' : ''}>الاستاذ عبدالله موسي</option>
-                            <option value="استاذ احمد اسلام و احمد طه" ${request.technician === 'استاذ احمد اسلام و احمد طه' ? 'selected' : ''}>استاذ احمد اسلام و احمد طه</option>
-                            <option value="المهندس عبد الفتاح وادم" ${request.technician === 'المهندس عبد الفتاح وادم' ? 'selected' : ''}>المهندس عبد الفتاح وادم</option>
-                        </select>
+                        <label class="form-label">الفني المسؤول (يمكن اختيار أكثر من فني)</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; max-height: 200px; overflow-y: auto; border: 1px solid #374151; border-radius: 0.375rem; padding: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذ ابراهيم" ${request.technician && request.technician.includes('استاذ ابراهيم') ? 'checked' : ''}> استاذ ابراهيم
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذ محمد شاهين" ${request.technician && request.technician.includes('استاذ محمد شاهين') ? 'checked' : ''}> استاذ محمد شاهين
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="علياء" ${request.technician && request.technician.includes('علياء') ? 'checked' : ''}> علياء
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="سلمي" ${request.technician && request.technician.includes('سلمي') ? 'checked' : ''}> سلمي
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذة سهير رمزي" ${request.technician && request.technician.includes('استاذة سهير رمزي') ? 'checked' : ''}> استاذة سهير رمزي
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذة ناديه" ${request.technician && request.technician.includes('استاذة ناديه') ? 'checked' : ''}> استاذة ناديه
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذة ام كلثوم" ${request.technician && request.technician.includes('استاذة ام كلثوم') ? 'checked' : ''}> استاذة ام كلثوم
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذة اسماء" ${request.technician && request.technician.includes('استاذة اسماء') ? 'checked' : ''}> استاذة اسماء
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذ خالد و عبدالله رضا" ${request.technician && request.technician.includes('استاذ خالد و عبدالله رضا') ? 'checked' : ''}> استاذ خالد و عبدالله رضا
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذ محمد علي و عم وليد" ${request.technician && request.technician.includes('استاذ محمد علي و عم وليد') ? 'checked' : ''}> استاذ محمد علي و عم وليد
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="الاستاذ عبد الدالي" ${request.technician && request.technician.includes('الاستاذ عبد الدالي') ? 'checked' : ''}> الاستاذ عبد الدالي
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="الاستاذ نادر" ${request.technician && request.technician.includes('الاستاذ نادر') ? 'checked' : ''}> الاستاذ نادر
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="الاستاذ عبدالله موسي" ${request.technician && request.technician.includes('الاستاذ عبدالله موسي') ? 'checked' : ''}> الاستاذ عبدالله موسي
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="استاذ احمد اسلام و احمد طه" ${request.technician && request.technician.includes('استاذ احمد اسلام و احمد طه') ? 'checked' : ''}> استاذ احمد اسلام و احمد طه
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="technician" value="المهندس عبد الفتاح وادم" ${request.technician && request.technician.includes('المهندس عبد الفتاح وادم') ? 'checked' : ''}> المهندس عبد الفتاح وادم
+                            </label>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
@@ -2960,7 +3076,7 @@ class AdminManager {
             const updateData = {
                 adminReply: form.adminReply.value,
                 cost: parseFloat(form.cost.value) || 0,
-                technician: form.technician.value,
+                technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
                 estimatedCompletionDate: estimatedCompletionDate,
                 status: form.status.value
             };
