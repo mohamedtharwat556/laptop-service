@@ -117,6 +117,49 @@ router.get('/trash', async (req, res) => {
     }
 });
 
+// Get company request by ID
+router.get('/:id', async (req, res) => {
+    try {
+        console.log('📋 GET /api/company-requests/:id', req.params.id);
+        const { data, error } = await supabase
+            .from('company_requests')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (error) throw error;
+        if (!data) return res.status(404).json({ error: 'Company request not found' });
+
+        // Convert to camelCase
+        const camelCaseData = {
+            id: data.id,
+            requestNumber: data.request_number,
+            fullName: data.full_name,
+            phone: data.phone,
+            laptopBrand: data.laptop_brand,
+            laptopModel: data.laptop_model,
+            serialNumber: data.serial_number,
+            receivedDate: data.received_date,
+            problemDescription: data.problem_description,
+            priority: data.priority,
+            status: data.status,
+            adminReply: data.admin_reply,
+            technician: data.technician,
+            technicianNotes: data.technician_notes,
+            cost: data.cost,
+            estimatedCompletionDate: data.estimated_completion_date,
+            createdAt: data.created_at,
+            updatedAt: data.updated_at,
+            deletedAt: data.deleted_at
+        };
+
+        res.json(camelCaseData);
+    } catch (error) {
+        console.error('Error fetching company request:', error);
+        res.status(500).json({ error: 'Failed to fetch company request' });
+    }
+});
+
 // POST /api/company-requests - Create a new company request
 router.post('/', async (req, res) => {
     try {
