@@ -3918,10 +3918,10 @@ class AdminManager {
                             ${requests.map(r => `
                                 <tr style="transition: background-color 0.2s;">
                                     <td style="font-weight: 600; color: #3b82f6;">${r.requestNumber}</td>
-                                    <td style="font-weight: 600;">${r.companyName}</td>
-                                    <td dir="ltr">${r.companyPhone}</td>
-                                    <td>${r.laptopBrand} ${r.laptopModel || ''}</td>
-                                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription}</td>
+                                    <td style="font-weight: 600;">${r.companyName || r.full_name || r.fullName || '—'}</td>
+                                    <td dir="ltr">${r.companyPhone || r.phone || '—'}</td>
+                                    <td>${r.laptopBrand || r.laptop_brand || ''} ${r.laptopModel || r.laptop_model || ''}</td>
+                                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription || r.problem_description || '—'}</td>
                                     <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
                                     <td>${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
                                     <td>${r.technician || '—'}</td>
