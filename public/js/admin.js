@@ -3721,7 +3721,7 @@ class AdminManager {
             'Under Maintenance': 'rgba(139, 92, 246, 0.1)',
             'Waiting Parts': 'rgba(239, 68, 68, 0.1)',
             'Ready': 'rgba(16, 185, 129, 0.1)',
-            'Delivered': 'rgba(107, 114, 128, 0.1)'
+            'Delivered': 'rgba(22, 101, 52, 0.2)'
         };
         return colors[status] || 'rgba(59, 130, 246, 0.1)';
     }
