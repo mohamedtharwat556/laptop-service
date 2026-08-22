@@ -2276,8 +2276,10 @@ class AdminManager {
                                         <th>الموديل</th>
                                         <th>الرقم التسلسلي</th>
                                         <th>الحالة</th>
+                                        <th>رد الإدارة</th>
                                         <th>التكلفة</th>
                                         <th>الفني</th>
+                                        <th>تاريخ الاستلام المتوقع</th>
                                         <th>إجراءات</th>
                                     </tr>
                                 </thead>
@@ -2301,8 +2303,10 @@ class AdminManager {
                                                     </select>
                                                 </div>
                                             </td>
+                                            <td>${device.adminReply || '—'}</td>
                                             <td>${device.cost > 0 ? device.cost : '—'}</td>
                                             <td>${device.technician || '—'}</td>
+                                            <td>${device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : '—'}</td>
                                             <td>
                                                 <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
                                                         onclick="adminManager.viewBulkDevice(${bulkRequestId}, ${device.id})">
