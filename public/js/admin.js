@@ -2291,14 +2291,17 @@ class AdminManager {
                                             <td>${device.laptopModel}</td>
                                             <td dir="ltr" style="color: #94a3b8;">${device.serialNumber || '—'}</td>
                                             <td>
-                                                <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateDeviceStatus(${bulkRequestId}, ${device.id}, this.value)">
-                                                    <option value="Received" ${device.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
-                                                    <option value="Waiting Inspection" ${device.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
-                                                    <option value="Under Maintenance" ${device.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
-                                                    <option value="Waiting Parts" ${device.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: rgba(239, 68, 68, 0.9); color: white;">بانتظار قطع الغيار</option>
-                                                    <option value="Ready" ${device.status === 'Ready' ? 'selected' : ''} style="background-color: rgba(16, 185, 129, 0.9); color: white;">جاهز للتسليم</option>
-                                                    <option value="Delivered" ${device.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم للعميل</option>
-                                                </select>
+                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                    <span class="status-badge ${this.getStatusClass(device.status)}" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">${this.translateStatus(device.status)}</span>
+                                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1); width: auto;" onchange="adminManager.updateDeviceStatus(${bulkRequestId}, ${device.id}, this.value)">
+                                                        <option value="Received" ${device.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
+                                                        <option value="Waiting Inspection" ${device.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
+                                                        <option value="Under Maintenance" ${device.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
+                                                        <option value="Waiting Parts" ${device.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: rgba(239, 68, 68, 0.9); color: white;">بانتظار قطع الغيار</option>
+                                                        <option value="Ready" ${device.status === 'Ready' ? 'selected' : ''} style="background-color: rgba(16, 185, 129, 0.9); color: white;">جاهز للتسليم</option>
+                                                        <option value="Delivered" ${device.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم للعميل</option>
+                                                    </select>
+                                                </div>
                                             </td>
                                             <td>${device.adminReply || '—'}</td>
                                             <td>${device.cost > 0 ? device.cost : '—'}</td>
@@ -2679,6 +2682,10 @@ class AdminManager {
                 ` : ''}
 
                 <form id="editBulkRequestForm" style="margin-top: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label">رقم الطلب</label>
+                        <input type="text" class="form-input" name="requestNumber" value="${bulkRequest.requestNumber || ''}" readonly style="background: rgba(59, 130, 246, 0.1);">
+                    </div>
                     <div class="form-group">
                         <label class="form-label">رقم الهاتف</label>
                         <input type="tel" class="form-input" name="customerPhone" value="${bulkRequest.customerPhone || ''}" placeholder="أدخل رقم الهاتف">
