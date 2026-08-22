@@ -6,7 +6,7 @@ const supabase = require('../config/db');
 router.get('/', async (req, res) => {
     try {
         console.log('📋 GET /api/requests');
-        const { data, error } = await supabase.from('requests').select('*').is('deleted_at', null).order('created_at', { ascending: false });
+        const { data, error } = await supabase.from('requests').select('*').order('created_at', { ascending: false });
         if (error) throw error;
         
         // Convert snake_case to camelCase
@@ -33,8 +33,7 @@ router.get('/', async (req, res) => {
             notes: item.notes,
             technicianNotes: item.technician_notes,
             technician: item.technician,
-            adminReply: item.admin_reply,
-            deletedAt: item.deleted_at
+            adminReply: item.admin_reply
         }));
         
         res.json(converted);
@@ -110,92 +109,6 @@ router.post('/', async (req, res) => {
         res.status(201).json(data[0]);
     } catch (error) {
         console.error('❌ POST /api/requests error:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Soft delete request
-router.put('/:id/soft-delete', async (req, res) => {
-    try {
-        console.log('�️ Soft deleting request:', req.params.id);
-        const { data, error } = await supabase.from('requests').update({ deleted_at: new Date().toISOString() }).eq('id', req.params.id).select();
-        if (error) throw error;
-        if (!data || data.length === 0) return res.status(404).json({ error: 'Request not found' });
-        res.json(data[0]);
-    } catch (error) {
-        console.error('Error soft deleting request:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Restore request
-router.put('/:id/restore', async (req, res) => {
-    try {
-        console.log('♻️ Restoring request:', req.params.id);
-        const { data, error } = await supabase.from('requests').update({ deleted_at: null }).eq('id', req.params.id).select();
-        if (error) throw error;
-        if (!data || data.length === 0) return res.status(404).json({ error: 'Request not found' });
-        res.json(data[0]);
-    } catch (error) {
-        console.error('Error restoring request:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Get all trash (deleted items)
-router.get('/trash', async (req, res) => {
-    try {
-        console.log('📋 GET /api/requests/trash');
-        const { data, error } = await supabase.from('requests').select('*').not('deleted_at', null).order('deleted_at', { ascending: false });
-        if (error) {
-            console.error('Supabase error:', error);
-            throw error;
-        }
-        
-        // Convert snake_case to camelCase
-        const converted = (data || []).map(item => ({
-            id: item.id,
-            requestNumber: item.request_number,
-            requestType: item.request_type || 'single',
-            fullName: item.full_name,
-            phone: item.phone,
-            email: item.email,
-            deviceType: item.device_type,
-            laptopBrand: item.laptop_brand,
-            laptopModel: item.laptop_model,
-            serialNumber: item.serial_number,
-            receivedDate: item.received_date,
-            problemDescription: item.problem_description,
-            priority: item.priority,
-            status: item.status,
-            cost: item.cost,
-            estimatedCompletionDate: item.estimated_completion_date,
-            deviceImage: item.device_image,
-            repairImages: item.repair_images,
-            replacementParts: item.replacement_parts,
-            notes: item.notes,
-            technicianNotes: item.technician_notes,
-            technician: item.technician,
-            adminReply: item.admin_reply,
-            deletedAt: item.deleted_at
-        }));
-        
-        res.json(converted);
-    } catch (error) {
-        console.error('Error fetching trash requests:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Delete all trash (permanently delete items with deleted_at not null)
-router.delete('/trash', async (req, res) => {
-    try {
-        console.log('🗑️ Deleting all trash requests');
-        const { error } = await supabase.from('requests').delete().not('deleted_at', null);
-        if (error) throw error;
-        res.json({ success: true, message: 'All trash deleted' });
-    } catch (error) {
-        console.error('Error deleting trash:', error);
         res.status(500).json({ error: error.message });
     }
 });

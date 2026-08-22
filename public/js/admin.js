@@ -244,8 +244,6 @@ class AdminManager {
                 this.renderUsers();
             } else if (this.currentSection === 'products') {
                 this.renderProductsManagement();
-            } else if (this.currentSection === 'trash') {
-                this.renderTrash();
             }
         }, 10000);
     }
@@ -1758,9 +1756,6 @@ class AdminManager {
             case 'products':
                 this.renderProductsManagement();
                 break;
-            case 'trash':
-                this.renderTrash();
-                break;
         }
     }
 
@@ -2068,24 +2063,24 @@ class AdminManager {
      * Delete company request
      */
     async deleteCompanyRequest(companyRequestId) {
-        if (!confirm('هل أنت متأكد من حذف الطلب؟ سيتم نقله إلى سلة المحذوفات ويمكن استعادته لمدة 7 أيام.')) {
+        if (!confirm('هل أنت متأكد من حذف الطلب؟ هذا الإجراء لا يمكن التراجع عنه.')) {
             return;
         }
 
         try {
-            const response = await fetch(`/api/company-requests/${companyRequestId}/soft-delete`, {
-                method: 'PUT'
+            const response = await fetch(`/api/company-requests/${companyRequestId}`, {
+                method: 'DELETE'
             });
 
             if (response.ok) {
-                toast.success('تم نقل الطلب إلى سلة المحذوفات');
+                toast.success('تم حذف الطلب بنجاح');
                 await this.loadData();
                 this.renderCompanyRequests();
             } else {
-                throw new Error('Failed to soft delete company request');
+                throw new Error('Failed to delete company request');
             }
         } catch (error) {
-            console.error('Error soft deleting company request:', error);
+            console.error('Error deleting company request:', error);
             toast.error('فشل في حذف الطلب');
         }
     }
@@ -2610,24 +2605,24 @@ class AdminManager {
     }
 
     async deleteBulkRequest(bulkRequestId) {
-        if (!confirm('هل أنت متأكد من حذف طلب الجملة؟ سيتم نقله إلى سلة المحذوفات ويمكن استعادته لمدة 7 أيام.')) {
+        if (!confirm('هل أنت متأكد من حذف طلب الجملة؟ هذا الإجراء لا يمكن التراجع عنه.')) {
             return;
         }
 
         try {
-            const response = await fetch(`/api/bulk-requests/${bulkRequestId}/soft-delete`, {
-                method: 'PUT'
+            const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                method: 'DELETE'
             });
 
             if (response.ok) {
-                toast.success('تم نقل طلب الجملة إلى سلة المحذوفات');
+                toast.success('تم حذف طلب الجملة بنجاح');
                 await this.loadData();
                 this.renderBulkRequests();
             } else {
-                throw new Error('Failed to soft delete bulk request');
+                throw new Error('Failed to delete bulk request');
             }
         } catch (error) {
-            console.error('Error soft deleting bulk request:', error);
+            console.error('Error deleting bulk request:', error);
             toast.error('فشل في حذف طلب الجملة');
         }
     }
@@ -3189,220 +3184,6 @@ class AdminManager {
         }
     }
 
-    /**
-     * Render trash section
-     */
-    async renderTrash() {
-        const container = document.getElementById('trashContainer');
-        if (!container) return;
-
-        container.innerHTML = '<div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6;"></i><p style="margin-top: 1rem; color: #94a3b8;">جاري تحميل سلة المحذوفات...</p></div>';
-
-        try {
-            // Fetch deleted items from all request types
-            const [deletedRequestsRes, deletedBulkRequestsRes, deletedCompanyRequestsRes] = await Promise.all([
-                fetch('/api/requests/trash').then(async r => {
-                    if (!r.ok) {
-                        console.error('Error fetching trash requests:', r.status);
-                        return [];
-                    }
-                    const data = await r.json();
-                    return Array.isArray(data) ? data : [];
-                }).catch(() => []),
-                fetch('/api/bulk-requests/trash').then(async r => {
-                    if (!r.ok) {
-                        console.error('Error fetching trash bulk requests:', r.status);
-                        return [];
-                    }
-                    const data = await r.json();
-                    return Array.isArray(data) ? data : [];
-                }).catch(() => []),
-                fetch('/api/company-requests/trash').then(async r => {
-                    if (!r.ok) {
-                        console.error('Error fetching trash company requests:', r.status);
-                        return [];
-                    }
-                    const data = await r.json();
-                    return Array.isArray(data) ? data : [];
-                }).catch(() => [])
-            ]);
-
-            const allDeleted = [
-                ...deletedRequestsRes.map(r => ({ ...r, type: 'request', displayName: `طلب #${r.requestNumber}` })),
-                ...deletedBulkRequestsRes.map(r => ({ ...r, type: 'bulk', displayName: `طلب جملة #${r.requestNumber}` })),
-                ...deletedCompanyRequestsRes.map(r => ({ ...r, type: 'company', displayName: `طلب شركة #${r.requestNumber}` }))
-            ];
-
-            // Sort by deleted date (newest first)
-            allDeleted.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
-
-            if (allDeleted.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-trash"></i>
-                        <h3>سلة المحذوفات فارغة</h3>
-                        <p>لا توجد عناصر محذوفة حالياً.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = `
-                <div class="table-container">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>النوع</th>
-                                <th>رقم الطلب</th>
-                                <th>الاسم/العميل</th>
-                                <th>تاريخ الحذف</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${allDeleted.map(item => `
-                                <tr>
-                                    <td>
-                                        <span style="font-weight: 600; color: ${item.type === 'request' ? '#3b82f6' : item.type === 'bulk' ? '#10b981' : '#f59e0b'};">
-                                            ${item.type === 'request' ? 'طلب عادي' : item.type === 'bulk' ? 'طلب جملة' : 'طلب شركة'}
-                                        </span>
-                                    </td>
-                                    <td style="font-weight: 600;">${item.requestNumber || item.request_number}</td>
-                                    <td>${item.type === 'request' ? item.fullName : item.customerName || item.full_name}</td>
-                                    <td>${Utils.formatDate(item.deletedAt)}</td>
-                                    <td>
-                                        <button class="btn btn-success" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
-                                                onclick="adminManager.restoreItem('${item.type}', ${item.id})">
-                                            <i class="fas fa-undo"></i> استعادة
-                                        </button>
-                                        <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                                onclick="adminManager.permanentDeleteItem('${item.type}', ${item.id})">
-                                            <i class="fas fa-trash-alt"></i> حذف نهائي
-                                        </button>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        } catch (error) {
-            console.error('Error loading trash:', error);
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>خطأ في التحميل</h3>
-                    <p>فشل تحميل سلة المحذوفات. يرجى المحاولة مرة أخرى.</p>
-                </div>
-            `;
-        }
-    }
-
-    /**
-     * Restore deleted item
-     */
-    async restoreItem(type, id) {
-        if (!confirm('هل أنت متأكد من استعادة هذا العنصر؟')) {
-            return;
-        }
-
-        try {
-            let endpoint;
-            switch (type) {
-                case 'request':
-                    endpoint = `/api/requests/${id}/restore`;
-                    break;
-                case 'bulk':
-                    endpoint = `/api/bulk-requests/${id}/restore`;
-                    break;
-                case 'company':
-                    endpoint = `/api/company-requests/${id}/restore`;
-                    break;
-            }
-
-            const response = await fetch(endpoint, {
-                method: 'PUT'
-            });
-
-            if (response.ok) {
-                toast.success('تم استعادة العنصر بنجاح');
-                await this.loadData();
-                this.renderTrash();
-            } else {
-                throw new Error('Failed to restore item');
-            }
-        } catch (error) {
-            console.error('Error restoring item:', error);
-            toast.error('فشل استعادة العنصر');
-        }
-    }
-
-    /**
-     * Permanently delete item
-     */
-    async permanentDeleteItem(type, id) {
-        if (!confirm('هل أنت متأكد من الحذف النهائي؟ هذا الإجراء لا يمكن التراجع عنه.')) {
-            return;
-        }
-
-        try {
-            let endpoint;
-            switch (type) {
-                case 'request':
-                    endpoint = `/api/requests/${id}`;
-                    break;
-                case 'bulk':
-                    endpoint = `/api/bulk-requests/${id}`;
-                    break;
-                case 'company':
-                    endpoint = `/api/company-requests/${id}`;
-                    break;
-            }
-
-            const response = await fetch(endpoint, {
-                method: 'DELETE'
-            });
-
-            if (response.ok) {
-                toast.success('تم الحذف النهائي بنجاح');
-                await this.loadData();
-                this.renderTrash();
-            } else {
-                throw new Error('Failed to permanently delete item');
-            }
-        } catch (error) {
-            console.error('Error permanently deleting item:', error);
-            toast.error('فشل الحذف النهائي');
-        }
-    }
-
-    /**
-     * Empty trash (delete all items older than 0 days)
-     */
-    async emptyTrash() {
-        if (!confirm('هل أنت متأكد من إفراغ السلة؟ سيتم حذف جميع العناصر نهائياً.')) {
-            return;
-        }
-
-        try {
-            // Delete all items with deleted_at not null
-            const promises = [
-                fetch('/api/requests/trash', { method: 'DELETE' }),
-                fetch('/api/bulk-requests/trash', { method: 'DELETE' }),
-                fetch('/api/company-requests/trash', { method: 'DELETE' })
-            ];
-
-            await Promise.all(promises);
-
-            toast.success('تم إفراغ السلة بنجاح');
-            await this.loadData();
-            this.renderTrash();
-        } catch (error) {
-            console.error('Error emptying trash:', error);
-            toast.error('فشل إفراغ السلة');
-        }
-    }
-
     async deleteRequest(requestId) {
         const request = this.requests.find(r => r.id === requestId);
         if (!request) return;
@@ -3412,34 +3193,32 @@ class AdminManager {
                 <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #f59e0b; margin-bottom: 1rem;"></i>
                 <h3 style="margin-bottom: 0.5rem;">تأكيد الحذف</h3>
                 <p style="color: #94a3b8; margin-bottom: 1rem;">هل أنت متأكد من حذف الطلب رقم <strong>${request.requestNumber}</strong>؟</p>
-                <p style="color: #94a3b8; font-size: 0.875rem;">سيتم نقله إلى سلة المحذوفات ويمكن استعادته لمدة 7 أيام.</p>
+                <p style="color: #ef4444; font-size: 0.875rem;">هذا الإجراء لا يمكن التراجع عنه.</p>
             </div>
         `;
 
         modalManager.create('confirm-delete-request', 'تأكيد الحذف', content, async () => {
             try {
-                console.log('🗑️ Soft deleting request ID:', requestId);
-                // Use same-origin API (Vercel handles both frontend and backend)
-                const apiUrl = '/api/requests';
-                const response = await fetch(`${apiUrl}/${requestId}/soft-delete`, {
-                    method: 'PUT'
+                console.log('🗑️ Deleting request ID:', requestId);
+                const response = await fetch(`/api/requests/${requestId}`, {
+                    method: 'DELETE'
                 });
 
-                console.log('📡 Soft delete response status:', response.status);
+                console.log('📡 Delete response status:', response.status);
 
                 if (response.ok) {
                     this.loadData();
                     this.renderRequests();
                     this.renderStats();
                     this.renderCharts();
-                    toast.success('تم نقل الطلب إلى سلة المحذوفات');
+                    toast.success('تم حذف الطلب بنجاح');
                 } else {
                     const errorText = await response.text();
-                    console.error('❌ Soft delete failed:', errorText);
+                    console.error('❌ Delete failed:', errorText);
                     toast.error('فشل حذف الطلب');
                 }
             } catch (error) {
-                console.error('❌ Soft delete error:', error);
+                console.error('❌ Delete error:', error);
                 toast.error('فشل حذف الطلب');
             }
         });
