@@ -218,4 +218,46 @@ router.delete('/trash', async (req, res) => {
     }
 });
 
+// Get all trash (deleted items)
+router.get('/trash', async (req, res) => {
+    try {
+        console.log('📋 GET /api/requests/trash');
+        const { data, error } = await supabase.from('requests').select('*').not('deleted_at', 'is', null).order('deleted_at', { ascending: false });
+        if (error) throw error;
+        
+        // Convert snake_case to camelCase
+        const converted = (data || []).map(item => ({
+            id: item.id,
+            requestNumber: item.request_number,
+            requestType: item.request_type || 'single',
+            fullName: item.full_name,
+            phone: item.phone,
+            email: item.email,
+            deviceType: item.device_type,
+            laptopBrand: item.laptop_brand,
+            laptopModel: item.laptop_model,
+            serialNumber: item.serial_number,
+            receivedDate: item.received_date,
+            problemDescription: item.problem_description,
+            priority: item.priority,
+            status: item.status,
+            cost: item.cost,
+            estimatedCompletionDate: item.estimated_completion_date,
+            deviceImage: item.device_image,
+            repairImages: item.repair_images,
+            replacementParts: item.replacement_parts,
+            notes: item.notes,
+            technicianNotes: item.technician_notes,
+            technician: item.technician,
+            adminReply: item.admin_reply,
+            deletedAt: item.deleted_at
+        }));
+        
+        res.json(converted);
+    } catch (error) {
+        console.error('Error fetching trash requests:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

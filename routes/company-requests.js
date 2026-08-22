@@ -286,4 +286,46 @@ router.delete('/trash', async (req, res) => {
     }
 });
 
+// Get all trash (deleted items)
+router.get('/trash', async (req, res) => {
+    try {
+        console.log('📋 GET /api/company-requests/trash');
+        const { data, error } = await supabase
+            .from('company_requests')
+            .select('*')
+            .not('deleted_at', 'is', null)
+            .order('deleted_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Convert to camelCase
+        const camelCaseData = data.map(item => ({
+            id: item.id,
+            requestNumber: item.request_number,
+            fullName: item.full_name,
+            phone: item.phone,
+            laptopBrand: item.laptop_brand,
+            laptopModel: item.laptop_model,
+            serialNumber: item.serial_number,
+            receivedDate: item.received_date,
+            problemDescription: item.problem_description,
+            priority: item.priority,
+            status: item.status,
+            adminReply: item.admin_reply,
+            technician: item.technician,
+            technicianNotes: item.technician_notes,
+            cost: item.cost,
+            estimatedCompletionDate: item.estimated_completion_date,
+            createdAt: item.created_at,
+            updatedAt: item.updated_at,
+            deletedAt: item.deleted_at
+        }));
+
+        res.json(camelCaseData);
+    } catch (error) {
+        console.error('Error fetching trash company requests:', error);
+        res.status(500).json({ error: 'Failed to fetch trash company requests' });
+    }
+});
+
 module.exports = router;

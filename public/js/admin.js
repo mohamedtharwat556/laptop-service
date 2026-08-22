@@ -3192,74 +3192,89 @@ class AdminManager {
     /**
      * Render trash section
      */
-    renderTrash() {
+    async renderTrash() {
         const container = document.getElementById('trashContainer');
         if (!container) return;
 
-        // Combine all deleted items from all request types
-        const deletedRequests = this.requests.filter(r => r.deletedAt);
-        const deletedBulkRequests = this.bulkRequests.filter(r => r.deletedAt);
-        const deletedCompanyRequests = this.companyRequests.filter(r => r.deletedAt);
+        container.innerHTML = '<div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6;"></i><p style="margin-top: 1rem; color: #94a3b8;">جاري تحميل سلة المحذوفات...</p></div>';
 
-        const allDeleted = [
-            ...deletedRequests.map(r => ({ ...r, type: 'request', displayName: `طلب #${r.requestNumber}` })),
-            ...deletedBulkRequests.map(r => ({ ...r, type: 'bulk', displayName: `طلب جملة #${r.requestNumber}` })),
-            ...deletedCompanyRequests.map(r => ({ ...r, type: 'company', displayName: `طلب شركة #${r.requestNumber}` }))
-        ];
+        try {
+            // Fetch deleted items from all request types
+            const [deletedRequestsRes, deletedBulkRequestsRes, deletedCompanyRequestsRes] = await Promise.all([
+                fetch('/api/requests/trash').then(r => r.json()).catch(() => []),
+                fetch('/api/bulk-requests/trash').then(r => r.json()).catch(() => []),
+                fetch('/api/company-requests/trash').then(r => r.json()).catch(() => [])
+            ]);
 
-        // Sort by deleted date (newest first)
-        allDeleted.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
+            const allDeleted = [
+                ...deletedRequestsRes.map(r => ({ ...r, type: 'request', displayName: `طلب #${r.requestNumber}` })),
+                ...deletedBulkRequestsRes.map(r => ({ ...r, type: 'bulk', displayName: `طلب جملة #${r.requestNumber}` })),
+                ...deletedCompanyRequestsRes.map(r => ({ ...r, type: 'company', displayName: `طلب شركة #${r.requestNumber}` }))
+            ];
 
-        if (allDeleted.length === 0) {
+            // Sort by deleted date (newest first)
+            allDeleted.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
+
+            if (allDeleted.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-trash"></i>
+                        <h3>سلة المحذوفات فارغة</h3>
+                        <p>لا توجد عناصر محذوفة حالياً.</p>
+                    </div>
+                `;
+                return;
+            }
+
             container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-trash"></i>
-                    <h3>سلة المحذوفات فارغة</h3>
-                    <p>لا توجد عناصر محذوفة حالياً.</p>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>النوع</th>
+                                <th>رقم الطلب</th>
+                                <th>الاسم/العميل</th>
+                                <th>تاريخ الحذف</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${allDeleted.map(item => `
+                                <tr>
+                                    <td>
+                                        <span style="font-weight: 600; color: ${item.type === 'request' ? '#3b82f6' : item.type === 'bulk' ? '#10b981' : '#f59e0b'};">
+                                            ${item.type === 'request' ? 'طلب عادي' : item.type === 'bulk' ? 'طلب جملة' : 'طلب شركة'}
+                                        </span>
+                                    </td>
+                                    <td style="font-weight: 600;">${item.requestNumber || item.request_number}</td>
+                                    <td>${item.type === 'request' ? item.fullName : item.customerName || item.full_name}</td>
+                                    <td>${Utils.formatDate(item.deletedAt)}</td>
+                                    <td>
+                                        <button class="btn btn-success" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
+                                                onclick="adminManager.restoreItem('${item.type}', ${item.id})">
+                                            <i class="fas fa-undo"></i> استعادة
+                                        </button>
+                                        <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                                onclick="adminManager.permanentDeleteItem('${item.type}', ${item.id})">
+                                            <i class="fas fa-trash-alt"></i> حذف نهائي
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
             `;
-            return;
+        } catch (error) {
+            console.error('Error loading trash:', error);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>خطأ في التحميل</h3>
+                    <p>فشل تحميل سلة المحذوفات. يرجى المحاولة مرة أخرى.</p>
+                </div>
+            `;
         }
-
-        container.innerHTML = `
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>النوع</th>
-                            <th>رقم الطلب</th>
-                            <th>الاسم/العميل</th>
-                            <th>تاريخ الحذف</th>
-                            <th>الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${allDeleted.map(item => `
-                            <tr>
-                                <td>
-                                    <span style="font-weight: 600; color: ${item.type === 'request' ? '#3b82f6' : item.type === 'bulk' ? '#10b981' : '#f59e0b'};">
-                                        ${item.type === 'request' ? 'طلب عادي' : item.type === 'bulk' ? 'طلب جملة' : 'طلب شركة'}
-                                    </span>
-                                </td>
-                                <td style="font-weight: 600;">${item.requestNumber || item.request_number}</td>
-                                <td>${item.type === 'request' ? item.fullName : item.customerName || item.full_name}</td>
-                                <td>${Utils.formatDate(item.deletedAt)}</td>
-                                <td>
-                                    <button class="btn btn-success" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
-                                            onclick="adminManager.restoreItem('${item.type}', ${item.id})">
-                                        <i class="fas fa-undo"></i> استعادة
-                                    </button>
-                                    <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.permanentDeleteItem('${item.type}', ${item.id})">
-                                        <i class="fas fa-trash-alt"></i> حذف نهائي
-                                    </button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        `;
     }
 
     /**
