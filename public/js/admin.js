@@ -2270,7 +2270,16 @@ class AdminManager {
                                             <td>${device.laptopBrand}</td>
                                             <td>${device.laptopModel}</td>
                                             <td dir="ltr" style="color: #94a3b8;">${device.serialNumber || '—'}</td>
-                                            <td><span class="status-badge ${this.getStatusClass(device.status)}">${this.translateStatus(device.status)}</span></td>
+                                            <td>
+                                                <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem;" onchange="adminManager.updateDeviceStatus(${bulkRequestId}, ${device.id}, this.value)">
+                                                    <option value="Received" ${device.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
+                                                    <option value="Waiting Inspection" ${device.status === 'Waiting Inspection' ? 'selected' : ''}>بانتظار الفحص</option>
+                                                    <option value="Under Maintenance" ${device.status === 'Under Maintenance' ? 'selected' : ''}>قيد الصيانة</option>
+                                                    <option value="Waiting Parts" ${device.status === 'Waiting Parts' ? 'selected' : ''}>بانتظار قطع الغيار</option>
+                                                    <option value="Ready" ${device.status === 'Ready' ? 'selected' : ''}>جاهز للتسليم</option>
+                                                    <option value="Delivered" ${device.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
+                                                </select>
+                                            </td>
                                             <td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${device.adminReply || '—'}</td>
                                             <td>${device.cost > 0 ? device.cost : '—'}</td>
                                             <td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${device.technician || '—'}</td>
@@ -2296,6 +2305,43 @@ class AdminManager {
         } catch (error) {
             console.error('Error viewing bulk request devices:', error);
             toast.error('فشل في تحميل الأجهزة');
+        }
+    }
+
+    /**
+     * Update device status directly from table
+     */
+    async updateDeviceStatus(bulkRequestId, deviceId, newStatus) {
+        try {
+            const response = await fetch(`/api/bulk-requests/${bulkRequestId}`);
+            if (!response.ok) throw new Error('Failed to fetch bulk request details');
+
+            const bulkRequest = await response.json();
+            const device = bulkRequest.devices.find(d => d.id === deviceId);
+
+            if (!device) {
+                toast.error('الجهاز غير موجود');
+                return;
+            }
+
+            // Update device status
+            device.status = newStatus;
+
+            // Update the bulk request
+            const updateResponse = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bulkRequest)
+            });
+
+            if (!updateResponse.ok) throw new Error('Failed to update device status');
+
+            toast.success('تم تحديث حالة الجهاز بنجاح');
+            await this.loadData();
+            this.renderBulkRequests();
+        } catch (error) {
+            console.error('Error updating device status:', error);
+            toast.error('فشل تحديث حالة الجهاز');
         }
     }
 
