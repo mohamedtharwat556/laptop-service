@@ -1810,7 +1810,16 @@ class AdminManager {
                                 <td style="font-weight: 600;">${bulkRequest.customerName}</td>
                                 <td dir="ltr">${bulkRequest.customerPhone}</td>
                                 <td style="font-weight: 600; color: #3b82f6;">${bulkRequest.deviceCount}</td>
-                                <td><span class="status-badge ${this.getStatusClass(bulkRequest.status)}">${this.translateStatus(bulkRequest.status)}</span></td>
+                                <td>
+                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem;" onchange="adminManager.updateBulkRequestStatus(${bulkRequest.id}, this.value)">
+                                        <option value="Received" ${bulkRequest.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
+                                        <option value="Waiting Inspection" ${bulkRequest.status === 'Waiting Inspection' ? 'selected' : ''}>بانتظار الفحص</option>
+                                        <option value="Under Maintenance" ${bulkRequest.status === 'Under Maintenance' ? 'selected' : ''}>قيد الصيانة</option>
+                                        <option value="Waiting Parts" ${bulkRequest.status === 'Waiting Parts' ? 'selected' : ''}>بانتظار قطع الغيار</option>
+                                        <option value="Ready" ${bulkRequest.status === 'Ready' ? 'selected' : ''}>جاهز للتسليم</option>
+                                        <option value="Delivered" ${bulkRequest.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
+                                    </select>
+                                </td>
                                 <td><span class="priority-badge ${this.getPriorityClass(bulkRequest.priority)}">${this.translatePriority(bulkRequest.priority)}</span></td>
                                 <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${bulkRequest.adminReply || '—'}</td>
                                 <td>${bulkRequest.estimatedCompletionDate ? Utils.formatDate(bulkRequest.estimatedCompletionDate) : '—'}</td>
@@ -2305,6 +2314,37 @@ class AdminManager {
         } catch (error) {
             console.error('Error viewing bulk request devices:', error);
             toast.error('فشل في تحميل الأجهزة');
+        }
+    }
+
+    /**
+     * Update bulk request status directly from table
+     */
+    async updateBulkRequestStatus(bulkRequestId, newStatus) {
+        try {
+            const response = await fetch(`/api/bulk-requests/${bulkRequestId}`);
+            if (!response.ok) throw new Error('Failed to fetch bulk request details');
+
+            const bulkRequest = await response.json();
+
+            // Update bulk request status
+            bulkRequest.status = newStatus;
+
+            // Update the bulk request
+            const updateResponse = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bulkRequest)
+            });
+
+            if (!updateResponse.ok) throw new Error('Failed to update bulk request status');
+
+            toast.success('تم تحديث حالة الطلب بنجاح');
+            await this.loadData();
+            this.renderBulkRequests();
+        } catch (error) {
+            console.error('Error updating bulk request status:', error);
+            toast.error('فشل تحديث حالة الطلب');
         }
     }
 
