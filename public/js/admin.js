@@ -244,6 +244,8 @@ class AdminManager {
                 this.renderUsers();
             } else if (this.currentSection === 'products') {
                 this.renderProductsManagement();
+            } else if (this.currentSection === 'trash') {
+                this.renderTrash();
             }
         }, 10000);
     }
@@ -1756,6 +1758,9 @@ class AdminManager {
             case 'products':
                 this.renderProductsManagement();
                 break;
+            case 'trash':
+                this.renderTrash();
+                break;
         }
     }
 
@@ -2063,24 +2068,24 @@ class AdminManager {
      * Delete company request
      */
     async deleteCompanyRequest(companyRequestId) {
-        if (!confirm('هل أنت متأكد من حذف الطلب؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+        if (!confirm('هل أنت متأكد من حذف الطلب؟ سيتم نقله إلى سلة المحذوفات ويمكن استعادته.')) {
             return;
         }
 
         try {
-            const response = await fetch(`/api/company-requests/${companyRequestId}`, {
-                method: 'DELETE'
+            const response = await fetch(`/api/company-requests/${companyRequestId}/soft-delete`, {
+                method: 'PUT'
             });
 
             if (response.ok) {
-                toast.success('تم حذف الطلب بنجاح');
+                toast.success('تم نقل الطلب إلى سلة المحذوفات');
                 await this.loadData();
                 this.renderCompanyRequests();
             } else {
-                throw new Error('Failed to delete company request');
+                throw new Error('Failed to soft delete company request');
             }
         } catch (error) {
-            console.error('Error deleting company request:', error);
+            console.error('Error soft deleting company request:', error);
             toast.error('فشل في حذف الطلب');
         }
     }
@@ -2605,24 +2610,24 @@ class AdminManager {
     }
 
     async deleteBulkRequest(bulkRequestId) {
-        if (!confirm('هل أنت متأكد من حذف طلب الجملة؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+        if (!confirm('هل أنت متأكد من حذف طلب الجملة؟ سيتم نقله إلى سلة المحذوفات ويمكن استعادته.')) {
             return;
         }
 
         try {
-            const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
-                method: 'DELETE'
+            const response = await fetch(`/api/bulk-requests/${bulkRequestId}/soft-delete`, {
+                method: 'PUT'
             });
 
             if (response.ok) {
-                toast.success('تم حذف طلب الجملة بنجاح');
+                toast.success('تم نقل طلب الجملة إلى سلة المحذوفات');
                 await this.loadData();
                 this.renderBulkRequests();
             } else {
-                throw new Error('Failed to delete bulk request');
+                throw new Error('Failed to soft delete bulk request');
             }
         } catch (error) {
-            console.error('Error deleting bulk request:', error);
+            console.error('Error soft deleting bulk request:', error);
             toast.error('فشل في حذف طلب الجملة');
         }
     }
@@ -3193,25 +3198,25 @@ class AdminManager {
                 <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #f59e0b; margin-bottom: 1rem;"></i>
                 <h3 style="margin-bottom: 0.5rem;">تأكيد الحذف</h3>
                 <p style="color: #94a3b8; margin-bottom: 1rem;">هل أنت متأكد من حذف الطلب رقم <strong>${request.requestNumber}</strong>؟</p>
-                <p style="color: #ef4444; font-size: 0.875rem;">هذا الإجراء لا يمكن التراجع عنه.</p>
+                <p style="color: #94a3b8; font-size: 0.875rem;">سيتم نقله إلى سلة المحذوفات ويمكن استعادته.</p>
             </div>
         `;
 
         modalManager.create('confirm-delete-request', 'تأكيد الحذف', content, async () => {
             try {
-                console.log('🗑️ Deleting request ID:', requestId);
-                const response = await fetch(`/api/requests/${requestId}`, {
-                    method: 'DELETE'
+                console.log('🗑️ Soft deleting request ID:', requestId);
+                const response = await fetch(`/api/requests/${requestId}/soft-delete`, {
+                    method: 'PUT'
                 });
 
-                console.log('📡 Delete response status:', response.status);
+                console.log('📡 Soft delete response status:', response.status);
 
                 if (response.ok) {
                     this.loadData();
                     this.renderRequests();
                     this.renderStats();
                     this.renderCharts();
-                    toast.success('تم حذف الطلب بنجاح');
+                    toast.success('تم نقل الطلب إلى سلة المحذوفات');
                 } else {
                     const errorText = await response.text();
                     console.error('❌ Delete failed:', errorText);

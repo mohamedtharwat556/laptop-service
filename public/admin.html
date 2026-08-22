@@ -102,6 +102,12 @@
                         تقرير اليوم
                     </a>
                 </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" data-section="trash">
+                        <i class="fas fa-trash"></i>
+                        سلة المحذوفات
+                    </a>
+                </li>
             </ul>
         </aside>
 
@@ -273,9 +279,16 @@
                         </button>
                     </div>
                 </div>
-                <div id="dailyReportContainer"></div>
+                <div id="reportContainer"></div>
             </div>
 
+            <!-- Trash Section -->
+            <div id="trashSection" class="dashboard-section">
+                <div class="dashboard-header" style="flex-wrap:wrap; gap:1rem;">
+                    <h2><i class="fas fa-trash" style="color:#ef4444;"></i> سلة المحذوفات</h2>
+                </div>
+                <div id="trashContainer"></div>
+            </div>
         </main>
 
 </div>

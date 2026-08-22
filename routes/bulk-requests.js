@@ -6,7 +6,7 @@ const supabase = require('../config/db');
 router.get('/', async (req, res) => {
     try {
         console.log('📋 GET /api/bulk-requests');
-        const { data, error } = await supabase.from('bulk_requests').select('*').order('created_at', { ascending: false });
+        const { data, error } = await supabase.from('bulk_requests').select('*').is('deleted_at', null).order('created_at', { ascending: false });
         if (error) throw error;
         
         // Get devices for each bulk request
@@ -44,6 +44,7 @@ router.get('/', async (req, res) => {
             estimatedCompletionDate: item.estimated_completion_date,
             createdAt: item.created_at,
             updatedAt: item.updated_at,
+            deletedAt: item.deleted_at,
             devices: (item.devices || []).map(device => ({
                 id: device.id,
                 bulkRequestId: device.bulk_request_id,
@@ -68,6 +69,108 @@ router.get('/', async (req, res) => {
         res.json(converted);
     } catch (error) {
         console.error('Error fetching bulk requests:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Soft delete bulk request
+router.put('/:id/soft-delete', async (req, res) => {
+    try {
+        console.log('🗑️ Soft deleting bulk request:', req.params.id);
+        const { data, error } = await supabase.from('bulk_requests').update({ deleted_at: new Date().toISOString() }).eq('id', req.params.id).select();
+        if (error) throw error;
+        if (!data || data.length === 0) return res.status(404).json({ error: 'Bulk request not found' });
+        res.json(data[0]);
+    } catch (error) {
+        console.error('Error soft deleting bulk request:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Restore bulk request
+router.put('/:id/restore', async (req, res) => {
+    try {
+        console.log('♻️ Restoring bulk request:', req.params.id);
+        const { data, error } = await supabase.from('bulk_requests').update({ deleted_at: null }).eq('id', req.params.id).select();
+        if (error) throw error;
+        if (!data || data.length === 0) return res.status(404).json({ error: 'Bulk request not found' });
+        res.json(data[0]);
+    } catch (error) {
+        console.error('Error restoring bulk request:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all trash (deleted items)
+router.get('/trash', async (req, res) => {
+    try {
+        console.log('📋 GET /api/bulk-requests/trash');
+        const { data, error } = await supabase.from('bulk_requests').select('*').not('deleted_at', null).order('deleted_at', { ascending: false });
+        if (error) {
+            console.error('Supabase error:', error);
+            throw error;
+        }
+        
+        // Get devices for each bulk request
+        const bulkRequestsWithDevices = await Promise.all(
+            (data || []).map(async (item) => {
+                const { data: devices, error: devicesError } = await supabase
+                    .from('bulk_request_devices')
+                    .select('*')
+                    .eq('bulk_request_id', item.id)
+                    .order('device_number', { ascending: true });
+                
+                if (devicesError) {
+                    console.error('Error fetching devices for bulk request:', item.id, devicesError);
+                    return { ...item, devices: [] };
+                }
+                
+                return { ...item, devices: devices || [] };
+            })
+        );
+        
+        // Convert snake_case to camelCase
+        const converted = bulkRequestsWithDevices.map(item => ({
+            id: item.id,
+            requestNumber: item.request_number,
+            customerName: item.customer_name,
+            customerPhone: item.customer_phone,
+            customerEmail: item.customer_email,
+            deviceCount: item.device_count,
+            status: item.status,
+            priority: item.priority,
+            cost: item.cost,
+            notes: item.notes,
+            adminReply: item.admin_reply,
+            technician: item.technician,
+            estimatedCompletionDate: item.estimated_completion_date,
+            createdAt: item.created_at,
+            updatedAt: item.updated_at,
+            deletedAt: item.deleted_at,
+            devices: (item.devices || []).map(device => ({
+                id: device.id,
+                bulkRequestId: device.bulk_request_id,
+                deviceNumber: device.device_number,
+                laptopBrand: device.laptop_brand,
+                laptopModel: device.laptop_model,
+                serialNumber: device.serial_number,
+                receivedDate: device.received_date,
+                priority: device.priority,
+                problemDescription: device.problem_description,
+                deviceImage: device.device_image,
+                status: device.status,
+                adminReply: device.admin_reply,
+                cost: device.cost,
+                technician: device.technician,
+                estimatedCompletionDate: device.estimated_completion_date,
+                createdAt: device.created_at,
+                updatedAt: device.updated_at
+            }))
+        }));
+        
+        res.json(converted);
+    } catch (error) {
+        console.error('Error fetching trash bulk requests:', error);
         res.status(500).json({ error: error.message });
     }
 });
