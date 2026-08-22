@@ -1,14 +1,38 @@
 -- Add deleted_at column to requests table for soft delete functionality
-ALTER TABLE requests 
-ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'requests' AND column_name = 'deleted_at'
+    ) THEN
+        ALTER TABLE requests
+        ADD COLUMN deleted_at TIMESTAMP WITH TIME ZONE;
+    END IF;
+END $$;
 
 -- Add deleted_at column to bulk_requests table
-ALTER TABLE bulk_requests 
-ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'bulk_requests' AND column_name = 'deleted_at'
+    ) THEN
+        ALTER TABLE bulk_requests
+        ADD COLUMN deleted_at TIMESTAMP WITH TIME ZONE;
+    END IF;
+END $$;
 
 -- Add deleted_at column to company_requests table
-ALTER TABLE company_requests 
-ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'company_requests' AND column_name = 'deleted_at'
+    ) THEN
+        ALTER TABLE company_requests
+        ADD COLUMN deleted_at TIMESTAMP WITH TIME ZONE;
+    END IF;
+END $$;
 
 -- Create indexes for faster queries on deleted items
 CREATE INDEX IF NOT EXISTS idx_requests_deleted_at ON requests(deleted_at);

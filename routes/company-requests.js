@@ -190,7 +190,7 @@ router.get('/trash', async (req, res) => {
         const { data, error } = await supabase
             .from('company_requests')
             .select('*')
-            .not('deleted_at', 'is', null)
+            .not('deleted_at', null)
             .order('deleted_at', { ascending: false });
 
         if (error) {
@@ -232,7 +232,7 @@ router.get('/trash', async (req, res) => {
 router.delete('/trash', async (req, res) => {
     try {
         console.log('🗑️ Deleting all trash company requests');
-        const { error } = await supabase.from('company_requests').delete().not('deleted_at', 'is', null);
+        const { error } = await supabase.from('company_requests').delete().not('deleted_at', null);
         if (error) throw error;
         res.json({ success: true, message: 'All trash deleted' });
     } catch (error) {
