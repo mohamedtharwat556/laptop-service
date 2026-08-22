@@ -2874,12 +2874,12 @@ class AdminManager {
                             <th>Customer</th>
                             <th class="table-hide-mobile">Phone</th>
                             <th>Device</th>
-                            <th class="table-hide-mobile">Received</th>
                             <th>Status</th>
                             <th class="table-hide-mobile">Priority</th>
                             <th class="table-hide-mobile">Cost</th>
                             <th>Technician</th>
                             <th class="table-hide-mobile">Date</th>
+                            <th class="table-hide-mobile">Received</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -2893,7 +2893,6 @@ class AdminManager {
                                     <div>${request.laptopBrand} ${request.laptopModel || ''}</div>
                                     ${request.serialNumber && request.serialNumber !== 'N/A' ? `<div style="font-size: 0.875rem; color: #94a3b8;" dir="ltr">SN: ${request.serialNumber}</div>` : ''}
                                 </td>
-                                <td class="table-hide-mobile">${request.receivedDate || '—'}</td>
                                 <td>
                                     <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateRequestStatus(${request.id}, this.value)">
                                         <option value="Received" ${request.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
@@ -2908,6 +2907,7 @@ class AdminManager {
                                 <td class="table-hide-mobile">${request.cost > 0 ? Utils.formatCurrency(request.cost) : '—'}</td>
                                 <td>${request.technician || '—'}</td>
                                 <td class="table-hide-mobile">${request.createdAt ? Utils.formatDate(request.createdAt) : '—'}</td>
+                                <td class="table-hide-mobile">${request.receivedDate || '—'}</td>
                                 <td>
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
                                             onclick="adminManager.viewRequest(${request.id})">
