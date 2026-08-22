@@ -296,7 +296,10 @@ router.get('/trash', async (req, res) => {
             .not('deleted_at', 'is', null)
             .order('deleted_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase error:', error);
+            throw error;
+        }
 
         // Convert to camelCase
         const camelCaseData = data.map(item => ({

@@ -377,7 +377,10 @@ router.get('/trash', async (req, res) => {
     try {
         console.log('📋 GET /api/bulk-requests/trash');
         const { data, error } = await supabase.from('bulk_requests').select('*').not('deleted_at', 'is', null).order('deleted_at', { ascending: false });
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase error:', error);
+            throw error;
+        }
         
         // Get devices for each bulk request
         const bulkRequestsWithDevices = await Promise.all(

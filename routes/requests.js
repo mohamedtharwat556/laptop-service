@@ -223,7 +223,10 @@ router.get('/trash', async (req, res) => {
     try {
         console.log('📋 GET /api/requests/trash');
         const { data, error } = await supabase.from('requests').select('*').not('deleted_at', 'is', null).order('deleted_at', { ascending: false });
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase error:', error);
+            throw error;
+        }
         
         // Convert snake_case to camelCase
         const converted = (data || []).map(item => ({

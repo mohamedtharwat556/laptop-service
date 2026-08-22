@@ -3201,9 +3201,30 @@ class AdminManager {
         try {
             // Fetch deleted items from all request types
             const [deletedRequestsRes, deletedBulkRequestsRes, deletedCompanyRequestsRes] = await Promise.all([
-                fetch('/api/requests/trash').then(r => r.json()).catch(() => []),
-                fetch('/api/bulk-requests/trash').then(r => r.json()).catch(() => []),
-                fetch('/api/company-requests/trash').then(r => r.json()).catch(() => [])
+                fetch('/api/requests/trash').then(async r => {
+                    if (!r.ok) {
+                        console.error('Error fetching trash requests:', r.status);
+                        return [];
+                    }
+                    const data = await r.json();
+                    return Array.isArray(data) ? data : [];
+                }).catch(() => []),
+                fetch('/api/bulk-requests/trash').then(async r => {
+                    if (!r.ok) {
+                        console.error('Error fetching trash bulk requests:', r.status);
+                        return [];
+                    }
+                    const data = await r.json();
+                    return Array.isArray(data) ? data : [];
+                }).catch(() => []),
+                fetch('/api/company-requests/trash').then(async r => {
+                    if (!r.ok) {
+                        console.error('Error fetching trash company requests:', r.status);
+                        return [];
+                    }
+                    const data = await r.json();
+                    return Array.isArray(data) ? data : [];
+                }).catch(() => [])
             ]);
 
             const allDeleted = [
