@@ -1811,13 +1811,13 @@ class AdminManager {
                                 <td dir="ltr">${bulkRequest.customerPhone}</td>
                                 <td style="font-weight: 600; color: #3b82f6;">${bulkRequest.deviceCount}</td>
                                 <td>
-                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem;" onchange="adminManager.updateBulkRequestStatus(${bulkRequest.id}, this.value)">
-                                        <option value="Received" ${bulkRequest.status === 'Received' ? 'selected' : ''} style="background-color: #3b82f6; color: white;">تم الاستلام</option>
-                                        <option value="Waiting Inspection" ${bulkRequest.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: #f59e0b; color: white;">بانتظار الفحص</option>
-                                        <option value="Under Maintenance" ${bulkRequest.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: #8b5cf6; color: white;">قيد الصيانة</option>
-                                        <option value="Waiting Parts" ${bulkRequest.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: #ef4444; color: white;">بانتظار قطع الغيار</option>
-                                        <option value="Ready" ${bulkRequest.status === 'Ready' ? 'selected' : ''} style="background-color: #10b981; color: white;">جاهز للتسليم</option>
-                                        <option value="Delivered" ${bulkRequest.status === 'Delivered' ? 'selected' : ''} style="background-color: #6b7280; color: white;">تم التسليم للعميل</option>
+                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateBulkRequestStatus(${bulkRequest.id}, this.value)">
+                                        <option value="Received" ${bulkRequest.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
+                                        <option value="Waiting Inspection" ${bulkRequest.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
+                                        <option value="Under Maintenance" ${bulkRequest.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
+                                        <option value="Waiting Parts" ${bulkRequest.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: rgba(239, 68, 68, 0.9); color: white;">بانتظار قطع الغيار</option>
+                                        <option value="Ready" ${bulkRequest.status === 'Ready' ? 'selected' : ''} style="background-color: rgba(16, 185, 129, 0.9); color: white;">جاهز للتسليم</option>
+                                        <option value="Delivered" ${bulkRequest.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم للعميل</option>
                                     </select>
                                 </td>
                                 <td><span class="priority-badge ${this.getPriorityClass(bulkRequest.priority)}">${this.translatePriority(bulkRequest.priority)}</span></td>
@@ -1891,13 +1891,13 @@ class AdminManager {
                                 <td dir="ltr">${companyRequest.phone}</td>
                                 <td>${companyRequest.laptop_brand || companyRequest.laptopBrand} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</td>
                                 <td>
-                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem;" onchange="adminManager.updateCompanyRequestStatus(${companyRequest.id}, this.value)">
-                                        <option value="Received" ${companyRequest.status === 'Received' ? 'selected' : ''} style="background-color: #3b82f6; color: white;">تم الاستلام</option>
-                                        <option value="Waiting Inspection" ${companyRequest.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: #f59e0b; color: white;">بانتظار الفحص</option>
-                                        <option value="Under Maintenance" ${companyRequest.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: #8b5cf6; color: white;">قيد الصيانة</option>
-                                        <option value="Waiting Parts" ${companyRequest.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: #ef4444; color: white;">بانتظار قطع الغيار</option>
-                                        <option value="Ready" ${companyRequest.status === 'Ready' ? 'selected' : ''} style="background-color: #10b981; color: white;">جاهز للتسليم</option>
-                                        <option value="Delivered" ${companyRequest.status === 'Delivered' ? 'selected' : ''} style="background-color: #6b7280; color: white;">تم التسليم للعميل</option>
+                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateCompanyRequestStatus(${companyRequest.id}, this.value)">
+                                        <option value="Received" ${companyRequest.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
+                                        <option value="Waiting Inspection" ${companyRequest.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
+                                        <option value="Under Maintenance" ${companyRequest.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
+                                        <option value="Waiting Parts" ${companyRequest.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: rgba(239, 68, 68, 0.9); color: white;">بانتظار قطع الغيار</option>
+                                        <option value="Ready" ${companyRequest.status === 'Ready' ? 'selected' : ''} style="background-color: rgba(16, 185, 129, 0.9); color: white;">جاهز للتسليم</option>
+                                        <option value="Delivered" ${companyRequest.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم للعميل</option>
                                     </select>
                                 </td>
                                 <td><span class="priority-badge ${this.getPriorityClass(companyRequest.priority)}">${this.translatePriority(companyRequest.priority)}</span></td>
@@ -2291,13 +2291,13 @@ class AdminManager {
                                             <td>${device.laptopModel}</td>
                                             <td dir="ltr" style="color: #94a3b8;">${device.serialNumber || '—'}</td>
                                             <td>
-                                                <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem;" onchange="adminManager.updateDeviceStatus(${bulkRequestId}, ${device.id}, this.value)">
-                                                    <option value="Received" ${device.status === 'Received' ? 'selected' : ''} style="background-color: #3b82f6; color: white;">تم الاستلام</option>
-                                                    <option value="Waiting Inspection" ${device.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: #f59e0b; color: white;">بانتظار الفحص</option>
-                                                    <option value="Under Maintenance" ${device.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: #8b5cf6; color: white;">قيد الصيانة</option>
-                                                    <option value="Waiting Parts" ${device.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: #ef4444; color: white;">بانتظار قطع الغيار</option>
-                                                    <option value="Ready" ${device.status === 'Ready' ? 'selected' : ''} style="background-color: #10b981; color: white;">جاهز للتسليم</option>
-                                                    <option value="Delivered" ${device.status === 'Delivered' ? 'selected' : ''} style="background-color: #6b7280; color: white;">تم التسليم للعميل</option>
+                                                <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateDeviceStatus(${bulkRequestId}, ${device.id}, this.value)">
+                                                    <option value="Received" ${device.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
+                                                    <option value="Waiting Inspection" ${device.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
+                                                    <option value="Under Maintenance" ${device.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
+                                                    <option value="Waiting Parts" ${device.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: rgba(239, 68, 68, 0.9); color: white;">بانتظار قطع الغيار</option>
+                                                    <option value="Ready" ${device.status === 'Ready' ? 'selected' : ''} style="background-color: rgba(16, 185, 129, 0.9); color: white;">جاهز للتسليم</option>
+                                                    <option value="Delivered" ${device.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم للعميل</option>
                                                 </select>
                                             </td>
                                             <td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${device.adminReply || '—'}</td>
@@ -2895,13 +2895,13 @@ class AdminManager {
                                 </td>
                                 <td class="table-hide-mobile">${request.receivedDate || '—'}</td>
                                 <td>
-                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem;" onchange="adminManager.updateRequestStatus(${request.id}, this.value)">
-                                        <option value="Received" ${request.status === 'Received' ? 'selected' : ''} style="background-color: #3b82f6; color: white;">تم الاستلام</option>
-                                        <option value="Waiting Inspection" ${request.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: #f59e0b; color: white;">بانتظار الفحص</option>
-                                        <option value="Under Maintenance" ${request.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: #8b5cf6; color: white;">قيد الصيانة</option>
-                                        <option value="Waiting Parts" ${request.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: #ef4444; color: white;">بانتظار قطع الغيار</option>
-                                        <option value="Ready" ${request.status === 'Ready' ? 'selected' : ''} style="background-color: #10b981; color: white;">جاهز للتسليم</option>
-                                        <option value="Delivered" ${request.status === 'Delivered' ? 'selected' : ''} style="background-color: #6b7280; color: white;">تم التسليم للعميل</option>
+                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateRequestStatus(${request.id}, this.value)">
+                                        <option value="Received" ${request.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
+                                        <option value="Waiting Inspection" ${request.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
+                                        <option value="Under Maintenance" ${request.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
+                                        <option value="Waiting Parts" ${request.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: rgba(239, 68, 68, 0.9); color: white;">بانتظار قطع الغيار</option>
+                                        <option value="Ready" ${request.status === 'Ready' ? 'selected' : ''} style="background-color: rgba(16, 185, 129, 0.9); color: white;">جاهز للتسليم</option>
+                                        <option value="Delivered" ${request.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم للعميل</option>
                                     </select>
                                 </td>
                                 <td class="table-hide-mobile">${this.translatePriority(request.priority)}</td>
