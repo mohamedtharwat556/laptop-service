@@ -1889,7 +1889,16 @@ class AdminManager {
                                 <td style="font-weight: 600;">${companyRequest.full_name || companyRequest.fullName}</td>
                                 <td dir="ltr">${companyRequest.phone}</td>
                                 <td>${companyRequest.laptop_brand || companyRequest.laptopBrand} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</td>
-                                <td><span class="status-badge ${this.getStatusClass(companyRequest.status)}">${this.translateStatus(companyRequest.status)}</span></td>
+                                <td>
+                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem;" onchange="adminManager.updateCompanyRequestStatus(${companyRequest.id}, this.value)">
+                                        <option value="Received" ${companyRequest.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
+                                        <option value="Waiting Inspection" ${companyRequest.status === 'Waiting Inspection' ? 'selected' : ''}>بانتظار الفحص</option>
+                                        <option value="Under Maintenance" ${companyRequest.status === 'Under Maintenance' ? 'selected' : ''}>قيد الصيانة</option>
+                                        <option value="Waiting Parts" ${companyRequest.status === 'Waiting Parts' ? 'selected' : ''}>بانتظار قطع الغيار</option>
+                                        <option value="Ready" ${companyRequest.status === 'Ready' ? 'selected' : ''}>جاهز للتسليم</option>
+                                        <option value="Delivered" ${companyRequest.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
+                                    </select>
+                                </td>
                                 <td><span class="priority-badge ${this.getPriorityClass(companyRequest.priority)}">${this.translatePriority(companyRequest.priority)}</span></td>
                                 <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${companyRequest.admin_reply || companyRequest.adminReply || '—'}</td>
                                 <td>${Utils.formatDate(companyRequest.created_at || companyRequest.createdAt)}</td>
@@ -2336,6 +2345,50 @@ class AdminManager {
             this.renderBulkRequests();
         } catch (error) {
             console.error('Error updating bulk request status:', error);
+            toast.error('فشل تحديث حالة الطلب');
+        }
+    }
+
+    /**
+     * Update company request status directly from table
+     */
+    async updateCompanyRequestStatus(companyRequestId, newStatus) {
+        try {
+            const updateResponse = await fetch(`/api/company-requests/${companyRequestId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (!updateResponse.ok) throw new Error('Failed to update company request status');
+
+            toast.success('تم تحديث حالة الطلب بنجاح');
+            await this.loadData();
+            this.renderCompanyRequests();
+        } catch (error) {
+            console.error('Error updating company request status:', error);
+            toast.error('فشل تحديث حالة الطلب');
+        }
+    }
+
+    /**
+     * Update request status directly from table
+     */
+    async updateRequestStatus(requestId, newStatus) {
+        try {
+            const updateResponse = await fetch(`/api/requests/${requestId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (!updateResponse.ok) throw new Error('Failed to update request status');
+
+            toast.success('تم تحديث حالة الطلب بنجاح');
+            await this.loadData();
+            this.renderRequests();
+        } catch (error) {
+            console.error('Error updating request status:', error);
             toast.error('فشل تحديث حالة الطلب');
         }
     }
@@ -2839,7 +2892,16 @@ class AdminManager {
                                     ${request.serialNumber && request.serialNumber !== 'N/A' ? `<div style="font-size: 0.875rem; color: #94a3b8;" dir="ltr">SN: ${request.serialNumber}</div>` : ''}
                                 </td>
                                 <td class="table-hide-mobile">${request.receivedDate || '—'}</td>
-                                <td><span class="status-badge ${this.getStatusClass(request.status)}">${this.translateStatus(request.status)}</span></td>
+                                <td>
+                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem;" onchange="adminManager.updateRequestStatus(${request.id}, this.value)">
+                                        <option value="Received" ${request.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
+                                        <option value="Waiting Inspection" ${request.status === 'Waiting Inspection' ? 'selected' : ''}>بانتظار الفحص</option>
+                                        <option value="Under Maintenance" ${request.status === 'Under Maintenance' ? 'selected' : ''}>قيد الصيانة</option>
+                                        <option value="Waiting Parts" ${request.status === 'Waiting Parts' ? 'selected' : ''}>بانتظار قطع الغيار</option>
+                                        <option value="Ready" ${request.status === 'Ready' ? 'selected' : ''}>جاهز للتسليم</option>
+                                        <option value="Delivered" ${request.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
+                                    </select>
+                                </td>
                                 <td class="table-hide-mobile">${this.translatePriority(request.priority)}</td>
                                 <td class="table-hide-mobile">${request.cost > 0 ? Utils.formatCurrency(request.cost) : '—'}</td>
                                 <td>${request.technician || '—'}</td>
