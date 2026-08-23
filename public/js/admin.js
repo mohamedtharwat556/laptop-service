@@ -998,7 +998,6 @@ class AdminManager {
         this.destroyCharts();
         this.renderRequestsChart();
         this.renderRevenueChart();
-        this.renderProductsChart();
     }
 
     /**
