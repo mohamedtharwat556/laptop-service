@@ -919,20 +919,36 @@ class AdminManager {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        console.log('📊 Today:', today);
+        console.log('📊 Total normal requests:', this.requests.length);
+        console.log('📊 Total bulk requests:', this.bulkRequests.length);
+        console.log('📊 Total company requests:', this.companyRequests.length);
+
         // Today's orders from all request types
         const todayNormalOrders = this.requests.filter(r => {
             const requestDate = new Date(r.createdAt);
-            return requestDate >= today;
+            const isToday = requestDate >= today;
+            console.log('📊 Normal request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday);
+            return isToday;
         });
         const todayBulkOrders = this.bulkRequests.filter(r => {
             const requestDate = new Date(r.createdAt);
-            return requestDate >= today;
+            const isToday = requestDate >= today;
+            console.log('📊 Bulk request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday);
+            return isToday;
         });
         const todayCompanyOrders = this.companyRequests.filter(r => {
             const requestDate = new Date(r.createdAt);
-            return requestDate >= today;
+            const isToday = requestDate >= today;
+            console.log('📊 Company request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday);
+            return isToday;
         });
         const todayOrders = todayNormalOrders.length + todayBulkOrders.length + todayCompanyOrders.length;
+
+        console.log('📊 Today normal orders:', todayNormalOrders.length);
+        console.log('📊 Today bulk orders:', todayBulkOrders.length);
+        console.log('📊 Today company orders:', todayCompanyOrders.length);
+        console.log('📊 Total today orders:', todayOrders);
 
         const totalRevenue = this.requests
             .filter(r => r.cost && r.cost > 0)
