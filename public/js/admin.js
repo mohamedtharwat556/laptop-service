@@ -3293,9 +3293,12 @@ class AdminManager {
      * Enable phone number editing in bulk request details
      */
     enableBulkRequestPhoneEdit(bulkRequestId) {
+        console.log('📞 enableBulkRequestPhoneEdit called for ID:', bulkRequestId);
         const phoneSpan = document.getElementById(`bulkRequestPhone_${bulkRequestId}`);
+        console.log('📞 phoneSpan found:', phoneSpan);
         if (phoneSpan) {
             const currentPhone = phoneSpan.textContent;
+            console.log('📞 currentPhone:', currentPhone);
             const input = document.createElement('input');
             input.type = 'tel';
             input.value = currentPhone;
@@ -3303,33 +3306,39 @@ class AdminManager {
             input.style.padding = '0.25rem 0.5rem';
             input.style.fontSize = '0.875rem';
             input.style.minWidth = '150px';
-            
+
             phoneSpan.replaceWith(input);
             input.focus();
-            
+
             input.addEventListener('blur', async () => {
                 const newPhone = input.value.trim();
+                console.log('📞 newPhone:', newPhone);
                 if (newPhone && newPhone !== currentPhone) {
                     try {
+                        console.log('📞 Sending update to server:', { customerPhone: newPhone });
                         const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ customerPhone: newPhone })
                         });
-                        
+                        console.log('📞 Response status:', response.status);
+
                         if (response.ok) {
                             const newSpan = document.createElement('span');
                             newSpan.className = 'request-detail-value';
                             newSpan.id = `bulkRequestPhone_${bulkRequestId}`;
                             newSpan.textContent = newPhone;
                             input.replaceWith(newSpan);
-                            
+
                             // Refresh data
                             await this.loadData();
                             this.renderBulkRequests();
+                        } else {
+                            console.error('📞 Server returned error:', response.status);
+                            input.value = currentPhone;
                         }
                     } catch (error) {
-                        console.error('Error updating phone:', error);
+                        console.error('📞 Error updating phone:', error);
                         input.value = currentPhone;
                     }
                 } else {
@@ -3340,12 +3349,14 @@ class AdminManager {
                     input.replaceWith(newSpan);
                 }
             });
-            
+
             input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     input.blur();
                 }
             });
+        } else {
+            console.error('📞 phoneSpan not found for ID:', `bulkRequestPhone_${bulkRequestId}`);
         }
     }
 
