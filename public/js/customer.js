@@ -304,10 +304,24 @@ class CustomerManager {
         const form = document.getElementById('requestForm');
         if (!form) return;
 
+        // Handle request type selection
+        const requestTypeSelect = document.getElementById('requestTypeSelect');
+        if (requestTypeSelect) {
+            requestTypeSelect.addEventListener('change', (e) => {
+                const requestType = e.target.value;
+                if (requestType === 'bulk') {
+                    window.location.href = 'bulk-customer.html';
+                } else if (requestType === 'company') {
+                    window.location.href = 'company-customer.html';
+                }
+            });
+        }
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const formData = {
+                requestType: form.querySelector('[name="requestType"]').value,
                 fullName: form.querySelector('[name="fullName"]').value,
                 phone: form.querySelector('[name="phone"]').value,
                 laptopBrand: form.querySelector('[name="laptopBrand"]').value,
