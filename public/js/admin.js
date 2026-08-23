@@ -2986,9 +2986,30 @@ class AdminManager {
         if (activeFilter === 'today') {
             // Include all request types for today's filter
             const today = new Date().toDateString();
-            const todayNormal = this.requests.filter(r => new Date(r.createdAt).toDateString() === today);
-            const todayBulk = this.bulkRequests.filter(r => new Date(r.createdAt).toDateString() === today);
-            const todayCompany = this.companyRequests.filter(r => new Date(r.createdAt).toDateString() === today);
+            console.log('📅 Today filter - Today date:', today);
+            console.log('📅 Total normal requests:', this.requests.length);
+            console.log('📅 Total bulk requests:', this.bulkRequests.length);
+            console.log('📅 Total company requests:', this.companyRequests.length);
+
+            const todayNormal = this.requests.filter(r => {
+                const isToday = new Date(r.createdAt).toDateString() === today;
+                console.log('📅 Normal request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday);
+                return isToday;
+            });
+            const todayBulk = this.bulkRequests.filter(r => {
+                const isToday = new Date(r.createdAt).toDateString() === today;
+                console.log('📅 Bulk request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday);
+                return isToday;
+            });
+            const todayCompany = this.companyRequests.filter(r => {
+                const isToday = new Date(r.createdAt).toDateString() === today;
+                console.log('📅 Company request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday);
+                return isToday;
+            });
+
+            console.log('📅 Today normal count:', todayNormal.length);
+            console.log('📅 Today bulk count:', todayBulk.length);
+            console.log('📅 Today company count:', todayCompany.length);
 
             // Convert bulk and company requests to match normal request structure
             const convertedBulk = todayBulk.map(r => ({
@@ -3018,6 +3039,7 @@ class AdminManager {
             }));
 
             filtered = [...todayNormal, ...convertedBulk, ...convertedCompany];
+            console.log('📅 Total filtered today:', filtered.length);
         } else if (activeFilter === 'yesterday') {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
