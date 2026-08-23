@@ -828,16 +828,6 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','open')" title="عرض الطلبات المفتوحة">
-                    <div class="stat-icon warning">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.openRequests}</h3>
-                        <p>طلبات مفتوحة</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
                 <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','completed')" title="عرض الطلبات المكتملة">
                     <div class="stat-icon success">
                         <i class="fas fa-check-circle"></i>
@@ -929,10 +919,20 @@ class AdminManager {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const todayOrders = this.requests.filter(r => {
+        // Today's orders from all request types
+        const todayNormalOrders = this.requests.filter(r => {
             const requestDate = new Date(r.createdAt);
             return requestDate >= today;
         });
+        const todayBulkOrders = this.bulkRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+        const todayCompanyOrders = this.companyRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+        const todayOrders = todayNormalOrders.length + todayBulkOrders.length + todayCompanyOrders.length;
 
         const totalRevenue = this.requests
             .filter(r => r.cost && r.cost > 0)
@@ -967,9 +967,8 @@ class AdminManager {
         return {
             // Normal requests stats
             totalRequests: this.requests.length,
-            openRequests: openRequests.length,
             completedRequests: completedRequests.length,
-            todayOrders: todayOrders.length,
+            todayOrders: todayOrders,
             totalRevenue: totalRevenue,
             
             // Company requests stats (separate)
