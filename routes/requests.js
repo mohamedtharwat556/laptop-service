@@ -8,7 +8,7 @@ router.get('/', async (req, res) => {
         console.log('📋 GET /api/requests');
         const { data, error } = await supabase.from('requests').select('*').is('deleted_at', null).order('created_at', { ascending: false });
         if (error) throw error;
-        
+
         // Convert snake_case to camelCase
         const converted = (data || []).map(item => ({
             id: item.id,
@@ -34,9 +34,11 @@ router.get('/', async (req, res) => {
             technicianNotes: item.technician_notes,
             technician: item.technician,
             adminReply: item.admin_reply,
+            createdAt: item.created_at,
+            updatedAt: item.updated_at,
             deletedAt: item.deleted_at
         }));
-        
+
         res.json(converted);
     } catch (error) {
         console.error('Error fetching requests:', error);
@@ -81,7 +83,7 @@ router.get('/trash', async (req, res) => {
             console.error('Supabase error:', error);
             throw error;
         }
-        
+
         // Convert snake_case to camelCase
         const converted = (data || []).map(item => ({
             id: item.id,
@@ -107,6 +109,8 @@ router.get('/trash', async (req, res) => {
             technicianNotes: item.technician_notes,
             technician: item.technician,
             adminReply: item.admin_reply,
+            createdAt: item.created_at,
+            updatedAt: item.updated_at,
             deletedAt: item.deleted_at
         }));
         
