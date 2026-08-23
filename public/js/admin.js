@@ -2985,24 +2985,32 @@ class AdminManager {
 
         if (activeFilter === 'today') {
             // Include all request types for today's filter
-            const today = new Date().toDateString();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
             console.log('📅 Today filter - Today date:', today);
+            console.log('📅 Tomorrow date:', tomorrow);
             console.log('📅 Total normal requests:', this.requests.length);
             console.log('📅 Total bulk requests:', this.bulkRequests.length);
             console.log('📅 Total company requests:', this.companyRequests.length);
 
             const todayNormal = this.requests.filter(r => {
-                const isToday = new Date(r.createdAt).toDateString() === today;
+                const requestDate = new Date(r.createdAt);
+                const isToday = requestDate >= today && requestDate < tomorrow;
                 console.log('📅 Normal request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday);
                 return isToday;
             });
             const todayBulk = this.bulkRequests.filter(r => {
-                const isToday = new Date(r.createdAt).toDateString() === today;
+                const requestDate = new Date(r.createdAt);
+                const isToday = requestDate >= today && requestDate < tomorrow;
                 console.log('📅 Bulk request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday);
                 return isToday;
             });
             const todayCompany = this.companyRequests.filter(r => {
-                const isToday = new Date(r.createdAt).toDateString() === today;
+                const requestDate = new Date(r.createdAt);
+                const isToday = requestDate >= today && requestDate < tomorrow;
                 console.log('📅 Company request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday);
                 return isToday;
             });
