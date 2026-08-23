@@ -13,6 +13,19 @@ class BulkCustomerManager {
         const form = document.getElementById('bulkRequestForm');
         const addDeviceBtn = document.getElementById('addDeviceBtn');
         const deviceCountInput = document.getElementById('deviceCount');
+        const requestTypeSelect = document.getElementById('requestTypeSelect');
+
+        // Handle request type selection
+        if (requestTypeSelect) {
+            requestTypeSelect.addEventListener('change', (e) => {
+                const requestType = e.target.value;
+                if (requestType === 'single') {
+                    window.location.href = 'customer.html';
+                } else if (requestType === 'company') {
+                    window.location.href = 'company-customer.html';
+                }
+            });
+        }
 
         form.addEventListener('submit', (e) => this.handleSubmit(e));
         addDeviceBtn.addEventListener('click', () => this.addDevice());

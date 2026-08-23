@@ -14,6 +14,19 @@ class CompanyCustomerManager {
         const form = document.getElementById('companyRequestForm');
         if (!form) return;
 
+        // Handle request type selection
+        const requestTypeSelect = document.getElementById('requestTypeSelect');
+        if (requestTypeSelect) {
+            requestTypeSelect.addEventListener('change', (e) => {
+                const requestType = e.target.value;
+                if (requestType === 'single') {
+                    window.location.href = 'customer.html';
+                } else if (requestType === 'bulk') {
+                    window.location.href = 'bulk-customer.html';
+                }
+            });
+        }
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             

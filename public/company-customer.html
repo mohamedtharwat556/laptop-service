@@ -50,6 +50,14 @@
         <div class="form-container glass-card">
             <form id="companyRequestForm">
                 <div class="form-group">
+                    <label class="form-label">نوع الطلب *</label>
+                    <select class="form-input" name="requestType" required id="requestTypeSelect">
+                        <option value="single">طلب عادي</option>
+                        <option value="bulk">طلب جملة</option>
+                        <option value="company" selected>موظفي الشركة</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label class="form-label">الاسم الكامل *</label>
                     <input type="text" class="form-input" name="fullName" required placeholder="أدخل اسمك الكامل">
                 </div>

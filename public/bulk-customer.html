@@ -49,6 +49,14 @@
         <h2 class="section-title">طلب صيانة جملة</h2>
         <div class="form-container glass-card">
             <form id="bulkRequestForm">
+                <div class="form-group">
+                    <label class="form-label">نوع الطلب *</label>
+                    <select class="form-input" name="requestType" required id="requestTypeSelect">
+                        <option value="single">طلب عادي</option>
+                        <option value="bulk" selected>طلب جملة</option>
+                        <option value="company">موظفي الشركة</option>
+                    </select>
+                </div>
                 <!-- Customer Information -->
                 <div style="background: rgba(59, 130, 246, 0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid rgba(59, 130, 246, 0.2);">
                     <h3 style="color: #3b82f6; margin-bottom: 1rem;"><i class="fas fa-user"></i> معلومات العميل</h3>
