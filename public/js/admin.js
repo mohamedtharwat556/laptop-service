@@ -2257,7 +2257,15 @@ class AdminManager {
                     </div>
                     <div class="request-details">
                         <div class="request-detail-item"><span class="request-detail-label">اسم العميل</span><span class="request-detail-value">${bulkRequest.customerName}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${bulkRequest.customerPhone}</span></div>
+                        <div class="request-detail-item">
+                            <span class="request-detail-label">رقم الهاتف</span>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <span class="request-detail-value" id="bulkRequestDevicesPhone_${bulkRequest.id}" style="font-weight: 600; color: #3b82f6;">${bulkRequest.customerPhone || '—'}</span>
+                                <button type="button" onclick="adminManager.enableBulkRequestPhoneEdit(${bulkRequest.id})" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.5);">
+                                    <i class="fas fa-edit"></i> تعديل
+                                </button>
+                            </div>
+                        </div>
                         <div class="request-detail-item"><span class="request-detail-label">عدد الأجهزة</span><span class="request-detail-value">${bulkRequest.deviceCount}</span></div>
                     </div>
 
@@ -3294,7 +3302,15 @@ class AdminManager {
      */
     enableBulkRequestPhoneEdit(bulkRequestId) {
         console.log('📞 enableBulkRequestPhoneEdit called for ID:', bulkRequestId);
-        const phoneSpan = document.getElementById(`bulkRequestPhone_${bulkRequestId}`);
+        // Try both possible IDs
+        let phoneSpan = document.getElementById(`bulkRequestPhone_${bulkRequestId}`);
+        let spanId = `bulkRequestPhone_${bulkRequestId}`;
+
+        if (!phoneSpan) {
+            phoneSpan = document.getElementById(`bulkRequestDevicesPhone_${bulkRequestId}`);
+            spanId = `bulkRequestDevicesPhone_${bulkRequestId}`;
+        }
+
         console.log('📞 phoneSpan found:', phoneSpan);
         if (phoneSpan) {
             const currentPhone = phoneSpan.textContent;
@@ -3326,7 +3342,7 @@ class AdminManager {
                         if (response.ok) {
                             const newSpan = document.createElement('span');
                             newSpan.className = 'request-detail-value';
-                            newSpan.id = `bulkRequestPhone_${bulkRequestId}`;
+                            newSpan.id = spanId;
                             newSpan.textContent = newPhone;
                             input.replaceWith(newSpan);
 
@@ -3344,7 +3360,7 @@ class AdminManager {
                 } else {
                     const newSpan = document.createElement('span');
                     newSpan.className = 'request-detail-value';
-                    newSpan.id = `bulkRequestPhone_${bulkRequestId}`;
+                    newSpan.id = spanId;
                     newSpan.textContent = currentPhone;
                     input.replaceWith(newSpan);
                 }
@@ -3356,7 +3372,7 @@ class AdminManager {
                 }
             });
         } else {
-            console.error('📞 phoneSpan not found for ID:', `bulkRequestPhone_${bulkRequestId}`);
+            console.error('📞 phoneSpan not found for IDs:', `bulkRequestPhone_${bulkRequestId}`, `bulkRequestDevicesPhone_${bulkRequestId}`);
         }
     }
 
