@@ -691,6 +691,9 @@ class CustomerManager {
         const timeline = this.getRequestTimeline(bulkRequest);
         const statusClass = this.getStatusClass(bulkRequest.status);
 
+        console.log('📦 Bulk request data:', bulkRequest);
+        console.log('📦 Estimated completion date:', bulkRequest.estimatedCompletionDate);
+
         container.innerHTML = `
             <div class="glass-card tracking-result">
                 <div class="tracking-header">
@@ -723,7 +726,7 @@ class CustomerManager {
                     </div>
                     <div class="tracking-info-item">
                         <p class="tracking-info-label">تاريخ الاستلام المتوقع</p>
-                        <p class="tracking-info-value" style="color: #10b981; font-weight: 600;">${bulkRequest.estimatedCompletionDate ? Utils.formatDate(bulkRequest.estimatedCompletionDate) : 'لم يحدد بعد'}</p>
+                        <p class="tracking-info-value" style="color: #10b981; font-weight: 600;">${bulkRequest.estimatedCompletionDate || bulkRequest.estimated_completion_date ? Utils.formatDate(bulkRequest.estimatedCompletionDate || bulkRequest.estimated_completion_date) : 'لم يحدد بعد'}</p>
                     </div>
                 </div>
 
