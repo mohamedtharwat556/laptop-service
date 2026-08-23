@@ -2984,70 +2984,75 @@ class AdminManager {
         const activeFilter = this._specialFilter || statusFilter;
 
         if (activeFilter === 'today') {
-            // Include all request types for today's filter
+            // Include all request types for today's filter - rebuilt from scratch
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
 
-            console.log('📅 Today filter - Today date:', today);
-            console.log('📅 Tomorrow date:', tomorrow);
-            console.log('📅 Total normal requests:', this.requests.length);
-            console.log('📅 Total bulk requests:', this.bulkRequests.length);
-            console.log('📅 Total company requests:', this.companyRequests.length);
+            console.log('📅 Today filter - Today date:', today.toISOString());
+            console.log('📅 Tomorrow date:', tomorrow.toISOString());
 
-            const todayNormal = this.requests.filter(r => {
+            // Get all today's requests from all types
+            const allTodayRequests = [];
+
+            // Normal requests
+            this.requests.forEach(r => {
                 const requestDate = new Date(r.createdAt);
-                const isToday = requestDate >= today && requestDate < tomorrow;
-                console.log('📅 Normal request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday);
-                return isToday;
-            });
-            const todayBulk = this.bulkRequests.filter(r => {
-                const requestDate = new Date(r.createdAt);
-                const isToday = requestDate >= today && requestDate < tomorrow;
-                console.log('📅 Bulk request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday);
-                return isToday;
-            });
-            const todayCompany = this.companyRequests.filter(r => {
-                const requestDate = new Date(r.createdAt);
-                const isToday = requestDate >= today && requestDate < tomorrow;
-                console.log('📅 Company request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday);
-                return isToday;
+                if (requestDate >= today && requestDate < tomorrow) {
+                    console.log('📅 Adding normal request:', r.requestNumber, r.createdAt);
+                    allTodayRequests.push({
+                        ...r,
+                        isBulk: false,
+                        isCompany: false
+                    });
+                }
             });
 
-            console.log('📅 Today normal count:', todayNormal.length);
-            console.log('📅 Today bulk count:', todayBulk.length);
-            console.log('📅 Today company count:', todayCompany.length);
+            // Bulk requests
+            this.bulkRequests.forEach(r => {
+                const requestDate = new Date(r.createdAt);
+                if (requestDate >= today && requestDate < tomorrow) {
+                    console.log('📅 Adding bulk request:', r.requestNumber, r.createdAt);
+                    allTodayRequests.push({
+                        ...r,
+                        requestNumber: r.requestNumber,
+                        fullName: r.customerName,
+                        phone: r.customerPhone,
+                        laptopBrand: r.devices?.[0]?.laptopBrand || '',
+                        laptopModel: r.devices?.[0]?.laptopModel || '',
+                        problemDescription: r.devices?.[0]?.problemDescription || '',
+                        status: r.status,
+                        createdAt: r.createdAt,
+                        isBulk: true,
+                        isCompany: false
+                    });
+                }
+            });
 
-            // Convert bulk and company requests to match normal request structure
-            const convertedBulk = todayBulk.map(r => ({
-                ...r,
-                requestNumber: r.requestNumber,
-                fullName: r.customerName,
-                phone: r.customerPhone,
-                laptopBrand: r.devices?.[0]?.laptopBrand || '',
-                laptopModel: r.devices?.[0]?.laptopModel || '',
-                problemDescription: r.devices?.[0]?.problemDescription || '',
-                status: r.status,
-                createdAt: r.createdAt,
-                isBulk: true
-            }));
+            // Company requests
+            this.companyRequests.forEach(r => {
+                const requestDate = new Date(r.createdAt);
+                if (requestDate >= today && requestDate < tomorrow) {
+                    console.log('📅 Adding company request:', r.requestNumber, r.createdAt);
+                    allTodayRequests.push({
+                        ...r,
+                        requestNumber: r.requestNumber,
+                        fullName: r.companyName || r.full_name || r.fullName,
+                        phone: r.companyPhone || r.phone,
+                        laptopBrand: r.laptopBrand || r.laptop_brand,
+                        laptopModel: r.laptopModel || r.laptop_model,
+                        problemDescription: r.problemDescription || r.problem_description,
+                        status: r.status,
+                        createdAt: r.createdAt,
+                        isBulk: false,
+                        isCompany: true
+                    });
+                }
+            });
 
-            const convertedCompany = todayCompany.map(r => ({
-                ...r,
-                requestNumber: r.requestNumber,
-                fullName: r.companyName || r.full_name || r.fullName,
-                phone: r.companyPhone || r.phone,
-                laptopBrand: r.laptopBrand || r.laptop_brand,
-                laptopModel: r.laptopModel || r.laptop_model,
-                problemDescription: r.problemDescription || r.problem_description,
-                status: r.status,
-                createdAt: r.createdAt,
-                isCompany: true
-            }));
-
-            filtered = [...todayNormal, ...convertedBulk, ...convertedCompany];
-            console.log('📅 Total filtered today:', filtered.length);
+            console.log('📅 Total today requests:', allTodayRequests.length);
+            filtered = allTodayRequests;
         } else if (activeFilter === 'yesterday') {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
