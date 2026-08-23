@@ -92,10 +92,10 @@ class CustomerManager {
                 request = requests.filter(r => r.phone === searchTerm);
                 request = request.length > 0 ? request[request.length - 1] : null;
             } else if (searchType === 'name') {
-                request = requests.filter(r => r.full_name.toLowerCase() === searchTerm.toLowerCase());
+                request = requests.filter(r => (r.fullName || r.full_name || '').toLowerCase() === searchTerm.toLowerCase());
                 request = request.length > 0 ? request[request.length - 1] : null;
             } else {
-                request = requests.find(r => r.request_number === searchTerm);
+                request = requests.find(r => (r.requestNumber || r.request_number) === searchTerm);
             }
 
             // Convert snake_case to camelCase
@@ -166,10 +166,10 @@ class CustomerManager {
 
             let companyRequest;
             if (searchType === 'phone') {
-                companyRequest = companyRequests.filter(r => r.phone === searchTerm);
+                companyRequest = companyRequests.filter(r => (r.phone || r.companyPhone || r.company_phone) === searchTerm);
                 companyRequest = companyRequest.length > 0 ? companyRequest[companyRequest.length - 1] : null;
             } else if (searchType === 'name') {
-                companyRequest = companyRequests.filter(r => (r.fullName || r.full_name).toLowerCase() === searchTerm.toLowerCase());
+                companyRequest = companyRequests.filter(r => (r.fullName || r.full_name || r.companyName || r.company_name || '').toLowerCase() === searchTerm.toLowerCase());
                 companyRequest = companyRequest.length > 0 ? companyRequest[companyRequest.length - 1] : null;
             } else {
                 companyRequest = companyRequests.find(r => (r.requestNumber || r.request_number) === searchTerm);
