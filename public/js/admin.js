@@ -2989,13 +2989,15 @@ class AdminManager {
             const today = new Date().toDateString();
 
             console.log('📅 Today filter - Today date (local):', today);
+            console.log('📅 Total normal requests:', this.requests.length);
 
             // Get all today's requests from all types
             const allTodayRequests = [];
 
-            // Normal requests
+            // Normal requests - log ALL requests to debug
             this.requests.forEach(r => {
                 const requestDate = new Date(r.createdAt).toDateString();
+                console.log('📅 Normal request:', r.requestNumber, 'Date:', r.createdAt, 'Date string:', requestDate, 'Matches today:', requestDate === today);
                 if (requestDate === today) {
                     console.log('📅 Adding normal request:', r.requestNumber, r.createdAt);
                     allTodayRequests.push({
