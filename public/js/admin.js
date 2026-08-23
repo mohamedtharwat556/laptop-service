@@ -2971,7 +2971,7 @@ class AdminManager {
         if (searchTerm) {
             // reset special filter on manual search
             this._specialFilter = null;
-            filtered = filtered.filter(r => 
+            filtered = filtered.filter(r =>
                 r.requestNumber.toLowerCase().includes(searchTerm) ||
                 r.fullName.toLowerCase().includes(searchTerm) ||
                 r.phone.includes(searchTerm) ||
@@ -2984,8 +2984,40 @@ class AdminManager {
         const activeFilter = this._specialFilter || statusFilter;
 
         if (activeFilter === 'today') {
+            // Include all request types for today's filter
             const today = new Date().toDateString();
-            filtered = filtered.filter(r => new Date(r.createdAt).toDateString() === today);
+            const todayNormal = this.requests.filter(r => new Date(r.createdAt).toDateString() === today);
+            const todayBulk = this.bulkRequests.filter(r => new Date(r.createdAt).toDateString() === today);
+            const todayCompany = this.companyRequests.filter(r => new Date(r.createdAt).toDateString() === today);
+
+            // Convert bulk and company requests to match normal request structure
+            const convertedBulk = todayBulk.map(r => ({
+                ...r,
+                requestNumber: r.requestNumber,
+                fullName: r.customerName,
+                phone: r.customerPhone,
+                laptopBrand: r.devices?.[0]?.laptopBrand || '',
+                laptopModel: r.devices?.[0]?.laptopModel || '',
+                problemDescription: r.devices?.[0]?.problemDescription || '',
+                status: r.status,
+                createdAt: r.createdAt,
+                isBulk: true
+            }));
+
+            const convertedCompany = todayCompany.map(r => ({
+                ...r,
+                requestNumber: r.requestNumber,
+                fullName: r.companyName || r.full_name || r.fullName,
+                phone: r.companyPhone || r.phone,
+                laptopBrand: r.laptopBrand || r.laptop_brand,
+                laptopModel: r.laptopModel || r.laptop_model,
+                problemDescription: r.problemDescription || r.problem_description,
+                status: r.status,
+                createdAt: r.createdAt,
+                isCompany: true
+            }));
+
+            filtered = [...todayNormal, ...convertedBulk, ...convertedCompany];
         } else if (activeFilter === 'yesterday') {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
