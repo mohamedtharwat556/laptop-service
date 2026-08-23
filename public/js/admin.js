@@ -2985,21 +2985,18 @@ class AdminManager {
 
         if (activeFilter === 'today') {
             // Include all request types for today's filter - rebuilt from scratch
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
+            // Use local date string comparison to avoid timezone issues
+            const today = new Date().toDateString();
 
-            console.log('📅 Today filter - Today date:', today.toISOString());
-            console.log('📅 Tomorrow date:', tomorrow.toISOString());
+            console.log('📅 Today filter - Today date (local):', today);
 
             // Get all today's requests from all types
             const allTodayRequests = [];
 
             // Normal requests
             this.requests.forEach(r => {
-                const requestDate = new Date(r.createdAt);
-                if (requestDate >= today && requestDate < tomorrow) {
+                const requestDate = new Date(r.createdAt).toDateString();
+                if (requestDate === today) {
                     console.log('📅 Adding normal request:', r.requestNumber, r.createdAt);
                     allTodayRequests.push({
                         ...r,
@@ -3011,8 +3008,8 @@ class AdminManager {
 
             // Bulk requests
             this.bulkRequests.forEach(r => {
-                const requestDate = new Date(r.createdAt);
-                if (requestDate >= today && requestDate < tomorrow) {
+                const requestDate = new Date(r.createdAt).toDateString();
+                if (requestDate === today) {
                     console.log('📅 Adding bulk request:', r.requestNumber, r.createdAt);
                     allTodayRequests.push({
                         ...r,
@@ -3032,8 +3029,8 @@ class AdminManager {
 
             // Company requests
             this.companyRequests.forEach(r => {
-                const requestDate = new Date(r.createdAt);
-                if (requestDate >= today && requestDate < tomorrow) {
+                const requestDate = new Date(r.createdAt).toDateString();
+                if (requestDate === today) {
                     console.log('📅 Adding company request:', r.requestNumber, r.createdAt);
                     allTodayRequests.push({
                         ...r,
