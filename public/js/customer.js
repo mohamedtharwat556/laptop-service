@@ -751,6 +751,7 @@ class CustomerManager {
                                     <th>الموديل</th>
                                     <th>الرقم التسلسلي</th>
                                     <th>تاريخ الاستلام</th>
+                                    <th>تاريخ الاستلام المتوقع</th>
                                     <th>الأولوية</th>
                                     <th>الحالة</th>
                                 </tr>
@@ -763,6 +764,7 @@ class CustomerManager {
                                         <td>${device.laptopModel}</td>
                                         <td dir="ltr" style="color: #94a3b8;">${device.serialNumber || '—'}</td>
                                         <td>${device.receivedDate ? Utils.formatDate(device.receivedDate) : '—'}</td>
+                                        <td style="color: #10b981; font-weight: 600;">${device.estimatedCompletionDate || device.estimated_completion_date ? Utils.formatDate(device.estimatedCompletionDate || device.estimated_completion_date) : 'لم يحدد بعد'}</td>
                                         <td><span class="priority-badge ${this.getStatusClass(device.priority)}">${this.translatePriority(device.priority)}</span></td>
                                         <td><span class="status-badge ${this.getStatusClass(device.status)}">${this.translateStatus(device.status)}</span></td>
                                     </tr>
