@@ -2392,6 +2392,15 @@ body.light-mode .msg-typing-dot {
     transform: translateY(-2px);
 }
 
+.share-btn.website {
+    background: var(--primary-blue);
+}
+
+.share-btn.website:hover {
+    background: var(--secondary-blue);
+    transform: translateY(-2px);
+}
+
 /* Google Reviews */
 .google-reviews {
     margin-top: 0.5rem;
