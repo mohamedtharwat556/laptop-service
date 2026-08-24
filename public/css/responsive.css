@@ -885,6 +885,154 @@
     .hero-buttons .btn {
         width: 100%;
     }
+
+    /* Additional dashboard improvements for very small screens */
+    .dashboard-container {
+        padding: 0.5rem;
+    }
+
+    .sidebar {
+        width: 260px;
+    }
+
+    .sidebar-header h2 {
+        font-size: 1.125rem;
+    }
+
+    .sidebar-nav-link {
+        padding: 0.75rem 0.875rem;
+        font-size: 0.875rem;
+    }
+
+    .sidebar-nav-link i {
+        font-size: 0.9375rem;
+        width: 24px;
+    }
+
+    .dashboard-main {
+        padding: 0.75rem;
+    }
+
+    .dashboard-header {
+        padding: 0.75rem;
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.25rem;
+    }
+
+    .stats-grid {
+        gap: 0.5rem;
+    }
+
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.125rem;
+    }
+
+    .stat-info h3 {
+        font-size: 1.5rem;
+    }
+
+    .stat-info p {
+        font-size: 0.8125rem;
+    }
+
+    .request-card {
+        padding: 0.875rem;
+    }
+
+    .request-card-header h3 {
+        font-size: 0.9375rem;
+    }
+
+    .request-detail-item {
+        font-size: 0.8125rem;
+    }
+
+    .request-actions .btn {
+        padding: 0.625rem 0.875rem;
+        font-size: 0.8125rem;
+    }
+
+    .table-container {
+        font-size: 0.75rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.375rem;
+        font-size: 0.75rem;
+    }
+
+    .pagination button {
+        padding: 0.3125rem 0.625rem;
+        font-size: 0.75rem;
+    }
+
+    /* Improve navbar on very small screens */
+    .navbar .nav-container {
+        padding: 0.375rem;
+    }
+
+    .navbar .logo {
+        font-size: 1.125rem;
+    }
+
+    .navbar .logo-img {
+        width: 35px;
+        height: 35px;
+    }
+
+    .navbar .nav-links {
+        top: 55px;
+    }
+
+    .sidebar-toggle {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    /* Improve modals on very small screens */
+    .modal-content {
+        padding: 0.875rem;
+        margin: 0.5rem;
+        border-radius: 8px;
+    }
+
+    .modal-header h3 {
+        font-size: 1.125rem;
+    }
+
+    /* Improve toast notifications */
+    .toast {
+        padding: 0.75rem 1rem;
+        font-size: 0.8125rem;
+    }
+
+    /* Improve form inputs on very small screens */
+    .form-input,
+    .form-select,
+    .form-textarea {
+        padding: 0.625rem;
+        font-size: 0.875rem;
+    }
+
+    .form-label {
+        font-size: 0.8125rem;
+    }
+
+    /* Improve buttons on very small screens */
+    .btn {
+        padding: 0.625rem 1rem;
+        font-size: 0.8125rem;
+    }
 }
 
 /* Landscape Orientation for Mobile */
