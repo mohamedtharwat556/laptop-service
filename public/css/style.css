@@ -2306,3 +2306,123 @@ body.light-mode .msg-typing-dot {
         opacity: 0;
     }
 }
+
+/* Social Links */
+.social-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.social-link {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1.1rem;
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.social-link:hover {
+    background: var(--primary-blue);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(30, 58, 138, 0.4);
+}
+
+.social-link.facebook:hover {
+    background: #1877f2;
+}
+
+.social-link.twitter:hover {
+    background: #1da1f2;
+}
+
+/* Share Buttons */
+.share-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.share-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.share-btn.facebook {
+    background: #1877f2;
+}
+
+.share-btn.facebook:hover {
+    background: #0d65d9;
+    transform: translateY(-2px);
+}
+
+.share-btn.twitter {
+    background: #1da1f2;
+}
+
+.share-btn.twitter:hover {
+    background: #0c85d0;
+    transform: translateY(-2px);
+}
+
+.share-btn.whatsapp {
+    background: #25d366;
+}
+
+.share-btn.whatsapp:hover {
+    background: #1ebc57;
+    transform: translateY(-2px);
+}
+
+/* Google Reviews */
+.google-reviews {
+    margin-top: 0.5rem;
+}
+
+.google-review-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.google-review-link:hover {
+    color: var(--white);
+    transform: translateY(-2px);
+}
+
+.google-review-link i {
+    color: #4285f4;
+    font-size: 1.5rem;
+}
+
+.stars {
+    color: #fbbf24;
+    margin-top: 0.25rem;
+    display: flex;
+    gap: 0.25rem;
+}
+
+.stars i {
+    font-size: 0.875rem;
+}

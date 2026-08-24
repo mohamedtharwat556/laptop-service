@@ -52,6 +52,33 @@ class Utils {
     }
 
     /**
+     * Share on Facebook
+     */
+    static shareOnFacebook() {
+        const url = encodeURIComponent(window.location.href);
+        const title = encodeURIComponent('مركز YAS لصيانة اللابتوب - صيانة احترافية لجميع أنواع اللابتوب');
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&t=${title}`, '_blank', 'width=600,height=400');
+    }
+
+    /**
+     * Share on Twitter
+     */
+    static shareOnTwitter() {
+        const url = encodeURIComponent(window.location.href);
+        const text = encodeURIComponent('مركز YAS لصيانة اللابتوب - صيانة احترافية لجميع أنواع اللابتوب');
+        window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank', 'width=600,height=400');
+    }
+
+    /**
+     * Share on WhatsApp
+     */
+    static shareOnWhatsApp() {
+        const url = encodeURIComponent(window.location.href);
+        const text = encodeURIComponent('مركز YAS لصيانة اللابتوب - صيانة احترافية لجميع أنواع اللابتوب');
+        window.open(`https://wa.me/?text=${text}%20${url}`, '_blank');
+    }
+
+    /**
      * Validate email
      */
     static validateEmail(email) {
@@ -76,6 +103,11 @@ class Utils {
         return div.innerHTML;
     }
 }
+
+// Global share functions
+window.shareOnFacebook = () => Utils.shareOnFacebook();
+window.shareOnTwitter = () => Utils.shareOnTwitter();
+window.shareOnWhatsApp = () => Utils.shareOnWhatsApp();
 
 // Toast Notification System
 class ToastManager {

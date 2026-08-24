@@ -324,6 +324,7 @@ class CustomerManager {
                 requestType: form.querySelector('[name="requestType"]').value,
                 fullName: form.querySelector('[name="fullName"]').value,
                 phone: form.querySelector('[name="phone"]').value,
+                referralCode: form.querySelector('[name="referralCode"]') ? form.querySelector('[name="referralCode"]').value : '',
                 laptopBrand: form.querySelector('[name="laptopBrand"]').value,
                 laptopModel: form.querySelector('[name="laptopModel"]').value,
                 serialNumber: form.querySelector('[name="serialNumber"]').value,
