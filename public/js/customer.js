@@ -379,6 +379,9 @@ class CustomerManager {
         const form = document.getElementById('trackingForm');
         if (!form) return;
 
+        // Setup instant search and suggestions
+        this.setupInstantSearch();
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -391,8 +394,11 @@ class CustomerManager {
                 return;
             }
 
-            loading.show();
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Save to recent searches
+            this.saveRecentSearch(searchTerm, searchType, requestType);
+
+            const loading = new Loading();
+            loading.show('جاري البحث...');
 
             try {
                 let request;
@@ -445,6 +451,201 @@ class CustomerManager {
     }
 
     /**
+     * Setup instant search functionality
+     */
+    setupInstantSearch() {
+        const searchInput = document.getElementById('searchInput');
+        const searchSuggestions = document.getElementById('searchSuggestions');
+        const recentSearches = document.getElementById('recentSearches');
+        const recentSearchesList = document.getElementById('recentSearchesList');
+
+        if (!searchInput) return;
+
+        // Load recent searches
+        this.loadRecentSearches();
+
+        // Instant search with debounce
+        let debounceTimer;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            const searchTerm = e.target.value.trim();
+
+            if (searchTerm.length < 2) {
+                searchSuggestions.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                this.showSearchSuggestions(searchTerm);
+            }, 300);
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+                searchSuggestions.style.display = 'none';
+            }
+        });
+    }
+
+    /**
+     * Show search suggestions
+     */
+    async showSearchSuggestions(searchTerm) {
+        const searchSuggestions = document.getElementById('searchSuggestions');
+        if (!searchSuggestions) return;
+
+        try {
+            // Fetch all requests for suggestions
+            const response = await fetch('/api/requests');
+            const requests = await response.json();
+
+            const suggestions = [];
+
+            // Search by phone
+            requests.forEach(req => {
+                if (req.phone && req.phone.includes(searchTerm)) {
+                    suggestions.push({
+                        type: 'رقم الهاتف',
+                        value: req.phone,
+                        requestNumber: req.requestNumber
+                    });
+                }
+            });
+
+            // Search by name
+            requests.forEach(req => {
+                const fullName = req.fullName || req.full_name || '';
+                if (fullName.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    suggestions.push({
+                        type: 'الاسم',
+                        value: fullName,
+                        requestNumber: req.requestNumber
+                    });
+                }
+            });
+
+            // Search by request number
+            requests.forEach(req => {
+                if (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    suggestions.push({
+                        type: 'رقم الطلب',
+                        value: req.requestNumber,
+                        requestNumber: req.requestNumber
+                    });
+                }
+            });
+
+            // Remove duplicates and limit to 5
+            const uniqueSuggestions = [...new Map(suggestions.map(s => [s.value, s])).values()].slice(0, 5);
+
+            if (uniqueSuggestions.length > 0) {
+                searchSuggestions.innerHTML = uniqueSuggestions.map(s => `
+                    <div class="search-suggestion-item" data-value="${s.value}" data-type="${s.type}">
+                        <div class="suggestion-type">${s.type}</div>
+                        <div class="suggestion-value">${s.value}</div>
+                    </div>
+                `).join('');
+
+                // Add click handlers
+                searchSuggestions.querySelectorAll('.search-suggestion-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        document.getElementById('searchInput').value = item.dataset.value;
+                        searchSuggestions.style.display = 'none';
+                        document.getElementById('trackingForm').dispatchEvent(new Event('submit'));
+                    });
+                });
+
+                searchSuggestions.style.display = 'block';
+            } else {
+                searchSuggestions.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error fetching suggestions:', error);
+            searchSuggestions.style.display = 'none';
+        }
+    }
+
+    /**
+     * Save recent search
+     */
+    saveRecentSearch(searchTerm, searchType, requestType) {
+        const recentSearches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+        
+        // Remove if already exists
+        const index = recentSearches.findIndex(s => s.value === searchTerm);
+        if (index > -1) {
+            recentSearches.splice(index, 1);
+        }
+
+        // Add to beginning
+        recentSearches.unshift({
+            value: searchTerm,
+            type: searchType,
+            requestType: requestType,
+            timestamp: new Date().toISOString()
+        });
+
+        // Keep only last 5
+        const recentSearchesLimited = recentSearches.slice(0, 5);
+        localStorage.setItem('recentSearches', JSON.stringify(recentSearchesLimited));
+
+        this.loadRecentSearches();
+    }
+
+    /**
+     * Load recent searches
+     */
+    loadRecentSearches() {
+        const recentSearches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+        const recentSearchesDiv = document.getElementById('recentSearches');
+        const recentSearchesList = document.getElementById('recentSearchesList');
+
+        if (!recentSearchesDiv || !recentSearchesList) return;
+
+        if (recentSearches.length > 0) {
+            recentSearchesDiv.style.display = 'block';
+            recentSearchesList.innerHTML = recentSearches.map((search, index) => `
+                <div class="recent-search-tag" data-index="${index}">
+                    <span>${search.value}</span>
+                    <span class="remove-search" data-index="${index}">×</span>
+                </div>
+            `).join('');
+
+            // Add click handlers for search tags
+            recentSearchesList.querySelectorAll('.recent-search-tag').forEach(tag => {
+                tag.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('remove-search')) {
+                        e.stopPropagation();
+                        this.removeRecentSearch(parseInt(e.target.dataset.index));
+                    } else {
+                        const index = parseInt(tag.dataset.index);
+                        const search = recentSearches[index];
+                        document.getElementById('searchInput').value = search.value;
+                        document.querySelector('[name="searchType"]').value = search.type;
+                        if (document.querySelector('[name="requestType"]')) {
+                            document.querySelector('[name="requestType"]').value = search.requestType;
+                        }
+                        document.getElementById('trackingForm').dispatchEvent(new Event('submit'));
+                    }
+                });
+            });
+        } else {
+            recentSearchesDiv.style.display = 'none';
+        }
+    }
+
+    /**
+     * Remove recent search
+     */
+    removeRecentSearch(index) {
+        const recentSearches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+        recentSearches.splice(index, 1);
+        localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
+        this.loadRecentSearches();
+    }
+
+    /**
      * Render tracking result
      */
     renderTrackingResult(request) {
@@ -454,6 +655,7 @@ class CustomerManager {
         const progress = this.calculateProgress(request);
         const timeline = this.getRequestTimeline(request);
         const statusClass = this.getStatusClass(request.status);
+        const stages = this.getProgressStages(request.status);
 
         container.innerHTML = `
             <div class="glass-card tracking-result">
@@ -467,9 +669,18 @@ class CustomerManager {
                     </div>
                 </div>
 
-
                 <div class="progress-container">
-                    <div class="progress-bar" style="width: ${progress}%"></div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" style="width: ${progress}%"></div>
+                        ${stages.map(stage => `
+                            <div class="progress-step ${stage.active ? 'active' : ''} ${stage.completed ? 'completed' : ''}">
+                                <div class="progress-step-circle">
+                                    ${stage.completed ? '<i class="fas fa-check"></i>' : (stage.active ? '<i class="fas fa-cog fa-spin"></i>' : stage.icon)}
+                                </div>
+                                <div class="progress-step-label">${stage.label}</div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
 
                 <div class="tracking-info">
@@ -889,6 +1100,41 @@ class CustomerManager {
                 ` : ''}
             </div>
         `;
+    }
+
+    /**
+     * Get progress stages based on request status
+     */
+    getProgressStages(status) {
+        const stages = [
+            { label: 'استلام', icon: '<i class="fas fa-inbox"></i>', completed: false, active: false },
+            { label: 'تشخيص', icon: '<i class="fas fa-search"></i>', completed: false, active: false },
+            { label: 'إصلاح', icon: '<i class="fas fa-tools"></i>', completed: false, active: false },
+            { label: 'اختبار', icon: '<i class="fas fa-check-circle"></i>', completed: false, active: false },
+            { label: 'جاهز', icon: '<i class="fas fa-check-double"></i>', completed: false, active: false }
+        ];
+
+        const statusMap = {
+            'Received': 0,
+            'Diagnosing': 1,
+            'Repairing': 2,
+            'Testing': 3,
+            'Ready': 4,
+            'Completed': 4,
+            'Delivered': 4
+        };
+
+        const currentIndex = statusMap[status] || 0;
+
+        stages.forEach((stage, index) => {
+            if (index < currentIndex) {
+                stage.completed = true;
+            } else if (index === currentIndex) {
+                stage.active = true;
+            }
+        });
+
+        return stages;
     }
 
     /**
