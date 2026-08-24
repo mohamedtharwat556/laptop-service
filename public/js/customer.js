@@ -397,7 +397,6 @@ class CustomerManager {
             // Save to recent searches
             this.saveRecentSearch(searchTerm, searchType, requestType);
 
-            const loading = new Loading();
             loading.show('جاري البحث...');
 
             try {
