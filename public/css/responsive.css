@@ -731,6 +731,87 @@
     .modal-content {
         max-width: calc(100% - 2rem);
         margin: 1rem;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+
+    .modal-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .modal-header h3 {
+        font-size: 1.25rem;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+    }
+
+    /* Request view modal specific */
+    .modal-content .request-card {
+        padding: 0.875rem;
+    }
+
+    .modal-content .request-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .modal-content .request-card-header h3 {
+        font-size: 1rem;
+    }
+
+    .modal-content .request-details {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .modal-content .request-detail-item {
+        font-size: 0.875rem;
+    }
+
+    .modal-content .request-detail-label {
+        font-size: 0.8125rem;
+    }
+
+    .modal-content .request-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-content .request-actions .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .modal-content .form-group {
+        margin-bottom: 0.75rem;
+    }
+
+    .modal-content .form-row {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-content .form-row .form-group {
+        width: 100%;
+    }
+
+    .modal-content .modal-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-content .modal-footer .btn {
+        width: 100%;
+        justify-content: center;
     }
 
     /* Form improvements */
@@ -1001,13 +1082,43 @@
 
     /* Improve modals on very small screens */
     .modal-content {
-        padding: 0.875rem;
+        padding: 0.75rem;
         margin: 0.5rem;
         border-radius: 8px;
+        max-height: 90vh;
+        overflow-y: auto;
     }
 
     .modal-header h3 {
         font-size: 1.125rem;
+    }
+
+    .modal-close {
+        top: 0.75rem;
+        left: 0.75rem;
+        font-size: 1.25rem;
+    }
+
+    /* Request view modal on very small screens */
+    .modal-content .request-card {
+        padding: 0.75rem;
+    }
+
+    .modal-content .request-card-header h3 {
+        font-size: 0.9375rem;
+    }
+
+    .modal-content .request-detail-item {
+        font-size: 0.8125rem;
+    }
+
+    .modal-content .request-detail-label {
+        font-size: 0.75rem;
+    }
+
+    .modal-content .request-actions .btn {
+        padding: 0.625rem 0.875rem;
+        font-size: 0.8125rem;
     }
 
     /* Improve toast notifications */
