@@ -1151,9 +1151,17 @@ class CustomerManager {
 
         stages.forEach((stage, index) => {
             if (index < currentIndex) {
+                // Previous stages are completed (green)
                 stage.completed = true;
+                stage.active = false;
             } else if (index === currentIndex) {
+                // Current stage is active (blue)
+                stage.completed = false;
                 stage.active = true;
+            } else {
+                // Future stages are inactive (gray)
+                stage.completed = false;
+                stage.active = false;
             }
         });
 
