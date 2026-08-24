@@ -234,20 +234,26 @@ router.post('/', async (req, res) => {
 // PUT /api/company-requests/:id - Update a company request
 router.put('/:id', async (req, res) => {
     try {
+        console.log('📝 PUT /api/company-requests/:id', req.params.id);
+        console.log('📝 Request body:', req.body);
+
         const updateData = {
-            admin_reply: req.body.admin_reply,
+            admin_reply: req.body.admin_reply || req.body.adminReply,
             cost: req.body.cost,
             technician: req.body.technician,
-            estimated_completion_date: req.body.estimated_completion_date,
-            status: req.body.status
+            estimated_completion_date: req.body.estimated_completion_date || req.body.estimatedCompletionDate,
+            status: req.body.status,
+            technician_notes: req.body.technician_notes || req.body.technicianNotes
         };
 
         // Remove undefined values
         Object.keys(updateData).forEach(key => {
-            if (updateData[key] === undefined) {
+            if (updateData[key] === undefined || updateData[key] === null) {
                 delete updateData[key];
             }
         });
+
+        console.log('📝 Update data:', updateData);
 
         const { data, error } = await supabase
             .from('company_requests')
@@ -256,7 +262,14 @@ router.put('/:id', async (req, res) => {
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('❌ Supabase error:', error);
+            throw error;
+        }
+
+        if (!data) {
+            return res.status(404).json({ error: 'Company request not found' });
+        }
 
         // Convert to camelCase
         const camelCaseData = {
@@ -282,8 +295,8 @@ router.put('/:id', async (req, res) => {
 
         res.json(camelCaseData);
     } catch (error) {
-        console.error('Error updating company request:', error);
-        res.status(500).json({ error: 'Failed to update company request' });
+        console.error('❌ Error updating company request:', error);
+        res.status(500).json({ error: error.message || 'Failed to update company request' });
     }
 });
 
