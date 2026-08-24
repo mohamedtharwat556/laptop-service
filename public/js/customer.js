@@ -1110,7 +1110,8 @@ class CustomerManager {
             { label: 'تشخيص', icon: '<i class="fas fa-search"></i>', completed: false, active: false },
             { label: 'إصلاح', icon: '<i class="fas fa-tools"></i>', completed: false, active: false },
             { label: 'اختبار', icon: '<i class="fas fa-check-circle"></i>', completed: false, active: false },
-            { label: 'جاهز', icon: '<i class="fas fa-check-double"></i>', completed: false, active: false }
+            { label: 'جاهز', icon: '<i class="fas fa-check-double"></i>', completed: false, active: false },
+            { label: 'تم التسليم', icon: '<i class="fas fa-hand-holding"></i>', completed: false, active: false }
         ];
 
         const statusMap = {
@@ -1120,7 +1121,8 @@ class CustomerManager {
             'Testing': 3,
             'Ready': 4,
             'Completed': 4,
-            'Delivered': 4
+            'Delivered': 5,
+            'HandedOver': 5
         };
 
         const currentIndex = statusMap[status] || 0;
