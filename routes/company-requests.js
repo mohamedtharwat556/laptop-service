@@ -238,6 +238,14 @@ router.put('/:id', async (req, res) => {
         console.log('📝 Request body:', req.body);
 
         const updateData = {
+            full_name: req.body.full_name || req.body.fullName,
+            phone: req.body.phone,
+            laptop_brand: req.body.laptop_brand || req.body.laptopBrand,
+            laptop_model: req.body.laptop_model || req.body.laptopModel,
+            serial_number: req.body.serial_number || req.body.serialNumber,
+            received_date: req.body.received_date || req.body.receivedDate,
+            problem_description: req.body.problem_description || req.body.problemDescription,
+            priority: req.body.priority,
             admin_reply: req.body.admin_reply || req.body.adminReply,
             cost: req.body.cost,
             technician: req.body.technician,
