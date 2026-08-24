@@ -901,6 +901,7 @@ class CustomerManager {
         const progress = this.calculateProgress(bulkRequest);
         const timeline = this.getRequestTimeline(bulkRequest);
         const statusClass = this.getStatusClass(bulkRequest.status);
+        const stages = this.getProgressStages(bulkRequest.status);
 
         console.log('📦 Bulk request data:', bulkRequest);
         console.log('📦 Estimated completion date:', bulkRequest.estimatedCompletionDate);
@@ -919,7 +920,17 @@ class CustomerManager {
                 </div>
 
                 <div class="progress-container">
-                    <div class="progress-bar" style="width: ${progress}%"></div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" style="width: ${progress}%"></div>
+                        ${stages.map(stage => `
+                            <div class="progress-step ${stage.active ? 'active' : ''} ${stage.completed ? 'completed' : ''}">
+                                <div class="progress-step-circle">
+                                    ${stage.completed ? '<i class="fas fa-check"></i>' : (stage.active ? '<i class="fas fa-cog fa-spin"></i>' : stage.icon)}
+                                </div>
+                                <div class="progress-step-label">${stage.label}</div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
 
                 <div class="tracking-info">
@@ -1018,6 +1029,7 @@ class CustomerManager {
         const progress = this.calculateProgress(companyRequest);
         const timeline = this.getRequestTimeline(companyRequest);
         const statusClass = this.getStatusClass(companyRequest.status);
+        const stages = this.getProgressStages(companyRequest.status);
 
         container.innerHTML = `
             <div class="glass-card tracking-result">
@@ -1033,7 +1045,17 @@ class CustomerManager {
                 </div>
 
                 <div class="progress-container">
-                    <div class="progress-bar" style="width: ${progress}%"></div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" style="width: ${progress}%"></div>
+                        ${stages.map(stage => `
+                            <div class="progress-step ${stage.active ? 'active' : ''} ${stage.completed ? 'completed' : ''}">
+                                <div class="progress-step-circle">
+                                    ${stage.completed ? '<i class="fas fa-check"></i>' : (stage.active ? '<i class="fas fa-cog fa-spin"></i>' : stage.icon)}
+                                </div>
+                                <div class="progress-step-label">${stage.label}</div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
 
                 <div class="tracking-info">
@@ -1111,7 +1133,7 @@ class CustomerManager {
             { label: 'إصلاح', icon: '<i class="fas fa-tools"></i>', completed: false, active: false },
             { label: 'اختبار', icon: '<i class="fas fa-check-circle"></i>', completed: false, active: false },
             { label: 'جاهز', icon: '<i class="fas fa-check-double"></i>', completed: false, active: false },
-            { label: 'تم التسليم', icon: '<i class="fas fa-hand-holding"></i>', completed: false, active: false }
+            { label: 'تم التسليم', icon: '<i class="fas fa-check"></i>', completed: false, active: false }
         ];
 
         const statusMap = {
