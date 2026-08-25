@@ -2284,6 +2284,12 @@ class AdminManager {
                     </div>
 
                     <div style="margin-top: 1.5rem;">
+                        <button type="button" onclick="adminManager.showAddDeviceModal(${bulkRequest.id})" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                            <i class="fas fa-plus"></i> إضافة لابتوب جديد
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 1.5rem;">
                         <h4 style="margin-bottom: 1rem; color: #94a3b8;">الأجهزة</h4>
                         <div style="overflow-x: auto;">
                             <table class="table">
