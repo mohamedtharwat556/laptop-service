@@ -2699,6 +2699,12 @@ class AdminManager {
                 </div>
                 ` : ''}
 
+                <div style="margin-top: 1.5rem;">
+                    <button type="button" onclick="adminManager.showAddDeviceModal(${bulkRequest.id})" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <i class="fas fa-plus"></i> إضافة لابتوب جديد
+                    </button>
+                </div>
+
                 <form id="editBulkRequestForm" style="margin-top: 1.5rem;">
                     <div class="form-group">
                         <label class="form-label">رقم الطلب</label>
@@ -2865,6 +2871,126 @@ class AdminManager {
         } catch (error) {
             console.error('Error soft deleting bulk request:', error);
             toast.error('فشل في حذف طلب الجملة');
+        }
+    }
+
+    /**
+     * Show add device modal for bulk request
+     */
+    showAddDeviceModal(bulkRequestId) {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h3>إضافة لابتوب جديد لطلب الجملة</h3>
+                    <button type="button" class="modal-close" onclick="this.closest('.modal').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="addDeviceForm">
+                    <div class="form-group">
+                        <label class="form-label">ماركة اللابتوب</label>
+                        <select class="form-select" name="laptopBrand" required>
+                            <option value="">اختر الماركة</option>
+                            <option value="HP">HP</option>
+                            <option value="Dell">Dell</option>
+                            <option value="Lenovo">Lenovo</option>
+                            <option value="Asus">Asus</option>
+                            <option value="Acer">Acer</option>
+                            <option value="Toshiba">Toshiba</option>
+                            <option value="Samsung">Samsung</option>
+                            <option value="MSI">MSI</option>
+                            <option value="Apple">Apple</option>
+                            <option value="Sony">Sony</option>
+                            <option value="Other">أخرى</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">موديل اللابتوب</label>
+                        <input type="text" class="form-input" name="laptopModel" placeholder="أدخل الموديل" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">الرقم التسلسلي (اختياري)</label>
+                        <input type="text" class="form-input" name="serialNumber" placeholder="أدخل الرقم التسلسلي">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">تاريخ الاستلام</label>
+                        <input type="date" class="form-input" name="receivedDate" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">الأولوية</label>
+                        <select class="form-select" name="priority">
+                            <option value="Low">منخفضة</option>
+                            <option value="Medium" selected>متوسطة</option>
+                            <option value="High">عالية</option>
+                            <option value="Urgent">عاجلة</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">وصف المشكلة</label>
+                        <textarea class="form-textarea" name="problemDescription" rows="3" placeholder="أدخل وصف المشكلة" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">التكلفة (اختياري)</label>
+                        <input type="number" class="form-input" name="cost" placeholder="أدخل التكلفة" min="0" step="0.01">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">إضافة اللابتوب</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        const form = document.getElementById('addDeviceForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.addDeviceToBulkRequest(bulkRequestId, new FormData(form));
+            modal.remove();
+        });
+    }
+
+    /**
+     * Add device to existing bulk request
+     */
+    async addDeviceToBulkRequest(bulkRequestId, formData) {
+        const deviceData = {
+            laptopBrand: formData.get('laptopBrand'),
+            laptopModel: formData.get('laptopModel'),
+            serialNumber: formData.get('serialNumber'),
+            receivedDate: formData.get('receivedDate'),
+            priority: formData.get('priority'),
+            problemDescription: formData.get('problemDescription'),
+            cost: parseFloat(formData.get('cost')) || 0
+        };
+
+        try {
+            loading.show('جاري إضافة اللابتوب...');
+            const response = await fetch(`/api/bulk-requests/${bulkRequestId}/devices`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(deviceData)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                toast.success('تم إضافة اللابتوب بنجاح');
+                await this.loadData();
+                this.renderBulkRequests();
+                // Refresh the modal to show updated devices
+                this.viewBulkRequest(bulkRequestId);
+            } else {
+                throw new Error('Failed to add device');
+            }
+        } catch (error) {
+            console.error('Error adding device to bulk request:', error);
+            toast.error('فشل في إضافة اللابتوب');
+        } finally {
+            loading.hide();
         }
     }
 

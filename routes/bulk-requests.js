@@ -314,6 +314,109 @@ router.post('/', async (req, res) => {
     }
 });
 
+// Add device to existing bulk request
+router.post('/:id/devices', async (req, res) => {
+    try {
+        console.log('📝 POST /api/bulk-requests/:id/devices - Adding device to bulk request:', req.params.id);
+        console.log('📝 Request body:', req.body);
+
+        // Get current bulk request to check if it exists
+        const { data: bulkRequest, error: bulkError } = await supabase
+            .from('bulk_requests')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (bulkError) throw bulkError;
+        if (!bulkRequest) return res.status(404).json({ error: 'Bulk request not found' });
+
+        // Get current devices to determine next device number
+        const { data: existingDevices, error: devicesError } = await supabase
+            .from('bulk_request_devices')
+            .select('device_number')
+            .eq('bulk_request_id', req.params.id)
+            .order('device_number', { ascending: false })
+            .limit(1);
+
+        if (devicesError) throw devicesError;
+
+        const nextDeviceNumber = existingDevices && existingDevices.length > 0
+            ? existingDevices[0].device_number + 1
+            : 1;
+
+        // Insert new device
+        const newDevice = {
+            bulk_request_id: req.params.id,
+            device_number: nextDeviceNumber,
+            laptop_brand: req.body.laptopBrand,
+            laptop_model: req.body.laptopModel,
+            serial_number: req.body.serialNumber || null,
+            received_date: req.body.receivedDate || new Date().toISOString(),
+            priority: req.body.priority || 'Medium',
+            problem_description: req.body.problemDescription || '',
+            device_image: req.body.deviceImage || null,
+            status: req.body.status || 'Received',
+            admin_reply: null,
+            cost: req.body.cost || 0,
+            technician: null,
+            estimated_completion_date: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+
+        const { data: deviceData, error: deviceError } = await supabase
+            .from('bulk_request_devices')
+            .insert([newDevice])
+            .select();
+
+        if (deviceError) throw deviceError;
+
+        // Update device_count in bulk_requests
+        const { data: updatedBulkRequest, error: updateError } = await supabase
+            .from('bulk_requests')
+            .update({
+                device_count: bulkRequest.device_count + 1,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', req.params.id)
+            .select();
+
+        if (updateError) throw updateError;
+
+        // Convert to camelCase
+        const convertedDevice = {
+            id: deviceData[0].id,
+            bulkRequestId: deviceData[0].bulk_request_id,
+            deviceNumber: deviceData[0].device_number,
+            laptopBrand: deviceData[0].laptop_brand,
+            laptopModel: deviceData[0].laptop_model,
+            serialNumber: deviceData[0].serial_number,
+            receivedDate: deviceData[0].received_date,
+            priority: deviceData[0].priority,
+            problemDescription: deviceData[0].problem_description,
+            deviceImage: deviceData[0].device_image,
+            status: deviceData[0].status,
+            adminReply: deviceData[0].admin_reply,
+            cost: deviceData[0].cost,
+            technician: deviceData[0].technician,
+            estimatedCompletionDate: deviceData[0].estimated_completion_date,
+            createdAt: deviceData[0].created_at,
+            updatedAt: deviceData[0].updated_at
+        };
+
+        res.status(201).json({
+            device: convertedDevice,
+            bulkRequest: {
+                ...updatedBulkRequest[0],
+                deviceCount: updatedBulkRequest[0].device_count
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error adding device to bulk request:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Update bulk request device status and fields
 router.put('/devices/:id', async (req, res) => {
     try {
