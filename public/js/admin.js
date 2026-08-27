@@ -1919,6 +1919,10 @@ class AdminManager {
                                             onclick="adminManager.viewCompanyRequest(${companyRequest.id})">
                                         <i class="fas fa-eye"></i>
                                     </button>
+                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.convertCompanyRequestToBulk(${companyRequest.id})" title="تحويل لطلب جملة">
+                                        <i class="fas fa-boxes"></i>
+                                    </button>
                                     <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
                                             onclick="adminManager.deleteCompanyRequest(${companyRequest.id})">
                                         <i class="fas fa-trash"></i>
@@ -2127,7 +2131,7 @@ class AdminManager {
      * Delete company request
      */
     async deleteCompanyRequest(companyRequestId) {
-        if (!confirm('هل أنت متأكد من حذف الطلب؟ سيتم نقله إلى سلة المحذوفات ويمكن استعادته.')) {
+        if (!confirm('هل أنت متأكد من حذف طلب موظفي الشركة؟ سيتم نقله إلى سلة المحذوفات ويمكن استعادته.')) {
             return;
         }
 
@@ -2137,7 +2141,7 @@ class AdminManager {
             });
 
             if (response.ok) {
-                toast.success('تم نقل الطلب إلى سلة المحذوفات');
+                toast.success('تم نقل طلب موظفي الشركة إلى سلة المحذوفات');
                 await this.loadData();
                 this.renderCompanyRequests();
             } else {
@@ -2145,7 +2149,37 @@ class AdminManager {
             }
         } catch (error) {
             console.error('Error soft deleting company request:', error);
-            toast.error('فشل في حذف الطلب');
+            toast.error('فشل في حذف طلب موظفي الشركة');
+        }
+    }
+
+    /**
+     * Convert company request to bulk request
+     */
+    async convertCompanyRequestToBulk(companyRequestId) {
+        if (!confirm('هل أنت متأكد من تحويل هذا الطلب إلى طلب جملة؟ سيتم نقله من قسم طلبات موظفي الشركة إلى قسم طلبات الجملة.')) {
+            return;
+        }
+
+        try {
+            loading.show('جاري تحويل الطلب...');
+            const response = await fetch(`/api/company-requests/${companyRequestId}/convert-to-bulk`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                toast.success('تم تحويل الطلب إلى طلب جملة بنجاح');
+                await this.loadData();
+                this.renderCompanyRequests();
+            } else {
+                throw new Error('Failed to convert request');
+            }
+        } catch (error) {
+            console.error('Error converting company request to bulk:', error);
+            toast.error('فشل في تحويل الطلب');
+        } finally {
+            loading.hide();
         }
     }
 
@@ -2880,10 +2914,84 @@ class AdminManager {
         }
     }
 
-    /**
-     * Show add device modal for bulk request
-     */
-    showAddDeviceModal(bulkRequestId) {
+    async deleteRequest(requestId) {
+        if (!confirm('هل أنت متأكد من حذف هذا الطلب؟ سيتم نقله إلى سلة المحذوفات ويمكن استعادته.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/requests/${requestId}/soft-delete`, {
+                method: 'PUT'
+            });
+
+            if (response.ok) {
+                toast.success('تم نقل الطلب إلى سلة المحذوفات');
+                await this.loadData();
+                this.renderRequests();
+            } else {
+                throw new Error('Failed to soft delete request');
+            }
+        } catch (error) {
+            console.error('Error soft deleting request:', error);
+            toast.error('فشل في حذف الطلب');
+        }
+    }
+
+    async convertRequestToBulk(requestId) {
+        if (!confirm('هل أنت متأكد من تحويل هذا الطلب إلى طلب جملة؟ سيتم نقله من قسم الطلبات العادية إلى قسم طلبات الجملة.')) {
+            return;
+        }
+
+        try {
+            loading.show('جاري تحويل الطلب...');
+            const response = await fetch(`/api/requests/${requestId}/convert-to-bulk`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                toast.success('تم تحويل الطلب إلى طلب جملة بنجاح');
+                await this.loadData();
+                this.renderRequests();
+            } else {
+                throw new Error('Failed to convert request');
+            }
+        } catch (error) {
+            console.error('Error converting request to bulk:', error);
+            toast.error('فشل في تحويل الطلب');
+        } finally {
+            loading.hide();
+        }
+    }
+
+    async convertRequestToCompany(requestId) {
+        if (!confirm('هل أنت متأكد من تحويل هذا الطلب إلى طلب موظفي شركة؟ سيتم نقله من قسم الطلبات العادية إلى قسم طلبات موظفي الشركة.')) {
+            return;
+        }
+
+        try {
+            loading.show('جاري تحويل الطلب...');
+            const response = await fetch(`/api/requests/${requestId}/convert-to-company`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                toast.success('تم تحويل الطلب إلى طلب موظفي شركة بنجاح');
+                await this.loadData();
+                this.renderRequests();
+            } else {
+                throw new Error('Failed to convert request');
+            }
+        } catch (error) {
+            console.error('Error converting request to company:', error);
+            toast.error('فشل في تحويل الطلب');
+        } finally {
+            loading.hide();
+        }
+    }
+
+    async showAddDeviceModal(bulkRequestId) {
         const modal = document.createElement('div');
         modal.className = 'modal active';
         modal.innerHTML = `
@@ -3072,6 +3180,14 @@ class AdminManager {
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
                                             onclick="adminManager.viewRequest(${request.id})">
                                         <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.convertRequestToBulk(${request.id})" title="تحويل لطلب جملة">
+                                        <i class="fas fa-boxes"></i>
+                                    </button>
+                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.convertRequestToCompany(${request.id})" title="تحويل لطلب موظفي شركة">
+                                        <i class="fas fa-building"></i>
                                     </button>
                                     <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
                                             onclick="adminManager.deleteRequest(${request.id})">

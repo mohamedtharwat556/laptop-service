@@ -321,24 +321,108 @@ router.delete('/:id', async (req, res) => {
         res.json({ message: 'Company request deleted successfully' });
     } catch (error) {
         console.error('Error deleting company request:', error);
-        res.status(500).json({ error: 'Failed to delete company request' });
+        res.status(500).json({ error: error.message });
     }
 });
 
-// DELETE /api/company-requests - Delete all company requests
-router.delete('/', async (req, res) => {
+// Convert company request to bulk request
+router.post('/:id/convert-to-bulk', async (req, res) => {
     try {
-        const { error } = await supabase
+        console.log('🔄 Converting company request to bulk request:', req.params.id);
+
+        // Get the original company request
+        const { data: originalRequest, error: fetchError } = await supabase
             .from('company_requests')
-            .delete()
-            .not('id', 'is', null);
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
 
-        if (error) throw error;
+        if (fetchError) throw fetchError;
+        if (!originalRequest) return res.status(404).json({ error: 'Company request not found' });
 
-        res.json({ message: 'All company requests deleted successfully' });
+        // Generate BULK request number
+        const { data: existingBulkRequests } = await supabase
+            .from('bulk_requests')
+            .select('request_number')
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        let nextNumber = 1;
+        if (existingBulkRequests && existingBulkRequests.length > 0) {
+            const lastRequestNumber = existingBulkRequests[0].request_number;
+            const match = lastRequestNumber.match(/BULK (\d+)/);
+            if (match) {
+                nextNumber = parseInt(match[1]) + 1;
+            }
+        }
+        const requestNumber = `BULK ${nextNumber}`;
+
+        // Create bulk request
+        const newBulkRequest = {
+            request_number: requestNumber,
+            customer_name: originalRequest.full_name,
+            customer_phone: originalRequest.phone,
+            customer_email: '',
+            device_count: 1,
+            status: originalRequest.status,
+            priority: originalRequest.priority,
+            cost: originalRequest.cost || 0,
+            notes: originalRequest.technician_notes || '',
+            admin_reply: originalRequest.admin_reply || null,
+            technician: originalRequest.technician || null,
+            estimated_completion_date: originalRequest.estimated_completion_date || null,
+            created_at: originalRequest.created_at,
+            updated_at: new Date().toISOString()
+        };
+
+        const { data: bulkRequest, error: bulkError } = await supabase
+            .from('bulk_requests')
+            .insert([newBulkRequest])
+            .select();
+
+        if (bulkError) throw bulkError;
+
+        // Create device for the bulk request
+        const newDevice = {
+            bulk_request_id: bulkRequest[0].id,
+            device_number: 1,
+            laptop_brand: originalRequest.laptop_brand,
+            laptop_model: originalRequest.laptop_model,
+            serial_number: originalRequest.serial_number,
+            received_date: originalRequest.received_date,
+            priority: originalRequest.priority,
+            problem_description: originalRequest.problem_description,
+            device_image: null,
+            status: originalRequest.status,
+            admin_reply: originalRequest.admin_reply || null,
+            cost: originalRequest.cost || 0,
+            technician: originalRequest.technician || null,
+            estimated_completion_date: originalRequest.estimated_completion_date || null,
+            created_at: originalRequest.created_at,
+            updated_at: new Date().toISOString()
+        };
+
+        const { data: device, error: deviceError } = await supabase
+            .from('bulk_request_devices')
+            .insert([newDevice])
+            .select();
+
+        if (deviceError) throw deviceError;
+
+        // Soft delete the original company request
+        await supabase
+            .from('company_requests')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('id', req.params.id);
+
+        res.status(201).json({
+            bulkRequest: bulkRequest[0],
+            device: device[0],
+            message: 'Company request converted to bulk request successfully'
+        });
     } catch (error) {
-        console.error('Error deleting all company requests:', error);
-        res.status(500).json({ error: 'Failed to delete all company requests' });
+        console.error('Error converting company request to bulk request:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 
