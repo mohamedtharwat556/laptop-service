@@ -1931,6 +1931,10 @@ class AdminManager {
                                             onclick="adminManager.convertCompanyRequestToSingle(${companyRequest.id})" title="تحويل لطلب عادي">
                                         <i class="fas fa-laptop"></i>
                                     </button>
+                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.convertCompanyRequestToBulk(${companyRequest.id})" title="تحويل لطلب جملة">
+                                        <i class="fas fa-boxes"></i>
+                                    </button>
                                     <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
                                             onclick="adminManager.deleteCompanyRequest(${companyRequest.id})">
                                         <i class="fas fa-trash"></i>
