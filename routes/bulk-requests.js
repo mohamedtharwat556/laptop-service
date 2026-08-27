@@ -538,4 +538,195 @@ router.delete('/', async (req, res) => {
     }
 });
 
+// Convert bulk request to single request
+router.post('/:id/convert-to-single', async (req, res) => {
+    try {
+        console.log('🔄 Converting bulk request to single request:', req.params.id);
+
+        // Get the bulk request with its devices
+        const { data: bulkRequest, error: fetchError } = await supabase
+            .from('bulk_requests')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (fetchError) throw fetchError;
+        if (!bulkRequest) return res.status(404).json({ error: 'Bulk request not found' });
+
+        // Get the first device
+        const { data: devices, error: devicesError } = await supabase
+            .from('bulk_request_devices')
+            .select('*')
+            .eq('bulk_request_id', req.params.id)
+            .order('device_number', { ascending: true })
+            .limit(1);
+
+        if (devicesError) throw devicesError;
+        if (!devices || devices.length === 0) return res.status(404).json({ error: 'No devices found in bulk request' });
+
+        const firstDevice = devices[0];
+
+        // Generate single request number
+        const { data: existingRequests } = await supabase
+            .from('requests')
+            .select('request_number')
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        let nextNumber = 1;
+        if (existingRequests && existingRequests.length > 0) {
+            const lastRequestNumber = existingRequests[0].request_number;
+            const match = lastRequestNumber.match(/REQ (\d+)/);
+            if (match) {
+                nextNumber = parseInt(match[1]) + 1;
+            }
+        }
+        const requestNumber = `REQ ${nextNumber}`;
+
+        // Create single request
+        const newRequest = {
+            request_number: requestNumber,
+            request_type: 'single',
+            full_name: bulkRequest.customer_name,
+            phone: bulkRequest.customer_phone,
+            email: bulkRequest.customer_email || '',
+            device_type: 'laptop',
+            laptop_brand: firstDevice.laptop_brand,
+            laptop_model: firstDevice.laptop_model,
+            serial_number: firstDevice.serial_number,
+            received_date: firstDevice.received_date,
+            problem_description: firstDevice.problem_description,
+            priority: firstDevice.priority,
+            status: firstDevice.status,
+            cost: firstDevice.cost || 0,
+            device_image: firstDevice.device_image || null,
+            admin_reply: bulkRequest.admin_reply || null,
+            technician: bulkRequest.technician || null,
+            estimated_completion_date: firstDevice.estimated_completion_date || null,
+            created_at: bulkRequest.created_at,
+            updated_at: new Date().toISOString()
+        };
+
+        const { data: request, error: requestError } = await supabase
+            .from('requests')
+            .insert([newRequest])
+            .select();
+
+        if (requestError) throw requestError;
+
+        // Soft delete the bulk request and its devices
+        await supabase
+            .from('bulk_request_devices')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('bulk_request_id', req.params.id);
+
+        await supabase
+            .from('bulk_requests')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('id', req.params.id);
+
+        res.status(201).json({
+            request: request[0],
+            message: 'Bulk request converted to single request successfully'
+        });
+    } catch (error) {
+        console.error('Error converting bulk request to single request:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Convert bulk request to company request
+router.post('/:id/convert-to-company', async (req, res) => {
+    try {
+        console.log('🔄 Converting bulk request to company request:', req.params.id);
+
+        // Get the bulk request with its devices
+        const { data: bulkRequest, error: fetchError } = await supabase
+            .from('bulk_requests')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (fetchError) throw fetchError;
+        if (!bulkRequest) return res.status(404).json({ error: 'Bulk request not found' });
+
+        // Get the first device
+        const { data: devices, error: devicesError } = await supabase
+            .from('bulk_request_devices')
+            .select('*')
+            .eq('bulk_request_id', req.params.id)
+            .order('device_number', { ascending: true })
+            .limit(1);
+
+        if (devicesError) throw devicesError;
+        if (!devices || devices.length === 0) return res.status(404).json({ error: 'No devices found in bulk request' });
+
+        const firstDevice = devices[0];
+
+        // Generate company request number
+        const { data: existingCompanyRequests } = await supabase
+            .from('company_requests')
+            .select('request_number')
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        let nextNumber = 1;
+        if (existingCompanyRequests && existingCompanyRequests.length > 0) {
+            const lastRequestNumber = existingCompanyRequests[0].request_number;
+            const match = lastRequestNumber.match(/COMP (\d+)/);
+            if (match) {
+                nextNumber = parseInt(match[1]) + 1;
+            }
+        }
+        const requestNumber = `COMP ${nextNumber}`;
+
+        // Create company request
+        const newCompanyRequest = {
+            request_number: requestNumber,
+            full_name: bulkRequest.customer_name,
+            phone: bulkRequest.customer_phone,
+            laptop_brand: firstDevice.laptop_brand,
+            laptop_model: firstDevice.laptop_model,
+            serial_number: firstDevice.serial_number,
+            received_date: firstDevice.received_date,
+            problem_description: firstDevice.problem_description,
+            priority: firstDevice.priority,
+            status: firstDevice.status,
+            admin_reply: bulkRequest.admin_reply || null,
+            technician: bulkRequest.technician || null,
+            technician_notes: bulkRequest.notes || null,
+            cost: firstDevice.cost || 0,
+            estimated_completion_date: firstDevice.estimated_completion_date || null,
+            created_at: bulkRequest.created_at,
+            updated_at: new Date().toISOString()
+        };
+
+        const { data: companyRequest, error: companyError } = await supabase
+            .from('company_requests')
+            .insert([newCompanyRequest])
+            .select();
+
+        if (companyError) throw companyError;
+
+        // Soft delete the bulk request and its devices
+        await supabase
+            .from('bulk_request_devices')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('bulk_request_id', req.params.id);
+
+        await supabase
+            .from('bulk_requests')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('id', req.params.id);
+
+        res.status(201).json({
+            companyRequest: companyRequest[0],
+            message: 'Bulk request converted to company request successfully'
+        });
+    } catch (error) {
+        console.error('Error converting bulk request to company request:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

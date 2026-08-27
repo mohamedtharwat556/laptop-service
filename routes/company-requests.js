@@ -426,4 +426,84 @@ router.post('/:id/convert-to-bulk', async (req, res) => {
     }
 });
 
+// Convert company request to single request
+router.post('/:id/convert-to-single', async (req, res) => {
+    try {
+        console.log('🔄 Converting company request to single request:', req.params.id);
+
+        // Get the original company request
+        const { data: originalRequest, error: fetchError } = await supabase
+            .from('company_requests')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (fetchError) throw fetchError;
+        if (!originalRequest) return res.status(404).json({ error: 'Company request not found' });
+
+        // Generate single request number
+        const { data: existingRequests } = await supabase
+            .from('requests')
+            .select('request_number')
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        let nextNumber = 1;
+        if (existingRequests && existingRequests.length > 0) {
+            const lastRequestNumber = existingRequests[0].request_number;
+            const match = lastRequestNumber.match(/REQ (\d+)/);
+            if (match) {
+                nextNumber = parseInt(match[1]) + 1;
+            }
+        }
+        const requestNumber = `REQ ${nextNumber}`;
+
+        // Create single request
+        const newRequest = {
+            request_number: requestNumber,
+            request_type: 'single',
+            full_name: originalRequest.full_name,
+            phone: originalRequest.phone,
+            email: '',
+            device_type: 'laptop',
+            laptop_brand: originalRequest.laptop_brand,
+            laptop_model: originalRequest.laptop_model,
+            serial_number: originalRequest.serial_number,
+            received_date: originalRequest.received_date,
+            problem_description: originalRequest.problem_description,
+            priority: originalRequest.priority,
+            status: originalRequest.status,
+            cost: originalRequest.cost || 0,
+            device_image: null,
+            admin_reply: originalRequest.admin_reply || null,
+            technician: originalRequest.technician || null,
+            technician_notes: originalRequest.technician_notes || null,
+            estimated_completion_date: originalRequest.estimated_completion_date || null,
+            created_at: originalRequest.created_at,
+            updated_at: new Date().toISOString()
+        };
+
+        const { data: request, error: requestError } = await supabase
+            .from('requests')
+            .insert([newRequest])
+            .select();
+
+        if (requestError) throw requestError;
+
+        // Soft delete the original company request
+        await supabase
+            .from('company_requests')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('id', req.params.id);
+
+        res.status(201).json({
+            request: request[0],
+            message: 'Company request converted to single request successfully'
+        });
+    } catch (error) {
+        console.error('Error converting company request to single request:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

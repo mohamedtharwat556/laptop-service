@@ -1839,6 +1839,14 @@ class AdminManager {
                                             onclick="adminManager.viewBulkRequestDevices(${bulkRequest.id})">
                                         <i class="fas fa-eye"></i> عرض الأجهزة
                                     </button>
+                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.convertBulkRequestToSingle(${bulkRequest.id})" title="تحويل لطلب عادي">
+                                        <i class="fas fa-laptop"></i>
+                                    </button>
+                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.convertBulkRequestToCompany(${bulkRequest.id})" title="تحويل لطلب موظفي شركة">
+                                        <i class="fas fa-building"></i>
+                                    </button>
                                     <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
                                             onclick="adminManager.deleteBulkRequest(${bulkRequest.id})">
                                         <i class="fas fa-trash"></i>
@@ -1920,8 +1928,8 @@ class AdminManager {
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.convertCompanyRequestToBulk(${companyRequest.id})" title="تحويل لطلب جملة">
-                                        <i class="fas fa-boxes"></i>
+                                            onclick="adminManager.convertCompanyRequestToSingle(${companyRequest.id})" title="تحويل لطلب عادي">
+                                        <i class="fas fa-laptop"></i>
                                     </button>
                                     <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
                                             onclick="adminManager.deleteCompanyRequest(${companyRequest.id})">
@@ -2177,6 +2185,96 @@ class AdminManager {
             }
         } catch (error) {
             console.error('Error converting company request to bulk:', error);
+            toast.error('فشل في تحويل الطلب');
+        } finally {
+            loading.hide();
+        }
+    }
+
+    /**
+     * Convert company request to single request
+     */
+    async convertCompanyRequestToSingle(companyRequestId) {
+        if (!confirm('هل أنت متأكد من تحويل هذا الطلب إلى طلب عادي؟ سيتم نقله من قسم طلبات موظفي الشركة إلى قسم الطلبات العادية.')) {
+            return;
+        }
+
+        try {
+            loading.show('جاري تحويل الطلب...');
+            const response = await fetch(`/api/company-requests/${companyRequestId}/convert-to-single`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                toast.success('تم تحويل الطلب إلى طلب عادي بنجاح');
+                await this.loadData();
+                this.renderCompanyRequests();
+            } else {
+                throw new Error('Failed to convert request');
+            }
+        } catch (error) {
+            console.error('Error converting company request to single:', error);
+            toast.error('فشل في تحويل الطلب');
+        } finally {
+            loading.hide();
+        }
+    }
+
+    /**
+     * Convert bulk request to single request
+     */
+    async convertBulkRequestToSingle(bulkRequestId) {
+        if (!confirm('هل أنت متأكد من تحويل هذا الطلب إلى طلب عادي؟ سيتم نقله من قسم طلبات الجملة إلى قسم الطلبات العادية. سيتم تحويل أول جهاز فقط.')) {
+            return;
+        }
+
+        try {
+            loading.show('جاري تحويل الطلب...');
+            const response = await fetch(`/api/bulk-requests/${bulkRequestId}/convert-to-single`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                toast.success('تم تحويل الطلب إلى طلب عادي بنجاح');
+                await this.loadData();
+                this.renderBulkRequests();
+            } else {
+                throw new Error('Failed to convert request');
+            }
+        } catch (error) {
+            console.error('Error converting bulk request to single:', error);
+            toast.error('فشل في تحويل الطلب');
+        } finally {
+            loading.hide();
+        }
+    }
+
+    /**
+     * Convert bulk request to company request
+     */
+    async convertBulkRequestToCompany(bulkRequestId) {
+        if (!confirm('هل أنت متأكد من تحويل هذا الطلب إلى طلب موظفي شركة؟ سيتم نقله من قسم طلبات الجملة إلى قسم طلبات موظفي الشركة. سيتم تحويل أول جهاز فقط.')) {
+            return;
+        }
+
+        try {
+            loading.show('جاري تحويل الطلب...');
+            const response = await fetch(`/api/bulk-requests/${bulkRequestId}/convert-to-company`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                toast.success('تم تحويل الطلب إلى طلب موظفي شركة بنجاح');
+                await this.loadData();
+                this.renderBulkRequests();
+            } else {
+                throw new Error('Failed to convert request');
+            }
+        } catch (error) {
+            console.error('Error converting bulk request to company:', error);
             toast.error('فشل في تحويل الطلب');
         } finally {
             loading.hide();
