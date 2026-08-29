@@ -558,7 +558,6 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .from('bulk_request_devices')
             .select('*')
             .eq('bulk_request_id', req.params.id)
-            .is('deleted_at', null)
             .order('device_number', { ascending: true })
             .limit(1);
 
@@ -596,7 +595,6 @@ router.post('/:id/convert-to-single', async (req, res) => {
             }])
             .select();
 
-        await supabase.from('bulk_request_devices').update({ deleted_at: new Date().toISOString() }).eq('bulk_request_id', req.params.id);
         await supabase.from('bulk_requests').update({ deleted_at: new Date().toISOString() }).eq('id', req.params.id);
 
         res.json({ request: request[0] });
@@ -626,7 +624,6 @@ router.post('/:id/convert-to-company', async (req, res) => {
             .from('bulk_request_devices')
             .select('*')
             .eq('bulk_request_id', req.params.id)
-            .is('deleted_at', null)
             .order('device_number', { ascending: true })
             .limit(1);
 
@@ -666,7 +663,6 @@ router.post('/:id/convert-to-company', async (req, res) => {
             }])
             .select();
 
-        await supabase.from('bulk_request_devices').update({ deleted_at: new Date().toISOString() }).eq('bulk_request_id', req.params.id);
         await supabase.from('bulk_requests').update({ deleted_at: new Date().toISOString() }).eq('id', req.params.id);
 
         res.json({ companyRequest: companyRequest[0] });
