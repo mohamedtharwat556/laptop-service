@@ -541,6 +541,8 @@ router.delete('/', async (req, res) => {
 // Convert bulk request to single request
 router.post('/:id/convert-to-single', async (req, res) => {
     try {
+        console.log('🔄 Converting bulk request to single request:', req.params.id);
+
         const { data: bulkRequest } = await supabase
             .from('bulk_requests')
             .select('*')
@@ -548,7 +550,9 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .is('deleted_at', null)
             .single();
 
-        if (!bulkRequest) return res.status(404).json({ error: 'Not found or already converted' });
+        if (!bulkRequest) {
+            return res.status(404).json({ error: 'Bulk request not found or already converted' });
+        }
 
         const { data: devices } = await supabase
             .from('bulk_request_devices')
@@ -558,7 +562,9 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .order('device_number', { ascending: true })
             .limit(1);
 
-        if (!devices?.length) return res.status(404).json({ error: 'No devices' });
+        if (!devices || devices.length === 0) {
+            return res.status(400).json({ error: 'لا يمكن تحويل طلب جملة بدون أجهزة. أضف أجهزة أولاً.' });
+        }
 
         const firstDevice = devices[0];
 
@@ -569,7 +575,7 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .limit(1);
 
         let nextNumber = 1;
-        if (existingRequests?.length > 0) {
+        if (existingRequests && existingRequests.length > 0) {
             const match = existingRequests[0].request_number?.match(/REQ (\d+)/);
             if (match) nextNumber = parseInt(match[1]) + 1;
         }
@@ -595,6 +601,7 @@ router.post('/:id/convert-to-single', async (req, res) => {
 
         res.json({ request: request[0] });
     } catch (error) {
+        console.error('Error converting bulk request to single:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -604,24 +611,18 @@ router.post('/:id/convert-to-company', async (req, res) => {
     try {
         console.log('🔄 Converting bulk request to company request:', req.params.id);
 
-        // Get the bulk request with its devices
-        const { data: bulkRequest, error: fetchError } = await supabase
+        const { data: bulkRequest } = await supabase
             .from('bulk_requests')
             .select('*')
             .eq('id', req.params.id)
             .is('deleted_at', null)
             .single();
 
-        if (fetchError) {
-            console.error('❌ Fetch bulk request error:', fetchError);
-            throw fetchError;
+        if (!bulkRequest) {
+            return res.status(404).json({ error: 'Bulk request not found or already converted' });
         }
-        if (!bulkRequest) return res.status(404).json({ error: 'Bulk request not found or already converted' });
 
-        console.log('✅ Bulk request found:', bulkRequest.id);
-
-        // Get the first device
-        const { data: devices, error: devicesError } = await supabase
+        const { data: devices } = await supabase
             .from('bulk_request_devices')
             .select('*')
             .eq('bulk_request_id', req.params.id)
@@ -629,19 +630,12 @@ router.post('/:id/convert-to-company', async (req, res) => {
             .order('device_number', { ascending: true })
             .limit(1);
 
-        if (devicesError) {
-            console.error('❌ Fetch devices error:', devicesError);
-            throw devicesError;
-        }
         if (!devices || devices.length === 0) {
-            console.log('❌ No devices found in bulk request');
             return res.status(400).json({ error: 'لا يمكن تحويل طلب جملة بدون أجهزة. أضف أجهزة أولاً.' });
         }
 
         const firstDevice = devices[0];
-        console.log('✅ First device found:', firstDevice.id);
 
-        // Generate company request number
         const { data: existingCompanyRequests } = await supabase
             .from('company_requests')
             .select('request_number')
@@ -650,64 +644,34 @@ router.post('/:id/convert-to-company', async (req, res) => {
 
         let nextNumber = 1;
         if (existingCompanyRequests && existingCompanyRequests.length > 0) {
-            const lastRequestNumber = existingCompanyRequests[0].request_number;
-            const match = lastRequestNumber.match(/COMP (\d+)/);
-            if (match) {
-                nextNumber = parseInt(match[1]) + 1;
-            }
+            const match = existingCompanyRequests[0].request_number?.match(/COMP (\d+)/);
+            if (match) nextNumber = parseInt(match[1]) + 1;
         }
-        const requestNumber = `COMP ${nextNumber}`;
 
-        // Create company request
-        const newCompanyRequest = {
-            request_number: requestNumber,
-            full_name: bulkRequest.customer_name,
-            phone: bulkRequest.customer_phone,
-            laptop_brand: firstDevice.laptop_brand,
-            laptop_model: firstDevice.laptop_model,
-            serial_number: firstDevice.serial_number,
-            received_date: firstDevice.received_date,
-            problem_description: firstDevice.problem_description,
-            priority: firstDevice.priority,
-            status: firstDevice.status,
-            admin_reply: bulkRequest.admin_reply || null,
-            technician: bulkRequest.technician || null,
-            technician_notes: bulkRequest.notes || null,
-            cost: firstDevice.cost || 0,
-            estimated_completion_date: firstDevice.estimated_completion_date || null,
-            created_at: bulkRequest.created_at,
-            updated_at: new Date().toISOString()
-        };
-
-        const { data: companyRequest, error: companyError } = await supabase
+        const { data: companyRequest } = await supabase
             .from('company_requests')
-            .insert([newCompanyRequest])
+            .insert([{
+                request_number: `COMP ${nextNumber}`,
+                full_name: bulkRequest.customer_name,
+                phone: bulkRequest.customer_phone,
+                laptop_brand: firstDevice.laptop_brand,
+                laptop_model: firstDevice.laptop_model,
+                serial_number: firstDevice.serial_number,
+                received_date: firstDevice.received_date,
+                problem_description: firstDevice.problem_description,
+                priority: firstDevice.priority,
+                status: firstDevice.status,
+                cost: firstDevice.cost || 0,
+                created_at: bulkRequest.created_at
+            }])
             .select();
 
-        if (companyError) {
-            console.error('❌ Insert company request error:', companyError);
-            throw companyError;
-        }
+        await supabase.from('bulk_request_devices').update({ deleted_at: new Date().toISOString() }).eq('bulk_request_id', req.params.id);
+        await supabase.from('bulk_requests').update({ deleted_at: new Date().toISOString() }).eq('id', req.params.id);
 
-        console.log('✅ Company request created:', companyRequest[0].id);
-
-        // Soft delete the bulk request and its devices
-        await supabase
-            .from('bulk_request_devices')
-            .update({ deleted_at: new Date().toISOString() })
-            .eq('bulk_request_id', req.params.id);
-
-        await supabase
-            .from('bulk_requests')
-            .update({ deleted_at: new Date().toISOString() })
-            .eq('id', req.params.id);
-
-        res.status(201).json({
-            companyRequest: companyRequest[0],
-            message: 'Bulk request converted to company request successfully'
-        });
+        res.json({ companyRequest: companyRequest[0] });
     } catch (error) {
-        console.error('Error converting bulk request to company request:', error);
+        console.error('Error converting bulk request to company:', error);
         res.status(500).json({ error: error.message });
     }
 });
