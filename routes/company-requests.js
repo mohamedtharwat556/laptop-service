@@ -433,9 +433,10 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .from('company_requests')
             .select('*')
             .eq('id', req.params.id)
+            .is('deleted_at', null)
             .single();
 
-        if (!originalRequest) return res.status(404).json({ error: 'Not found' });
+        if (!originalRequest) return res.status(404).json({ error: 'Not found or already converted' });
 
         const { data: existingRequests } = await supabase
             .from('requests')

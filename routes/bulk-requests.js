@@ -545,14 +545,16 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .from('bulk_requests')
             .select('*')
             .eq('id', req.params.id)
+            .is('deleted_at', null)
             .single();
 
-        if (!bulkRequest) return res.status(404).json({ error: 'Not found' });
+        if (!bulkRequest) return res.status(404).json({ error: 'Not found or already converted' });
 
         const { data: devices } = await supabase
             .from('bulk_request_devices')
             .select('*')
             .eq('bulk_request_id', req.params.id)
+            .is('deleted_at', null)
             .order('device_number', { ascending: true })
             .limit(1);
 
