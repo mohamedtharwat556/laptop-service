@@ -609,16 +609,18 @@ router.post('/:id/convert-to-company', async (req, res) => {
             .from('bulk_requests')
             .select('*')
             .eq('id', req.params.id)
+            .is('deleted_at', null)
             .single();
 
         if (fetchError) throw fetchError;
-        if (!bulkRequest) return res.status(404).json({ error: 'Bulk request not found' });
+        if (!bulkRequest) return res.status(404).json({ error: 'Bulk request not found or already converted' });
 
         // Get the first device
         const { data: devices, error: devicesError } = await supabase
             .from('bulk_request_devices')
             .select('*')
             .eq('bulk_request_id', req.params.id)
+            .is('deleted_at', null)
             .order('device_number', { ascending: true })
             .limit(1);
 
