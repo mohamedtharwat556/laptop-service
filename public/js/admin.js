@@ -1840,6 +1840,10 @@ class AdminManager {
                                         <i class="fas fa-eye"></i> عرض الأجهزة
                                     </button>
                                     <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.quickEditBulkRequest(${bulkRequest.id})" title="تعديل سريع">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
                                             onclick="adminManager.convertBulkRequestToSingle(${bulkRequest.id})" title="تحويل لطلب عادي">
                                         <i class="fas fa-laptop"></i>
                                     </button>
@@ -1926,6 +1930,10 @@ class AdminManager {
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
                                             onclick="adminManager.viewCompanyRequest(${companyRequest.id})">
                                         <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.quickEditCompanyRequest(${companyRequest.id})" title="تعديل سريع">
+                                        <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
                                             onclick="adminManager.convertCompanyRequestToSingle(${companyRequest.id})" title="تحويل لطلب عادي">
@@ -3317,6 +3325,10 @@ class AdminManager {
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
+                                            onclick="adminManager.quickEditRequest(${request.id})" title="تعديل سريع">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
                                             onclick="adminManager.convertRequestToBulk(${request.id})" title="تحويل لطلب جملة">
                                         <i class="fas fa-boxes"></i>
                                     </button>
@@ -3937,6 +3949,172 @@ class AdminManager {
             console.error('❌ Update request failed:', errorText);
             toast.error('فشل تحديث الطلب: ' + errorText);
         }
+    }
+
+    /**
+     * Quick edit request from dashboard
+     */
+    async quickEditRequest(requestId) {
+        const request = this.requests.find(r => r.id === requestId);
+        if (!request) return;
+
+        const content = `
+            <form id="quickEditForm" style="padding: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">رقم الهاتف</label>
+                    <input type="tel" class="form-input" name="phone" value="${request.phone || ''}" placeholder="أدخل رقم الهاتف">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">وصف المشكلة</label>
+                    <textarea class="form-textarea" name="problemDescription" rows="4">${request.problemDescription || ''}</textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="modalManager.close('quick-edit')">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+            </form>
+        `;
+
+        modalManager.create('quick-edit', 'تعديل سريع', content);
+        modalManager.open('quick-edit');
+
+        const form = document.getElementById('quickEditForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const updateData = {
+                phone: form.phone.value,
+                problem_description: form.problemDescription.value
+            };
+
+            try {
+                const response = await fetch(`/api/requests/${requestId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (response.ok) {
+                    toast.success('تم تحديث الطلب بنجاح');
+                    modalManager.close('quick-edit');
+                    await this.loadData();
+                    this.renderRequests();
+                } else {
+                    throw new Error('Failed to update');
+                }
+            } catch (error) {
+                toast.error('فشل تحديث الطلب');
+            }
+        });
+    }
+
+    /**
+     * Quick edit bulk request from dashboard
+     */
+    async quickEditBulkRequest(bulkRequestId) {
+        const bulkRequest = this.bulkRequests.find(br => br.id === bulkRequestId);
+        if (!bulkRequest) return;
+
+        const content = `
+            <form id="quickEditBulkForm" style="padding: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">رقم الهاتف</label>
+                    <input type="tel" class="form-input" name="phone" value="${bulkRequest.customerPhone || ''}" placeholder="أدخل رقم الهاتف">
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="modalManager.close('quick-edit-bulk')">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+            </form>
+        `;
+
+        modalManager.create('quick-edit-bulk', 'تعديل سريع', content);
+        modalManager.open('quick-edit-bulk');
+
+        const form = document.getElementById('quickEditBulkForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const updateData = {
+                customer_phone: form.phone.value
+            };
+
+            try {
+                const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (response.ok) {
+                    toast.success('تم تحديث الطلب بنجاح');
+                    modalManager.close('quick-edit-bulk');
+                    await this.loadData();
+                    this.renderBulkRequests();
+                } else {
+                    throw new Error('Failed to update');
+                }
+            } catch (error) {
+                toast.error('فشل تحديث الطلب');
+            }
+        });
+    }
+
+    /**
+     * Quick edit company request from dashboard
+     */
+    async quickEditCompanyRequest(companyRequestId) {
+        const companyRequest = this.companyRequests.find(cr => cr.id === companyRequestId);
+        if (!companyRequest) return;
+
+        const content = `
+            <form id="quickEditCompanyForm" style="padding: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">رقم الهاتف</label>
+                    <input type="tel" class="form-input" name="phone" value="${companyRequest.phone || ''}" placeholder="أدخل رقم الهاتف">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">وصف المشكلة</label>
+                    <textarea class="form-textarea" name="problemDescription" rows="4">${companyRequest.problem_description || companyRequest.problemDescription || ''}</textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="modalManager.close('quick-edit-company')">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+            </form>
+        `;
+
+        modalManager.create('quick-edit-company', 'تعديل سريع', content);
+        modalManager.open('quick-edit-company');
+
+        const form = document.getElementById('quickEditCompanyForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const updateData = {
+                phone: form.phone.value,
+                problem_description: form.problemDescription.value
+            };
+
+            try {
+                const response = await fetch(`/api/company-requests/${companyRequestId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (response.ok) {
+                    toast.success('تم تحديث الطلب بنجاح');
+                    modalManager.close('quick-edit-company');
+                    await this.loadData();
+                    this.renderCompanyRequests();
+                } else {
+                    throw new Error('Failed to update');
+                }
+            } catch (error) {
+                toast.error('فشل تحديث الطلب');
+            }
+        });
     }
 
     /**
