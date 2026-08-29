@@ -437,9 +437,6 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .eq('id', req.params.id)
             .single();
 
-        console.log('Original request:', originalRequest);
-        console.log('Fetch error:', fetchError);
-
         if (fetchError) throw fetchError;
         if (!originalRequest) return res.status(404).json({ error: 'Company request not found' });
 
@@ -448,8 +445,6 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .select('request_number')
             .order('created_at', { ascending: false })
             .limit(1);
-
-        console.log('Existing requests:', existingRequests);
 
         let nextNumber = 1;
         if (existingRequests && existingRequests.length > 0) {
@@ -461,37 +456,25 @@ router.post('/:id/convert-to-single', async (req, res) => {
         }
         const requestNumber = `REQ ${nextNumber}`;
 
-        console.log('Request number:', requestNumber);
-
         const newRequest = {
             request_number: requestNumber,
             full_name: originalRequest.full_name,
             phone: originalRequest.phone,
-            email: '',
-            device_type: 'laptop',
             laptop_brand: originalRequest.laptop_brand,
             laptop_model: originalRequest.laptop_model,
             problem_description: originalRequest.problem_description,
             priority: originalRequest.priority,
             status: originalRequest.status,
             cost: originalRequest.cost || 0,
-            device_image: null,
             notes: originalRequest.technician_notes || null,
-            technician_notes: originalRequest.technician_notes || null,
-            estimated_completion_date: originalRequest.estimated_completion_date || null,
             created_at: originalRequest.created_at,
             updated_at: new Date().toISOString()
         };
-
-        console.log('New request to insert:', newRequest);
 
         const { data: request, error: requestError } = await supabase
             .from('requests')
             .insert([newRequest])
             .select();
-
-        console.log('Insert result:', request);
-        console.log('Insert error:', requestError);
 
         if (requestError) throw requestError;
 
@@ -506,8 +489,6 @@ router.post('/:id/convert-to-single', async (req, res) => {
         });
     } catch (error) {
         console.error('Error converting company request to single request:', error);
-        console.error('Error details:', error.message);
-        console.error('Error stack:', error.stack);
         res.status(500).json({ error: error.message });
     }
 });
