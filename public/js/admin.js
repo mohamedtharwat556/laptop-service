@@ -2015,6 +2015,14 @@ class AdminManager {
 
                     <form id="editCompanyRequestForm" style="margin-top: 1.5rem;">
                         <div class="form-group">
+                            <label class="form-label">رقم الهاتف</label>
+                            <input type="tel" class="form-input" name="phone" value="${companyRequest.phone || ''}" placeholder="أدخل رقم الهاتف">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">وصف المشكلة</label>
+                            <textarea class="form-textarea" name="problemDescription" rows="3">${companyRequest.problem_description || companyRequest.problemDescription || ''}</textarea>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">رد الإدارة</label>
                             <textarea class="form-textarea" name="adminReply" rows="3">${companyRequest.admin_reply || companyRequest.adminReply || ''}</textarea>
                         </div>
@@ -2109,6 +2117,8 @@ class AdminManager {
                 }
 
                 const updateData = {
+                    phone: form.phone.value,
+                    problem_description: form.problemDescription.value,
                     admin_reply: form.adminReply.value,
                     cost: parseFloat(form.cost.value) || 0,
                     technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
@@ -2612,6 +2622,14 @@ class AdminManager {
 
                     <form id="editBulkDeviceForm" style="margin-top: 1.5rem;">
                         <div class="form-group">
+                            <label class="form-label">رقم الهاتف</label>
+                            <input type="tel" class="form-input" name="phone" value="${bulkRequest.customerPhone || ''}" placeholder="أدخل رقم الهاتف">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">وصف المشكلة</label>
+                            <textarea class="form-textarea" name="problemDescription" rows="3">${device.problemDescription || ''}</textarea>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">رد الإدارة</label>
                             <textarea class="form-textarea" name="adminReply" rows="3">${device.adminReply || ''}</textarea>
                         </div>
@@ -2714,11 +2732,17 @@ class AdminManager {
                     
                     // Update device with all fields
                     const deviceUpdateData = {
+                        problemDescription: form.problemDescription.value,
                         adminReply: form.adminReply.value,
                         cost: form.cost.value ? parseFloat(form.cost.value) : 0,
                         technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
                         estimatedCompletionDate: estimatedCompletionDate,
                         status: form.status.value
+                    };
+
+                    // Update bulk request phone
+                    const bulkUpdateData = {
+                        customerPhone: form.phone.value
                     };
 
                     try {
@@ -2733,13 +2757,26 @@ class AdminManager {
 
                         if (!deviceResponse.ok) throw new Error('Failed to update device');
 
+                        // Update bulk request phone
+                        const bulkResponse = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(bulkUpdateData)
+                        });
+
+                        if (!bulkResponse.ok) throw new Error('Failed to update bulk request');
+
                         // Update local data
                         const bulkRequestIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
                         if (bulkRequestIndex !== -1) {
+                            this.bulkRequests[bulkRequestIndex].customerPhone = bulkUpdateData.customerPhone;
                             const deviceIndex = this.bulkRequests[bulkRequestIndex].devices.findIndex(d => d.id === deviceId);
                             if (deviceIndex !== -1) {
                                 this.bulkRequests[bulkRequestIndex].devices[deviceIndex] = {
                                     ...this.bulkRequests[bulkRequestIndex].devices[deviceIndex],
+                                    problemDescription: deviceUpdateData.problemDescription,
                                     adminReply: deviceUpdateData.adminReply,
                                     cost: deviceUpdateData.cost,
                                     technician: deviceUpdateData.technician,
@@ -3549,6 +3586,14 @@ class AdminManager {
                 </div>
                 <form id="editRequestForm" style="margin-top: 1.5rem;">
                     <div class="form-group">
+                        <label class="form-label">رقم الهاتف</label>
+                        <input type="tel" class="form-input" name="phone" value="${request.phone || ''}" placeholder="أدخل رقم الهاتف">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">وصف المشكلة</label>
+                        <textarea class="form-textarea" name="problemDescription" rows="3">${request.problemDescription || ''}</textarea>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">رد الإدارة</label>
                         <textarea class="form-textarea" name="adminReply" rows="3">${request.adminReply || ''}</textarea>
                     </div>
@@ -3642,6 +3687,8 @@ class AdminManager {
             }
 
             const updateData = {
+                phone: form.phone.value,
+                problemDescription: form.problemDescription.value,
                 adminReply: form.adminReply.value,
                 cost: parseFloat(form.cost.value) || 0,
                 technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
