@@ -429,9 +429,8 @@ router.post('/:id/convert-to-bulk', async (req, res) => {
 // Convert company request to single request
 router.post('/:id/convert-to-single', async (req, res) => {
     try {
-        console.log('🔄 Converting company request to single request:', req.params.id);
+        console.log('Converting company request to single request:', req.params.id);
 
-        // Get the original company request
         const { data: originalRequest, error: fetchError } = await supabase
             .from('company_requests')
             .select('*')
@@ -441,7 +440,6 @@ router.post('/:id/convert-to-single', async (req, res) => {
         if (fetchError) throw fetchError;
         if (!originalRequest) return res.status(404).json({ error: 'Company request not found' });
 
-        // Generate single request number
         const { data: existingRequests } = await supabase
             .from('requests')
             .select('request_number')
@@ -458,25 +456,6 @@ router.post('/:id/convert-to-single', async (req, res) => {
         }
         const requestNumber = `REQ ${nextNumber}`;
 
-        // Build notes from company request data
-        let notes = '';
-        if (originalRequest.serial_number) {
-            notes += `Serial Number: ${originalRequest.serial_number}\n`;
-        }
-        if (originalRequest.received_date) {
-            notes += `Received Date: ${originalRequest.received_date}\n`;
-        }
-        if (originalRequest.admin_reply) {
-            notes += `Admin Reply: ${originalRequest.admin_reply}\n`;
-        }
-        if (originalRequest.technician) {
-            notes += `Technician: ${originalRequest.technician}\n`;
-        }
-        if (originalRequest.technician_notes) {
-            notes += `Technician Notes: ${originalRequest.technician_notes}\n`;
-        }
-
-        // Create single request
         const newRequest = {
             request_number: requestNumber,
             full_name: originalRequest.full_name,
@@ -490,7 +469,7 @@ router.post('/:id/convert-to-single', async (req, res) => {
             status: originalRequest.status,
             cost: originalRequest.cost || 0,
             device_image: null,
-            notes: notes || null,
+            notes: originalRequest.technician_notes || null,
             technician_notes: originalRequest.technician_notes || null,
             estimated_completion_date: originalRequest.estimated_completion_date || null,
             created_at: originalRequest.created_at,
@@ -504,7 +483,6 @@ router.post('/:id/convert-to-single', async (req, res) => {
 
         if (requestError) throw requestError;
 
-        // Soft delete the original company request
         await supabase
             .from('company_requests')
             .update({ deleted_at: new Date().toISOString() })

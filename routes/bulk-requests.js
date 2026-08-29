@@ -541,9 +541,8 @@ router.delete('/', async (req, res) => {
 // Convert bulk request to single request
 router.post('/:id/convert-to-single', async (req, res) => {
     try {
-        console.log('🔄 Converting bulk request to single request:', req.params.id);
+        console.log('Converting bulk request to single request:', req.params.id);
 
-        // Get the bulk request with its devices
         const { data: bulkRequest, error: fetchError } = await supabase
             .from('bulk_requests')
             .select('*')
@@ -553,7 +552,6 @@ router.post('/:id/convert-to-single', async (req, res) => {
         if (fetchError) throw fetchError;
         if (!bulkRequest) return res.status(404).json({ error: 'Bulk request not found' });
 
-        // Get the first device
         const { data: devices, error: devicesError } = await supabase
             .from('bulk_request_devices')
             .select('*')
@@ -566,7 +564,6 @@ router.post('/:id/convert-to-single', async (req, res) => {
 
         const firstDevice = devices[0];
 
-        // Generate single request number
         const { data: existingRequests } = await supabase
             .from('requests')
             .select('request_number')
@@ -583,22 +580,6 @@ router.post('/:id/convert-to-single', async (req, res) => {
         }
         const requestNumber = `REQ ${nextNumber}`;
 
-        // Build notes from bulk request and device data
-        let notes = bulkRequest.notes || '';
-        if (firstDevice.serial_number) {
-            notes += (notes ? '\n' : '') + `Serial Number: ${firstDevice.serial_number}`;
-        }
-        if (firstDevice.received_date) {
-            notes += (notes ? '\n' : '') + `Received Date: ${firstDevice.received_date}`;
-        }
-        if (bulkRequest.admin_reply) {
-            notes += (notes ? '\n' : '') + `Admin Reply: ${bulkRequest.admin_reply}`;
-        }
-        if (bulkRequest.technician) {
-            notes += (notes ? '\n' : '') + `Technician: ${bulkRequest.technician}`;
-        }
-
-        // Create single request
         const newRequest = {
             request_number: requestNumber,
             full_name: bulkRequest.customer_name,
@@ -612,7 +593,7 @@ router.post('/:id/convert-to-single', async (req, res) => {
             status: firstDevice.status,
             cost: firstDevice.cost || 0,
             device_image: firstDevice.device_image || null,
-            notes: notes || null,
+            notes: bulkRequest.notes || null,
             technician_notes: bulkRequest.technician || null,
             estimated_completion_date: firstDevice.estimated_completion_date || null,
             created_at: bulkRequest.created_at,
@@ -626,7 +607,6 @@ router.post('/:id/convert-to-single', async (req, res) => {
 
         if (requestError) throw requestError;
 
-        // Soft delete the bulk request and its devices
         await supabase
             .from('bulk_request_devices')
             .update({ deleted_at: new Date().toISOString() })
