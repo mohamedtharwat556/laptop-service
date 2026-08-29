@@ -549,6 +549,9 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .eq('id', req.params.id)
             .single();
 
+        console.log('Bulk request:', bulkRequest);
+        console.log('Fetch error:', fetchError);
+
         if (fetchError) throw fetchError;
         if (!bulkRequest) return res.status(404).json({ error: 'Bulk request not found' });
 
@@ -558,6 +561,9 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .eq('bulk_request_id', req.params.id)
             .order('device_number', { ascending: true })
             .limit(1);
+
+        console.log('Devices:', devices);
+        console.log('Devices error:', devicesError);
 
         if (devicesError) throw devicesError;
         if (!devices || devices.length === 0) return res.status(404).json({ error: 'No devices found in bulk request' });
@@ -570,6 +576,8 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .order('created_at', { ascending: false })
             .limit(1);
 
+        console.log('Existing requests:', existingRequests);
+
         let nextNumber = 1;
         if (existingRequests && existingRequests.length > 0) {
             const lastRequestNumber = existingRequests[0].request_number;
@@ -579,6 +587,8 @@ router.post('/:id/convert-to-single', async (req, res) => {
             }
         }
         const requestNumber = `REQ ${nextNumber}`;
+
+        console.log('Request number:', requestNumber);
 
         const newRequest = {
             request_number: requestNumber,
@@ -600,10 +610,15 @@ router.post('/:id/convert-to-single', async (req, res) => {
             updated_at: new Date().toISOString()
         };
 
+        console.log('New request to insert:', newRequest);
+
         const { data: request, error: requestError } = await supabase
             .from('requests')
             .insert([newRequest])
             .select();
+
+        console.log('Insert result:', request);
+        console.log('Insert error:', requestError);
 
         if (requestError) throw requestError;
 
@@ -623,6 +638,8 @@ router.post('/:id/convert-to-single', async (req, res) => {
         });
     } catch (error) {
         console.error('Error converting bulk request to single request:', error);
+        console.error('Error details:', error.message);
+        console.error('Error stack:', error.stack);
         res.status(500).json({ error: error.message });
     }
 });
