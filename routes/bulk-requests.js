@@ -612,8 +612,13 @@ router.post('/:id/convert-to-company', async (req, res) => {
             .is('deleted_at', null)
             .single();
 
-        if (fetchError) throw fetchError;
+        if (fetchError) {
+            console.error('❌ Fetch bulk request error:', fetchError);
+            throw fetchError;
+        }
         if (!bulkRequest) return res.status(404).json({ error: 'Bulk request not found or already converted' });
+
+        console.log('✅ Bulk request found:', bulkRequest.id);
 
         // Get the first device
         const { data: devices, error: devicesError } = await supabase
@@ -624,10 +629,17 @@ router.post('/:id/convert-to-company', async (req, res) => {
             .order('device_number', { ascending: true })
             .limit(1);
 
-        if (devicesError) throw devicesError;
-        if (!devices || devices.length === 0) return res.status(404).json({ error: 'No devices found in bulk request' });
+        if (devicesError) {
+            console.error('❌ Fetch devices error:', devicesError);
+            throw devicesError;
+        }
+        if (!devices || devices.length === 0) {
+            console.log('❌ No devices found in bulk request');
+            return res.status(400).json({ error: 'لا يمكن تحويل طلب جملة بدون أجهزة. أضف أجهزة أولاً.' });
+        }
 
         const firstDevice = devices[0];
+        console.log('✅ First device found:', firstDevice.id);
 
         // Generate company request number
         const { data: existingCompanyRequests } = await supabase
@@ -672,7 +684,12 @@ router.post('/:id/convert-to-company', async (req, res) => {
             .insert([newCompanyRequest])
             .select();
 
-        if (companyError) throw companyError;
+        if (companyError) {
+            console.error('❌ Insert company request error:', companyError);
+            throw companyError;
+        }
+
+        console.log('✅ Company request created:', companyRequest[0].id);
 
         // Soft delete the bulk request and its devices
         await supabase
