@@ -4203,10 +4203,6 @@ class AdminManager {
                                                 onclick="adminManager.restoreItem('${item.type}', ${item.id})">
                                             <i class="fas fa-undo"></i> استعادة
                                         </button>
-                                        <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                                onclick="adminManager.permanentDeleteItem('${item.type}', ${item.id})">
-                                            <i class="fas fa-trash-alt"></i> حذف نهائي
-                                        </button>
                                     </td>
                                 </tr>
                             `).join('')}
