@@ -458,6 +458,24 @@ router.post('/:id/convert-to-single', async (req, res) => {
         }
         const requestNumber = `REQ ${nextNumber}`;
 
+        // Build notes from company request data
+        let notes = '';
+        if (originalRequest.serial_number) {
+            notes += `Serial Number: ${originalRequest.serial_number}\n`;
+        }
+        if (originalRequest.received_date) {
+            notes += `Received Date: ${originalRequest.received_date}\n`;
+        }
+        if (originalRequest.admin_reply) {
+            notes += `Admin Reply: ${originalRequest.admin_reply}\n`;
+        }
+        if (originalRequest.technician) {
+            notes += `Technician: ${originalRequest.technician}\n`;
+        }
+        if (originalRequest.technician_notes) {
+            notes += `Technician Notes: ${originalRequest.technician_notes}\n`;
+        }
+
         // Create single request
         const newRequest = {
             request_number: requestNumber,
@@ -472,7 +490,7 @@ router.post('/:id/convert-to-single', async (req, res) => {
             status: originalRequest.status,
             cost: originalRequest.cost || 0,
             device_image: null,
-            notes: originalRequest.technician_notes || null,
+            notes: notes || null,
             technician_notes: originalRequest.technician_notes || null,
             estimated_completion_date: originalRequest.estimated_completion_date || null,
             created_at: originalRequest.created_at,

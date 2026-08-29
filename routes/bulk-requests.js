@@ -583,6 +583,21 @@ router.post('/:id/convert-to-single', async (req, res) => {
         }
         const requestNumber = `REQ ${nextNumber}`;
 
+        // Build notes from bulk request and device data
+        let notes = bulkRequest.notes || '';
+        if (firstDevice.serial_number) {
+            notes += (notes ? '\n' : '') + `Serial Number: ${firstDevice.serial_number}`;
+        }
+        if (firstDevice.received_date) {
+            notes += (notes ? '\n' : '') + `Received Date: ${firstDevice.received_date}`;
+        }
+        if (bulkRequest.admin_reply) {
+            notes += (notes ? '\n' : '') + `Admin Reply: ${bulkRequest.admin_reply}`;
+        }
+        if (bulkRequest.technician) {
+            notes += (notes ? '\n' : '') + `Technician: ${bulkRequest.technician}`;
+        }
+
         // Create single request
         const newRequest = {
             request_number: requestNumber,
@@ -597,8 +612,8 @@ router.post('/:id/convert-to-single', async (req, res) => {
             status: firstDevice.status,
             cost: firstDevice.cost || 0,
             device_image: firstDevice.device_image || null,
-            notes: bulkRequest.notes || null,
-            technician_notes: bulkRequest.notes || null,
+            notes: notes || null,
+            technician_notes: bulkRequest.technician || null,
             estimated_completion_date: firstDevice.estimated_completion_date || null,
             created_at: bulkRequest.created_at,
             updated_at: new Date().toISOString()
