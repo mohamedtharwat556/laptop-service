@@ -2199,7 +2199,7 @@ class AdminManager {
      * Convert company request to single request
      */
     async convertCompanyRequestToSingle(companyRequestId) {
-        if (!confirm('هل أنت متأكد من تحويل هذا الطلب إلى طلب عادي؟ سيتم نقله من قسم طلبات موظفي الشركة إلى قسم الطلبات العادية.')) {
+        if (!confirm('هل أنت متأكد من تحويل هذا الطلب إلى طلب عادي؟')) {
             return;
         }
 
@@ -2210,15 +2210,13 @@ class AdminManager {
             });
 
             if (response.ok) {
-                const result = await response.json();
-                toast.success('تم تحويل الطلب إلى طلب عادي بنجاح');
+                toast.success('تم تحويل الطلب بنجاح');
                 await this.loadData();
                 this.renderCompanyRequests();
             } else {
-                throw new Error('Failed to convert request');
+                throw new Error('Failed');
             }
         } catch (error) {
-            console.error('Error converting company request to single:', error);
             toast.error('فشل في تحويل الطلب');
         } finally {
             loading.hide();
@@ -2229,7 +2227,7 @@ class AdminManager {
      * Convert bulk request to single request
      */
     async convertBulkRequestToSingle(bulkRequestId) {
-        if (!confirm('هل أنت متأكد من تحويل هذا الطلب إلى طلب عادي؟ سيتم نقله من قسم طلبات الجملة إلى قسم الطلبات العادية. سيتم تحويل أول جهاز فقط.')) {
+        if (!confirm('هل أنت متأكد من تحويل هذا الطلب إلى طلب عادي؟')) {
             return;
         }
 
@@ -2240,15 +2238,13 @@ class AdminManager {
             });
 
             if (response.ok) {
-                const result = await response.json();
-                toast.success('تم تحويل الطلب إلى طلب عادي بنجاح');
+                toast.success('تم تحويل الطلب بنجاح');
                 await this.loadData();
                 this.renderBulkRequests();
             } else {
-                throw new Error('Failed to convert request');
+                throw new Error('Failed');
             }
         } catch (error) {
-            console.error('Error converting bulk request to single:', error);
             toast.error('فشل في تحويل الطلب');
         } finally {
             loading.hide();

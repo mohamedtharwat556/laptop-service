@@ -541,26 +541,22 @@ router.delete('/', async (req, res) => {
 // Convert bulk request to single request
 router.post('/:id/convert-to-single', async (req, res) => {
     try {
-        console.log('Converting bulk request to single request:', req.params.id);
-
-        const { data: bulkRequest, error: fetchError } = await supabase
+        const { data: bulkRequest } = await supabase
             .from('bulk_requests')
             .select('*')
             .eq('id', req.params.id)
             .single();
 
-        if (fetchError) throw fetchError;
-        if (!bulkRequest) return res.status(404).json({ error: 'Bulk request not found' });
+        if (!bulkRequest) return res.status(404).json({ error: 'Not found' });
 
-        const { data: devices, error: devicesError } = await supabase
+        const { data: devices } = await supabase
             .from('bulk_request_devices')
             .select('*')
             .eq('bulk_request_id', req.params.id)
             .order('device_number', { ascending: true })
             .limit(1);
 
-        if (devicesError) throw devicesError;
-        if (!devices || devices.length === 0) return res.status(404).json({ error: 'No devices found in bulk request' });
+        if (!devices?.length) return res.status(404).json({ error: 'No devices' });
 
         const firstDevice = devices[0];
 
@@ -571,53 +567,32 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .limit(1);
 
         let nextNumber = 1;
-        if (existingRequests && existingRequests.length > 0) {
-            const lastRequestNumber = existingRequests[0].request_number;
-            const match = lastRequestNumber.match(/REQ (\d+)/);
-            if (match) {
-                nextNumber = parseInt(match[1]) + 1;
-            }
+        if (existingRequests?.length > 0) {
+            const match = existingRequests[0].request_number?.match(/REQ (\d+)/);
+            if (match) nextNumber = parseInt(match[1]) + 1;
         }
-        const requestNumber = `REQ ${nextNumber}`;
 
-        const newRequest = {
-            request_number: requestNumber,
-            full_name: bulkRequest.customer_name,
-            phone: bulkRequest.customer_phone,
-            laptop_brand: firstDevice.laptop_brand,
-            laptop_model: firstDevice.laptop_model,
-            problem_description: firstDevice.problem_description,
-            priority: firstDevice.priority,
-            status: firstDevice.status,
-            cost: firstDevice.cost || 0,
-            notes: bulkRequest.notes || null,
-            created_at: bulkRequest.created_at,
-            updated_at: new Date().toISOString()
-        };
-
-        const { data: request, error: requestError } = await supabase
+        const { data: request } = await supabase
             .from('requests')
-            .insert([newRequest])
+            .insert([{
+                request_number: `REQ ${nextNumber}`,
+                full_name: bulkRequest.customer_name,
+                phone: bulkRequest.customer_phone,
+                laptop_brand: firstDevice.laptop_brand,
+                laptop_model: firstDevice.laptop_model,
+                problem_description: firstDevice.problem_description,
+                priority: firstDevice.priority,
+                status: firstDevice.status,
+                cost: firstDevice.cost || 0,
+                created_at: bulkRequest.created_at
+            }])
             .select();
 
-        if (requestError) throw requestError;
+        await supabase.from('bulk_request_devices').update({ deleted_at: new Date().toISOString() }).eq('bulk_request_id', req.params.id);
+        await supabase.from('bulk_requests').update({ deleted_at: new Date().toISOString() }).eq('id', req.params.id);
 
-        await supabase
-            .from('bulk_request_devices')
-            .update({ deleted_at: new Date().toISOString() })
-            .eq('bulk_request_id', req.params.id);
-
-        await supabase
-            .from('bulk_requests')
-            .update({ deleted_at: new Date().toISOString() })
-            .eq('id', req.params.id);
-
-        res.status(201).json({
-            request: request[0],
-            message: 'Bulk request converted to single request successfully'
-        });
+        res.json({ request: request[0] });
     } catch (error) {
-        console.error('Error converting bulk request to single request:', error);
         res.status(500).json({ error: error.message });
     }
 });

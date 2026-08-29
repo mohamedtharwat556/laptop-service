@@ -429,16 +429,13 @@ router.post('/:id/convert-to-bulk', async (req, res) => {
 // Convert company request to single request
 router.post('/:id/convert-to-single', async (req, res) => {
     try {
-        console.log('Converting company request to single request:', req.params.id);
-
-        const { data: originalRequest, error: fetchError } = await supabase
+        const { data: originalRequest } = await supabase
             .from('company_requests')
             .select('*')
             .eq('id', req.params.id)
             .single();
 
-        if (fetchError) throw fetchError;
-        if (!originalRequest) return res.status(404).json({ error: 'Company request not found' });
+        if (!originalRequest) return res.status(404).json({ error: 'Not found' });
 
         const { data: existingRequests } = await supabase
             .from('requests')
@@ -447,48 +444,31 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .limit(1);
 
         let nextNumber = 1;
-        if (existingRequests && existingRequests.length > 0) {
-            const lastRequestNumber = existingRequests[0].request_number;
-            const match = lastRequestNumber.match(/REQ (\d+)/);
-            if (match) {
-                nextNumber = parseInt(match[1]) + 1;
-            }
+        if (existingRequests?.length > 0) {
+            const match = existingRequests[0].request_number?.match(/REQ (\d+)/);
+            if (match) nextNumber = parseInt(match[1]) + 1;
         }
-        const requestNumber = `REQ ${nextNumber}`;
 
-        const newRequest = {
-            request_number: requestNumber,
-            full_name: originalRequest.full_name,
-            phone: originalRequest.phone,
-            laptop_brand: originalRequest.laptop_brand,
-            laptop_model: originalRequest.laptop_model,
-            problem_description: originalRequest.problem_description,
-            priority: originalRequest.priority,
-            status: originalRequest.status,
-            cost: originalRequest.cost || 0,
-            notes: originalRequest.technician_notes || null,
-            created_at: originalRequest.created_at,
-            updated_at: new Date().toISOString()
-        };
-
-        const { data: request, error: requestError } = await supabase
+        const { data: request } = await supabase
             .from('requests')
-            .insert([newRequest])
+            .insert([{
+                request_number: `REQ ${nextNumber}`,
+                full_name: originalRequest.full_name,
+                phone: originalRequest.phone,
+                laptop_brand: originalRequest.laptop_brand,
+                laptop_model: originalRequest.laptop_model,
+                problem_description: originalRequest.problem_description,
+                priority: originalRequest.priority,
+                status: originalRequest.status,
+                cost: originalRequest.cost || 0,
+                created_at: originalRequest.created_at
+            }])
             .select();
 
-        if (requestError) throw requestError;
+        await supabase.from('company_requests').update({ deleted_at: new Date().toISOString() }).eq('id', req.params.id);
 
-        await supabase
-            .from('company_requests')
-            .update({ deleted_at: new Date().toISOString() })
-            .eq('id', req.params.id);
-
-        res.status(201).json({
-            request: request[0],
-            message: 'Company request converted to single request successfully'
-        });
+        res.json({ request: request[0] });
     } catch (error) {
-        console.error('Error converting company request to single request:', error);
         res.status(500).json({ error: error.message });
     }
 });
