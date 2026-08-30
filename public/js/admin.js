@@ -2143,9 +2143,17 @@ class AdminManager {
 
                     if (!response.ok) throw new Error('Failed to update company request');
 
+                    const updatedData = await response.json();
+                    
+                    // Update local data instead of reloading everything
+                    const index = this.companyRequests.findIndex(r => r.id === companyRequestId);
+                    if (index !== -1) {
+                        this.companyRequests[index] = { ...this.companyRequests[index], ...updatedData };
+                        this.renderCompanyRequests();
+                    }
+
                     toast.success('تم تحديث الطلب بنجاح');
                     modalManager.close('view-company-request');
-                    await this.loadData();
                 } catch (error) {
                     console.error('Error updating company request:', error);
                     toast.error('فشل تحديث الطلب');
@@ -2563,9 +2571,16 @@ class AdminManager {
 
             if (!updateResponse.ok) throw new Error('Failed to update request status');
 
+            // Update local data instead of reloading everything
+            const index = this.requests.findIndex(r => r.id === requestId);
+            if (index !== -1) {
+                this.requests[index].status = newStatus;
+                this.renderRequests();
+                this.renderStats();
+                this.renderCharts();
+            }
+
             toast.success('تم تحديث حالة الطلب بنجاح');
-            await this.loadData();
-            this.renderRequests();
         } catch (error) {
             console.error('Error updating request status:', error);
             toast.error('فشل تحديث حالة الطلب');
@@ -2586,9 +2601,17 @@ class AdminManager {
 
             if (!updateResponse.ok) throw new Error('Failed to update device status');
 
+            // Update local data instead of reloading everything
+            const bulkRequestIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+            if (bulkRequestIndex !== -1) {
+                const deviceIndex = this.bulkRequests[bulkRequestIndex].devices.findIndex(d => d.id === deviceId);
+                if (deviceIndex !== -1) {
+                    this.bulkRequests[bulkRequestIndex].devices[deviceIndex].status = newStatus;
+                    this.renderBulkRequests();
+                }
+            }
+
             toast.success('تم تحديث حالة الجهاز بنجاح');
-            await this.loadData();
-            this.renderBulkRequests();
         } catch (error) {
             console.error('Error updating device status:', error);
             toast.error('فشل تحديث حالة الجهاز');
@@ -3938,10 +3961,17 @@ class AdminManager {
         console.log('📡 Response status:', response.status);
 
         if (response.ok) {
-            this.loadData();
-            this.renderRequests();
-            this.renderStats();
-            this.renderCharts();
+            const updatedData = await response.json();
+            
+            // Update local data instead of reloading everything
+            const index = this.requests.findIndex(r => r.id === requestId);
+            if (index !== -1) {
+                this.requests[index] = { ...this.requests[index], ...updatedData };
+                this.renderRequests();
+                this.renderStats();
+                this.renderCharts();
+            }
+            
             modalManager.close('view-request');
             toast.success('تم تحديث الطلب بنجاح');
         } else {
