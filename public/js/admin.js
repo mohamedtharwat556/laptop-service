@@ -625,8 +625,11 @@ class AdminManager {
                 `}).join('')}
             </div>
             <div style="padding: 0.75rem; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                <button onclick="adminManager.markAllAsRead()" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.875rem;">
+                <button onclick="adminManager.markAllAsRead()" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.875rem; margin-right: 1rem;">
                     تعليم الكل كمقروء
+                </button>
+                <button onclick="adminManager.clearAllNotifications()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.875rem;">
+                    مسح جميع الإشعارات
                 </button>
             </div>
         `;
@@ -687,6 +690,20 @@ class AdminManager {
         localStorage.setItem('unreadNotifications', JSON.stringify(this.unreadNotifications));
         this.updateNotificationBadge();
         this.renderNotificationDropdown();
+    }
+
+    /**
+     * Clear all notifications
+     */
+    clearAllNotifications() {
+        if (!confirm('هل أنت متأكد من مسح جميع الإشعارات؟')) {
+            return;
+        }
+        this.unreadNotifications = [];
+        localStorage.setItem('unreadNotifications', JSON.stringify(this.unreadNotifications));
+        this.updateNotificationBadge();
+        this.renderNotificationDropdown();
+        toast.success('تم مسح جميع الإشعارات');
     }
 
     /**
