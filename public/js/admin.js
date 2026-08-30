@@ -655,9 +655,20 @@ class AdminManager {
             const dropdown = document.getElementById('notificationDropdown');
             if (dropdown) dropdown.style.display = 'none';
             
-            // Navigate to appropriate section based on notification type
-            console.log('🔔 Notification type:', notification.type);
-            if (notification.type === 'bulk_request') {
+            // Determine the actual type by checking which array contains this ID
+            let actualType = notification.type;
+            if (this.bulkRequests.find(r => r.id === notificationId)) {
+                actualType = 'bulk_request';
+            } else if (this.companyRequests.find(r => r.id === notificationId)) {
+                actualType = 'company_request';
+            } else if (this.requests.find(r => r.id === notificationId)) {
+                actualType = 'new_request';
+            }
+            
+            console.log('🔔 Original type:', notification.type, 'Actual type:', actualType);
+            
+            // Navigate to appropriate section based on actual type
+            if (actualType === 'bulk_request') {
                 console.log('🔔 Switching to bulk-requests');
                 this.switchSection('bulk-requests');
                 setTimeout(() => {
@@ -666,7 +677,7 @@ class AdminManager {
                         this.viewBulkRequest(notificationId);
                     }
                 }, 100);
-            } else if (notification.type === 'company_request') {
+            } else if (actualType === 'company_request') {
                 console.log('🔔 Switching to company-requests');
                 this.switchSection('company-requests');
                 setTimeout(() => {
