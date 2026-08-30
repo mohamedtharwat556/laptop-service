@@ -335,10 +335,11 @@ router.post('/:id/convert-to-bulk', async (req, res) => {
             .from('company_requests')
             .select('*')
             .eq('id', req.params.id)
+            .is('deleted_at', null)
             .single();
 
         if (fetchError) throw fetchError;
-        if (!originalRequest) return res.status(404).json({ error: 'Company request not found' });
+        if (!originalRequest) return res.status(404).json({ error: 'Company request not found or already converted' });
 
         // Generate BULK request number
         const { data: existingBulkRequests } = await supabase
