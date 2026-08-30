@@ -402,7 +402,7 @@ class AdminManager {
         `;
         
         toast.onclick = () => {
-            this.toggleNotificationDropdown();
+            this.toggleNotificationDropdown('request');
             toast.remove();
         };
         
@@ -452,7 +452,7 @@ class AdminManager {
         `;
         
         toast.onclick = () => {
-            this.toggleNotificationDropdown();
+            this.toggleNotificationDropdown('bulk');
             toast.remove();
         };
         
@@ -502,7 +502,7 @@ class AdminManager {
         `;
         
         toast.onclick = () => {
-            this.toggleNotificationDropdown();
+            this.toggleNotificationDropdown('company');
             toast.remove();
         };
         
@@ -541,46 +541,64 @@ class AdminManager {
     }
 
     /**
-     * Update notification badge count
+     * Update notification badge
      */
     updateNotificationBadge() {
-        const badge = document.getElementById('notificationBadge');
-        if (badge) {
-            const unreadCount = this.unreadNotifications.filter(n => !n.read).length;
-            if (unreadCount > 0) {
-                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
+        const typeMap = {
+            'request': 'new_request',
+            'bulk': 'bulk_request',
+            'company': 'company_request'
+        };
+
+        ['request', 'bulk', 'company'].forEach(type => {
+            const badge = document.getElementById(`${type}NotificationBadge`);
+            if (badge) {
+                const unreadCount = this.unreadNotifications.filter(n => !n.read && n.type === typeMap[type]).length;
+                badge.textContent = unreadCount;
+                if (unreadCount > 0) {
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
             }
-        }
+        });
     }
 
     /**
      * Toggle notification dropdown
      */
-    toggleNotificationDropdown() {
-        const dropdown = document.getElementById('notificationDropdown');
+    toggleNotificationDropdown(type) {
+        const dropdownId = `${type}NotificationDropdown`;
+        const dropdown = document.getElementById(dropdownId);
+        
+        // Close all dropdowns first
+        ['request', 'bulk', 'company'].forEach(t => {
+            const d = document.getElementById(`${t}NotificationDropdown`);
+            if (d) d.style.display = 'none';
+        });
+        
         if (dropdown) {
-            if (dropdown.style.display === 'block') {
-                dropdown.style.display = 'none';
-            } else {
-                this.renderNotificationDropdown();
-                dropdown.style.display = 'block';
-            }
+            dropdown.style.display = 'block';
+            this.renderNotificationDropdown(type);
         }
     }
 
     /**
      * Render notification dropdown
      */
-    renderNotificationDropdown() {
-        const dropdown = document.getElementById('notificationDropdown');
+    renderNotificationDropdown(type) {
+        const dropdownId = `${type}NotificationDropdown`;
+        const dropdown = document.getElementById(dropdownId);
         if (!dropdown) return;
 
-        const unreadNotifications = this.unreadNotifications.filter(n => !n.read);
-        console.log('🔔 All notifications:', this.unreadNotifications);
-        console.log('🔔 Unread notifications:', unreadNotifications);
+        const typeMap = {
+            'request': 'new_request',
+            'bulk': 'bulk_request',
+            'company': 'company_request'
+        };
+
+        const unreadNotifications = this.unreadNotifications.filter(n => !n.read && n.type === typeMap[type]);
+        console.log(`🔔 ${type} notifications:`, unreadNotifications);
         
         if (unreadNotifications.length === 0) {
             dropdown.innerHTML = `
@@ -627,10 +645,10 @@ class AdminManager {
                 `}).join('')}
             </div>
             <div style="padding: 0.75rem; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                <button onclick="adminManager.markAllAsRead()" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.875rem; margin-right: 1rem;">
+                <button onclick="adminManager.markAllAsRead('${type}')" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.875rem; margin-right: 1rem;">
                     تعليم الكل كمقروء
                 </button>
-                <button onclick="adminManager.clearAllNotifications()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.875rem;">
+                <button onclick="adminManager.clearAllNotifications('${type}')" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.875rem;">
                     مسح جميع الإشعارات
                 </button>
             </div>
@@ -703,24 +721,36 @@ class AdminManager {
     /**
      * Mark all notifications as read
      */
-    markAllAsRead() {
-        this.unreadNotifications.forEach(n => n.read = true);
+    markAllAsRead(type) {
+        const typeMap = {
+            'request': 'new_request',
+            'bulk': 'bulk_request',
+            'company': 'company_request'
+        };
+        this.unreadNotifications.forEach(n => {
+            if (n.type === typeMap[type]) n.read = true;
+        });
         localStorage.setItem('unreadNotifications', JSON.stringify(this.unreadNotifications));
         this.updateNotificationBadge();
-        this.renderNotificationDropdown();
+        this.renderNotificationDropdown(type);
     }
 
     /**
      * Clear all notifications
      */
-    clearAllNotifications() {
+    clearAllNotifications(type) {
         if (!confirm('هل أنت متأكد من مسح جميع الإشعارات؟')) {
             return;
         }
-        this.unreadNotifications = [];
+        const typeMap = {
+            'request': 'new_request',
+            'bulk': 'bulk_request',
+            'company': 'company_request'
+        };
+        this.unreadNotifications = this.unreadNotifications.filter(n => n.type !== typeMap[type]);
         localStorage.setItem('unreadNotifications', JSON.stringify(this.unreadNotifications));
         this.updateNotificationBadge();
-        this.renderNotificationDropdown();
+        this.renderNotificationDropdown(type);
         toast.success('تم مسح جميع الإشعارات');
     }
 
