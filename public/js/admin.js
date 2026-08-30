@@ -579,6 +579,8 @@ class AdminManager {
         if (!dropdown) return;
 
         const unreadNotifications = this.unreadNotifications.filter(n => !n.read);
+        console.log('🔔 All notifications:', this.unreadNotifications);
+        console.log('🔔 Unread notifications:', unreadNotifications);
         
         if (unreadNotifications.length === 0) {
             dropdown.innerHTML = `
@@ -640,6 +642,7 @@ class AdminManager {
      */
     openNotification(notificationId) {
         const notification = this.unreadNotifications.find(n => n.id === notificationId);
+        console.log('🔔 Opening notification:', notification);
         if (notification) {
             // Mark as read
             notification.read = true;
@@ -653,7 +656,9 @@ class AdminManager {
             if (dropdown) dropdown.style.display = 'none';
             
             // Navigate to appropriate section based on notification type
+            console.log('🔔 Notification type:', notification.type);
             if (notification.type === 'bulk_request') {
+                console.log('🔔 Switching to bulk-requests');
                 this.switchSection('bulk-requests');
                 setTimeout(() => {
                     const request = this.bulkRequests.find(r => r.id === notificationId);
@@ -662,6 +667,7 @@ class AdminManager {
                     }
                 }, 100);
             } else if (notification.type === 'company_request') {
+                console.log('🔔 Switching to company-requests');
                 this.switchSection('company-requests');
                 setTimeout(() => {
                     const request = this.companyRequests.find(r => r.id === notificationId);
@@ -670,6 +676,7 @@ class AdminManager {
                     }
                 }, 100);
             } else {
+                console.log('🔔 Switching to requests');
                 // Regular request
                 this.switchSection('requests');
                 setTimeout(() => {
