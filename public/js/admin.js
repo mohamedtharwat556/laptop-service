@@ -565,6 +565,16 @@ class AdminManager {
     }
 
     /**
+     * Close all notification dropdowns
+     */
+    closeAllDropdowns() {
+        ['request', 'bulk', 'company'].forEach(t => {
+            const d = document.getElementById(`${t}NotificationDropdown`);
+            if (d) d.style.display = 'none';
+        });
+    }
+
+    /**
      * Toggle notification dropdown
      */
     toggleNotificationDropdown(type) {
@@ -602,7 +612,7 @@ class AdminManager {
         
         if (unreadNotifications.length === 0) {
             dropdown.innerHTML = `
-                <div style="padding: 2rem; text-align: center; color: #94a3b8;">
+                <div style="padding: 2rem; text-align: center; color: #94a3b8; cursor: pointer;" onclick="adminManager.closeAllDropdowns()">
                     <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
                     <p>لا توجد إشعارات جديدة</p>
                 </div>
@@ -670,8 +680,10 @@ class AdminManager {
             this.updateNotificationBadge();
             
             // Close dropdown
-            const dropdown = document.getElementById('notificationDropdown');
-            if (dropdown) dropdown.style.display = 'none';
+            ['request', 'bulk', 'company'].forEach(t => {
+                const d = document.getElementById(`${t}NotificationDropdown`);
+                if (d) d.style.display = 'none';
+            });
             
             // Determine the actual type by checking which array contains this ID
             let actualType = notification.type;
