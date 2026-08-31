@@ -12,8 +12,9 @@ class ProductsManager {
      * Initialize products manager
      */
     async init() {
-        this.loadProducts();
-        this.renderProducts();
+        // Disabled - products section now links to external site
+        // this.loadProducts();
+        // this.renderProducts();
     }
 
     /**
