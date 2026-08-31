@@ -133,12 +133,12 @@ router.post('/', async (req, res) => {
         let nextNumber = 1;
         if (existingRequests && existingRequests.length > 0) {
             const lastRequestNumber = existingRequests[0].request_number;
-            const match = lastRequestNumber.match(/YAS (\d+)/);
+            const match = lastRequestNumber.match(/(\d+)/);
             if (match) {
                 nextNumber = parseInt(match[1]) + 1;
             }
         }
-        const requestNumber = `YAS ${nextNumber}`;
+        const requestNumber = `REQ ${nextNumber}`;
 
         const newRequest = {
             request_number: req.body.requestNumber || requestNumber,
