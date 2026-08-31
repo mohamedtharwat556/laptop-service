@@ -576,14 +576,14 @@ router.post('/:id/convert-to-single', async (req, res) => {
 
         let nextNumber = 1;
         if (existingRequests && existingRequests.length > 0) {
-            const match = existingRequests[0].request_number?.match(/REQ (\d+)/);
+            const match = existingRequests[0].request_number?.match(/YAS (\d+)/);
             if (match) nextNumber = parseInt(match[1]) + 1;
         }
 
         const { data: request } = await supabase
             .from('requests')
             .insert([{
-                request_number: `REQ ${nextNumber}`,
+                request_number: `YAS ${nextNumber}`,
                 full_name: bulkRequest.customer_name,
                 phone: bulkRequest.customer_phone,
                 laptop_brand: firstDevice.laptop_brand,
