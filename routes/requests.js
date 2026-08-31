@@ -128,16 +128,25 @@ router.post('/', async (req, res) => {
     try {
         console.log('📝 POST /api/requests - Request body:', req.body);
 
-        // Generate YAS request number
-        const { data: existingRequests } = await supabase.from('requests').select('request_number').order('created_at', { ascending: false }).limit(1);
+        // Generate YAS request number - use MAX to get highest number
+        const { data: existingRequests } = await supabase
+            .from('requests')
+            .select('request_number')
+            .order('created_at', { ascending: false })
+            .limit(50); // Get more to find the highest number
+
         let nextNumber = 1;
         if (existingRequests && existingRequests.length > 0) {
-            const lastRequestNumber = existingRequests[0].request_number;
-            // Match any prefix followed by a number (YAS, REQ, etc.)
-            const match = lastRequestNumber.match(/(\d+)/);
-            if (match) {
-                nextNumber = parseInt(match[1]) + 1;
-            }
+            // Find the highest number from all existing requests
+            let maxNumber = 0;
+            existingRequests.forEach(req => {
+                const match = req.request_number?.match(/(\d+)/);
+                if (match) {
+                    const num = parseInt(match[1]);
+                    if (num > maxNumber) maxNumber = num;
+                }
+            });
+            nextNumber = maxNumber + 1;
         }
         const requestNumber = `YAS ${nextNumber}`;
 

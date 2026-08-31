@@ -572,13 +572,20 @@ router.post('/:id/convert-to-single', async (req, res) => {
             .from('requests')
             .select('request_number')
             .order('created_at', { ascending: false })
-            .limit(1);
+            .limit(50); // Get more to find the highest number
 
         let nextNumber = 1;
         if (existingRequests && existingRequests.length > 0) {
-            // Match any prefix followed by a number (YAS, REQ, etc.)
-            const match = existingRequests[0].request_number?.match(/(\d+)/);
-            if (match) nextNumber = parseInt(match[1]) + 1;
+            // Find the highest number from all existing requests
+            let maxNumber = 0;
+            existingRequests.forEach(req => {
+                const match = req.request_number?.match(/(\d+)/);
+                if (match) {
+                    const num = parseInt(match[1]);
+                    if (num > maxNumber) maxNumber = num;
+                }
+            });
+            nextNumber = maxNumber + 1;
         }
 
         const { data: request } = await supabase
