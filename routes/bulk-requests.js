@@ -576,7 +576,8 @@ router.post('/:id/convert-to-single', async (req, res) => {
 
         let nextNumber = 1;
         if (existingRequests && existingRequests.length > 0) {
-            const match = existingRequests[0].request_number?.match(/YAS (\d+)/);
+            // Match any prefix followed by a number (YAS, REQ, etc.)
+            const match = existingRequests[0].request_number?.match(/(\d+)/);
             if (match) nextNumber = parseInt(match[1]) + 1;
         }
 

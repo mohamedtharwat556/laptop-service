@@ -133,7 +133,8 @@ router.post('/', async (req, res) => {
         let nextNumber = 1;
         if (existingRequests && existingRequests.length > 0) {
             const lastRequestNumber = existingRequests[0].request_number;
-            const match = lastRequestNumber.match(/YAS (\d+)/);
+            // Match any prefix followed by a number (YAS, REQ, etc.)
+            const match = lastRequestNumber.match(/(\d+)/);
             if (match) {
                 nextNumber = parseInt(match[1]) + 1;
             }
