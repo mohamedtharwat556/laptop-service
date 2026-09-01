@@ -2487,6 +2487,82 @@ class AdminManager {
     }
 
     /**
+     * Export bulk request devices to Excel
+     */
+    async exportBulkRequestDevices(bulkRequestId) {
+        try {
+            const response = await fetch(`/api/bulk-requests/${bulkRequestId}`);
+            if (!response.ok) throw new Error('Failed to fetch bulk request details');
+            
+            const bulkRequest = await response.json();
+            
+            if (!bulkRequest.devices || bulkRequest.devices.length === 0) {
+                toast.error('لا توجد أجهزة لتصديرها');
+                return;
+            }
+            
+            const data = [
+                ['#', 'رقم الجهاز', 'رقم طلب الجملة', 'اسم العميل', 'الهاتف', 'ماركة اللابتوب', 'الموديل', 'السيريال', 'المشكلة', 'الحالة', 'التكلفة', 'الفني', 'رد الإدارة', 'تاريخ الاستلام المتوقع', 'تاريخ الطلب'],
+                ...bulkRequest.devices.map((device, index) => [
+                    index + 1,
+                    device.deviceNumber,
+                    bulkRequest.requestNumber,
+                    bulkRequest.customerName,
+                    bulkRequest.customerPhone,
+                    device.laptopBrand,
+                    device.laptopModel,
+                    device.serialNumber || '—',
+                    device.problemDescription || '—',
+                    this.translateStatus(device.status),
+                    device.cost > 0 ? device.cost : 0,
+                    device.technician || '—',
+                    device.adminReply || '—',
+                    device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : '—',
+                    Utils.formatDate(device.createdAt)
+                ])
+            ];
+            
+            // Convert to Excel format
+            const html = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                    <style>
+                        table { border-collapse: collapse; }
+                        td, th { border: 1px solid #ddd; padding: 8px; text-align: right; }
+                        th { background-color: #4CAF50; color: white; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <table>
+                        ${data.map(row => `
+                            <tr>
+                                ${row.map(cell => `<td>${cell}</td>`).join('')}
+                            </tr>
+                        `).join('')}
+                    </table>
+                </body>
+                </html>
+            `;
+            
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${bulkRequest.requestNumber}_devices.xls`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            toast.success('تم تصدير الأجهزة بنجاح');
+        } catch (error) {
+            console.error('Error exporting bulk request devices:', error);
+            toast.error('فشل تصدير الأجهزة');
+        }
+    }
+
+    /**
      * View all devices in a bulk request
      */
     async viewBulkRequestDevices(bulkRequestId) {
@@ -2503,6 +2579,9 @@ class AdminManager {
                             <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${bulkRequest.requestNumber} - جميع الأجهزة</h3>
                             <span class="status-badge ${this.getStatusClass(bulkRequest.status)}">${this.translateStatus(bulkRequest.status)}</span>
                         </div>
+                        <button type="button" onclick="adminManager.exportBulkRequestDevices(${bulkRequest.id})" class="btn btn-success" style="padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-file-excel"></i> تصدير Excel
+                        </button>
                     </div>
                     <div class="request-details">
                         <div class="request-detail-item"><span class="request-detail-label">اسم العميل</span><span class="request-detail-value">${bulkRequest.customerName}</span></div>
