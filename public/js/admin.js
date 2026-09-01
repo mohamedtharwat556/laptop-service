@@ -4824,22 +4824,54 @@ class AdminManager {
 
         let data;
         if (type === 'bulk') {
-            // For bulk requests, show each request as a row with summary info
+            // For bulk requests, show each device as a separate row
+            const deviceRows = [];
+            filteredRequests.forEach((bulkRequest, bulkIndex) => {
+                if (bulkRequest.devices && bulkRequest.devices.length > 0) {
+                    bulkRequest.devices.forEach((device, deviceIndex) => {
+                        deviceRows.push([
+                            deviceRows.length + 1,
+                            bulkRequest.requestNumber,
+                            device.deviceNumber,
+                            bulkRequest.customerName,
+                            bulkRequest.customerPhone,
+                            device.laptopBrand,
+                            device.laptopModel,
+                            device.serialNumber || '—',
+                            device.problemDescription || '—',
+                            this.translateStatus(device.status),
+                            device.cost > 0 ? device.cost : 0,
+                            device.technician || '—',
+                            device.adminReply || '—',
+                            device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : '—',
+                            Utils.formatDate(device.createdAt)
+                        ]);
+                    });
+                } else {
+                    // If no devices, show the bulk request itself
+                    deviceRows.push([
+                        deviceRows.length + 1,
+                        bulkRequest.requestNumber,
+                        '—',
+                        bulkRequest.customerName,
+                        bulkRequest.customerPhone,
+                        '—',
+                        '—',
+                        '—',
+                        'لا توجد أجهزة',
+                        this.translateStatus(bulkRequest.status),
+                        bulkRequest.cost > 0 ? bulkRequest.cost : 0,
+                        bulkRequest.technician || '—',
+                        bulkRequest.adminReply || '—',
+                        bulkRequest.estimatedCompletionDate ? Utils.formatDate(bulkRequest.estimatedCompletionDate) : '—',
+                        Utils.formatDate(bulkRequest.createdAt)
+                    ]);
+                }
+            });
+            
             data = [
-                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'عدد اللابتوبات', 'الحالة', 'التكلفة', 'الفني', 'رد الإدارة', 'تاريخ الاستلام المتوقع', 'تاريخ الطلب'],
-                ...filteredRequests.map((r, i) => [
-                    i + 1,
-                    r.requestNumber,
-                    r.customerName,
-                    r.customerPhone,
-                    r.deviceCount,
-                    this.translateStatus(r.status),
-                    r.cost > 0 ? r.cost : 0,
-                    r.technician || '—',
-                    r.adminReply || '—',
-                    r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—',
-                    Utils.formatDate(r.createdAt)
-                ])
+                ['#', 'رقم طلب الجملة', 'رقم الجهاز', 'اسم العميل', 'الهاتف', 'ماركة اللابتوب', 'الموديل', 'السيريال', 'المشكلة', 'الحالة', 'التكلفة', 'الفني', 'رد الإدارة', 'تاريخ الاستلام المتوقع', 'تاريخ الطلب'],
+                ...deviceRows
             ];
         } else if (type === 'company') {
             // Company requests
