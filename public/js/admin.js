@@ -1966,6 +1966,12 @@ class AdminManager {
         }
 
         container.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">طلبات موظفي الشركة (${data.length})</h3>
+                <button type="button" onclick="adminManager.exportCompanyRequestsToExcel()" class="btn btn-success" style="padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-file-excel"></i> تصدير Excel
+                </button>
+            </div>
             <div style="overflow-x: auto;">
                 <table class="table">
                     <thead>
