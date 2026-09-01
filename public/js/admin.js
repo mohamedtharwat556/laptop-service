@@ -25,6 +25,40 @@ class AdminManager {
     }
 
     /**
+     * Setup mobile menu toggle
+     */
+    setupMobileMenu() {
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        const navLinks = document.querySelector('.navbar .nav-links');
+        
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+        }
+        
+        // Close sidebar when clicking outside
+        document.addEventListener('click', (e) => {
+            if (sidebar && sidebar.classList.contains('active')) {
+                if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                    sidebar.classList.remove('active');
+                }
+            }
+        });
+        
+        // Mobile nav links toggle
+        if (navLinks) {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-toggle');
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    navLinks.classList.toggle('mobile-active');
+                });
+            }
+        }
+    }
+
+    /**
      * Initialize admin dashboard
      */
     async init() {

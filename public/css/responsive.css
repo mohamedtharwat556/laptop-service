@@ -368,6 +368,59 @@
         overflow-y: auto;
     }
 
+    /* Admin panel specific mobile improvements */
+    .navbar .nav-links {
+        display: none !important;
+    }
+
+    .navbar .nav-links.mobile-active {
+        display: flex !important;
+        flex-direction: column;
+        position: fixed;
+        top: 60px;
+        right: 0;
+        width: 100%;
+        background: rgba(8, 12, 26, 0.98);
+        padding: 1rem;
+        z-index: 999;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .navbar .nav-links.mobile-active > * {
+        width: 100%;
+    }
+
+    .navbar .nav-links .btn {
+        width: 100%;
+        justify-content: flex-start;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Notification buttons on mobile */
+    .navbar .nav-links > div {
+        width: 100%;
+    }
+
+    .navbar .nav-links > div > button {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 0.75rem 1rem;
+    }
+
+    .navbar .nav-links > div > div {
+        position: static !important;
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    #requestNotificationDropdown,
+    #bulkNotificationDropdown,
+    #companyNotificationDropdown {
+        position: static !important;
+        width: 100% !important;
+        margin-top: 0.5rem;
+    }
+
     /* Dashboard Mobile Improvements */
     .navbar .nav-container {
         padding: 0.5rem;
@@ -380,28 +433,6 @@
     .navbar .logo-img {
         width: 45px;
         height: 45px;
-    }
-
-    .navbar .nav-links {
-        flex-direction: column;
-        width: 100%;
-        position: fixed;
-        top: 60px;
-        right: 0;
-        background: rgba(8, 12, 26, 0.98);
-        padding: 1rem;
-        border-radius: 0 0 12px 12px;
-        gap: 0.5rem;
-    }
-
-    .navbar .nav-links > * {
-        width: 100%;
-    }
-
-    .navbar .nav-links .btn {
-        width: 100%;
-        justify-content: flex-start;
-        padding: 0.75rem 1rem;
     }
 
     .sidebar {
@@ -448,7 +479,8 @@
         padding: 1rem;
     }
 
-    .dashboard-header h1 {
+    .dashboard-header h1,
+    .dashboard-header h2 {
         font-size: 1.5rem;
     }
 
@@ -458,8 +490,65 @@
     }
 
     .dashboard-header .search-input,
-    .dashboard-header .filter-select {
+    .dashboard-header .filter-select,
+    .dashboard-header input,
+    .dashboard-header select {
         width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .dashboard-header button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Date range container on mobile */
+    .date-range-container {
+        flex-direction: column !important;
+        width: 100%;
+    }
+
+    .date-range-container label {
+        width: 100%;
+    }
+
+    .date-range-container input {
+        width: 100% !important;
+    }
+
+    /* Report section on mobile */
+    #daily-reportSection .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    #daily-reportSection .dashboard-header > div {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #daily-reportSection .dashboard-header > div > select,
+    #daily-reportSection .dashboard-header > div > input,
+    #daily-reportSection .dashboard-header > div > button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    #reportPeriod,
+    #reportDate,
+    #reportDateFrom,
+    #reportDateTo,
+    #reportType,
+    #reportStartDate,
+    #reportEndDate {
+        width: 100%;
+    }
+
+    #daily-reportSection button {
+        width: 100%;
+        justify-content: center;
     }
 
     .stats-grid {
@@ -610,38 +699,6 @@
 
     .table th {
         font-size: 0.8125rem;
-    }
-
-    /* Report filters on mobile */
-    #daily-reportSection .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
-        width: 100%;
-    }
-
-    #daily-reportSection .dashboard-header > div {
-        width: 100%;
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    #daily-reportSection .dashboard-header > div > select,
-    #daily-reportSection .dashboard-header > div > input,
-    #daily-reportSection .dashboard-header > div > button {
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-
-    #reportPeriod,
-    #reportDate,
-    #reportDateFrom,
-    #reportDateTo {
-        width: 100%;
-    }
-
-    #daily-reportSection button {
-        width: 100%;
-        justify-content: center;
     }
 
     /* Pagination */
