@@ -2487,6 +2487,70 @@ class AdminManager {
     }
 
     /**
+     * Export company requests to Excel
+     */
+    exportCompanyRequestsToExcel() {
+        const companyRequests = this.companyRequests || [];
+        const filteredRequests = this.filterCompanyRequests(companyRequests);
+        
+        if (filteredRequests.length === 0) {
+            toast.error('لا توجد طلبات موظفي الشركة لتصديرها');
+            return;
+        }
+        
+        const data = [
+            ['#', 'رقم الطلب', 'اسم الشركة', 'الهاتف', 'الجهاز', 'المشكلة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الطلب'],
+            ...filteredRequests.map((r, index) => [
+                index + 1,
+                r.requestNumber || r.request_number,
+                r.companyName || r.full_name || r.fullName || '—',
+                r.companyPhone || r.phone || '—',
+                `${r.laptopBrand || r.laptop_brand || ''} ${r.laptopModel || r.laptop_model || ''}`,
+                r.problemDescription || r.problem_description || '—',
+                this.translateStatus(r.status),
+                r.cost > 0 ? r.cost : 0,
+                r.technician || '—',
+                Utils.formatDate(r.createdAt)
+            ])
+        ];
+        
+        // Convert to Excel format
+        const html = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    table { border-collapse: collapse; }
+                    td, th { border: 1px solid #ddd; padding: 8px; text-align: right; }
+                    th { background-color: #4CAF50; color: white; font-weight: bold; }
+                </style>
+            </head>
+            <body>
+                <table>
+                    ${data.map(row => `
+                        <tr>
+                            ${row.map(cell => `<td>${cell}</td>`).join('')}
+                        </tr>
+                    `).join('')}
+                </table>
+            </body>
+            </html>
+        `;
+        
+        const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `company_requests_${new Date().toISOString().slice(0, 10)}.xls`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        toast.success('تم تصدير طلبات موظفي الشركة بنجاح');
+    }
+
+    /**
      * Export bulk request devices to Excel
      */
     async exportBulkRequestDevices(bulkRequestId) {
@@ -4759,6 +4823,9 @@ class AdminManager {
             container.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h3 style="margin: 0;">طلبات موظفي الشركة (${requests.length})</h3>
+                    <button type="button" onclick="adminManager.exportCompanyRequestsToExcel()" class="btn btn-success" style="padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
                 </div>
                 <div class="table-container" style="overflow-x: auto;">
                     <table class="table" style="min-width: 1000px;">
