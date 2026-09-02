@@ -56,14 +56,6 @@ class AdminManager {
                 });
             }
         }
-        
-        // Setup global search
-        const globalSearch = document.getElementById('globalSearch');
-        if (globalSearch) {
-            globalSearch.addEventListener('input', Utils.debounce(() => {
-                this.performGlobalSearch(globalSearch.value);
-            }, 300));
-        }
     }
 
     /**
@@ -327,6 +319,15 @@ class AdminManager {
             console.log('📊 Loading data...');
             await this.loadData();
             console.log('✅ Data loaded successfully');
+            
+            // Setup global search after data is loaded
+            const globalSearch = document.getElementById('globalSearch');
+            if (globalSearch) {
+                globalSearch.addEventListener('input', Utils.debounce(() => {
+                    this.performGlobalSearch(globalSearch.value);
+                }, 300));
+                console.log('✅ Global search listener set up');
+            }
             
             console.log('📑 Switching to dashboard section...');
             await this.switchSection('dashboard');
