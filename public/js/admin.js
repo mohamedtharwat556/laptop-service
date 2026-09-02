@@ -70,6 +70,13 @@ class AdminManager {
      * Perform global search across all request types
      */
     performGlobalSearch(searchTerm) {
+        console.log('🔍 Global search called with:', searchTerm);
+        console.log('📊 Data available:', {
+            requests: this.requests?.length,
+            bulkRequests: this.bulkRequests?.length,
+            companyRequests: this.companyRequests?.length
+        });
+        
         const searchResultsContainer = document.getElementById('globalSearchResults');
         
         if (!searchTerm || searchTerm.trim() === '') {
@@ -83,88 +90,96 @@ class AdminManager {
         const results = [];
         
         // Search in normal requests
-        this.requests.forEach(r => {
-            if (
-                r.requestNumber.toLowerCase().includes(term) ||
-                r.fullName.toLowerCase().includes(term) ||
-                r.phone.includes(term) ||
-                (r.laptopBrand && r.laptopBrand.toLowerCase().includes(term)) ||
-                (r.laptopModel && r.laptopModel.toLowerCase().includes(term)) ||
-                (r.serialNumber && r.serialNumber.toLowerCase().includes(term))
-            ) {
-                results.push({
-                    type: 'normal',
-                    requestNumber: r.requestNumber,
-                    customerName: r.fullName,
-                    phone: r.phone,
-                    laptop: `${r.laptopBrand} ${r.laptopModel}`,
-                    status: r.status,
-                    id: r.id
-                });
-            }
-        });
+        if (this.requests && this.requests.length > 0) {
+            this.requests.forEach(r => {
+                if (
+                    r.requestNumber.toLowerCase().includes(term) ||
+                    r.fullName.toLowerCase().includes(term) ||
+                    r.phone.includes(term) ||
+                    (r.laptopBrand && r.laptopBrand.toLowerCase().includes(term)) ||
+                    (r.laptopModel && r.laptopModel.toLowerCase().includes(term)) ||
+                    (r.serialNumber && r.serialNumber.toLowerCase().includes(term))
+                ) {
+                    results.push({
+                        type: 'normal',
+                        requestNumber: r.requestNumber,
+                        customerName: r.fullName,
+                        phone: r.phone,
+                        laptop: `${r.laptopBrand} ${r.laptopModel}`,
+                        status: r.status,
+                        id: r.id
+                    });
+                }
+            });
+        }
         
         // Search in bulk requests
-        this.bulkRequests.forEach(r => {
-            if (
-                r.requestNumber.toLowerCase().includes(term) ||
-                r.customerName.toLowerCase().includes(term) ||
-                r.customerPhone.includes(term)
-            ) {
-                results.push({
-                    type: 'bulk',
-                    requestNumber: r.requestNumber,
-                    customerName: r.customerName,
-                    phone: r.customerPhone,
-                    laptop: `${r.deviceCount} أجهزة`,
-                    status: r.status,
-                    id: r.id
-                });
-            }
-            
-            // Also search in bulk request devices
-            if (r.devices) {
-                r.devices.forEach(d => {
-                    if (
-                        (d.laptopBrand && d.laptopBrand.toLowerCase().includes(term)) ||
-                        (d.laptopModel && d.laptopModel.toLowerCase().includes(term)) ||
-                        (d.serialNumber && d.serialNumber.toLowerCase().includes(term))
-                    ) {
-                        results.push({
-                            type: 'bulk',
-                            requestNumber: r.requestNumber,
-                            customerName: r.customerName,
-                            phone: r.customerPhone,
-                            laptop: `${d.laptopBrand} ${d.laptopModel}`,
-                            status: d.status,
-                            id: r.id
-                        });
-                    }
-                });
-            }
-        });
+        if (this.bulkRequests && this.bulkRequests.length > 0) {
+            this.bulkRequests.forEach(r => {
+                if (
+                    r.requestNumber.toLowerCase().includes(term) ||
+                    r.customerName.toLowerCase().includes(term) ||
+                    r.customerPhone.includes(term)
+                ) {
+                    results.push({
+                        type: 'bulk',
+                        requestNumber: r.requestNumber,
+                        customerName: r.customerName,
+                        phone: r.customerPhone,
+                        laptop: `${r.deviceCount} أجهزة`,
+                        status: r.status,
+                        id: r.id
+                    });
+                }
+                
+                // Also search in bulk request devices
+                if (r.devices) {
+                    r.devices.forEach(d => {
+                        if (
+                            (d.laptopBrand && d.laptopBrand.toLowerCase().includes(term)) ||
+                            (d.laptopModel && d.laptopModel.toLowerCase().includes(term)) ||
+                            (d.serialNumber && d.serialNumber.toLowerCase().includes(term))
+                        ) {
+                            results.push({
+                                type: 'bulk',
+                                requestNumber: r.requestNumber,
+                                customerName: r.customerName,
+                                phone: r.customerPhone,
+                                laptop: `${d.laptopBrand} ${d.laptopModel}`,
+                                status: d.status,
+                                id: r.id
+                            });
+                        }
+                    });
+                }
+            });
+        }
         
         // Search in company requests
-        this.companyRequests.forEach(r => {
-            if (
-                (r.request_number || r.requestNumber).toLowerCase().includes(term) ||
-                (r.full_name || r.fullName).toLowerCase().includes(term) ||
-                r.phone.includes(term) ||
-                (r.laptop_brand || r.laptopBrand && (r.laptop_brand || r.laptopBrand).toLowerCase().includes(term)) ||
-                (r.laptop_model || r.laptopModel && (r.laptop_model || r.laptopModel).toLowerCase().includes(term)) ||
-                (r.serial_number || r.serialNumber && (r.serial_number || r.serialNumber).toLowerCase().includes(term))
-            ) {
-                results.push({
-                    type: 'company',
-                    requestNumber: r.request_number || r.requestNumber,
-                    customerName: r.full_name || r.fullName,
-                    phone: r.phone,
-                    laptop: `${r.laptop_brand || r.laptopBrand} ${r.laptop_model || r.laptopModel}`,
-                    status: r.status,
-                    id: r.id
-                });
-            }
-        });
+        if (this.companyRequests && this.companyRequests.length > 0) {
+            this.companyRequests.forEach(r => {
+                if (
+                    (r.request_number || r.requestNumber).toLowerCase().includes(term) ||
+                    (r.full_name || r.fullName).toLowerCase().includes(term) ||
+                    r.phone.includes(term) ||
+                    (r.laptop_brand || r.laptopBrand && (r.laptop_brand || r.laptopBrand).toLowerCase().includes(term)) ||
+                    (r.laptop_model || r.laptopModel && (r.laptop_model || r.laptopModel).toLowerCase().includes(term)) ||
+                    (r.serial_number || r.serialNumber && (r.serial_number || r.serialNumber).toLowerCase().includes(term))
+                ) {
+                    results.push({
+                        type: 'company',
+                        requestNumber: r.request_number || r.requestNumber,
+                        customerName: r.full_name || r.fullName,
+                        phone: r.phone,
+                        laptop: `${r.laptop_brand || r.laptopBrand} ${r.laptop_model || r.laptopModel}`,
+                        status: r.status,
+                        id: r.id
+                    });
+                }
+            });
+        }
+        
+        console.log('🎯 Search results:', results);
         
         // Display results
         this.displayGlobalSearchResults(results);
