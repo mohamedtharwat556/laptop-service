@@ -129,16 +129,33 @@
 
         <!-- Main Content -->
         <main class="dashboard-main animate__animated animate__fadeInUp">
-            <div class="dashboard-header" style="position: relative;">
+            <div class="dashboard-header">
                 <h1>لوحة التحكم</h1>
-                <div class="search-container" style="width: 100%; max-width: 500px; position: relative;">
-                    <input type="text" id="globalSearch" class="form-input search-input" placeholder="بحث برقم الطلب أو اسم اللابتوب..." style="width: 100%;">
-                </div>
             </div>
 
             <!-- Dashboard Section -->
             <div id="dashboardSection" class="dashboard-section active">
                 <div id="adminStats"></div>
+                
+                <!-- Global Search Section -->
+                <div class="glass-card" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;"><i class="fas fa-search"></i> البحث الشامل</h3>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <input type="text" id="globalSearchInput" class="form-input" placeholder="بحث..." style="flex: 1; min-width: 200px;">
+                        <select id="globalSearchFilter" class="form-select" style="width: auto; min-width: 150px;">
+                            <option value="all">الكل</option>
+                            <option value="requestNumber">رقم الطلب</option>
+                            <option value="laptop">اسم اللابتوب</option>
+                            <option value="customer">اسم العميل</option>
+                            <option value="phone">الهاتف</option>
+                            <option value="serial">الرقم التسلسلي</option>
+                        </select>
+                        <button onclick="adminManager.performGlobalSearch()" class="btn btn-primary">
+                            <i class="fas fa-search"></i> بحث
+                        </button>
+                    </div>
+                    <div id="globalSearchResults" style="margin-top: 1rem;"></div>
+                </div>
                 
                 <div class="charts-grid">
                     <div class="glass-card chart-card">

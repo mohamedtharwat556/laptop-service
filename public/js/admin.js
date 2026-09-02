@@ -61,8 +61,11 @@ class AdminManager {
     /**
      * Perform global search across all request types
      */
-    performGlobalSearch(searchTerm) {
-        console.log('🔍 Global search called with:', searchTerm);
+    performGlobalSearch() {
+        const searchTerm = document.getElementById('globalSearchInput')?.value?.toLowerCase() || '';
+        const filterType = document.getElementById('globalSearchFilter')?.value || 'all';
+        
+        console.log('🔍 Global search called with:', searchTerm, 'Filter:', filterType);
         console.log('📊 Data available:', {
             requests: this.requests?.length,
             bulkRequests: this.bulkRequests?.length,
@@ -73,7 +76,7 @@ class AdminManager {
         
         if (!searchTerm || searchTerm.trim() === '') {
             if (searchResultsContainer) {
-                searchResultsContainer.remove();
+                searchResultsContainer.innerHTML = '';
             }
             return;
         }
@@ -84,14 +87,36 @@ class AdminManager {
         // Search in normal requests
         if (this.requests && this.requests.length > 0) {
             this.requests.forEach(r => {
-                if (
-                    r.requestNumber.toLowerCase().includes(term) ||
-                    r.fullName.toLowerCase().includes(term) ||
-                    r.phone.includes(term) ||
-                    (r.laptopBrand && r.laptopBrand.toLowerCase().includes(term)) ||
-                    (r.laptopModel && r.laptopModel.toLowerCase().includes(term)) ||
-                    (r.serialNumber && r.serialNumber.toLowerCase().includes(term))
-                ) {
+                let match = false;
+                
+                switch(filterType) {
+                    case 'all':
+                        match = r.requestNumber.toLowerCase().includes(term) ||
+                               r.fullName.toLowerCase().includes(term) ||
+                               r.phone.includes(term) ||
+                               (r.laptopBrand && r.laptopBrand.toLowerCase().includes(term)) ||
+                               (r.laptopModel && r.laptopModel.toLowerCase().includes(term)) ||
+                               (r.serialNumber && r.serialNumber.toLowerCase().includes(term));
+                        break;
+                    case 'requestNumber':
+                        match = r.requestNumber.toLowerCase().includes(term);
+                        break;
+                    case 'laptop':
+                        match = (r.laptopBrand && r.laptopBrand.toLowerCase().includes(term)) ||
+                               (r.laptopModel && r.laptopModel.toLowerCase().includes(term));
+                        break;
+                    case 'customer':
+                        match = r.fullName.toLowerCase().includes(term);
+                        break;
+                    case 'phone':
+                        match = r.phone.includes(term);
+                        break;
+                    case 'serial':
+                        match = r.serialNumber && r.serialNumber.toLowerCase().includes(term);
+                        break;
+                }
+                
+                if (match) {
                     results.push({
                         type: 'normal',
                         requestNumber: r.requestNumber,
@@ -108,11 +133,28 @@ class AdminManager {
         // Search in bulk requests
         if (this.bulkRequests && this.bulkRequests.length > 0) {
             this.bulkRequests.forEach(r => {
-                if (
-                    r.requestNumber.toLowerCase().includes(term) ||
-                    r.customerName.toLowerCase().includes(term) ||
-                    r.customerPhone.includes(term)
-                ) {
+                let match = false;
+                
+                switch(filterType) {
+                    case 'all':
+                        match = r.requestNumber.toLowerCase().includes(term) ||
+                               r.customerName.toLowerCase().includes(term) ||
+                               r.customerPhone.includes(term);
+                        break;
+                    case 'requestNumber':
+                        match = r.requestNumber.toLowerCase().includes(term);
+                        break;
+                    case 'customer':
+                        match = r.customerName.toLowerCase().includes(term);
+                        break;
+                    case 'phone':
+                        match = r.customerPhone.includes(term);
+                        break;
+                    default:
+                        match = false;
+                }
+                
+                if (match) {
                     results.push({
                         type: 'bulk',
                         requestNumber: r.requestNumber,
@@ -127,11 +169,26 @@ class AdminManager {
                 // Also search in bulk request devices
                 if (r.devices) {
                     r.devices.forEach(d => {
-                        if (
-                            (d.laptopBrand && d.laptopBrand.toLowerCase().includes(term)) ||
-                            (d.laptopModel && d.laptopModel.toLowerCase().includes(term)) ||
-                            (d.serialNumber && d.serialNumber.toLowerCase().includes(term))
-                        ) {
+                        let deviceMatch = false;
+                        
+                        switch(filterType) {
+                            case 'all':
+                                deviceMatch = (d.laptopBrand && d.laptopBrand.toLowerCase().includes(term)) ||
+                                           (d.laptopModel && d.laptopModel.toLowerCase().includes(term)) ||
+                                           (d.serialNumber && d.serialNumber.toLowerCase().includes(term));
+                                break;
+                            case 'laptop':
+                                deviceMatch = (d.laptopBrand && d.laptopBrand.toLowerCase().includes(term)) ||
+                                           (d.laptopModel && d.laptopModel.toLowerCase().includes(term));
+                                break;
+                            case 'serial':
+                                deviceMatch = d.serialNumber && d.serialNumber.toLowerCase().includes(term);
+                                break;
+                            default:
+                                deviceMatch = false;
+                        }
+                        
+                        if (deviceMatch) {
                             results.push({
                                 type: 'bulk',
                                 requestNumber: r.requestNumber,
@@ -150,14 +207,36 @@ class AdminManager {
         // Search in company requests
         if (this.companyRequests && this.companyRequests.length > 0) {
             this.companyRequests.forEach(r => {
-                if (
-                    (r.request_number || r.requestNumber).toLowerCase().includes(term) ||
-                    (r.full_name || r.fullName).toLowerCase().includes(term) ||
-                    r.phone.includes(term) ||
-                    (r.laptop_brand || r.laptopBrand && (r.laptop_brand || r.laptopBrand).toLowerCase().includes(term)) ||
-                    (r.laptop_model || r.laptopModel && (r.laptop_model || r.laptopModel).toLowerCase().includes(term)) ||
-                    (r.serial_number || r.serialNumber && (r.serial_number || r.serialNumber).toLowerCase().includes(term))
-                ) {
+                let match = false;
+                
+                switch(filterType) {
+                    case 'all':
+                        match = (r.request_number || r.requestNumber).toLowerCase().includes(term) ||
+                               (r.full_name || r.fullName).toLowerCase().includes(term) ||
+                               r.phone.includes(term) ||
+                               (r.laptop_brand || r.laptopBrand && (r.laptop_brand || r.laptopBrand).toLowerCase().includes(term)) ||
+                               (r.laptop_model || r.laptopModel && (r.laptop_model || r.laptopModel).toLowerCase().includes(term)) ||
+                               (r.serial_number || r.serialNumber && (r.serial_number || r.serialNumber).toLowerCase().includes(term));
+                        break;
+                    case 'requestNumber':
+                        match = (r.request_number || r.requestNumber).toLowerCase().includes(term);
+                        break;
+                    case 'laptop':
+                        match = (r.laptop_brand || r.laptopBrand && (r.laptop_brand || r.laptopBrand).toLowerCase().includes(term)) ||
+                               (r.laptop_model || r.laptopModel && (r.laptop_model || r.laptopModel).toLowerCase().includes(term));
+                        break;
+                    case 'customer':
+                        match = (r.full_name || r.fullName).toLowerCase().includes(term);
+                        break;
+                    case 'phone':
+                        match = r.phone.includes(term);
+                        break;
+                    case 'serial':
+                        match = (r.serial_number || r.serialNumber && (r.serial_number || r.serialNumber).toLowerCase().includes(term));
+                        break;
+                }
+                
+                if (match) {
                     results.push({
                         type: 'company',
                         requestNumber: r.request_number || r.requestNumber,
@@ -181,13 +260,10 @@ class AdminManager {
      * Display global search results
      */
     displayGlobalSearchResults(results) {
-        let resultsContainer = document.getElementById('globalSearchResults');
+        const resultsContainer = document.getElementById('globalSearchResults');
         
         if (!resultsContainer) {
-            resultsContainer = document.createElement('div');
-            resultsContainer.id = 'globalSearchResults';
-            resultsContainer.style.cssText = 'position: absolute; top: 100%; left: 0; right: 0; background: rgba(30, 41, 59, 0.98); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; max-height: 400px; overflow-y: auto; z-index: 1000; margin-top: 0.5rem; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);';
-            document.querySelector('.dashboard-header').appendChild(resultsContainer);
+            return;
         }
         
         if (results.length === 0) {
@@ -213,33 +289,43 @@ class AdminManager {
         };
         
         resultsContainer.innerHTML = `
-            <div style="padding: 0.5rem;">
-                <div style="padding: 0.5rem 1rem; color: #94a3b8; font-size: 0.875rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                    ${results.length} نتيجة
-                </div>
-                ${results.map(r => `
-                    <div style="padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; transition: background 0.2s;" 
-                         onclick="adminManager.navigateToRequest('${r.type}', ${r.id})"
-                         onmouseover="this.style.background='rgba(255,255,255,0.05)'" 
-                         onmouseout="this.style.background='transparent'">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                            <span style="font-weight: 600; color: #3b82f6;">${r.requestNumber}</span>
-                            <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: ${typeColors[r.type]}20; color: ${typeColors[r.type]};">${typeLabels[r.type]}</span>
-                        </div>
-                        <div style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 0.25rem;">
-                            <i class="fas fa-user"></i> ${r.customerName}
-                        </div>
-                        <div style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 0.25rem;">
-                            <i class="fas fa-laptop"></i> ${r.laptop}
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 0.8125rem; color: #64748b;">
-                                <i class="fas fa-phone"></i> ${r.phone}
-                            </span>
-                            <span class="status-badge ${this.getStatusClass(r.status)}" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">${this.translateStatus(r.status)}</span>
-                        </div>
-                    </div>
-                `).join('')}
+            <div style="overflow-x: auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>رقم الطلب</th>
+                            <th>النوع</th>
+                            <th>اسم العميل</th>
+                            <th>اللابتوب</th>
+                            <th>الهاتف</th>
+                            <th>الحالة</th>
+                            <th>إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${results.map(r => `
+                            <tr>
+                                <td style="font-weight: 600; color: #3b82f6;">${r.requestNumber}</td>
+                                <td>
+                                    <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: ${typeColors[r.type]}20; color: ${typeColors[r.type]};">${typeLabels[r.type]}</span>
+                                </td>
+                                <td>${r.customerName}</td>
+                                <td>${r.laptop}</td>
+                                <td dir="ltr">${r.phone}</td>
+                                <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
+                                <td>
+                                    <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.875rem;"
+                                            onclick="adminManager.navigateToRequest('${r.type}', ${r.id})">
+                                        <i class="fas fa-eye"></i> عرض
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
+                <strong>إجمالي النتائج:</strong> ${results.length}
             </div>
         `;
     }
@@ -251,13 +337,13 @@ class AdminManager {
         // Clear search results
         const resultsContainer = document.getElementById('globalSearchResults');
         if (resultsContainer) {
-            resultsContainer.remove();
+            resultsContainer.innerHTML = '';
         }
         
         // Clear search input
-        const globalSearch = document.getElementById('globalSearch');
-        if (globalSearch) {
-            globalSearch.value = '';
+        const globalSearchInput = document.getElementById('globalSearchInput');
+        if (globalSearchInput) {
+            globalSearchInput.value = '';
         }
         
         // Switch to appropriate section
@@ -321,10 +407,10 @@ class AdminManager {
             console.log('✅ Data loaded successfully');
             
             // Setup global search after data is loaded
-            const globalSearch = document.getElementById('globalSearch');
-            if (globalSearch) {
-                globalSearch.addEventListener('input', Utils.debounce(() => {
-                    this.performGlobalSearch(globalSearch.value);
+            const globalSearchInput = document.getElementById('globalSearchInput');
+            if (globalSearchInput) {
+                globalSearchInput.addEventListener('input', Utils.debounce(() => {
+                    this.performGlobalSearch();
                 }, 300));
                 console.log('✅ Global search listener set up');
             }
