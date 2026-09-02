@@ -56,6 +56,215 @@ class AdminManager {
                 });
             }
         }
+        
+        // Setup global search
+        const globalSearch = document.getElementById('globalSearch');
+        if (globalSearch) {
+            globalSearch.addEventListener('input', Utils.debounce(() => {
+                this.performGlobalSearch(globalSearch.value);
+            }, 300));
+        }
+    }
+
+    /**
+     * Perform global search across all request types
+     */
+    performGlobalSearch(searchTerm) {
+        const searchResultsContainer = document.getElementById('globalSearchResults');
+        
+        if (!searchTerm || searchTerm.trim() === '') {
+            if (searchResultsContainer) {
+                searchResultsContainer.remove();
+            }
+            return;
+        }
+        
+        const term = searchTerm.toLowerCase();
+        const results = [];
+        
+        // Search in normal requests
+        this.requests.forEach(r => {
+            if (
+                r.requestNumber.toLowerCase().includes(term) ||
+                r.fullName.toLowerCase().includes(term) ||
+                r.phone.includes(term) ||
+                (r.laptopBrand && r.laptopBrand.toLowerCase().includes(term)) ||
+                (r.laptopModel && r.laptopModel.toLowerCase().includes(term)) ||
+                (r.serialNumber && r.serialNumber.toLowerCase().includes(term))
+            ) {
+                results.push({
+                    type: 'normal',
+                    requestNumber: r.requestNumber,
+                    customerName: r.fullName,
+                    phone: r.phone,
+                    laptop: `${r.laptopBrand} ${r.laptopModel}`,
+                    status: r.status,
+                    id: r.id
+                });
+            }
+        });
+        
+        // Search in bulk requests
+        this.bulkRequests.forEach(r => {
+            if (
+                r.requestNumber.toLowerCase().includes(term) ||
+                r.customerName.toLowerCase().includes(term) ||
+                r.customerPhone.includes(term)
+            ) {
+                results.push({
+                    type: 'bulk',
+                    requestNumber: r.requestNumber,
+                    customerName: r.customerName,
+                    phone: r.customerPhone,
+                    laptop: `${r.deviceCount} أجهزة`,
+                    status: r.status,
+                    id: r.id
+                });
+            }
+            
+            // Also search in bulk request devices
+            if (r.devices) {
+                r.devices.forEach(d => {
+                    if (
+                        (d.laptopBrand && d.laptopBrand.toLowerCase().includes(term)) ||
+                        (d.laptopModel && d.laptopModel.toLowerCase().includes(term)) ||
+                        (d.serialNumber && d.serialNumber.toLowerCase().includes(term))
+                    ) {
+                        results.push({
+                            type: 'bulk',
+                            requestNumber: r.requestNumber,
+                            customerName: r.customerName,
+                            phone: r.customerPhone,
+                            laptop: `${d.laptopBrand} ${d.laptopModel}`,
+                            status: d.status,
+                            id: r.id
+                        });
+                    }
+                });
+            }
+        });
+        
+        // Search in company requests
+        this.companyRequests.forEach(r => {
+            if (
+                (r.request_number || r.requestNumber).toLowerCase().includes(term) ||
+                (r.full_name || r.fullName).toLowerCase().includes(term) ||
+                r.phone.includes(term) ||
+                (r.laptop_brand || r.laptopBrand && (r.laptop_brand || r.laptopBrand).toLowerCase().includes(term)) ||
+                (r.laptop_model || r.laptopModel && (r.laptop_model || r.laptopModel).toLowerCase().includes(term)) ||
+                (r.serial_number || r.serialNumber && (r.serial_number || r.serialNumber).toLowerCase().includes(term))
+            ) {
+                results.push({
+                    type: 'company',
+                    requestNumber: r.request_number || r.requestNumber,
+                    customerName: r.full_name || r.fullName,
+                    phone: r.phone,
+                    laptop: `${r.laptop_brand || r.laptopBrand} ${r.laptop_model || r.laptopModel}`,
+                    status: r.status,
+                    id: r.id
+                });
+            }
+        });
+        
+        // Display results
+        this.displayGlobalSearchResults(results);
+    }
+
+    /**
+     * Display global search results
+     */
+    displayGlobalSearchResults(results) {
+        let resultsContainer = document.getElementById('globalSearchResults');
+        
+        if (!resultsContainer) {
+            resultsContainer = document.createElement('div');
+            resultsContainer.id = 'globalSearchResults';
+            resultsContainer.style.cssText = 'position: absolute; top: 100%; left: 0; right: 0; background: rgba(30, 41, 59, 0.98); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; max-height: 400px; overflow-y: auto; z-index: 1000; margin-top: 0.5rem; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);';
+            document.querySelector('.dashboard-header').appendChild(resultsContainer);
+        }
+        
+        if (results.length === 0) {
+            resultsContainer.innerHTML = `
+                <div style="padding: 1rem; color: #94a3b8; text-align: center;">
+                    <i class="fas fa-search" style="margin-bottom: 0.5rem;"></i>
+                    <p>لا توجد نتائج</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const typeLabels = {
+            normal: 'طلب عادي',
+            bulk: 'طلب جملة',
+            company: 'موظفي شركة'
+        };
+        
+        const typeColors = {
+            normal: '#3b82f6',
+            bulk: '#f59e0b',
+            company: '#8b5cf6'
+        };
+        
+        resultsContainer.innerHTML = `
+            <div style="padding: 0.5rem;">
+                <div style="padding: 0.5rem 1rem; color: #94a3b8; font-size: 0.875rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                    ${results.length} نتيجة
+                </div>
+                ${results.map(r => `
+                    <div style="padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; transition: background 0.2s;" 
+                         onclick="adminManager.navigateToRequest('${r.type}', ${r.id})"
+                         onmouseover="this.style.background='rgba(255,255,255,0.05)'" 
+                         onmouseout="this.style.background='transparent'">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                            <span style="font-weight: 600; color: #3b82f6;">${r.requestNumber}</span>
+                            <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: ${typeColors[r.type]}20; color: ${typeColors[r.type]};">${typeLabels[r.type]}</span>
+                        </div>
+                        <div style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 0.25rem;">
+                            <i class="fas fa-user"></i> ${r.customerName}
+                        </div>
+                        <div style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 0.25rem;">
+                            <i class="fas fa-laptop"></i> ${r.laptop}
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.8125rem; color: #64748b;">
+                                <i class="fas fa-phone"></i> ${r.phone}
+                            </span>
+                            <span class="status-badge ${this.getStatusClass(r.status)}" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">${this.translateStatus(r.status)}</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    /**
+     * Navigate to request based on type
+     */
+    navigateToRequest(type, id) {
+        // Clear search results
+        const resultsContainer = document.getElementById('globalSearchResults');
+        if (resultsContainer) {
+            resultsContainer.remove();
+        }
+        
+        // Clear search input
+        const globalSearch = document.getElementById('globalSearch');
+        if (globalSearch) {
+            globalSearch.value = '';
+        }
+        
+        // Switch to appropriate section
+        switch(type) {
+            case 'normal':
+                this.switchSection('requests');
+                break;
+            case 'bulk':
+                this.switchSection('bulk-requests');
+                break;
+            case 'company':
+                this.switchSection('company-requests');
+                break;
+        }
     }
 
     /**
