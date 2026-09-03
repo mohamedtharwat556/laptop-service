@@ -188,6 +188,7 @@ router.post('/', async (req, res) => {
             laptop_brand: req.body.laptopBrand,
             laptop_model: req.body.laptopModel,
             serial_number: req.body.serialNumber || null,
+            received_date: req.body.receivedDate,
             problem_description: req.body.problemDescription,
             priority: req.body.priority || 'Medium',
             status: 'Received'

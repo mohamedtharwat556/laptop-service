@@ -351,6 +351,7 @@ router.post('/:id/devices', async (req, res) => {
             laptop_brand: req.body.laptopBrand,
             laptop_model: req.body.laptopModel,
             serial_number: req.body.serialNumber || null,
+            received_date: req.body.receivedDate || null,
             priority: req.body.priority || 'Medium',
             problem_description: req.body.problemDescription || '',
             device_image: req.body.deviceImage || null,
