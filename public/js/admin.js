@@ -5201,7 +5201,8 @@ class AdminManager {
      * Generate report based on selected period
      */
     async generateReport() {
-        const reportType = document.getElementById('reportType');
+        const reportTypeElement = document.getElementById('reportType');
+        const reportType = reportTypeElement ? reportTypeElement.value : 'single';
         const reportStartDate = document.getElementById('reportStartDate');
         const reportEndDate = document.getElementById('reportEndDate');
         const container = document.getElementById('reportContainer');
@@ -5452,6 +5453,10 @@ class AdminManager {
     /**
      * Export daily report as Excel
      */
+    exportDailyReport() {
+        this.generateReport();
+    }
+
     exportDailyReportToExcel() {
         // TO DO: implement export logic
     }
