@@ -4902,6 +4902,64 @@ class AdminManager {
         }
     }
 
+    /**
+     * Delete all items from trash
+     */
+    async deleteAllTrash() {
+        if (!confirm('هل أنت متأكد من حذف جميع العناصر من سلة المحذوفات نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+            return;
+        }
+
+        try {
+            loading.show('جاري حذف جميع العناصر...');
+
+            // Fetch all deleted items
+            const [deletedRequestsRes, deletedBulkRequestsRes, deletedCompanyRequestsRes] = await Promise.all([
+                fetch('/api/requests/trash').then(async r => {
+                    if (!r.ok) return [];
+                    const data = await r.json();
+                    return Array.isArray(data) ? data : [];
+                }).catch(() => []),
+                fetch('/api/bulk-requests/trash').then(async r => {
+                    if (!r.ok) return [];
+                    const data = await r.json();
+                    return Array.isArray(data) ? data : [];
+                }).catch(() => []),
+                fetch('/api/company-requests/trash').then(async r => {
+                    if (!r.ok) return [];
+                    const data = await r.json();
+                    return Array.isArray(data) ? data : [];
+                }).catch(() => [])
+            ]);
+
+            // Delete all items
+            const deletePromises = [];
+
+            deletedRequestsRes.forEach(item => {
+                deletePromises.push(fetch(`/api/requests/${item.id}`, { method: 'DELETE' }));
+            });
+
+            deletedBulkRequestsRes.forEach(item => {
+                deletePromises.push(fetch(`/api/bulk-requests/${item.id}`, { method: 'DELETE' }));
+            });
+
+            deletedCompanyRequestsRes.forEach(item => {
+                deletePromises.push(fetch(`/api/company-requests/${item.id}`, { method: 'DELETE' }));
+            });
+
+            await Promise.all(deletePromises);
+
+            loading.hide();
+            toast.success('تم حذف جميع العناصر من سلة المحذوفات بنجاح');
+            await this.loadData();
+            this.renderTrash();
+        } catch (error) {
+            console.error('Error deleting all trash:', error);
+            loading.hide();
+            toast.error('فشل حذف جميع العناصر');
+        }
+    }
+
     async deleteRequest(requestId) {
         const request = this.requests.find(r => r.id === requestId);
         if (!request) return;
