@@ -5291,7 +5291,7 @@ class AdminManager {
             return;
         }
 
-        this.renderReportTable(reportType, filteredRequests);
+        this.renderReportTable(filteredRequests, reportType);
     }
 
     /**
@@ -5300,6 +5300,10 @@ class AdminManager {
     renderReportTable(requests, type = 'single') {
         const container = document.getElementById('reportContainer');
         if (!container) return;
+
+        console.log('📊 renderReportTable called with:', { requests, type });
+        console.log('📊 requests is array:', Array.isArray(requests));
+        console.log('📊 requests length:', requests.length);
 
         if (requests.length === 0) {
             container.innerHTML = `
