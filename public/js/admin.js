@@ -3608,10 +3608,17 @@ class AdminManager {
 
                     if (!response.ok) throw new Error('Failed to update bulk request');
 
+                    const updatedData = await response.json();
+
+                    // Update local data instead of reloading everything
+                    const bulkRequestIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                    if (bulkRequestIndex !== -1) {
+                        this.bulkRequests[bulkRequestIndex] = { ...this.bulkRequests[bulkRequestIndex], ...updatedData };
+                        this.renderBulkRequests();
+                    }
+
                     toast.success('تم تحديث الطلب بنجاح');
                     modalManager.close(modalId);
-                    await this.loadData();
-                    this.renderBulkRequests();
                 } catch (error) {
                     console.error('Error updating bulk request:', error);
                     toast.error('فشل تحديث الطلب');
