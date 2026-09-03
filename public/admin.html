@@ -293,21 +293,24 @@
             <div id="daily-reportSection" class="dashboard-section">
                 <div class="dashboard-header" style="flex-wrap:wrap; gap:1rem;">
                     <h2><i class="fas fa-file-excel" style="color:#10b981;"></i> التقارير</h2>
-                    <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
-                        <select id="reportType" class="form-select" style="width:auto; min-width:150px;">
-                            <option value="single">طلبات عادية</option>
-                            <option value="bulk">طلبات جملة</option>
-                            <option value="company">طلبات شركات</option>
-                        </select>
-                        <input type="date" id="reportStartDate" class="form-input" style="width:auto;">
-                        <input type="date" id="reportEndDate" class="form-input" style="width:auto;">
-                        <button class="btn btn-primary" onclick="adminManager.generateReport()">
-                            <i class="fas fa-download"></i> تحميل التقرير
-                        </button>
-                        <button onclick="adminManager.exportDailyReport()" class="btn btn-success" style="display:flex;align-items:center;gap:0.5rem;">
-                            <i class="fas fa-download"></i> تحميل Excel
-                        </button>
-                    </div>
+                </div>
+                <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                    <select id="reportType" class="form-select" style="width:auto; min-width:150px;">
+                        <option value="single">طلبات عادية</option>
+                        <option value="bulk">طلبات جملة</option>
+                        <option value="company">طلبات شركات</option>
+                        <option value="technician">تقرير الفنيين</option>
+                        <option value="problem">تقرير المشاكل</option>
+                        <option value="profit">تقرير الأرباح الشهري</option>
+                    </select>
+                    <input type="date" id="reportStartDate" class="form-input" style="width:auto;">
+                    <input type="date" id="reportEndDate" class="form-input" style="width:auto;">
+                    <button class="btn btn-primary" onclick="adminManager.generateReport()">
+                        <i class="fas fa-download"></i> تحميل التقرير
+                    </button>
+                    <button onclick="adminManager.exportDailyReport()" class="btn btn-success" style="display:flex;align-items:center;gap:0.5rem;">
+                        <i class="fas fa-download"></i> تحميل Excel
+                    </button>
                 </div>
                 <div id="reportContainer"></div>
             </div>
@@ -316,9 +319,23 @@
             <div id="trashSection" class="dashboard-section">
                 <div class="dashboard-header" style="flex-wrap:wrap; gap:1rem;">
                     <h2><i class="fas fa-trash" style="color:#ef4444;"></i> سلة المحذوفات</h2>
-                    <button type="button" onclick="adminManager.deleteAllTrash()" class="btn btn-danger" style="padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-trash-alt"></i> حذف الكل
-                    </button>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button type="button" onclick="adminManager.restoreAllTrash()" class="btn btn-success" style="padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-undo"></i> استعادة الكل
+                        </button>
+                        <button type="button" onclick="adminManager.deleteAllTrash()" class="btn btn-danger" style="padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-trash-alt"></i> حذف الكل
+                        </button>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <input type="text" id="trashSearch" placeholder="بحث في سلة المحذوفات..." class="form-input" style="flex: 1; min-width: 200px;" oninput="adminManager.filterTrash()">
+                    <select id="trashTypeFilter" class="form-select" style="min-width: 150px;" onchange="adminManager.filterTrash()">
+                        <option value="all">جميع الأنواع</option>
+                        <option value="request">طلبات عادية</option>
+                        <option value="bulk">طلبات جملة</option>
+                        <option value="company">طلبات شركات</option>
+                    </select>
                 </div>
                 <div id="trashContainer"></div>
             </div>
