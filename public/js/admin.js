@@ -5200,27 +5200,45 @@ class AdminManager {
     /**
      * Generate report based on selected period
      */
-    generateReport() {
+    async generateReport() {
         const reportType = document.getElementById('reportType');
         const reportStartDate = document.getElementById('reportStartDate');
         const reportEndDate = document.getElementById('reportEndDate');
+        const container = document.getElementById('reportContainer');
 
         let filteredRequests = [];
+        let fileName = 'تقرير';
 
-        // Filter by request type
-        const type = reportType ? reportType.value : 'single';
+        // Filter by date range
+        const startDate = reportStartDate ? reportStartDate.value : null;
+        const endDate = reportEndDate ? reportEndDate.value : null;
+
+        if (reportType === 'technician') {
+            // Technician report
+            await this.generateTechnicianReport(startDate, endDate);
+            return;
+        } else if (reportType === 'problem') {
+            // Problem type report
+            await this.generateProblemReport(startDate, endDate);
+            return;
+        } else if (reportType === 'profit') {
+            // Monthly profit report
+            await this.generateProfitReport(startDate, endDate);
+            return;
+        }
+
+        // Original report logic for single, bulk, company
         let requestsByType;
-        if (type === 'bulk') {
+        if (reportType === 'bulk') {
             requestsByType = this.bulkRequests || [];
-        } else if (type === 'company') {
+        } else if (reportType === 'company') {
             requestsByType = this.companyRequests || [];
         } else {
             requestsByType = this.requests;
         }
 
-        // Filter by date range
-        const startDate = reportStartDate ? reportStartDate.value : null;
-        const endDate = reportEndDate ? reportEndDate.value : null;
+        console.log('📊 Report type:', reportType);
+        console.log('📊 Total requests:', requestsByType.length);
 
         if (startDate && endDate) {
             filteredRequests = requestsByType.filter(r => {
@@ -5228,17 +5246,32 @@ class AdminManager {
                 const requestDate = d.toISOString().slice(0, 10);
                 return requestDate >= startDate && requestDate <= endDate;
             });
+            fileName = reportType === 'bulk' ? `تقرير-جملة-${startDate}-${endDate}` : reportType === 'company' ? `تقرير-شركات-${startDate}-${endDate}` : `تقرير-${startDate}-${endDate}`;
         } else if (startDate) {
             filteredRequests = requestsByType.filter(r => {
                 const d = new Date(r.createdAt);
                 return d.toISOString().slice(0, 10) === startDate;
             });
+            fileName = reportType === 'bulk' ? `تقرير-جملة-${startDate}` : reportType === 'company' ? `تقرير-شركات-${startDate}` : `تقرير-${startDate}`;
         } else {
-            // If no date selected, show all
             filteredRequests = requestsByType;
+            fileName = reportType === 'bulk' ? 'تقرير-طلبات-جملة' : reportType === 'company' ? 'تقرير-طلبات-شركات' : 'تقرير-كل-الطلبات';
         }
 
-        this.renderReportTable(filteredRequests, type);
+        console.log('📊 Filtered requests:', filteredRequests.length);
+
+        if (filteredRequests.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-file-excel"></i>
+                    <h3>لا توجد بيانات</h3>
+                    <p>لا توجد طلبات في الفترة المحددة.</p>
+                </div>
+            `;
+            return;
+        }
+
+        this.renderReportTable(reportType, filteredRequests);
     }
 
     /**
@@ -5412,310 +5445,243 @@ class AdminManager {
     /**
      * Render daily report table (legacy - for backward compatibility)
      */
-
-/**
- * Generate report based on type
- */
-async generateReport() {
-    const reportType = document.getElementById('reportType').value;
-    const reportStartDate = document.getElementById('reportStartDate');
-    const reportEndDate = document.getElementById('reportEndDate');
-    const container = document.getElementById('reportContainer');
-
-    let filteredRequests = [];
-    let fileName = 'تقرير';
-
-    // Filter by date range
-    const startDate = reportStartDate ? reportStartDate.value : null;
-    const endDate = reportEndDate ? reportEndDate.value : null;
-
-    if (reportType === 'technician') {
-        // Technician report
-        await this.generateTechnicianReport(startDate, endDate);
-        return;
-    } else if (reportType === 'problem') {
-        // Problem type report
-        await this.generateProblemReport(startDate, endDate);
-        return;
-    } else if (reportType === 'profit') {
-        // Monthly profit report
-        await this.generateProfitReport(startDate, endDate);
-        return;
+    renderDailyReport() {
+        this.generateReport();
     }
 
-    // Original report logic for single, bulk, company
-    let requestsByType;
-    if (reportType === 'bulk') {
-        requestsByType = this.bulkRequests || [];
-    } else if (reportType === 'company') {
-        requestsByType = this.companyRequests || [];
-    } else {
-        requestsByType = this.requests;
+    /**
+     * Export daily report as Excel
+     */
+    exportDailyReportToExcel() {
+        // TO DO: implement export logic
     }
 
-    console.log('📊 Report type:', reportType);
-    console.log('📊 Total requests:', requestsByType.length);
+    /**
+     * Generate technician report
+     */
+    async generateTechnicianReport(startDate, endDate) {
+        const container = document.getElementById('reportContainer');
 
-    if (startDate && endDate) {
-        filteredRequests = requestsByType.filter(r => {
-            const d = new Date(r.createdAt);
-            const requestDate = d.toISOString().slice(0, 10);
-            return requestDate >= startDate && requestDate <= endDate;
+        // Collect all requests with technicians
+        const allRequests = [
+            ...this.requests.map(r => ({ ...r, type: 'عادي' })),
+            ...this.bulkRequests.map(r => ({ ...r, type: 'جملة' })),
+            ...this.companyRequests.map(r => ({ ...r, type: 'شركة' }))
+        ];
+
+        // Filter by date
+        let filteredRequests = allRequests;
+        if (startDate && endDate) {
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                const requestDate = d.toISOString().slice(0, 10);
+                return requestDate >= startDate && requestDate <= endDate;
+            });
+        } else if (startDate) {
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                return d.toISOString().slice(0, 10) === startDate;
+            });
+        }
+
+        // Group by technician
+        const technicianStats = {};
+        filteredRequests.forEach(r => {
+            const technician = r.technician || 'غير محدد';
+            if (!technicianStats[technician]) {
+                technicianStats[technician] = {
+                    count: 0,
+                    totalCost: 0,
+                    requests: []
+                };
+            }
+            technicianStats[technician].count++;
+            technicianStats[technician].totalCost += r.cost || 0;
+            technicianStats[technician].requests.push(r);
         });
-        fileName = reportType === 'bulk' ? `تقرير-جملة-${startDate}-${endDate}` : reportType === 'company' ? `تقرير-شركات-${startDate}-${endDate}` : `تقرير-${startDate}-${endDate}`;
-    } else if (startDate) {
-        filteredRequests = requestsByType.filter(r => {
-            const d = new Date(r.createdAt);
-            return d.toISOString().slice(0, 10) === startDate;
-        });
-        fileName = reportType === 'bulk' ? `تقرير-جملة-${startDate}` : reportType === 'company' ? `تقرير-شركات-${startDate}` : `تقرير-${startDate}`;
-    } else {
-        filteredRequests = requestsByType;
-        fileName = reportType === 'bulk' ? 'تقرير-طلبات-جملة' : reportType === 'company' ? 'تقرير-طلبات-شركات' : 'تقرير-كل-الطلبات';
-    }
 
-    console.log('📊 Filtered requests:', filteredRequests.length);
-
-    if (filteredRequests.length === 0) {
+        // Render technician report
         container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-file-excel"></i>
-                <h3>لا توجد بيانات</h3>
-                <p>لا توجد طلبات في الفترة المحددة.</p>
+            <div class="glass-card">
+                <h3 style="margin-bottom: 1rem;">تقرير الفنيين</h3>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>الفني</th>
+                                <th>عدد الطلبات</th>
+                                <th>إجمالي التكلفة</th>
+                                <th>متوسط التكلفة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(technicianStats).map(([tech, stats]) => `
+                                <tr>
+                                    <td style="font-weight: 600;">${tech}</td>
+                                    <td>${stats.count}</td>
+                                    <td>${Utils.formatCurrency(stats.totalCost)}</td>
+                                    <td>${Utils.formatCurrency(stats.totalCost / stats.count)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         `;
-        return;
     }
 
-    this.renderReportTable(reportType, filteredRequests);
-}
+    /**
+     * Generate problem type report
+     */
+    async generateProblemReport(startDate, endDate) {
+        const container = document.getElementById('reportContainer');
 
-/**
- * Generate technician report
- */
-async generateTechnicianReport(startDate, endDate) {
-    const container = document.getElementById('reportContainer');
+        // Collect all requests
+        const allRequests = [
+            ...this.requests.map(r => ({ ...r, type: 'عادي', problem: r.problemDescription })),
+            ...this.bulkRequests.flatMap(r => (r.devices || []).map(d => ({ ...d, type: 'جملة', problem: d.problemDescription }))),
+            ...this.companyRequests.map(r => ({ ...r, type: 'شركة', problem: r.problemDescription || r.problem_description }))
+        ];
 
-    // Collect all requests with technicians
-    const allRequests = [
-        ...this.requests.map(r => ({ ...r, type: 'عادي' })),
-        ...this.bulkRequests.map(r => ({ ...r, type: 'جملة' })),
-        ...this.companyRequests.map(r => ({ ...r, type: 'شركة' }))
-    ];
-
-    // Filter by date
-    let filteredRequests = allRequests;
-    if (startDate && endDate) {
-        filteredRequests = allRequests.filter(r => {
-            const d = new Date(r.createdAt);
-            const requestDate = d.toISOString().slice(0, 10);
-            return requestDate >= startDate && requestDate <= endDate;
-        });
-    } else if (startDate) {
-        filteredRequests = allRequests.filter(r => {
-            const d = new Date(r.createdAt);
-            return d.toISOString().slice(0, 10) === startDate;
-        });
-    }
-
-    // Group by technician
-    const technicianStats = {};
-    filteredRequests.forEach(r => {
-        const technician = r.technician || 'غير محدد';
-        if (!technicianStats[technician]) {
-            technicianStats[technician] = {
-                count: 0,
-                totalCost: 0,
-                requests: []
-            };
+        // Filter by date
+        let filteredRequests = allRequests;
+        if (startDate && endDate) {
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                const requestDate = d.toISOString().slice(0, 10);
+                return requestDate >= startDate && requestDate <= endDate;
+            });
+        } else if (startDate) {
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                return d.toISOString().slice(0, 10) === startDate;
+            });
         }
-        technicianStats[technician].count++;
-        technicianStats[technician].totalCost += r.cost || 0;
-        technicianStats[technician].requests.push(r);
-    });
 
-    // Render technician report
-    container.innerHTML = `
-        <div class="glass-card">
-            <h3 style="margin-bottom: 1rem;">تقرير الفنيين</h3>
-            <div style="overflow-x: auto;">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>الفني</th>
-                            <th>عدد الطلبات</th>
-                            <th>إجمالي التكلفة</th>
-                            <th>متوسط التكلفة</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${Object.entries(technicianStats).map(([tech, stats]) => `
-                            <tr>
-                                <td style="font-weight: 600;">${tech}</td>
-                                <td>${stats.count}</td>
-                                <td>${Utils.formatCurrency(stats.totalCost)}</td>
-                                <td>${Utils.formatCurrency(stats.totalCost / stats.count)}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
-}
+        // Group by problem keywords
+        const problemStats = {};
+        const keywords = ['شاشة', 'باتري', 'هارد', 'رام', 'كيبورد', 'ماوس', 'شاحن', 'نظام', 'ويندوز', 'انترنت', 'واي فاي', 'صوت', 'كاميرا', 'فان', 'سبيكر'];
 
-/**
- * Generate problem type report
- */
-async generateProblemReport(startDate, endDate) {
-    const container = document.getElementById('reportContainer');
+        filteredRequests.forEach(r => {
+            const problem = r.problem || '';
+            let found = false;
 
-    // Collect all requests
-    const allRequests = [
-        ...this.requests.map(r => ({ ...r, type: 'عادي', problem: r.problemDescription })),
-        ...this.bulkRequests.flatMap(r => (r.devices || []).map(d => ({ ...d, type: 'جملة', problem: d.problemDescription }))),
-        ...this.companyRequests.map(r => ({ ...r, type: 'شركة', problem: r.problemDescription || r.problem_description }))
-    ];
-
-    // Filter by date
-    let filteredRequests = allRequests;
-    if (startDate && endDate) {
-        filteredRequests = allRequests.filter(r => {
-            const d = new Date(r.createdAt);
-            const requestDate = d.toISOString().slice(0, 10);
-            return requestDate >= startDate && requestDate <= endDate;
-        });
-    } else if (startDate) {
-        filteredRequests = allRequests.filter(r => {
-            const d = new Date(r.createdAt);
-            return d.toISOString().slice(0, 10) === startDate;
-        });
-    }
-
-    // Group by problem keywords
-    const problemStats = {};
-    const keywords = ['شاشة', 'باتري', 'هارد', 'رام', 'كيبورد', 'ماوس', 'شاحن', 'نظام', 'ويندوز', 'انترنت', 'واي فاي', 'صوت', 'كاميرا', 'فان', 'سبيكر'];
-
-    filteredRequests.forEach(r => {
-        const problem = r.problem || '';
-        let found = false;
-
-        keywords.forEach(keyword => {
-            if (problem.includes(keyword)) {
-                if (!problemStats[keyword]) {
-                    problemStats[keyword] = { count: 0 };
+            keywords.forEach(keyword => {
+                if (problem.includes(keyword)) {
+                    if (!problemStats[keyword]) {
+                        problemStats[keyword] = { count: 0 };
+                    }
+                    problemStats[keyword].count++;
+                    found = true;
                 }
-                problemStats[keyword].count++;
-                found = true;
+            });
+
+            if (!found) {
+                if (!problemStats['أخرى']) {
+                    problemStats['أخرى'] = { count: 0 };
+                }
+                problemStats['أخرى'].count++;
             }
         });
 
-        if (!found) {
-            if (!problemStats['أخرى']) {
-                problemStats['أخرى'] = { count: 0 };
-            }
-            problemStats['أخرى'].count++;
-        }
-    });
-
-    // Render problem report
-    container.innerHTML = `
-        <div class="glass-card">
-            <h3 style="margin-bottom: 1rem;">تقرير المشاكل</h3>
-            <div style="overflow-x: auto;">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>نوع المشكلة</th>
-                            <th>عدد الطلبات</th>
-                            <th>النسبة المئوية</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${Object.entries(problemStats)
-                            .sort((a, b) => b[1].count - a[1].count)
-                            .map(([problem, stats]) => {
-                                const percentage = ((stats.count / filteredRequests.length) * 100).toFixed(1);
-                                return `
+        // Render problem report
+        container.innerHTML = `
+            <div class="glass-card">
+                <h3 style="margin-bottom: 1rem;">تقرير المشاكل</h3>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>نوع المشكلة</th>
+                                <th>عدد الطلبات</th>
+                                <th>النسبة المئوية</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(problemStats)
+                                .sort((a, b) => b[1].count - a[1].count)
+                                .map(([problem, stats]) => {
+                                    const percentage = ((stats.count / filteredRequests.length) * 100).toFixed(1);
+                                    return `
                                 <tr>
                                     <td style="font-weight: 600;">${problem}</td>
                                     <td>${stats.count}</td>
                                     <td>${percentage}%</td>
                                 </tr>
                             `}).join('')}
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    `;
-}
-
-/**
- * Generate monthly profit report
- */
-async generateProfitReport(startDate, endDate) {
-    const container = document.getElementById('reportContainer');
-
-    // Collect all requests
-    const allRequests = [
-        ...this.requests.map(r => ({ ...r, type: 'عادي' })),
-        ...this.bulkRequests.map(r => ({ ...r, type: 'جملة' })),
-        ...this.companyRequests.map(r => ({ ...r, type: 'شركة' }))
-    ];
-
-    // Filter by date
-    let filteredRequests = allRequests;
-    if (startDate && endDate) {
-        filteredRequests = allRequests.filter(r => {
-            const d = new Date(r.createdAt);
-            const requestDate = d.toISOString().slice(0, 10);
-            return requestDate >= startDate && requestDate <= endDate;
-        });
-    } else if (startDate) {
-        filteredRequests = allRequests.filter(r => {
-            const d = new Date(r.createdAt);
-            return d.toISOString().slice(0, 10) === startDate;
-        });
+        `;
     }
 
-    // Group by month
-    const monthlyStats = {};
-    filteredRequests.forEach(r => {
-        const date = new Date(r.createdAt);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    /**
+     * Generate monthly profit report
+     */
+    async generateProfitReport(startDate, endDate) {
+        const container = document.getElementById('reportContainer');
 
-        if (!monthlyStats[monthKey]) {
-            monthlyStats[monthKey] = {
-                count: 0,
-                totalCost: 0,
-                byType: { عادي: 0, جملة: 0, شركة: 0 }
-            };
+        // Collect all requests
+        const allRequests = [
+            ...this.requests.map(r => ({ ...r, type: 'عادي' })),
+            ...this.bulkRequests.map(r => ({ ...r, type: 'جملة' })),
+            ...this.companyRequests.map(r => ({ ...r, type: 'شركة' }))
+        ];
+
+        // Filter by date
+        let filteredRequests = allRequests;
+        if (startDate && endDate) {
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                const requestDate = d.toISOString().slice(0, 10);
+                return requestDate >= startDate && requestDate <= endDate;
+            });
+        } else if (startDate) {
+            filteredRequests = allRequests.filter(r => {
+                const d = new Date(r.createdAt);
+                return d.toISOString().slice(0, 10) === startDate;
+            });
         }
-        monthlyStats[monthKey].count++;
-        monthlyStats[monthKey].totalCost += r.cost || 0;
-        monthlyStats[monthKey].byType[r.type] += r.cost || 0;
-    });
 
-    // Render profit report
-    container.innerHTML = `
-        <div class="glass-card">
-            <h3 style="margin-bottom: 1rem;">تقرير الأرباح الشهري</h3>
-            <div style="overflow-x: auto;">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>الشهر</th>
-                            <th>عدد الطلبات</th>
-                            <th>إجمالي الأرباح</th>
-                            <th>طلبات عادية</th>
-                            <th>طلبات جملة</th>
-                            <th>طلبات شركات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${Object.entries(monthlyStats)
-                            .sort((a, b) => b[0].localeCompare(a[0]))
-                            .map(([month, stats]) => `
+        // Group by month
+        const monthlyStats = {};
+        filteredRequests.forEach(r => {
+            const date = new Date(r.createdAt);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+            if (!monthlyStats[monthKey]) {
+                monthlyStats[monthKey] = {
+                    count: 0,
+                    totalCost: 0,
+                    byType: { عادي: 0, جملة: 0, شركة: 0 }
+                };
+            }
+            monthlyStats[monthKey].count++;
+            monthlyStats[monthKey].totalCost += r.cost || 0;
+            monthlyStats[monthKey].byType[r.type] += r.cost || 0;
+        });
+
+        // Render profit report
+        container.innerHTML = `
+            <div class="glass-card">
+                <h3 style="margin-bottom: 1rem;">تقرير الأرباح الشهري</h3>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>الشهر</th>
+                                <th>عدد الطلبات</th>
+                                <th>إجمالي الأرباح</th>
+                                <th>طلبات عادية</th>
+                                <th>طلبات جملة</th>
+                                <th>طلبات شركات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(monthlyStats)
+                                .sort((a, b) => b[0].localeCompare(a[0]))
+                                .map(([month, stats]) => `
                                 <tr>
                                     <td style="font-weight: 600;">${month}</td>
                                     <td>${stats.count}</td>
@@ -5725,13 +5691,12 @@ async generateProfitReport(startDate, endDate) {
                                     <td>${Utils.formatCurrency(stats.byType['شركة'])}</td>
                                 </tr>
                             `).join('')}
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    `;
-}
-
+        `;
+    }
 }
 
 // Create global instance
