@@ -2445,7 +2445,6 @@ class AdminManager {
                         </div>
                         <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptop_brand || companyRequest.laptopBrand || ''} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${companyRequest.serial_number || companyRequest.serialNumber || '—'}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${companyRequest.received_date || companyRequest.receivedDate ? Utils.formatDate(companyRequest.received_date || companyRequest.receivedDate) : '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(companyRequest.created_at || companyRequest.createdAt)}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${companyRequest.problem_description || companyRequest.problemDescription || ''}</span></div>
                     </div>
@@ -3219,7 +3218,6 @@ class AdminManager {
                         <div class="request-detail-item"><span class="request-detail-label">رقم الهاتف</span><span class="request-detail-value">${bulkRequest.customerPhone}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${device.laptopBrand} ${device.laptopModel || ''}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${device.serialNumber || '—'}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${device.receivedDate ? Utils.formatDate(device.receivedDate) : '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${device.problemDescription}</span></div>
                     </div>
 
@@ -3435,7 +3433,6 @@ class AdminManager {
                     </div>
                     <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${firstDevice ? `${firstDevice.laptopBrand} ${firstDevice.laptopModel || ''}` : '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${firstDevice ? (firstDevice.serialNumber || '—') : '—'}</span></div>
-                    <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${firstDevice ? (firstDevice.receivedDate ? Utils.formatDate(firstDevice.receivedDate) : '—') : '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(bulkRequest.createdAt)}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${firstDevice ? firstDevice.problemDescription : '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">عدد الأجهزة</span><span class="request-detail-value">${bulkRequest.deviceCount}</span></div>
@@ -3452,7 +3449,6 @@ class AdminManager {
                                     <th>الماركة</th>
                                     <th>الموديل</th>
                                     <th>الرقم التسلسلي</th>
-                                    <th>تاريخ الاستلام</th>
                                     <th>الأولوية</th>
                                     <th>المشكلة</th>
                                     <th>الحالة</th>
@@ -3465,7 +3461,6 @@ class AdminManager {
                                         <td>${device.laptopBrand}</td>
                                         <td>${device.laptopModel}</td>
                                         <td dir="ltr" style="color: #94a3b8;">${device.serialNumber || '—'}</td>
-                                        <td>${device.receivedDate ? Utils.formatDate(device.receivedDate) : '—'}</td>
                                         <td><span class="priority-badge ${this.getPriorityClass(device.priority)}">${this.translatePriority(device.priority)}</span></td>
                                         <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${device.problemDescription}</td>
                                         <td><span class="status-badge ${this.getStatusClass(device.status)}">${this.translateStatus(device.status)}</span></td>
@@ -5375,7 +5370,7 @@ class AdminManager {
         } else if (type === 'company') {
             // Company requests
             data = [
-                ['#', 'رقم الطلب', 'الاسم', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
+                ['#', 'رقم الطلب', 'الاسم', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
                 ...filteredRequests.map((r, i) => [
                     i + 1,
                     r.requestNumber || r.request_number,
@@ -5388,7 +5383,6 @@ class AdminManager {
                     this.translateStatus(r.status),
                     r.cost > 0 ? r.cost : 0,
                     r.technician || '—',
-                    r.receivedDate || r.received_date ? Utils.formatDate(r.receivedDate || r.received_date) : '—',
                     r.estimatedCompletionDate || r.estimated_completion_date ? Utils.formatDate(r.estimatedCompletionDate || r.estimated_completion_date) : '—',
                     Utils.formatDate(r.createdAt || r.created_at)
                 ])
@@ -5396,7 +5390,7 @@ class AdminManager {
         } else {
             // Single requests
             data = [
-                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
+                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
                 ...filteredRequests.map((r, i) => [
                     i + 1,
                     r.requestNumber,
