@@ -5214,6 +5214,11 @@ class AdminManager {
         const startDate = reportStartDate ? reportStartDate.value : null;
         const endDate = reportEndDate ? reportEndDate.value : null;
 
+        console.log('📊 Report type:', reportType);
+        console.log('📊 this.requests:', this.requests);
+        console.log('📊 this.bulkRequests:', this.bulkRequests);
+        console.log('📊 this.companyRequests:', this.companyRequests);
+
         if (reportType === 'technician') {
             // Technician report
             await this.generateTechnicianReport(startDate, endDate);
@@ -5235,11 +5240,24 @@ class AdminManager {
         } else if (reportType === 'company') {
             requestsByType = this.companyRequests || [];
         } else {
-            requestsByType = this.requests;
+            requestsByType = this.requests || [];
         }
 
-        console.log('📊 Report type:', reportType);
+        console.log('📊 Requests by type:', requestsByType);
+        console.log('📊 Is array?', Array.isArray(requestsByType));
         console.log('📊 Total requests:', requestsByType.length);
+
+        if (!Array.isArray(requestsByType)) {
+            console.error('❌ requestsByType is not an array!');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>خطأ في البيانات</h3>
+                    <p>البيانات غير متوفرة بشكل صحيح.</p>
+                </div>
+            `;
+            return;
+        }
 
         if (startDate && endDate) {
             filteredRequests = requestsByType.filter(r => {
@@ -5260,6 +5278,7 @@ class AdminManager {
         }
 
         console.log('📊 Filtered requests:', filteredRequests.length);
+        console.log('📊 Filtered requests is array:', Array.isArray(filteredRequests));
 
         if (filteredRequests.length === 0) {
             container.innerHTML = `
