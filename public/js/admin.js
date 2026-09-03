@@ -5481,7 +5481,223 @@ class AdminManager {
     }
 
     exportDailyReportToExcel() {
-        // TO DO: implement export logic
+        const reportTypeElement = document.getElementById('reportType');
+        const reportType = reportTypeElement ? reportTypeElement.value : 'single';
+
+        if (reportType === 'technician') {
+            this.exportTechnicianReportToExcel();
+        } else if (reportType === 'problem') {
+            this.exportProblemReportToExcel();
+        } else if (reportType === 'profit') {
+            this.exportProfitReportToExcel();
+        } else {
+            this.exportReportToExcel(reportType);
+        }
+    }
+
+    exportReportToExcel(reportType) {
+        let data = [];
+        let headers = [];
+
+        if (reportType === 'bulk') {
+            headers = ['#', 'رقم طلب الجملة', 'اسم العميل', 'الهاتف', 'ماركة اللابتوب', 'الموديل', 'السيريال', 'المشكلة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الطلب'];
+            this.bulkRequests.forEach((bulkRequest, index) => {
+                if (bulkRequest.devices && bulkRequest.devices.length > 0) {
+                    bulkRequest.devices.forEach((device, deviceIndex) => {
+                        data.push([
+                            index + 1,
+                            bulkRequest.requestNumber,
+                            bulkRequest.customerName,
+                            bulkRequest.customerPhone,
+                            device.laptopBrand,
+                            device.laptopModel || '',
+                            device.serialNumber || '',
+                            device.problemDescription,
+                            this.translateStatus(device.status),
+                            device.cost || 0,
+                            bulkRequest.technician || '—',
+                            Utils.formatDate(bulkRequest.createdAt)
+                        ]);
+                    });
+                }
+            });
+        } else if (reportType === 'company') {
+            headers = ['#', 'رقم الطلب', 'الاسم', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'];
+            this.companyRequests.forEach((r, index) => {
+                data.push([
+                    index + 1,
+                    r.requestNumber,
+                    r.companyName || r.full_name || r.fullName || '—',
+                    r.companyPhone || r.phone || '—',
+                    r.laptopBrand || r.laptop_brand || '',
+                    r.serialNumber || r.serial_number || '',
+                    r.problemDescription || r.problem_description || '—',
+                    r.adminResponse || r.admin_response || '—',
+                    this.translateStatus(r.status),
+                    r.cost || 0,
+                    r.technician || '—',
+                    r.estimatedCompletionDate || r.estimated_completion_date ? Utils.formatDate(r.estimatedCompletionDate || r.estimated_completion_date) : '—',
+                    Utils.formatDate(r.createdAt)
+                ]);
+            });
+        } else {
+            headers = ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'];
+            this.requests.forEach((r, index) => {
+                data.push([
+                    index + 1,
+                    r.requestNumber,
+                    r.fullName,
+                    r.phone,
+                    r.laptopBrand,
+                    r.serialNumber,
+                    r.problemDescription,
+                    r.adminResponse || '—',
+                    this.translateStatus(r.status),
+                    r.cost || 0,
+                    r.technician || '—',
+                    r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—',
+                    Utils.formatDate(r.createdAt)
+                ]);
+            });
+        }
+
+        if (data.length === 0) {
+            Utils.showToast('لا توجد بيانات للتصدير', 'error');
+            return;
+        }
+
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'تقرير');
+        const fileName = reportType === 'bulk' ? 'تقرير-طلبات-جملة.xlsx' : reportType === 'company' ? 'تقرير-طلبات-شركات.xlsx' : 'تقرير-طلبات.xlsx';
+        XLSX.writeFile(wb, fileName);
+        Utils.showToast('تم تصدير التقرير بنجاح', 'success');
+    }
+
+    exportTechnicianReportToExcel() {
+        const allRequests = [
+            ...this.requests.map(r => ({ ...r, type: 'عادي' })),
+            ...this.bulkRequests.map(r => ({ ...r, type: 'جملة' })),
+            ...this.companyRequests.map(r => ({ ...r, type: 'شركة' }))
+        ];
+
+        const technicianStats = {};
+        allRequests.forEach(r => {
+            const technician = r.technician || 'غير محدد';
+            if (!technicianStats[technician]) {
+                technicianStats[technician] = {
+                    count: 0,
+                    totalCost: 0
+                };
+            }
+            technicianStats[technician].count++;
+            technicianStats[technician].totalCost += r.cost || 0;
+        });
+
+        const headers = ['الفني', 'عدد الطلبات', 'إجمالي التكلفة', 'متوسط التكلفة'];
+        const data = Object.entries(technicianStats).map(([tech, stats]) => [
+            tech,
+            stats.count,
+            stats.totalCost,
+            stats.count > 0 ? (stats.totalCost / stats.count).toFixed(2) : 0
+        ]);
+
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'تقرير الفنيين');
+        XLSX.writeFile(wb, 'تقرير-الفنيين.xlsx');
+        Utils.showToast('تم تصدير تقرير الفنيين بنجاح', 'success');
+    }
+
+    exportProblemReportToExcel() {
+        const allRequests = [
+            ...this.requests.map(r => ({ ...r, type: 'عادي', problem: r.problemDescription })),
+            ...this.bulkRequests.flatMap(r => (r.devices || []).map(d => ({ ...d, type: 'جملة', problem: d.problemDescription }))),
+            ...this.companyRequests.map(r => ({ ...r, type: 'شركة', problem: r.problemDescription || r.problem_description }))
+        ];
+
+        const problemStats = {};
+        const keywords = ['شاشة', 'باتري', 'هارد', 'رام', 'كيبورد', 'ماوس', 'شاحن', 'نظام', 'ويندوز', 'انترنت', 'واي فاي', 'صوت', 'كاميرا', 'فان', 'سبيكر'];
+
+        allRequests.forEach(r => {
+            const problem = r.problem || '';
+            let found = false;
+
+            keywords.forEach(keyword => {
+                if (problem.includes(keyword)) {
+                    if (!problemStats[keyword]) {
+                        problemStats[keyword] = { count: 0 };
+                    }
+                    problemStats[keyword].count++;
+                    found = true;
+                }
+            });
+
+            if (!found) {
+                if (!problemStats['أخرى']) {
+                    problemStats['أخرى'] = { count: 0 };
+                }
+                problemStats['أخرى'].count++;
+            }
+        });
+
+        const headers = ['نوع المشكلة', 'عدد الطلبات', 'النسبة المئوية'];
+        const data = Object.entries(problemStats)
+            .sort((a, b) => b[1].count - a[1].count)
+            .map(([problem, stats]) => [
+                problem,
+                stats.count,
+                ((stats.count / allRequests.length) * 100).toFixed(1) + '%'
+            ]);
+
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'تقرير المشاكل');
+        XLSX.writeFile(wb, 'تقرير-المشاكل.xlsx');
+        Utils.showToast('تم تصدير تقرير المشاكل بنجاح', 'success');
+    }
+
+    exportProfitReportToExcel() {
+        const allRequests = [
+            ...this.requests.map(r => ({ ...r, type: 'عادي' })),
+            ...this.bulkRequests.map(r => ({ ...r, type: 'جملة' })),
+            ...this.companyRequests.map(r => ({ ...r, type: 'شركة' }))
+        ];
+
+        const monthlyStats = {};
+        allRequests.forEach(r => {
+            const date = new Date(r.createdAt);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+            if (!monthlyStats[monthKey]) {
+                monthlyStats[monthKey] = {
+                    count: 0,
+                    totalCost: 0,
+                    byType: { عادي: 0, جملة: 0, شركة: 0 }
+                };
+            }
+            monthlyStats[monthKey].count++;
+            monthlyStats[monthKey].totalCost += r.cost || 0;
+            monthlyStats[monthKey].byType[r.type] += r.cost || 0;
+        });
+
+        const headers = ['الشهر', 'عدد الطلبات', 'إجمالي الأرباح', 'طلبات عادية', 'طلبات جملة', 'طلبات شركات'];
+        const data = Object.entries(monthlyStats)
+            .sort((a, b) => b[0].localeCompare(a[0]))
+            .map(([month, stats]) => [
+                month,
+                stats.count,
+                stats.totalCost,
+                stats.byType['عادي'],
+                stats.byType['جملة'],
+                stats.byType['شركة']
+            ]);
+
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'تقرير الأرباح');
+        XLSX.writeFile(wb, 'تقرير-الأرباح.xlsx');
+        Utils.showToast('تم تصدير تقرير الأرباح بنجاح', 'success');
     }
 
     /**
