@@ -41,7 +41,6 @@ class CompanyCustomerManager {
                 laptopBrand: finalLaptopBrand,
                 laptopModel: formData.get('laptopModel'),
                 serialNumber: formData.get('serialNumber'),
-                receivedDate: formData.get('receivedDate'),
                 problemDescription: formData.get('problemDescription'),
                 priority: formData.get('priority'),
                 deviceImage: null

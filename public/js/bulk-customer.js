@@ -131,10 +131,6 @@ class BulkCustomerManager {
                     <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">موجود عادة على ملصق أسفل اللابتوب أو في البطارية</p>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">تاريخ ووقت الاستلام *</label>
-                    <input type="datetime-local" class="form-input" name="receivedDate_${deviceId}" required id="receivedDate_${deviceId}">
-                </div>
-                <div class="form-group">
                     <label class="form-label">الأولوية *</label>
                     <select class="form-input" name="priority_${deviceId}" required>
                         <option value="Low">منخفضة</option>
@@ -156,18 +152,6 @@ class BulkCustomerManager {
         `;
         
         container.insertAdjacentHTML('beforeend', deviceHtml);
-        
-        // Set current datetime as default for received date
-        const receivedDate = document.getElementById(`receivedDate_${deviceId}`);
-        if (receivedDate) {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            receivedDate.value = `${year}-${month}-${day}T${hours}:${minutes}`;
-        }
         
         // Handle laptop brand selection
         const laptopBrandSelect = document.getElementById(`laptopBrandSelect_${deviceId}`);
@@ -259,10 +243,6 @@ class BulkCustomerManager {
                     <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">موجود عادة على ملصق أسفل اللابتوب أو في البطارية</p>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">تاريخ ووقت الاستلام *</label>
-                    <input type="datetime-local" class="form-input" name="receivedDate_${device.id}" required id="receivedDate_${device.id}">
-                </div>
-                <div class="form-group">
                     <label class="form-label">الأولوية *</label>
                     <select class="form-input" name="priority_${device.id}" required>
                         <option value="Low">منخفضة</option>
@@ -283,20 +263,8 @@ class BulkCustomerManager {
             </div>
         `).join('');
 
-        // Set current datetime as default for received date
+        // Handle laptop brand selection
         this.devices.forEach((device, index) => {
-            const receivedDate = document.getElementById(`receivedDate_${device.id}`);
-            if (receivedDate) {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                receivedDate.value = `${year}-${month}-${day}T${hours}:${minutes}`;
-            }
-            
-            // Handle laptop brand selection
             const laptopBrandSelect = document.getElementById(`laptopBrandSelect_${device.id}`);
             const laptopBrandOther = document.getElementById(`laptopBrandOther_${device.id}`);
             
@@ -337,7 +305,6 @@ class BulkCustomerManager {
                 laptopBrand: laptopBrand === 'Other' ? laptopBrandOther : laptopBrand,
                 laptopModel: formData.get(`laptopModel_${device.id}`),
                 serialNumber: formData.get(`serialNumber_${device.id}`),
-                receivedDate: formData.get(`receivedDate_${device.id}`),
                 priority: formData.get(`priority_${device.id}`),
                 problemDescription: formData.get(`problemDescription_${device.id}`),
                 deviceImage: null // Will handle file upload separately if needed

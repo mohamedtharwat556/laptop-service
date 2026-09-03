@@ -3767,10 +3767,6 @@ class AdminManager {
                         <input type="text" class="form-input" name="serialNumber" placeholder="أدخل الرقم التسلسلي">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">تاريخ ووقت الاستلام</label>
-                        <input type="datetime-local" class="form-input" name="receivedDate">
-                    </div>
-                    <div class="form-group">
                         <label class="form-label">الأولوية</label>
                         <select class="form-select" name="priority">
                             <option value="Low">منخفضة</option>
@@ -3812,7 +3808,6 @@ class AdminManager {
             laptopBrand: formData.get('laptopBrand'),
             laptopModel: formData.get('laptopModel'),
             serialNumber: formData.get('serialNumber'),
-            receivedDate: formData.get('receivedDate'),
             priority: formData.get('priority'),
             problemDescription: formData.get('problemDescription'),
             cost: parseFloat(formData.get('cost')) || 0
