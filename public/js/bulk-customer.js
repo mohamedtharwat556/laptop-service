@@ -131,8 +131,8 @@ class BulkCustomerManager {
                     <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">موجود عادة على ملصق أسفل اللابتوب أو في البطارية</p>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">تاريخ الاستلام *</label>
-                    <input type="date" class="form-input" name="receivedDate_${deviceId}" required id="receivedDate_${deviceId}">
+                    <label class="form-label">تاريخ ووقت الاستلام *</label>
+                    <input type="datetime-local" class="form-input" name="receivedDate_${deviceId}" required id="receivedDate_${deviceId}">
                 </div>
                 <div class="form-group">
                     <label class="form-label">الأولوية *</label>
@@ -157,10 +157,16 @@ class BulkCustomerManager {
         
         container.insertAdjacentHTML('beforeend', deviceHtml);
         
-        // Set today's date as default for received date
+        // Set current datetime as default for received date
         const receivedDate = document.getElementById(`receivedDate_${deviceId}`);
         if (receivedDate) {
-            receivedDate.value = new Date().toISOString().slice(0, 10);
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            receivedDate.value = `${year}-${month}-${day}T${hours}:${minutes}`;
         }
         
         // Handle laptop brand selection
@@ -253,8 +259,8 @@ class BulkCustomerManager {
                     <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">موجود عادة على ملصق أسفل اللابتوب أو في البطارية</p>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">تاريخ الاستلام *</label>
-                    <input type="date" class="form-input" name="receivedDate_${device.id}" required id="receivedDate_${device.id}">
+                    <label class="form-label">تاريخ ووقت الاستلام *</label>
+                    <input type="datetime-local" class="form-input" name="receivedDate_${device.id}" required id="receivedDate_${device.id}">
                 </div>
                 <div class="form-group">
                     <label class="form-label">الأولوية *</label>
@@ -277,11 +283,17 @@ class BulkCustomerManager {
             </div>
         `).join('');
 
-        // Set today's date as default for received date
+        // Set current datetime as default for received date
         this.devices.forEach((device, index) => {
             const receivedDate = document.getElementById(`receivedDate_${device.id}`);
             if (receivedDate) {
-                receivedDate.value = new Date().toISOString().slice(0, 10);
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                receivedDate.value = `${year}-${month}-${day}T${hours}:${minutes}`;
             }
             
             // Handle laptop brand selection

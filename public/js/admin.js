@@ -3767,8 +3767,8 @@ class AdminManager {
                         <input type="text" class="form-input" name="serialNumber" placeholder="أدخل الرقم التسلسلي">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">تاريخ الاستلام</label>
-                        <input type="date" class="form-input" name="receivedDate" value="${new Date().toISOString().split('T')[0]}">
+                        <label class="form-label">تاريخ ووقت الاستلام</label>
+                        <input type="datetime-local" class="form-input" name="receivedDate">
                     </div>
                     <div class="form-group">
                         <label class="form-label">الأولوية</label>
