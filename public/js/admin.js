@@ -975,96 +975,6 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','under-maintenance')" title="عرض قيد الصيانة - الطلبات العادية">
-                    <div class="stat-icon" style="background: rgba(139, 92, 246, 0.2);">
-                        <i class="fas fa-wrench" style="color: #8b5cf6;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.normalUnderMaintenance}</h3>
-                        <p>قيد الصيانة (عادي)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('company-requests','under-maintenance')" title="عرض قيد الصيانة - موظفي الشركة">
-                    <div class="stat-icon" style="background: rgba(139, 92, 246, 0.2);">
-                        <i class="fas fa-wrench" style="color: #8b5cf6;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.companyUnderMaintenance}</h3>
-                        <p>قيد الصيانة (شركة)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('bulk-requests','under-maintenance')" title="عرض قيد الصيانة - طلبات الجملة">
-                    <div class="stat-icon" style="background: rgba(139, 92, 246, 0.2);">
-                        <i class="fas fa-wrench" style="color: #8b5cf6;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.bulkUnderMaintenance}</h3>
-                        <p>قيد الصيانة (جملة)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','waiting-inspection')" title="عرض بانتظار الفحص - الطلبات العادية">
-                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2);">
-                        <i class="fas fa-search" style="color: #f59e0b;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.normalWaitingInspection}</h3>
-                        <p>بانتظار الفحص (عادي)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('company-requests','waiting-inspection')" title="عرض بانتظار الفحص - موظفي الشركة">
-                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2);">
-                        <i class="fas fa-search" style="color: #f59e0b;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.companyWaitingInspection}</h3>
-                        <p>بانتظار الفحص (شركة)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('bulk-requests','waiting-inspection')" title="عرض بانتظار الفحص - طلبات الجملة">
-                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2);">
-                        <i class="fas fa-search" style="color: #f59e0b;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.bulkWaitingInspection}</h3>
-                        <p>بانتظار الفحص (جملة)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','waiting-parts')" title="عرض بانتظار قطع الغيار - الطلبات العادية">
-                    <div class="stat-icon" style="background: rgba(239, 68, 68, 0.2);">
-                        <i class="fas fa-cogs" style="color: #ef4444;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.normalWaitingParts}</h3>
-                        <p>بانتظار قطع الغيار (عادي)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('company-requests','waiting-parts')" title="عرض بانتظار قطع الغيار - موظفي الشركة">
-                    <div class="stat-icon" style="background: rgba(239, 68, 68, 0.2);">
-                        <i class="fas fa-cogs" style="color: #ef4444;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.companyWaitingParts}</h3>
-                        <p>بانتظار قطع الغيار (شركة)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('bulk-requests','waiting-parts')" title="عرض بانتظار قطع الغيار - طلبات الجملة">
-                    <div class="stat-icon" style="background: rgba(239, 68, 68, 0.2);">
-                        <i class="fas fa-cogs" style="color: #ef4444;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.bulkWaitingParts}</h3>
-                        <p>بانتظار قطع الغيار (جملة)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
                 <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('users','All')" title="عرض المستخدمين">
                     <div class="stat-icon">
                         <i class="fas fa-users"></i>
@@ -1154,37 +1064,18 @@ class AdminManager {
         const normalLaptopsUnderMaintenance = this.requests.filter(r =>
             maintenanceStatuses.includes(r.status)
         ).length;
-        const normalUnderMaintenance = this.requests.filter(r => r.status === 'Under Maintenance').length;
-        const normalWaitingInspection = this.requests.filter(r => r.status === 'Waiting Inspection').length;
-        const normalWaitingParts = this.requests.filter(r => r.status === 'Waiting Parts').length;
 
         // Company requests: each request = 1 laptop
         const companyLaptopsUnderMaintenance = this.companyRequests.filter(r =>
             maintenanceStatuses.includes(r.status)
         ).length;
-        const companyUnderMaintenance = this.companyRequests.filter(r => r.status === 'Under Maintenance').length;
-        const companyWaitingInspection = this.companyRequests.filter(r => r.status === 'Waiting Inspection').length;
-        const companyWaitingParts = this.companyRequests.filter(r => r.status === 'Waiting Parts').length;
 
         // Bulk requests: count devices with maintenance status
         let bulkLaptopsUnderMaintenance = 0;
-        let bulkUnderMaintenance = 0;
-        let bulkWaitingInspection = 0;
-        let bulkWaitingParts = 0;
-        
         this.bulkRequests.forEach(bulkRequest => {
             if (maintenanceStatuses.includes(bulkRequest.status)) {
                 // Count all devices in this bulk request
-                const deviceCount = (bulkRequest.devices || []).length;
-                bulkLaptopsUnderMaintenance += deviceCount;
-                
-                if (bulkRequest.status === 'Under Maintenance') {
-                    bulkUnderMaintenance += deviceCount;
-                } else if (bulkRequest.status === 'Waiting Inspection') {
-                    bulkWaitingInspection += deviceCount;
-                } else if (bulkRequest.status === 'Waiting Parts') {
-                    bulkWaitingParts += deviceCount;
-                }
+                bulkLaptopsUnderMaintenance += (bulkRequest.devices || []).length;
             }
         });
 
@@ -1214,17 +1105,6 @@ class AdminManager {
             normalLaptopsUnderMaintenance: normalLaptopsUnderMaintenance,
             companyLaptopsUnderMaintenance: companyLaptopsUnderMaintenance,
             bulkLaptopsUnderMaintenance: bulkLaptopsUnderMaintenance,
-            
-            // Detailed maintenance stats by status
-            normalUnderMaintenance: normalUnderMaintenance,
-            normalWaitingInspection: normalWaitingInspection,
-            normalWaitingParts: normalWaitingParts,
-            companyUnderMaintenance: companyUnderMaintenance,
-            companyWaitingInspection: companyWaitingInspection,
-            companyWaitingParts: companyWaitingParts,
-            bulkUnderMaintenance: bulkUnderMaintenance,
-            bulkWaitingInspection: bulkWaitingInspection,
-            bulkWaitingParts: bulkWaitingParts,
             
             // Other stats
             totalProducts: this.products.length,
@@ -2470,16 +2350,10 @@ class AdminManager {
             );
         }
 
-        // Special maintenance filters
+        // Special maintenance filter
         if (this._companySpecialFilter === 'maintenance') {
             const maintenanceStatuses = ['Under Maintenance', 'Waiting Inspection', 'Waiting Parts'];
             filtered = filtered.filter(r => maintenanceStatuses.includes(r.status));
-        } else if (this._companySpecialFilter === 'under-maintenance') {
-            filtered = filtered.filter(r => r.status === 'Under Maintenance');
-        } else if (this._companySpecialFilter === 'waiting-inspection') {
-            filtered = filtered.filter(r => r.status === 'Waiting Inspection');
-        } else if (this._companySpecialFilter === 'waiting-parts') {
-            filtered = filtered.filter(r => r.status === 'Waiting Parts');
         }
 
         // Status filter
@@ -2906,16 +2780,10 @@ class AdminManager {
             );
         }
 
-        // Special maintenance filters
+        // Special maintenance filter
         if (this._bulkSpecialFilter === 'maintenance') {
             const maintenanceStatuses = ['Under Maintenance', 'Waiting Inspection', 'Waiting Parts'];
             filtered = filtered.filter(r => maintenanceStatuses.includes(r.status));
-        } else if (this._bulkSpecialFilter === 'under-maintenance') {
-            filtered = filtered.filter(r => r.status === 'Under Maintenance');
-        } else if (this._bulkSpecialFilter === 'waiting-inspection') {
-            filtered = filtered.filter(r => r.status === 'Waiting Inspection');
-        } else if (this._bulkSpecialFilter === 'waiting-parts') {
-            filtered = filtered.filter(r => r.status === 'Waiting Parts');
         }
 
         // Status filter
@@ -3930,12 +3798,6 @@ class AdminManager {
         if (activeFilter === 'maintenance') {
             const maintenanceStatuses = ['Under Maintenance', 'Waiting Inspection', 'Waiting Parts'];
             filtered = filtered.filter(r => maintenanceStatuses.includes(r.status));
-        } else if (activeFilter === 'under-maintenance') {
-            filtered = filtered.filter(r => r.status === 'Under Maintenance');
-        } else if (activeFilter === 'waiting-inspection') {
-            filtered = filtered.filter(r => r.status === 'Waiting Inspection');
-        } else if (activeFilter === 'waiting-parts') {
-            filtered = filtered.filter(r => r.status === 'Waiting Parts');
         } else if (activeFilter === 'today') {
             // Include all request types for today's filter - rebuilt from scratch
             // Use local date string comparison to avoid timezone issues
@@ -4104,13 +3966,13 @@ class AdminManager {
                 const statusFilter = document.getElementById('statusFilter');
                 if (statusFilter) {
                     // Map special filters to select values
-                    if (filter === 'open' || filter === 'today' || filter === 'completed' || filter === 'maintenance' || filter === 'under-maintenance' || filter === 'waiting-inspection' || filter === 'waiting-parts') {
+                    if (filter === 'open' || filter === 'today' || filter === 'completed' || filter === 'maintenance') {
                         statusFilter.value = 'All'; // will be handled by filterRequests
                     } else {
                         statusFilter.value = filter;
                     }
                     // Store special filter
-                    this._specialFilter = (filter === 'open' || filter === 'today' || filter === 'completed' || filter === 'maintenance' || filter === 'under-maintenance' || filter === 'waiting-inspection' || filter === 'waiting-parts') ? filter : null;
+                    this._specialFilter = (filter === 'open' || filter === 'today' || filter === 'completed' || filter === 'maintenance') ? filter : null;
                     this.renderRequests();
                 }
             }, 50);
@@ -4118,9 +3980,9 @@ class AdminManager {
             setTimeout(() => {
                 const statusFilter = document.getElementById('companyStatusFilter');
                 if (statusFilter) {
-                    if (filter === 'maintenance' || filter === 'under-maintenance' || filter === 'waiting-inspection' || filter === 'waiting-parts') {
+                    if (filter === 'maintenance') {
                         statusFilter.value = ''; // will be handled by filterCompanyRequests
-                        this._companySpecialFilter = filter;
+                        this._companySpecialFilter = 'maintenance';
                     } else {
                         statusFilter.value = filter;
                         this._companySpecialFilter = null;
@@ -4132,9 +3994,9 @@ class AdminManager {
             setTimeout(() => {
                 const statusFilter = document.getElementById('bulkStatusFilter');
                 if (statusFilter) {
-                    if (filter === 'maintenance' || filter === 'under-maintenance' || filter === 'waiting-inspection' || filter === 'waiting-parts') {
+                    if (filter === 'maintenance') {
                         statusFilter.value = ''; // will be handled by filterBulkRequests
-                        this._bulkSpecialFilter = filter;
+                        this._bulkSpecialFilter = 'maintenance';
                     } else {
                         statusFilter.value = filter;
                         this._bulkSpecialFilter = null;
