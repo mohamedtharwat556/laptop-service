@@ -1959,8 +1959,12 @@ class AdminManager {
                 return;
             }
 
-            // Create workbook
-            const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js');
+            // Check if XLSX is available
+            if (typeof XLSX === 'undefined') {
+                toast.error('مكتبة Excel غير متاحة');
+                loading.hide();
+                return;
+            }
             
             // Prepare data for Excel
             const excelData = [];
@@ -2021,8 +2025,12 @@ class AdminManager {
                 return;
             }
 
-            // Create workbook
-            const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js');
+            // Check if XLSX is available
+            if (typeof XLSX === 'undefined') {
+                toast.error('مكتبة Excel غير متاحة');
+                loading.hide();
+                return;
+            }
             
             // Prepare data for Excel
             const excelData = [];
