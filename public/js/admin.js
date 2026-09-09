@@ -2080,9 +2080,10 @@ class AdminManager {
         try {
             loading.show('جاري تصدير البيانات...');
 
-            const requests = this.requests || [];
+            // Use filtered requests based on current filters
+            const filteredRequests = this.filterRequests();
             
-            if (requests.length === 0) {
+            if (filteredRequests.length === 0) {
                 toast.error('لا توجد طلبات للتصدير');
                 loading.hide();
                 return;
@@ -2096,7 +2097,7 @@ class AdminManager {
             }
             
             // Prepare data for Excel
-            const excelData = requests.map(request => ({
+            const excelData = filteredRequests.map(request => ({
                 'رقم الطلب': request.requestNumber,
                 'اسم العميل': request.fullName,
                 'رقم الهاتف': request.phone,
@@ -2139,9 +2140,11 @@ class AdminManager {
         try {
             loading.show('جاري تصدير البيانات...');
 
+            // Use filtered requests based on current filters
             const companyRequests = this.companyRequests || [];
+            const filteredRequests = this.filterCompanyRequests(companyRequests);
             
-            if (companyRequests.length === 0) {
+            if (filteredRequests.length === 0) {
                 toast.error('لا توجد طلبات شركات للتصدير');
                 loading.hide();
                 return;
@@ -2155,21 +2158,21 @@ class AdminManager {
             }
             
             // Prepare data for Excel
-            const excelData = companyRequests.map(request => ({
-                'رقم الطلب': request.requestNumber,
-                'اسم الموظف': request.fullName || request.companyName || '',
+            const excelData = filteredRequests.map(request => ({
+                'رقم الطلب': request.requestNumber || request.request_number,
+                'اسم الموظف': request.fullName || request.full_name || request.companyName || '',
                 'اسم الشركة': request.companyName || '',
                 'رقم الهاتف': request.phone || request.companyPhone || '',
-                'ماركة اللابتوب': request.laptopBrand || '',
-                'موديل اللابتوب': request.laptopModel || '',
-                'الرقم التسلسلي': request.serialNumber || '',
-                'وصف المشكلة': request.problemDescription || '',
+                'ماركة اللابتوب': request.laptopBrand || request.laptop_brand || '',
+                'موديل اللابتوب': request.laptopModel || request.laptop_model || '',
+                'الرقم التسلسلي': request.serialNumber || request.serial_number || '',
+                'وصف المشكلة': request.problemDescription || request.problem_description || '',
                 'الحالة': request.status,
                 'الأولوية': request.priority,
                 'التكلفة': request.cost || 0,
                 'الفني': request.technician || '',
                 'تاريخ الاستلام': request.receivedDate || '',
-                'تاريخ الإنشاء': Utils.formatDate(request.createdAt),
+                'تاريخ الإنشاء': Utils.formatDate(request.createdAt || request.created_at),
                 'ملاحظات': request.notes || ''
             }));
 
