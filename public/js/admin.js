@@ -975,6 +975,16 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','All')" title="عرض اللابات تحت الصيانة">
+                    <div class="stat-icon" style="background: rgba(139, 92, 246, 0.2);">
+                        <i class="fas fa-tools" style="color: #8b5cf6;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>${stats.totalLaptopsUnderMaintenance}</h3>
+                        <p>لابات تحت الصيانة</p>
+                    </div>
+                    <i class="fas fa-arrow-left stat-arrow"></i>
+                </div>
                 <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('users','All')" title="عرض المستخدمين">
                     <div class="stat-icon">
                         <i class="fas fa-users"></i>
@@ -1057,6 +1067,30 @@ class AdminManager {
         );
         const completedRequests = this.requests.filter(r => r.status === 'Delivered');
 
+        // Laptops under maintenance (all types)
+        const maintenanceStatuses = ['Under Maintenance', 'Waiting Inspection', 'Waiting Parts'];
+        
+        // Normal requests: each request = 1 laptop
+        const normalLaptopsUnderMaintenance = this.requests.filter(r =>
+            maintenanceStatuses.includes(r.status)
+        ).length;
+
+        // Company requests: each request = 1 laptop
+        const companyLaptopsUnderMaintenance = this.companyRequests.filter(r =>
+            maintenanceStatuses.includes(r.status)
+        ).length;
+
+        // Bulk requests: count devices with maintenance status
+        let bulkLaptopsUnderMaintenance = 0;
+        this.bulkRequests.forEach(bulkRequest => {
+            if (maintenanceStatuses.includes(bulkRequest.status)) {
+                // Count all devices in this bulk request
+                bulkLaptopsUnderMaintenance += (bulkRequest.devices || []).length;
+            }
+        });
+
+        const totalLaptopsUnderMaintenance = normalLaptopsUnderMaintenance + companyLaptopsUnderMaintenance + bulkLaptopsUnderMaintenance;
+
         return {
             // Normal requests stats
             totalRequests: this.requests.length,
@@ -1075,6 +1109,12 @@ class AdminManager {
             bulkOpenRequests: bulkOpenRequests.length,
             bulkCompletedRequests: bulkCompletedRequests.length,
             bulkRevenue: bulkRevenue,
+            
+            // Laptops under maintenance stats
+            totalLaptopsUnderMaintenance: totalLaptopsUnderMaintenance,
+            normalLaptopsUnderMaintenance: normalLaptopsUnderMaintenance,
+            companyLaptopsUnderMaintenance: companyLaptopsUnderMaintenance,
+            bulkLaptopsUnderMaintenance: bulkLaptopsUnderMaintenance,
             
             // Other stats
             totalProducts: this.products.length,
