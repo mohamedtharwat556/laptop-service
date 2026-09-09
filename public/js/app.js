@@ -723,6 +723,7 @@ async function performGlobalSearch(searchTerm) {
  */
 function displayGlobalSearchResults(results) {
     const globalSearchResults = document.getElementById('globalSearchResults');
+    const globalSearchResultsModal = document.getElementById('globalSearchResultsModal');
     if (!globalSearchResults) return;
 
     const allResults = [
@@ -733,43 +734,94 @@ function displayGlobalSearchResults(results) {
 
     if (allResults.length === 0) {
         globalSearchResults.innerHTML = `
-            <div class="glass-card" style="text-align: center; padding: 2rem;">
+            <div style="text-align: center; padding: 2rem;">
                 <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted-more); margin-bottom: 1rem;"></i>
                 <p style="color: var(--text-muted);">لم يتم العثور على نتائج</p>
             </div>
         `;
-        return;
+    } else {
+        globalSearchResults.innerHTML = `
+            <p style="margin-bottom: 1rem; color: var(--text-muted);">تم العثور على ${allResults.length} نتيجة</p>
+            <div class="search-results-grid">
+                ${allResults.map(r => `
+                    <div class="glass-card" style="padding: 1rem; margin-bottom: 1rem; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.1);" onclick="handleSearchResultClick('${r.typeEn}', '${r.requestNumber || r.request_number}')">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 600; color: #3b82f6;">${r.requestNumber || r.request_number}</span>
+                            <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: rgba(59, 130, 246, 0.1); border-radius: 4px; color: #3b82f6;">${r.type}</span>
+                        </div>
+                        <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
+                            <i class="fas fa-user"></i> ${r.fullName || r.full_name || r.customerName || r.companyName || ''}
+                        </p>
+                        <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
+                            <i class="fas fa-phone"></i> ${r.phone || r.customerPhone || r.companyPhone || ''}
+                        </p>
+                        ${r.serialNumber || r.serial_number ? `
+                            <p style="color: var(--text-muted);">
+                                <i class="fas fa-barcode"></i> ${r.serialNumber || r.serial_number}
+                            </p>
+                        ` : ''}
+                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                            <span style="font-size: 0.875rem; color: var(--text-muted);">
+                                <i class="fas fa-clock"></i> ${Utils.formatDate(r.createdAt || r.created_at)}
+                            </span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
     }
 
-    globalSearchResults.innerHTML = `
-        <h3 style="margin-bottom: 1rem;">نتائج البحث (${allResults.length})</h3>
-        <div class="search-results-grid">
-            ${allResults.map(r => `
-                <div class="glass-card search-result-card" style="padding: 1rem; margin-bottom: 1rem; cursor: pointer;" onclick="window.location.href='track.html'">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                        <span style="font-weight: 600; color: #3b82f6;">${r.requestNumber || r.request_number}</span>
-                        <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: rgba(59, 130, 246, 0.1); border-radius: 4px; color: #3b82f6;">${r.type}</span>
-                    </div>
-                    <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
-                        <i class="fas fa-user"></i> ${r.fullName || r.full_name || r.customerName || r.companyName || ''}
-                    </p>
-                    <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
-                        <i class="fas fa-phone"></i> ${r.phone || r.customerPhone || r.companyPhone || ''}
-                    </p>
-                    ${r.serialNumber || r.serial_number ? `
-                        <p style="color: var(--text-muted);">
-                            <i class="fas fa-barcode"></i> ${r.serialNumber || r.serial_number}
-                        </p>
-                    ` : ''}
-                    <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--glass-border);">
-                        <span style="font-size: 0.875rem; color: var(--text-muted);">
-                            <i class="fas fa-clock"></i> ${Utils.formatDate(r.createdAt || r.created_at)}
-                        </span>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
+    // Show modal
+    if (globalSearchResultsModal) {
+        globalSearchResultsModal.style.display = 'block';
+    }
+}
+
+/**
+ * Handle search result click
+ */
+function handleSearchResultClick(type, requestNumber) {
+    const modal = document.getElementById('globalSearchResultsModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+
+    // Navigate to appropriate section
+    if (type === 'single') {
+        if (typeof adminManager !== 'undefined') {
+            adminManager.switchSection('requests');
+            // Set search filter
+            setTimeout(() => {
+                const searchInput = document.getElementById('requestSearch');
+                if (searchInput) {
+                    searchInput.value = requestNumber;
+                    searchInput.dispatchEvent(new Event('input'));
+                }
+            }, 100);
+        }
+    } else if (type === 'bulk') {
+        if (typeof adminManager !== 'undefined') {
+            adminManager.switchSection('bulk-requests');
+            setTimeout(() => {
+                const searchInput = document.getElementById('bulkSearchInput');
+                if (searchInput) {
+                    searchInput.value = requestNumber;
+                    searchInput.dispatchEvent(new Event('input'));
+                }
+            }, 100);
+        }
+    } else if (type === 'company') {
+        if (typeof adminManager !== 'undefined') {
+            adminManager.switchSection('company-requests');
+            setTimeout(() => {
+                const searchInput = document.getElementById('companySearchInput');
+                if (searchInput) {
+                    searchInput.value = requestNumber;
+                    searchInput.dispatchEvent(new Event('input'));
+                }
+            }, 100);
+        }
+    }
 }
 
 // Export for use in other modules

@@ -131,6 +131,32 @@
         <main class="dashboard-main animate__animated animate__fadeInUp">
             <div class="dashboard-header">
                 <h1>لوحة التحكم</h1>
+                
+                <!-- Global Search -->
+                <div style="margin-left: auto; max-width: 400px;">
+                    <form id="globalSearchForm">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="globalSearchInput" placeholder="بحث شامل بالرقم التسلسلي، الاسم، أو رقم الطلب..." autocomplete="off" style="flex: 1; padding: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; background: rgba(255, 255, 255, 0.1); color: var(--white);">
+                            <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div id="globalSearchSuggestions" class="search-suggestions" style="display: none;"></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Global Search Results Modal -->
+            <div id="globalSearchResultsModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); z-index: 1000; padding: 2rem; overflow-y: auto;">
+                <div class="glass-card" style="max-width: 900px; margin: 0 auto; padding: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2>نتائج البحث الشامل</h2>
+                        <button onclick="document.getElementById('globalSearchResultsModal').style.display = 'none'" style="background: none; border: none; color: var(--white); font-size: 1.5rem; cursor: pointer;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div id="globalSearchResults"></div>
+                </div>
             </div>
 
             <!-- Dashboard Section -->
