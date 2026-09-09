@@ -1878,11 +1878,6 @@ class AdminManager {
         }
 
         container.innerHTML = `
-            <div style="margin-bottom: 1rem;">
-                <button class="btn btn-success" onclick="adminManager.exportBulkRequestsToExcel()">
-                    <i class="fas fa-file-excel"></i> تصدير Excel
-                </button>
-            </div>
             <div style="overflow-x: auto;">
                 <table class="table">
                     <thead>
@@ -2001,6 +1996,65 @@ class AdminManager {
             
             // Generate Excel file
             XLSX.writeFile(workbook, `bulk_requests_${new Date().toISOString().split('T')[0]}.xlsx`);
+            
+            loading.hide();
+            toast.success('تم تصدير البيانات بنجاح');
+        } catch (error) {
+            loading.hide();
+            console.error('Error exporting to Excel:', error);
+            toast.error('فشل تصدير البيانات');
+        }
+    }
+
+    /**
+     * Export single bulk request to Excel
+     */
+    async exportSingleBulkRequestToExcel(bulkRequestId) {
+        try {
+            loading.show('جاري تصدير البيانات...');
+
+            const bulkRequest = this.bulkRequests.find(r => r.id === bulkRequestId);
+            
+            if (!bulkRequest) {
+                toast.error('لم يتم العثور على الطلب');
+                loading.hide();
+                return;
+            }
+
+            // Create workbook
+            const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js');
+            
+            // Prepare data for Excel
+            const excelData = [];
+            const devices = bulkRequest.devices || [];
+            
+            devices.forEach((device, index) => {
+                excelData.push({
+                    'رقم الطلب': bulkRequest.requestNumber,
+                    'اسم العميل': bulkRequest.customerName,
+                    'رقم الهاتف': bulkRequest.customerPhone,
+                    'رقم الجهاز': index + 1,
+                    'ماركة اللابتوب': device.laptopBrand || '',
+                    'موديل اللابتوب': device.laptopModel || '',
+                    'الرقم التسلسلي': device.serialNumber || '',
+                    'وصف المشكلة': device.problemDescription || '',
+                    'حالة الجهاز': device.status || '',
+                    'حالة الطلب': bulkRequest.status,
+                    'الأولوية': bulkRequest.priority,
+                    'التاريخ': Utils.formatDate(bulkRequest.createdAt),
+                    'ملاحظات': bulkRequest.notes || ''
+                });
+            });
+
+            // Create worksheet
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            
+            // Create workbook
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, `${bulkRequest.requestNumber}`);
+            
+            // Generate Excel file
+            XLSX.writeFile(workbook, `${bulkRequest.requestNumber}_${new Date().toISOString().split('T')[0]}.xlsx`);
             
             loading.hide();
             toast.success('تم تصدير البيانات بنجاح');
@@ -2571,6 +2625,9 @@ class AdminManager {
                             <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${bulkRequest.requestNumber} - جميع الأجهزة</h3>
                             <span class="status-badge ${this.getStatusClass(bulkRequest.status)}">${this.translateStatus(bulkRequest.status)}</span>
                         </div>
+                        <button type="button" onclick="adminManager.exportSingleBulkRequestToExcel(${bulkRequestId})" class="btn btn-success" style="padding: 0.5rem 1rem;">
+                            <i class="fas fa-file-excel"></i> تصدير Excel
+                        </button>
                     </div>
                     <div class="request-details">
                         <div class="request-detail-item"><span class="request-detail-label">اسم العميل</span><span class="request-detail-value">${bulkRequest.customerName}</span></div>
