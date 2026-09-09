@@ -945,7 +945,7 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','All')" title="عرض اللابات تحت الصيانة - الطلبات العادية">
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','maintenance')" title="عرض اللابات تحت الصيانة - الطلبات العادية">
                     <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2);">
                         <i class="fas fa-tools" style="color: #3b82f6;"></i>
                     </div>
@@ -955,7 +955,7 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('company-requests')" title="عرض اللابات تحت الصيانة - موظفي الشركة">
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('company-requests','maintenance')" title="عرض اللابات تحت الصيانة - موظفي الشركة">
                     <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2);">
                         <i class="fas fa-tools" style="color: #10b981;"></i>
                     </div>
@@ -965,7 +965,7 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('bulk-requests')" title="عرض اللابات تحت الصيانة - طلبات الجملة">
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('bulk-requests','maintenance')" title="عرض اللابات تحت الصيانة - طلبات الجملة">
                     <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2);">
                         <i class="fas fa-tools" style="color: #f59e0b;"></i>
                     </div>
@@ -2350,6 +2350,12 @@ class AdminManager {
             );
         }
 
+        // Special maintenance filter
+        if (this._companySpecialFilter === 'maintenance') {
+            const maintenanceStatuses = ['Under Maintenance', 'Waiting Inspection', 'Waiting Parts'];
+            filtered = filtered.filter(r => maintenanceStatuses.includes(r.status));
+        }
+
         // Status filter
         if (statusFilter) {
             filtered = filtered.filter(r => r.status === statusFilter);
@@ -2774,8 +2780,14 @@ class AdminManager {
             );
         }
 
+        // Special maintenance filter
+        if (this._bulkSpecialFilter === 'maintenance') {
+            const maintenanceStatuses = ['Under Maintenance', 'Waiting Inspection', 'Waiting Parts'];
+            filtered = filtered.filter(r => maintenanceStatuses.includes(r.status));
+        }
+
         // Status filter
-        if (statusFilter !== 'All') {
+        if (statusFilter !== 'All' && statusFilter !== '') {
             filtered = filtered.filter(r => r.status === statusFilter);
         }
 
@@ -3783,7 +3795,10 @@ class AdminManager {
 
         const activeFilter = this._specialFilter || statusFilter;
 
-        if (activeFilter === 'today') {
+        if (activeFilter === 'maintenance') {
+            const maintenanceStatuses = ['Under Maintenance', 'Waiting Inspection', 'Waiting Parts'];
+            filtered = filtered.filter(r => maintenanceStatuses.includes(r.status));
+        } else if (activeFilter === 'today') {
             // Include all request types for today's filter - rebuilt from scratch
             // Use local date string comparison to avoid timezone issues
             const today = new Date().toDateString();
@@ -3951,14 +3966,42 @@ class AdminManager {
                 const statusFilter = document.getElementById('statusFilter');
                 if (statusFilter) {
                     // Map special filters to select values
-                    if (filter === 'open' || filter === 'today' || filter === 'completed') {
+                    if (filter === 'open' || filter === 'today' || filter === 'completed' || filter === 'maintenance') {
                         statusFilter.value = 'All'; // will be handled by filterRequests
                     } else {
                         statusFilter.value = filter;
                     }
                     // Store special filter
-                    this._specialFilter = (filter === 'open' || filter === 'today' || filter === 'completed') ? filter : null;
+                    this._specialFilter = (filter === 'open' || filter === 'today' || filter === 'completed' || filter === 'maintenance') ? filter : null;
                     this.renderRequests();
+                }
+            }, 50);
+        } else if (section === 'company-requests') {
+            setTimeout(() => {
+                const statusFilter = document.getElementById('companyStatusFilter');
+                if (statusFilter) {
+                    if (filter === 'maintenance') {
+                        statusFilter.value = ''; // will be handled by filterCompanyRequests
+                        this._companySpecialFilter = 'maintenance';
+                    } else {
+                        statusFilter.value = filter;
+                        this._companySpecialFilter = null;
+                    }
+                    this.renderCompanyRequests();
+                }
+            }, 50);
+        } else if (section === 'bulk-requests') {
+            setTimeout(() => {
+                const statusFilter = document.getElementById('bulkStatusFilter');
+                if (statusFilter) {
+                    if (filter === 'maintenance') {
+                        statusFilter.value = ''; // will be handled by filterBulkRequests
+                        this._bulkSpecialFilter = 'maintenance';
+                    } else {
+                        statusFilter.value = filter;
+                        this._bulkSpecialFilter = null;
+                    }
+                    this.renderBulkRequests();
                 }
             }, 50);
         }
