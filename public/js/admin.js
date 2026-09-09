@@ -2074,6 +2074,125 @@ class AdminManager {
     }
 
     /**
+     * Export normal requests to Excel
+     */
+    async exportRequestsToExcel() {
+        try {
+            loading.show('جاري تصدير البيانات...');
+
+            const requests = this.requests || [];
+            
+            if (requests.length === 0) {
+                toast.error('لا توجد طلبات للتصدير');
+                loading.hide();
+                return;
+            }
+
+            // Check if XLSX is available
+            if (typeof XLSX === 'undefined') {
+                toast.error('مكتبة Excel غير متاحة');
+                loading.hide();
+                return;
+            }
+            
+            // Prepare data for Excel
+            const excelData = requests.map(request => ({
+                'رقم الطلب': request.requestNumber,
+                'اسم العميل': request.fullName,
+                'رقم الهاتف': request.phone,
+                'ماركة اللابتوب': request.laptopBrand || '',
+                'موديل اللابتوب': request.laptopModel || '',
+                'الرقم التسلسلي': request.serialNumber || '',
+                'وصف المشكلة': request.problemDescription || '',
+                'الحالة': request.status,
+                'الأولوية': request.priority,
+                'التكلفة': request.cost || 0,
+                'الفني': request.technician || '',
+                'تاريخ الاستلام': request.receivedDate || '',
+                'تاريخ الإنشاء': Utils.formatDate(request.createdAt),
+                'ملاحظات': request.notes || ''
+            }));
+
+            // Create worksheet
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            
+            // Create workbook
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'الطلبات العادية');
+            
+            // Generate Excel file
+            XLSX.writeFile(workbook, `requests_${new Date().toISOString().split('T')[0]}.xlsx`);
+            
+            loading.hide();
+            toast.success('تم تصدير البيانات بنجاح');
+        } catch (error) {
+            loading.hide();
+            console.error('Error exporting to Excel:', error);
+            toast.error('فشل تصدير البيانات');
+        }
+    }
+
+    /**
+     * Export company requests to Excel
+     */
+    async exportCompanyRequestsToExcel() {
+        try {
+            loading.show('جاري تصدير البيانات...');
+
+            const companyRequests = this.companyRequests || [];
+            
+            if (companyRequests.length === 0) {
+                toast.error('لا توجد طلبات شركات للتصدير');
+                loading.hide();
+                return;
+            }
+
+            // Check if XLSX is available
+            if (typeof XLSX === 'undefined') {
+                toast.error('مكتبة Excel غير متاحة');
+                loading.hide();
+                return;
+            }
+            
+            // Prepare data for Excel
+            const excelData = companyRequests.map(request => ({
+                'رقم الطلب': request.requestNumber,
+                'اسم الموظف': request.fullName || request.companyName || '',
+                'اسم الشركة': request.companyName || '',
+                'رقم الهاتف': request.phone || request.companyPhone || '',
+                'ماركة اللابتوب': request.laptopBrand || '',
+                'موديل اللابتوب': request.laptopModel || '',
+                'الرقم التسلسلي': request.serialNumber || '',
+                'وصف المشكلة': request.problemDescription || '',
+                'الحالة': request.status,
+                'الأولوية': request.priority,
+                'التكلفة': request.cost || 0,
+                'الفني': request.technician || '',
+                'تاريخ الاستلام': request.receivedDate || '',
+                'تاريخ الإنشاء': Utils.formatDate(request.createdAt),
+                'ملاحظات': request.notes || ''
+            }));
+
+            // Create worksheet
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            
+            // Create workbook
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'طلبات الشركات');
+            
+            // Generate Excel file
+            XLSX.writeFile(workbook, `company_requests_${new Date().toISOString().split('T')[0]}.xlsx`);
+            
+            loading.hide();
+            toast.success('تم تصدير البيانات بنجاح');
+        } catch (error) {
+            loading.hide();
+            console.error('Error exporting to Excel:', error);
+            toast.error('فشل تصدير البيانات');
+        }
+    }
+
+    /**
      * Render company requests table
      */
     renderCompanyRequests() {
@@ -2095,6 +2214,17 @@ class AdminManager {
         }
 
         container.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">طلبات موظفي الشركة (${filteredRequests.length})</h3>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-success" onclick="adminManager.exportCompanyRequestsToExcel()" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
+                    <button onclick="adminManager.deleteAllCompanyRequests()" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        <i class="fas fa-trash"></i> حذف الكل
+                    </button>
+                </div>
+            </div>
             <div style="overflow-x: auto;">
                 <table class="table">
                     <thead>
@@ -3508,9 +3638,14 @@ class AdminManager {
         container.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h3 style="margin: 0;">الطلبات (${filteredRequests.length})</h3>
-                <button class="btn btn-danger" onclick="adminManager.deleteAllRequests()" style="padding: 0.5rem 1rem;">
-                    <i class="fas fa-trash"></i> حذف الكل
-                </button>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-success" onclick="adminManager.exportRequestsToExcel()" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
+                    <button class="btn btn-danger" onclick="adminManager.deleteAllRequests()" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-trash"></i> حذف الكل
+                    </button>
+                </div>
             </div>
             <div class="table-container" style="overflow-x: auto;">
                 <table class="table" style="min-width: 1000px;">
