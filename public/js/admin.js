@@ -2312,7 +2312,9 @@ class AdminManager {
             filtered = filtered.filter(r => 
                 ((r.full_name || r.fullName) && (r.full_name || r.fullName).toLowerCase().includes(searchTerm)) ||
                 (r.phone && r.phone.includes(searchTerm)) ||
-                ((r.request_number || r.requestNumber) && (r.request_number || r.requestNumber).toLowerCase().includes(searchTerm))
+                ((r.request_number || r.requestNumber) && (r.request_number || r.requestNumber).toLowerCase().includes(searchTerm)) ||
+                ((r.serial_number || r.serialNumber) && (r.serial_number || r.serialNumber).toLowerCase().includes(searchTerm)) ||
+                ((r.laptop_brand || r.laptopBrand) && (r.laptop_brand || r.laptopBrand).toLowerCase().includes(searchTerm))
             );
         }
 
@@ -3743,6 +3745,7 @@ class AdminManager {
                 r.phone.includes(searchTerm) ||
                 (r.laptopBrand && r.laptopBrand.toLowerCase().includes(searchTerm)) ||
                 (r.laptopModel && r.laptopModel.toLowerCase().includes(searchTerm)) ||
+                (r.serialNumber && r.serialNumber.toLowerCase().includes(searchTerm)) ||
                 (r.problemDescription && r.problemDescription.toLowerCase().includes(searchTerm))
             );
         }
