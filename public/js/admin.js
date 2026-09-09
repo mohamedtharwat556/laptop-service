@@ -2236,6 +2236,7 @@ class AdminManager {
                             <th>الاسم</th>
                             <th>الهاتف</th>
                             <th>الجهاز</th>
+                            <th>الرقم التسلسلي</th>
                             <th>الحالة</th>
                             <th>الأولوية</th>
                             <th>رد الإدارة</th>
@@ -2251,6 +2252,7 @@ class AdminManager {
                                 <td style="font-weight: 600;">${companyRequest.full_name || companyRequest.fullName}</td>
                                 <td dir="ltr">${companyRequest.phone}</td>
                                 <td>${companyRequest.laptop_brand || companyRequest.laptopBrand} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</td>
+                                <td dir="ltr" style="font-size: 0.875rem; color: #94a3b8;">${companyRequest.serial_number || companyRequest.serialNumber || '—'}</td>
                                 <td>
                                     <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateCompanyRequestStatus(${companyRequest.id}, this.value)">
                                         <option value="Received" ${companyRequest.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
