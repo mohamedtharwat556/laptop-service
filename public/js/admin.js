@@ -1878,6 +1878,11 @@ class AdminManager {
         }
 
         container.innerHTML = `
+            <div style="margin-bottom: 1rem;">
+                <button class="btn btn-success" onclick="adminManager.exportBulkRequestsToExcel()">
+                    <i class="fas fa-file-excel"></i> تصدير Excel
+                </button>
+            </div>
             <div style="overflow-x: auto;">
                 <table class="table">
                     <thead>
@@ -1942,6 +1947,68 @@ class AdminManager {
         `;
 
         this.renderPagination('bulkRequestsPagination', pages);
+    }
+
+    /**
+     * Export bulk requests to Excel
+     */
+    async exportBulkRequestsToExcel() {
+        try {
+            loading.show('جاري تصدير البيانات...');
+
+            const bulkRequests = this.bulkRequests || [];
+            
+            if (bulkRequests.length === 0) {
+                toast.error('لا توجد طلبات جملة للتصدير');
+                loading.hide();
+                return;
+            }
+
+            // Create workbook
+            const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js');
+            
+            // Prepare data for Excel
+            const excelData = [];
+            
+            bulkRequests.forEach(bulkRequest => {
+                const devices = bulkRequest.devices || [];
+                
+                devices.forEach((device, index) => {
+                    excelData.push({
+                        'رقم الطلب': bulkRequest.requestNumber,
+                        'اسم العميل': bulkRequest.customerName,
+                        'رقم الهاتف': bulkRequest.customerPhone,
+                        'رقم الجهاز': index + 1,
+                        'ماركة اللابتوب': device.laptopBrand || '',
+                        'موديل اللابتوب': device.laptopModel || '',
+                        'الرقم التسلسلي': device.serialNumber || '',
+                        'وصف المشكلة': device.problemDescription || '',
+                        'حالة الجهاز': device.status || '',
+                        'حالة الطلب': bulkRequest.status,
+                        'الأولوية': bulkRequest.priority,
+                        'التاريخ': Utils.formatDate(bulkRequest.createdAt),
+                        'ملاحظات': bulkRequest.notes || ''
+                    });
+                });
+            });
+
+            // Create worksheet
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            
+            // Create workbook
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'طلبات الجملة');
+            
+            // Generate Excel file
+            XLSX.writeFile(workbook, `bulk_requests_${new Date().toISOString().split('T')[0]}.xlsx`);
+            
+            loading.hide();
+            toast.success('تم تصدير البيانات بنجاح');
+        } catch (error) {
+            loading.hide();
+            console.error('Error exporting to Excel:', error);
+            toast.error('فشل تصدير البيانات');
+        }
     }
 
     /**
