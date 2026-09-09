@@ -2357,7 +2357,6 @@ class AdminManager {
                         </div>
                         <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptop_brand || companyRequest.laptopBrand || ''} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${companyRequest.serial_number || companyRequest.serialNumber || '—'}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${companyRequest.received_date || companyRequest.receivedDate ? Utils.formatDate(companyRequest.received_date || companyRequest.receivedDate) : '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(companyRequest.created_at || companyRequest.createdAt)}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${companyRequest.problem_description || companyRequest.problemDescription || ''}</span></div>
                     </div>
