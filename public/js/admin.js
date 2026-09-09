@@ -925,16 +925,6 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','All')" title="عرض الإيرادات">
-                    <div class="stat-icon success">
-                        <i class="fas fa-dollar-sign"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${Utils.formatCurrency(stats.totalRevenue)}</h3>
-                        <p>إجمالي الإيرادات</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
                 <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('company-requests')" title="عرض موظفي الشركة">
                     <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2);">
                         <i class="fas fa-building" style="color: #10b981;"></i>
@@ -942,16 +932,6 @@ class AdminManager {
                     <div class="stat-info">
                         <h3>${stats.companyTotalRequests}</h3>
                         <p>موظفي الشركة</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('company-requests')" title="عرض إيرادات الشركات">
-                    <div class="stat-icon success" style="background: rgba(16, 185, 129, 0.2);">
-                        <i class="fas fa-dollar-sign" style="color: #10b981;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${Utils.formatCurrency(stats.companyRevenue)}</h3>
-                        <p>إيرادات الشركات</p>
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
@@ -965,23 +945,33 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('bulk-requests')" title="عرض إيرادات الجملة">
-                    <div class="stat-icon success" style="background: rgba(245, 158, 11, 0.2);">
-                        <i class="fas fa-dollar-sign" style="color: #f59e0b;"></i>
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','All')" title="عرض اللابات تحت الصيانة - الطلبات العادية">
+                    <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2);">
+                        <i class="fas fa-tools" style="color: #3b82f6;"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>${Utils.formatCurrency(stats.bulkRevenue)}</h3>
-                        <p>إيرادات الجملة</p>
+                        <h3>${stats.normalLaptopsUnderMaintenance}</h3>
+                        <p>لابات تحت الصيانة (عادي)</p>
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','All')" title="عرض اللابات تحت الصيانة">
-                    <div class="stat-icon" style="background: rgba(139, 92, 246, 0.2);">
-                        <i class="fas fa-tools" style="color: #8b5cf6;"></i>
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('company-requests')" title="عرض اللابات تحت الصيانة - موظفي الشركة">
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2);">
+                        <i class="fas fa-tools" style="color: #10b981;"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>${stats.totalLaptopsUnderMaintenance}</h3>
-                        <p>لابات تحت الصيانة</p>
+                        <h3>${stats.companyLaptopsUnderMaintenance}</h3>
+                        <p>لابات تحت الصيانة (شركة)</p>
+                    </div>
+                    <i class="fas fa-arrow-left stat-arrow"></i>
+                </div>
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('bulk-requests')" title="عرض اللابات تحت الصيانة - طلبات الجملة">
+                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2);">
+                        <i class="fas fa-tools" style="color: #f59e0b;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>${stats.bulkLaptopsUnderMaintenance}</h3>
+                        <p>لابات تحت الصيانة (جملة)</p>
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
