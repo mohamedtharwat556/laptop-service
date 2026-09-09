@@ -110,6 +110,23 @@
         </div>
     </nav>
 
+    <!-- Global Search Section -->
+    <section class="section" style="padding-top: 80px; padding-bottom: 40px;">
+        <div class="form-container glass-card" style="max-width: 800px; margin: 0 auto;">
+            <h2 style="text-align: center; margin-bottom: 1.5rem;">بحث شامل</h2>
+            <form id="globalSearchForm">
+                <div class="form-group">
+                    <input type="text" class="form-input" id="globalSearchInput" placeholder="البحث بالرقم التسلسلي، اسم العميل، أو رقم الطلب..." autocomplete="off">
+                    <div id="globalSearchSuggestions" class="search-suggestions" style="display: none;"></div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+            </form>
+            <div id="globalSearchResults" style="margin-top: 2rem;"></div>
+        </div>
+    </section>
+
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-inner">

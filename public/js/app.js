@@ -570,7 +570,207 @@ document.addEventListener('DOMContentLoaded', () => {
             sidebar.classList.toggle('active');
         });
     }
+
+    // Initialize global search
+    initGlobalSearch();
 });
+
+/**
+ * Initialize global search functionality
+ */
+function initGlobalSearch() {
+    const globalSearchForm = document.getElementById('globalSearchForm');
+    const globalSearchInput = document.getElementById('globalSearchInput');
+    const globalSearchSuggestions = document.getElementById('globalSearchSuggestions');
+    const globalSearchResults = document.getElementById('globalSearchResults');
+
+    if (!globalSearchForm || !globalSearchInput) return;
+
+    let debounceTimer;
+
+    // Instant search with debounce
+    globalSearchInput.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        const searchTerm = e.target.value.trim();
+
+        if (searchTerm.length < 2) {
+            globalSearchSuggestions.style.display = 'none';
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            showGlobalSearchSuggestions(searchTerm);
+        }, 300);
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!globalSearchInput.contains(e.target) && !globalSearchSuggestions.contains(e.target)) {
+            globalSearchSuggestions.style.display = 'none';
+        }
+    });
+
+    // Form submission
+    globalSearchForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const searchTerm = globalSearchInput.value.trim();
+        
+        if (!searchTerm) {
+            toast.error('يرجى إدخال كلمة البحث');
+            return;
+        }
+
+        loading.show('جاري البحث...');
+
+        try {
+            const results = await performGlobalSearch(searchTerm);
+            displayGlobalSearchResults(results);
+            loading.hide();
+        } catch (error) {
+            loading.hide();
+            console.error('Global search error:', error);
+            toast.error('حدث خطأ أثناء البحث');
+        }
+    });
+}
+
+/**
+ * Show global search suggestions
+ */
+async function showGlobalSearchSuggestions(searchTerm) {
+    const globalSearchSuggestions = document.getElementById('globalSearchSuggestions');
+    if (!globalSearchSuggestions) return;
+
+    try {
+        const results = await performGlobalSearch(searchTerm);
+        const allResults = [
+            ...results.requests.map(r => ({ ...r, type: 'طلب عادي', typeEn: 'single' })),
+            ...results.bulkRequests.map(r => ({ ...r, type: 'طلب جملة', typeEn: 'bulk' })),
+            ...results.companyRequests.map(r => ({ ...r, type: 'موظفي شركة', typeEn: 'company' }))
+        ];
+
+        if (allResults.length > 0) {
+            globalSearchSuggestions.innerHTML = allResults.slice(0, 5).map(r => `
+                <div class="search-suggestion-item" data-value="${r.requestNumber || r.request_number}" data-type="${r.typeEn}">
+                    <div class="suggestion-type">${r.type}</div>
+                    <div class="suggestion-value">${r.requestNumber || r.request_number} - ${r.fullName || r.full_name || r.customerName || r.companyName || ''}</div>
+                </div>
+            `).join('');
+
+            globalSearchSuggestions.querySelectorAll('.search-suggestion-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.getElementById('globalSearchInput').value = item.dataset.value;
+                    globalSearchSuggestions.style.display = 'none';
+                    document.getElementById('globalSearchForm').dispatchEvent(new Event('submit'));
+                });
+            });
+
+            globalSearchSuggestions.style.display = 'block';
+        } else {
+            globalSearchSuggestions.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error fetching suggestions:', error);
+        globalSearchSuggestions.style.display = 'none';
+    }
+}
+
+/**
+ * Perform global search across all request types
+ */
+async function performGlobalSearch(searchTerm) {
+    const [requestsRes, bulkRequestsRes, companyRequestsRes] = await Promise.all([
+        fetch('/api/requests').then(r => r.json()).catch(() => []),
+        fetch('/api/bulk-requests').then(r => r.json()).catch(() => []),
+        fetch('/api/company-requests').then(r => r.json()).catch(() => [])
+    ]);
+
+    const searchTermLower = searchTerm.toLowerCase();
+
+    // Search in regular requests
+    const requests = requestsRes.filter(r => {
+        return (r.serialNumber || r.serial_number || '').toLowerCase().includes(searchTermLower) ||
+               (r.fullName || r.full_name || '').toLowerCase().includes(searchTermLower) ||
+               (r.requestNumber || r.request_number || '').toLowerCase().includes(searchTermLower) ||
+               (r.phone || '').includes(searchTerm);
+    });
+
+    // Search in bulk requests
+    const bulkRequests = bulkRequestsRes.filter(r => {
+        const devices = r.devices || [];
+        const hasMatchingSerial = devices.some(d => 
+            (d.serialNumber || d.serial_number || '').toLowerCase().includes(searchTermLower)
+        );
+        return hasMatchingSerial ||
+               (r.customerName || '').toLowerCase().includes(searchTermLower) ||
+               (r.requestNumber || '').toLowerCase().includes(searchTermLower) ||
+               (r.customerPhone || '').includes(searchTerm);
+    });
+
+    // Search in company requests
+    const companyRequests = companyRequestsRes.filter(r => {
+        return (r.serialNumber || r.serial_number || '').toLowerCase().includes(searchTermLower) ||
+               (r.fullName || r.full_name || r.companyName || r.company_name || '').toLowerCase().includes(searchTermLower) ||
+               (r.requestNumber || r.request_number || '').toLowerCase().includes(searchTermLower) ||
+               (r.phone || r.companyPhone || r.company_phone || '').includes(searchTerm);
+    });
+
+    return { requests, bulkRequests, companyRequests };
+}
+
+/**
+ * Display global search results
+ */
+function displayGlobalSearchResults(results) {
+    const globalSearchResults = document.getElementById('globalSearchResults');
+    if (!globalSearchResults) return;
+
+    const allResults = [
+        ...results.requests.map(r => ({ ...r, type: 'طلب عادي', typeEn: 'single' })),
+        ...results.bulkRequests.map(r => ({ ...r, type: 'طلب جملة', typeEn: 'bulk' })),
+        ...results.companyRequests.map(r => ({ ...r, type: 'موظفي شركة', typeEn: 'company' }))
+    ];
+
+    if (allResults.length === 0) {
+        globalSearchResults.innerHTML = `
+            <div class="glass-card" style="text-align: center; padding: 2rem;">
+                <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted-more); margin-bottom: 1rem;"></i>
+                <p style="color: var(--text-muted);">لم يتم العثور على نتائج</p>
+            </div>
+        `;
+        return;
+    }
+
+    globalSearchResults.innerHTML = `
+        <h3 style="margin-bottom: 1rem;">نتائج البحث (${allResults.length})</h3>
+        <div class="search-results-grid">
+            ${allResults.map(r => `
+                <div class="glass-card search-result-card" style="padding: 1rem; margin-bottom: 1rem; cursor: pointer;" onclick="window.location.href='track.html'">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <span style="font-weight: 600; color: #3b82f6;">${r.requestNumber || r.request_number}</span>
+                        <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: rgba(59, 130, 246, 0.1); border-radius: 4px; color: #3b82f6;">${r.type}</span>
+                    </div>
+                    <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
+                        <i class="fas fa-user"></i> ${r.fullName || r.full_name || r.customerName || r.companyName || ''}
+                    </p>
+                    <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
+                        <i class="fas fa-phone"></i> ${r.phone || r.customerPhone || r.companyPhone || ''}
+                    </p>
+                    ${r.serialNumber || r.serial_number ? `
+                        <p style="color: var(--text-muted);">
+                            <i class="fas fa-barcode"></i> ${r.serialNumber || r.serial_number}
+                        </p>
+                    ` : ''}
+                    <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--glass-border);">
+                        <span style="font-size: 0.875rem; color: var(--text-muted);">
+                            <i class="fas fa-clock"></i> ${Utils.formatDate(r.createdAt || r.created_at)}
+                        </span>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
