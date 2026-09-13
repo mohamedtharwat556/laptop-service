@@ -4043,6 +4043,27 @@ class AdminManager {
         this.renderRequests();
     }
 
+    /**
+     * Show today's requests
+     */
+    showTodayRequests() {
+        // Switch to requests section
+        this.switchSection('requests');
+        
+        // Set filter to today
+        document.getElementById('statusFilter').value = 'today';
+        document.getElementById('requestSearch').value = '';
+        document.getElementById('brandFilter').value = 'All';
+        document.getElementById('priorityFilter').value = 'All';
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        
+        this.currentPage = 1;
+        this.renderRequests();
+        
+        toast.success('تم عرض طلبات اليوم');
+    }
+
     paginate(data) {
         const start = (this.currentPage - 1) * this.itemsPerPage;
         const end = start + this.itemsPerPage;
