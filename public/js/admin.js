@@ -975,6 +975,36 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','received')" title="تم الاستلام - الطلبات العادية">
+                    <div class="stat-icon" style="background: rgba(34, 197, 94, 0.2);">
+                        <i class="fas fa-check-circle" style="color: #22c55e;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>${stats.normalLaptopsReceived}</h3>
+                        <p>تم الاستلام (عادي)</p>
+                    </div>
+                    <i class="fas fa-arrow-left stat-arrow"></i>
+                </div>
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('company-requests','received')" title="تم الاستلام - موظفي الشركة">
+                    <div class="stat-icon" style="background: rgba(34, 197, 94, 0.2);">
+                        <i class="fas fa-check-circle" style="color: #22c55e;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>${stats.companyLaptopsReceived}</h3>
+                        <p>تم الاستلام (شركة)</p>
+                    </div>
+                    <i class="fas fa-arrow-left stat-arrow"></i>
+                </div>
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('bulk-requests','received')" title="تم الاستلام - طلبات الجملة">
+                    <div class="stat-icon" style="background: rgba(34, 197, 94, 0.2);">
+                        <i class="fas fa-check-circle" style="color: #22c55e;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>${stats.bulkLaptopsReceived}</h3>
+                        <p>تم الاستلام (جملة)</p>
+                    </div>
+                    <i class="fas fa-arrow-left stat-arrow"></i>
+                </div>
                 <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('users','All')" title="عرض المستخدمين">
                     <div class="stat-icon">
                         <i class="fas fa-users"></i>
@@ -1081,6 +1111,26 @@ class AdminManager {
 
         const totalLaptopsUnderMaintenance = normalLaptopsUnderMaintenance + companyLaptopsUnderMaintenance + bulkLaptopsUnderMaintenance;
 
+        // Received laptops (all types)
+        const receivedStatus = 'Received';
+        
+        // Normal requests: each request = 1 laptop
+        const normalLaptopsReceived = this.requests.filter(r => r.status === receivedStatus).length;
+
+        // Company requests: each request = 1 laptop
+        const companyLaptopsReceived = this.companyRequests.filter(r => r.status === receivedStatus).length;
+
+        // Bulk requests: count devices with received status
+        let bulkLaptopsReceived = 0;
+        this.bulkRequests.forEach(bulkRequest => {
+            if (bulkRequest.status === receivedStatus) {
+                // Count all devices in this bulk request
+                bulkLaptopsReceived += (bulkRequest.devices || []).length;
+            }
+        });
+
+        const totalLaptopsReceived = normalLaptopsReceived + companyLaptopsReceived + bulkLaptopsReceived;
+
         return {
             // Normal requests stats
             totalRequests: this.requests.length,
@@ -1106,6 +1156,12 @@ class AdminManager {
             companyLaptopsUnderMaintenance: companyLaptopsUnderMaintenance,
             bulkLaptopsUnderMaintenance: bulkLaptopsUnderMaintenance,
             
+            // Laptops received stats
+            totalLaptopsReceived: totalLaptopsReceived,
+            normalLaptopsReceived: normalLaptopsReceived,
+            companyLaptopsReceived: companyLaptopsReceived,
+            bulkLaptopsReceived: bulkLaptopsReceived,
+            
             // Other stats
             totalProducts: this.products.length,
             totalOrders: this.orders.length,
@@ -1119,7 +1175,6 @@ class AdminManager {
     renderCharts() {
         this.destroyCharts();
         this.renderRequestsChart();
-        this.renderRevenueChart();
     }
 
     /**
@@ -1180,77 +1235,6 @@ class AdminManager {
                         labels: {
                             color: '#94a3b8',
                             padding: 20
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    /**
-     * Render revenue chart
-     */
-    renderRevenueChart() {
-        const ctx = document.getElementById('revenueChart');
-        if (!ctx) return;
-
-        // Get last 7 days of orders
-        const last7Days = [];
-        const revenueData = [];
-        
-        for (let i = 6; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            const dateStr = date.toDateString();
-            
-            last7Days.push(date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
-            
-            const dayRevenue = this.orders
-                .filter(o => new Date(o.createdAt).toDateString() === dateStr)
-                .reduce((sum, o) => sum + (o.total || 0), 0);
-            
-            revenueData.push(dayRevenue);
-        }
-
-        this.charts.revenue = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: last7Days,
-                datasets: [{
-                    label: 'Revenue',
-                    data: revenueData,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            color: 'rgba(148, 163, 184, 0.1)'
-                        },
-                        ticks: {
-                            color: '#94a3b8'
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: 'rgba(148, 163, 184, 0.1)'
-                        },
-                        ticks: {
-                            color: '#94a3b8',
-                            callback: function(value) {
-                                return '$' + value;
-                            }
                         }
                     }
                 }
@@ -1886,7 +1870,61 @@ class AdminManager {
     }
 
     /**
-     * Render bulk requests table
+     * Filter bulk requests with search and status filter - works on device level
+     */
+    filterBulkRequests(bulkRequests) {
+        let filtered = [...bulkRequests];
+        const searchTerm = document.getElementById('bulkSearchInput')?.value?.toLowerCase() || '';
+        const statusFilter = document.getElementById('bulkStatusFilter')?.value || '';
+
+        if (searchTerm) {
+            filtered = filtered.filter(r =>
+                r.requestNumber.toLowerCase().includes(searchTerm) ||
+                r.customerName.toLowerCase().includes(searchTerm) ||
+                r.customerPhone.includes(searchTerm) ||
+                (r.devices && r.devices.some(d => 
+                    (d.laptopBrand && d.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                    (d.laptopModel && d.laptopModel.toLowerCase().includes(searchTerm)) ||
+                    (d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm))
+                ))
+            );
+        }
+
+        if (statusFilter) {
+            filtered = filtered.filter(r => r.status === statusFilter);
+        }
+
+        return filtered;
+    }
+
+    /**
+     * Filter expanded devices with search and status filter
+     */
+    filterExpandedDevices(expandedDevices) {
+        let filtered = [...expandedDevices];
+        const searchTerm = document.getElementById('bulkSearchInput')?.value?.toLowerCase() || '';
+        const statusFilter = document.getElementById('bulkStatusFilter')?.value || '';
+
+        if (searchTerm) {
+            filtered = filtered.filter(d =>
+                d.bulkRequestNumber.toLowerCase().includes(searchTerm) ||
+                d.customerName.toLowerCase().includes(searchTerm) ||
+                d.customerPhone.includes(searchTerm) ||
+                (d.laptopBrand && d.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                (d.laptopModel && d.laptopModel.toLowerCase().includes(searchTerm)) ||
+                (d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm))
+            );
+        }
+
+        if (statusFilter) {
+            filtered = filtered.filter(d => d.status === statusFilter);
+        }
+
+        return filtered;
+    }
+
+    /**
+     * Render bulk requests table - displays each device as individual row like normal requests
      */
     renderBulkRequests() {
         const container = document.getElementById('bulkRequestsContainer');
@@ -1895,19 +1933,54 @@ class AdminManager {
         // Use bulk requests from separate table
         const bulkRequests = this.bulkRequests || [];
         const filteredRequests = this.filterBulkRequests(bulkRequests);
-        const { data, pages } = this.paginate(filteredRequests);
+        
+        // Expand devices into individual rows
+        const expandedDevices = [];
+        filteredRequests.forEach(bulkRequest => {
+            const devices = bulkRequest.devices || [];
+            devices.forEach((device, index) => {
+                expandedDevices.push({
+                    ...device,
+                    deviceArrayIndex: index, // Store the array index for updates
+                    bulkRequestId: bulkRequest.id,
+                    bulkRequestNumber: bulkRequest.requestNumber,
+                    customerName: bulkRequest.customerName,
+                    customerPhone: bulkRequest.customerPhone,
+                    deviceIndex: index + 1, // Display index (1-based)
+                    status: device.status || bulkRequest.status,
+                    priority: device.priority || bulkRequest.priority,
+                    createdAt: bulkRequest.createdAt
+                });
+            });
+        });
+
+        // Apply filtering on expanded devices
+        const filteredDevices = this.filterExpandedDevices(expandedDevices);
+
+        const { data, pages } = this.paginate(filteredDevices);
 
         if (data.length === 0) {
             container.innerHTML = `
                 <div class="glass-card" style="text-align: center; padding: 3rem;">
                     <i class="fas fa-boxes" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
-                    <p style="color: #94a3b8;">لا توجد طلبات جملة حالياً</p>
+                    <p style="color: #94a3b8;">لا توجد أجهزة في طلبات الجملة حالياً</p>
                 </div>
             `;
             return;
         }
 
         container.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">الأجهزة (${filteredDevices.length})</h3>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-success" onclick="adminManager.exportBulkRequestsToExcel()" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
+                    <button class="btn btn-danger" onclick="adminManager.deleteAllBulkRequests()" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-trash"></i> حذف الكل
+                    </button>
+                </div>
+            </div>
             <div style="overflow-x: auto;">
                 <table class="table">
                     <thead>
@@ -1915,7 +1988,7 @@ class AdminManager {
                             <th>رقم الطلب</th>
                             <th>العميل</th>
                             <th>الهاتف</th>
-                            <th>عدد اللابتوبات</th>
+                            <th>الجهاز</th>
                             <th>الحالة</th>
                             <th>الأولوية</th>
                             <th>التاريخ</th>
@@ -1923,43 +1996,47 @@ class AdminManager {
                         </tr>
                     </thead>
                     <tbody>
-                        ${data.map(bulkRequest => `
+                        ${data.map(device => `
                             <tr style="transition: background-color 0.2s;">
-                                <td style="font-weight: 600; color: #3b82f6;">${bulkRequest.requestNumber}</td>
-                                <td style="font-weight: 600;">${bulkRequest.customerName}</td>
-                                <td dir="ltr">${bulkRequest.customerPhone}</td>
-                                <td style="font-weight: 600; color: #3b82f6;">${bulkRequest.deviceCount}</td>
+                                <td style="font-weight: 600; color: #3b82f6;">${device.bulkRequestNumber}</td>
+                                <td style="font-weight: 600;">${device.customerName}</td>
+                                <td dir="ltr">${device.customerPhone}</td>
                                 <td>
-                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateBulkRequestStatus(${bulkRequest.id}, this.value)">
-                                        <option value="Received" ${bulkRequest.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
-                                        <option value="Waiting Inspection" ${bulkRequest.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
-                                        <option value="Under Maintenance" ${bulkRequest.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
-                                        <option value="Waiting Parts" ${bulkRequest.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: rgba(239, 68, 68, 0.9); color: white;">بانتظار قطع الغيار</option>
-                                        <option value="Ready" ${bulkRequest.status === 'Ready' ? 'selected' : ''} style="background-color: rgba(16, 185, 129, 0.9); color: white;">جاهز للتسليم</option>
-                                        <option value="Delivered" ${bulkRequest.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم للعميل</option>
+                                    <div>${device.laptopBrand} ${device.laptopModel || ''}</div>
+                                    ${device.serialNumber ? `<div style="font-size: 0.875rem; color: #94a3b8;" dir="ltr">SN: ${device.serialNumber}</div>` : ''}
+                                    <div style="font-size: 0.75rem; color: #64748b;">جهاز #${device.deviceIndex}</div>
+                                </td>
+                                <td>
+                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateDeviceStatus(${device.bulkRequestId}, ${device.deviceArrayIndex}, this.value)">
+                                        <option value="Received" ${device.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
+                                        <option value="Waiting Inspection" ${device.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
+                                        <option value="Under Maintenance" ${device.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
+                                        <option value="Waiting Parts" ${device.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: rgba(239, 68, 68, 0.9); color: white;">بانتظار قطع الغيار</option>
+                                        <option value="Ready" ${device.status === 'Ready' ? 'selected' : ''} style="background-color: rgba(16, 185, 129, 0.9); color: white;">جاهز للتسليم</option>
+                                        <option value="Delivered" ${device.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم للعميل</option>
                                     </select>
                                 </td>
-                                <td><span class="priority-badge ${this.getPriorityClass(bulkRequest.priority)}">${this.translatePriority(bulkRequest.priority)}</span></td>
-                                <td>${Utils.formatDate(bulkRequest.createdAt)}</td>
+                                <td><span class="priority-badge ${this.getPriorityClass(device.priority)}">${this.translatePriority(device.priority)}</span></td>
+                                <td>${Utils.formatDate(device.createdAt)}</td>
                                 <td>
                                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
-                                            onclick="adminManager.viewBulkRequestDevices(${bulkRequest.id})">
-                                        <i class="fas fa-eye"></i> عرض الأجهزة
+                                            onclick="adminManager.viewBulkRequestDevices(${device.bulkRequestId})">
+                                        <i class="fas fa-eye"></i>
                                     </button>
                                     <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.quickEditBulkRequest(${bulkRequest.id})" title="تعديل سريع">
+                                            onclick="adminManager.quickEditBulkRequest(${device.bulkRequestId})" title="تعديل سريع">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.convertBulkRequestToSingle(${bulkRequest.id})" title="تحويل لطلب عادي">
+                                            onclick="adminManager.convertBulkRequestToSingle(${device.bulkRequestId})" title="تحويل لطلب عادي">
                                         <i class="fas fa-laptop"></i>
                                     </button>
                                     <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.convertBulkRequestToCompany(${bulkRequest.id})" title="تحويل لطلب موظفي شركة">
+                                            onclick="adminManager.convertBulkRequestToCompany(${device.bulkRequestId})" title="تحويل لطلب موظفي شركة">
                                         <i class="fas fa-building"></i>
                                     </button>
                                     <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.deleteBulkRequest(${bulkRequest.id})">
+                                            onclick="adminManager.deleteBulkRequest(${device.bulkRequestId})">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
@@ -2354,6 +2431,8 @@ class AdminManager {
         if (this._companySpecialFilter === 'maintenance') {
             const maintenanceStatuses = ['Under Maintenance', 'Waiting Inspection', 'Waiting Parts'];
             filtered = filtered.filter(r => maintenanceStatuses.includes(r.status));
+        } else if (this._companySpecialFilter === 'received') {
+            filtered = filtered.filter(r => r.status === 'Received');
         }
 
         // Status filter
@@ -2784,6 +2863,8 @@ class AdminManager {
         if (this._bulkSpecialFilter === 'maintenance') {
             const maintenanceStatuses = ['Under Maintenance', 'Waiting Inspection', 'Waiting Parts'];
             filtered = filtered.filter(r => maintenanceStatuses.includes(r.status));
+        } else if (this._bulkSpecialFilter === 'received') {
+            filtered = filtered.filter(r => r.status === 'Received');
         }
 
         // Status filter
@@ -2921,6 +3002,42 @@ class AdminManager {
         } catch (error) {
             console.error('Error updating bulk request status:', error);
             toast.error('فشل تحديث حالة الطلب');
+        }
+    }
+
+    /**
+     * Update individual device status in bulk request
+     */
+    async updateDeviceStatus(bulkRequestId, deviceArrayIndex, newStatus) {
+        try {
+            // Get the bulk request
+            const bulkRequest = this.bulkRequests.find(r => r.id === bulkRequestId);
+            if (!bulkRequest) {
+                toast.error('لم يتم العثور على الطلب');
+                return;
+            }
+
+            // Update the specific device status
+            const devices = bulkRequest.devices || [];
+            if (devices[deviceArrayIndex]) {
+                devices[deviceArrayIndex].status = newStatus;
+            }
+
+            // Update the bulk request with the modified devices
+            const updateResponse = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ devices: devices })
+            });
+
+            if (!updateResponse.ok) throw new Error('Failed to update device status');
+
+            toast.success('تم تحديث حالة الجهاز بنجاح');
+            await this.loadData();
+            this.renderBulkRequests();
+        } catch (error) {
+            console.error('Error updating device status:', error);
+            toast.error('فشل تحديث حالة الجهاز');
         }
     }
 
@@ -3798,6 +3915,8 @@ class AdminManager {
         if (activeFilter === 'maintenance') {
             const maintenanceStatuses = ['Under Maintenance', 'Waiting Inspection', 'Waiting Parts'];
             filtered = filtered.filter(r => maintenanceStatuses.includes(r.status));
+        } else if (activeFilter === 'received') {
+            filtered = filtered.filter(r => r.status === 'Received');
         } else if (activeFilter === 'today') {
             // Include all request types for today's filter - rebuilt from scratch
             // Use local date string comparison to avoid timezone issues
@@ -3966,13 +4085,13 @@ class AdminManager {
                 const statusFilter = document.getElementById('statusFilter');
                 if (statusFilter) {
                     // Map special filters to select values
-                    if (filter === 'open' || filter === 'today' || filter === 'completed' || filter === 'maintenance') {
+                    if (filter === 'open' || filter === 'today' || filter === 'completed' || filter === 'maintenance' || filter === 'received') {
                         statusFilter.value = 'All'; // will be handled by filterRequests
                     } else {
                         statusFilter.value = filter;
                     }
                     // Store special filter
-                    this._specialFilter = (filter === 'open' || filter === 'today' || filter === 'completed' || filter === 'maintenance') ? filter : null;
+                    this._specialFilter = (filter === 'open' || filter === 'today' || filter === 'completed' || filter === 'maintenance' || filter === 'received') ? filter : null;
                     this.renderRequests();
                 }
             }, 50);
@@ -3980,9 +4099,9 @@ class AdminManager {
             setTimeout(() => {
                 const statusFilter = document.getElementById('companyStatusFilter');
                 if (statusFilter) {
-                    if (filter === 'maintenance') {
+                    if (filter === 'maintenance' || filter === 'received') {
                         statusFilter.value = ''; // will be handled by filterCompanyRequests
-                        this._companySpecialFilter = 'maintenance';
+                        this._companySpecialFilter = filter;
                     } else {
                         statusFilter.value = filter;
                         this._companySpecialFilter = null;
@@ -3994,9 +4113,9 @@ class AdminManager {
             setTimeout(() => {
                 const statusFilter = document.getElementById('bulkStatusFilter');
                 if (statusFilter) {
-                    if (filter === 'maintenance') {
+                    if (filter === 'maintenance' || filter === 'received') {
                         statusFilter.value = ''; // will be handled by filterBulkRequests
-                        this._bulkSpecialFilter = 'maintenance';
+                        this._bulkSpecialFilter = filter;
                     } else {
                         statusFilter.value = filter;
                         this._bulkSpecialFilter = null;
