@@ -4014,7 +4014,7 @@ class AdminManager {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Count today's requests from all types (matching calculateStatistics logic)
+        // Count today's requests from all types separately
         const todayNormalOrders = this.requests.filter(r => {
             const requestDate = new Date(r.createdAt);
             return requestDate >= today;
@@ -4027,11 +4027,27 @@ class AdminManager {
             const requestDate = new Date(r.createdAt);
             return requestDate >= today;
         });
-        const todayCount = todayNormalOrders.length + todayBulkOrders.length + todayCompanyOrders.length;
 
+        // Update separate counters for each type
+        const normalCountElement = document.getElementById('todayNormalCount');
+        const bulkCountElement = document.getElementById('todayBulkCount');
+        const companyCountElement = document.getElementById('todayCompanyCount');
+        
+        if (normalCountElement) {
+            normalCountElement.textContent = todayNormalOrders.length;
+        }
+        if (bulkCountElement) {
+            bulkCountElement.textContent = todayBulkOrders.length;
+        }
+        if (companyCountElement) {
+            companyCountElement.textContent = todayCompanyOrders.length;
+        }
+
+        // Update total counter if exists
+        const totalCount = todayNormalOrders.length + todayBulkOrders.length + todayCompanyOrders.length;
         const todayCountElement = document.getElementById('todayCount');
         if (todayCountElement) {
-            todayCountElement.textContent = todayCount;
+            todayCountElement.textContent = totalCount;
         }
     }
 
