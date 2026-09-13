@@ -1930,7 +1930,7 @@ class AdminManager {
     }
 
     /**
-     * Render bulk requests table - displays each device as individual row like normal requests
+     * Render bulk requests as accordion - shows customer header with devices list inside
      */
     renderBulkRequests() {
         const container = document.getElementById('bulkRequestsContainer');
@@ -1939,45 +1939,23 @@ class AdminManager {
         // Use bulk requests from separate table
         const bulkRequests = this.bulkRequests || [];
         const filteredRequests = this.filterBulkRequests(bulkRequests);
-        
-        // Expand devices into individual rows
-        const expandedDevices = [];
-        filteredRequests.forEach(bulkRequest => {
-            const devices = bulkRequest.devices || [];
-            devices.forEach((device, index) => {
-                expandedDevices.push({
-                    ...device,
-                    deviceArrayIndex: index, // Store the array index for updates
-                    bulkRequestId: bulkRequest.id,
-                    bulkRequestNumber: bulkRequest.requestNumber,
-                    customerName: bulkRequest.customerName,
-                    customerPhone: bulkRequest.customerPhone,
-                    deviceIndex: index + 1, // Display index (1-based)
-                    status: device.status || bulkRequest.status,
-                    priority: device.priority || bulkRequest.priority,
-                    createdAt: bulkRequest.createdAt
-                });
-            });
-        });
 
-        // Apply filtering on expanded devices
-        const filteredDevices = this.filterExpandedDevices(expandedDevices);
-
-        const { data, pages } = this.paginate(filteredDevices);
-
-        if (data.length === 0) {
+        if (filteredRequests.length === 0) {
             container.innerHTML = `
                 <div class="glass-card" style="text-align: center; padding: 3rem;">
                     <i class="fas fa-boxes" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
-                    <p style="color: #94a3b8;">لا توجد أجهزة في طلبات الجملة حالياً</p>
+                    <p style="color: #94a3b8;">لا توجد طلبات جملة حالياً</p>
                 </div>
             `;
             return;
         }
 
+        // Count total devices
+        const totalDevices = filteredRequests.reduce((sum, req) => sum + (req.devices?.length || 0), 0);
+
         container.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3 style="margin: 0;">الأجهزة (${filteredDevices.length})</h3>
+                <h3 style="margin: 0;">طلبات الجملة (${filteredRequests.length} طلب - ${totalDevices} جهاز)</h3>
                 <div style="display: flex; gap: 0.5rem;">
                     <button class="btn btn-success" onclick="adminManager.exportBulkRequestsToExcel()" style="padding: 0.5rem 1rem;">
                         <i class="fas fa-file-excel"></i> تصدير Excel
@@ -1987,74 +1965,330 @@ class AdminManager {
                     </button>
                 </div>
             </div>
-            <div style="overflow-x: auto;">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>رقم الطلب</th>
-                            <th>العميل</th>
-                            <th>الهاتف</th>
-                            <th>الجهاز</th>
-                            <th>الحالة</th>
-                            <th>الأولوية</th>
-                            <th>التاريخ</th>
-                            <th>إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.map(device => `
-                            <tr style="transition: background-color 0.2s;">
-                                <td style="font-weight: 600; color: #3b82f6;">${device.bulkRequestNumber}</td>
-                                <td style="font-weight: 600;">${device.customerName}</td>
-                                <td dir="ltr">${device.customerPhone}</td>
-                                <td>
-                                    <div>${device.laptopBrand} ${device.laptopModel || ''}</div>
-                                    ${device.serialNumber ? `<div style="font-size: 0.875rem; color: #94a3b8;" dir="ltr">SN: ${device.serialNumber}</div>` : ''}
-                                    <div style="font-size: 0.75rem; color: #64748b;">جهاز #${device.deviceIndex}</div>
-                                </td>
-                                <td>
-                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateDeviceStatus(${device.bulkRequestId}, ${device.deviceArrayIndex}, this.value)">
-                                        <option value="Received" ${device.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
-                                        <option value="Waiting Inspection" ${device.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
-                                        <option value="Under Maintenance" ${device.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
-                                        <option value="Waiting Parts" ${device.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: rgba(239, 68, 68, 0.9); color: white;">بانتظار قطع الغيار</option>
-                                        <option value="Ready" ${device.status === 'Ready' ? 'selected' : ''} style="background-color: rgba(16, 185, 129, 0.9); color: white;">جاهز للتسليم</option>
-                                        <option value="Delivered" ${device.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم للعميل</option>
-                                    </select>
-                                </td>
-                                <td><span class="priority-badge ${this.getPriorityClass(device.priority)}">${this.translatePriority(device.priority)}</span></td>
-                                <td>${Utils.formatDate(device.createdAt)}</td>
-                                <td>
-                                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
-                                            onclick="adminManager.viewBulkRequestDevices(${device.bulkRequestId})">
-                                        <i class="fas fa-eye"></i>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                ${filteredRequests.map(bulkRequest => {
+                    const devices = bulkRequest.devices || [];
+                    const deviceCount = devices.length;
+                    
+                    return `
+                        <div class="glass-card bulk-request-accordion" style="border: 1px solid rgba(59, 130, 246, 0.3);">
+                            <!-- Customer Header -->
+                            <div class="bulk-request-header" 
+                                 style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; cursor: pointer; background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1)); border-radius: 12px; transition: var(--transition);"
+                                 onclick="adminManager.toggleBulkRequestAccordion(${bulkRequest.id})">
+                                <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+                                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span style="font-weight: 700; font-size: 1.1rem; color: #3b82f6;">${bulkRequest.requestNumber}</span>
+                                            <span style="font-size: 0.875rem; color: #94a3b8;">${deviceCount} جهاز</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 1rem;">
+                                            <span style="font-weight: 600; font-size: 1rem;">${bulkRequest.customerName}</span>
+                                            <span style="color: #94a3b8; font-size: 0.875rem;" dir="ltr">${bulkRequest.customerPhone}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <span class="priority-badge ${this.getPriorityClass(bulkRequest.priority)}">${this.translatePriority(bulkRequest.priority)}</span>
+                                    <span class="status-badge status-${this.getStatusClass(bulkRequest.status)}">${this.translateStatus(bulkRequest.status)}</span>
+                                    <i class="fas fa-chevron-down accordion-icon" id="accordion-icon-${bulkRequest.id}" style="transition: transform 0.3s;"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Devices List (collapsible) -->
+                            <div class="bulk-request-devices" id="bulk-request-devices-${bulkRequest.id}" style="display: none; padding: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                                ${devices.map((device, index) => `
+                                    <div class="glass-card device-card" style="margin-bottom: 1rem; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem;">
+                                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                                <div style="background: rgba(59, 130, 246, 0.2); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; color: #3b82f6;">
+                                                    جهاز #${index + 1}
+                                                </div>
+                                                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                                    <div style="font-weight: 600;">${device.laptopBrand} ${device.laptopModel || ''}</div>
+                                                    ${device.serialNumber ? `<div style="font-size: 0.875rem; color: #94a3b8;" dir="ltr">SN: ${device.serialNumber}</div>` : ''}
+                                                    ${device.problemDescription ? `<div style="font-size: 0.875rem; color: #64748b; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${device.problemDescription}</div>` : ''}
+                                                </div>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1); min-width: 140px;" onchange="adminManager.updateDeviceStatus(${bulkRequest.id}, ${index}, this.value)">
+                                                    <option value="Received" ${device.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
+                                                    <option value="Waiting Inspection" ${device.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
+                                                    <option value="Under Maintenance" ${device.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
+                                                    <option value="Waiting Parts" ${device.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: rgba(239, 68, 68, 0.9); color: white;">بانتظار قطع الغيار</option>
+                                                    <option value="Ready" ${device.status === 'Ready' ? 'selected' : ''} style="background-color: rgba(16, 185, 129, 0.9); color: white;">جاهز للتسليم</option>
+                                                    <option value="Delivered" ${device.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم</option>
+                                                </select>
+                                                <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
+                                                        onclick="adminManager.editDevice(${bulkRequest.id}, ${index})" title="تعديل الجهاز">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                                
+                                <!-- Bulk Request Actions -->
+                                <div style="display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                                    <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;"
+                                            onclick="adminManager.addDeviceToBulkRequest(${bulkRequest.id})" title="إضافة جهاز جديد">
+                                        <i class="fas fa-plus"></i> إضافة جهاز
                                     </button>
-                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.quickEditBulkRequest(${device.bulkRequestId})" title="تعديل سريع">
-                                        <i class="fas fa-edit"></i>
+                                    <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;"
+                                            onclick="adminManager.convertBulkRequestToSingle(${bulkRequest.id})" title="تحويل لطلب عادي">
+                                        <i class="fas fa-laptop"></i> تحويل لعادي
                                     </button>
-                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.convertBulkRequestToSingle(${device.bulkRequestId})" title="تحويل لطلب عادي">
-                                        <i class="fas fa-laptop"></i>
+                                    <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;"
+                                            onclick="adminManager.convertBulkRequestToCompany(${bulkRequest.id})" title="تحويل لطلب موظفي شركة">
+                                        <i class="fas fa-building"></i> تحويل لشركة
                                     </button>
-                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.convertBulkRequestToCompany(${device.bulkRequestId})" title="تحويل لطلب موظفي شركة">
-                                        <i class="fas fa-building"></i>
+                                    <button class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem; margin-right: auto;"
+                                            onclick="adminManager.deleteBulkRequest(${bulkRequest.id})">
+                                        <i class="fas fa-trash"></i> حذف الطلب
                                     </button>
-                                    <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.deleteBulkRequest(${device.bulkRequestId})">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
             </div>
-            <div id="bulkRequestsPagination"></div>
+        `;
+    }
+
+    /**
+     * Toggle bulk request accordion
+     */
+    toggleBulkRequestAccordion(bulkRequestId) {
+        const devicesContainer = document.getElementById(`bulk-request-devices-${bulkRequestId}`);
+        const icon = document.getElementById(`accordion-icon-${bulkRequestId}`);
+        
+        if (devicesContainer) {
+            if (devicesContainer.style.display === 'none') {
+                devicesContainer.style.display = 'block';
+                if (icon) icon.style.transform = 'rotate(180deg)';
+            } else {
+                devicesContainer.style.display = 'none';
+                if (icon) icon.style.transform = 'rotate(0deg)';
+            }
+        }
+    }
+
+    /**
+     * Edit individual device in bulk request
+     */
+    editDevice(bulkRequestId, deviceIndex) {
+        const bulkRequest = this.bulkRequests.find(r => r.id === bulkRequestId);
+        if (!bulkRequest || !bulkRequest.devices || !bulkRequest.devices[deviceIndex]) return;
+
+        const device = bulkRequest.devices[deviceIndex];
+
+        const content = `
+            <form id="editDeviceForm">
+                <div class="form-group">
+                    <label class="form-label">ماركة اللابتوب *</label>
+                    <select class="form-input" name="laptopBrand" required>
+                        <option value="Acer" ${device.laptopBrand === 'Acer' ? 'selected' : ''}>Acer</option>
+                        <option value="Apple" ${device.laptopBrand === 'Apple' ? 'selected' : ''}>Apple (MacBook)</option>
+                        <option value="Asus" ${device.laptopBrand === 'Asus' ? 'selected' : ''}>Asus</option>
+                        <option value="Dell" ${device.laptopBrand === 'Dell' ? 'selected' : ''}>Dell</option>
+                        <option value="HP" ${device.laptopBrand === 'HP' ? 'selected' : ''}>HP</option>
+                        <option value="Lenovo" ${device.laptopBrand === 'Lenovo' ? 'selected' : ''}>Lenovo</option>
+                        <option value="MSI" ${device.laptopBrand === 'MSI' ? 'selected' : ''}>MSI</option>
+                        <option value="Microsoft" ${device.laptopBrand === 'Microsoft' ? 'selected' : ''}>Microsoft Surface</option>
+                        <option value="Samsung" ${device.laptopBrand === 'Samsung' ? 'selected' : ''}>Samsung</option>
+                        <option value="Sony" ${device.laptopBrand === 'Sony' ? 'selected' : ''}>Sony Vaio</option>
+                        <option value="Toshiba" ${device.laptopBrand === 'Toshiba' ? 'selected' : ''}>Toshiba</option>
+                        <option value="LG" ${device.laptopBrand === 'LG' ? 'selected' : ''}>LG</option>
+                        <option value="Other" ${device.laptopBrand === 'Other' ? 'selected' : ''}>أخرى</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">موديل اللابتوب *</label>
+                    <input type="text" class="form-input" name="laptopModel" value="${device.laptopModel || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الرقم التسلسلي</label>
+                    <input type="text" class="form-input" name="serialNumber" value="${device.serialNumber || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">تاريخ الاستلام</label>
+                    <input type="date" class="form-input" name="receivedDate" value="${device.receivedDate ? device.receivedDate.split('T')[0] : ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الأولوية</label>
+                    <select class="form-input" name="priority">
+                        <option value="Low" ${device.priority === 'Low' ? 'selected' : ''}>منخفضة</option>
+                        <option value="Medium" ${device.priority === 'Medium' ? 'selected' : ''}>متوسطة</option>
+                        <option value="High" ${device.priority === 'High' ? 'selected' : ''}>عالية</option>
+                        <option value="Urgent" ${device.priority === 'Urgent' ? 'selected' : ''}>عاجلة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">وصف المشكلة *</label>
+                    <textarea class="form-textarea" name="problemDescription" rows="3" required>${device.problemDescription || ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الحالة</label>
+                    <select class="form-input" name="status">
+                        <option value="Received" ${device.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
+                        <option value="Waiting Inspection" ${device.status === 'Waiting Inspection' ? 'selected' : ''}>بانتظار الفحص</option>
+                        <option value="Under Maintenance" ${device.status === 'Under Maintenance' ? 'selected' : ''}>قيد الصيانة</option>
+                        <option value="Waiting Parts" ${device.status === 'Waiting Parts' ? 'selected' : ''}>بانتظار قطع الغيار</option>
+                        <option value="Ready" ${device.status === 'Ready' ? 'selected' : ''}>جاهز للتسليم</option>
+                        <option value="Delivered" ${device.status === 'Delivered' ? 'selected' : ''}>تم التسليم</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">التكلفة</label>
+                    <input type="number" class="form-input" name="cost" value="${device.cost || 0}" min="0" step="0.01">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-save"></i> حفظ التغييرات
+                </button>
+            </form>
         `;
 
-        this.renderPagination('bulkRequestsPagination', pages);
+        modalManager.create('edit-device', `تعديل الجهاز #${deviceIndex + 1}`, content);
+        modalManager.open('edit-device');
+
+        const form = document.getElementById('editDeviceForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const deviceData = {
+                laptopBrand: form.laptopBrand.value,
+                laptopModel: form.laptopModel.value,
+                serialNumber: form.serialNumber.value,
+                receivedDate: form.receivedDate.value,
+                priority: form.priority.value,
+                problemDescription: form.problemDescription.value,
+                status: form.status.value,
+                cost: parseFloat(form.cost.value) || 0
+            };
+
+            try {
+                loading.show('جاري حفظ التغييرات...');
+                
+                const response = await fetch(`/api/bulk-requests/devices/${device.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(deviceData)
+                });
+
+                if (!response.ok) throw new Error('Failed to update device');
+
+                await this.loadData();
+                this.renderBulkRequests();
+                modalManager.close('edit-device');
+                loading.hide();
+                toast.success('تم تحديث الجهاز بنجاح');
+            } catch (error) {
+                loading.hide();
+                console.error('Error updating device:', error);
+                toast.error('فشل تحديث الجهاز');
+            }
+        });
+    }
+
+    /**
+     * Add device to bulk request
+     */
+    async addDeviceToBulkRequest(bulkRequestId) {
+        const bulkRequest = this.bulkRequests.find(r => r.id === bulkRequestId);
+        if (!bulkRequest) return;
+
+        const content = `
+            <form id="addDeviceForm">
+                <div class="form-group">
+                    <label class="form-label">ماركة اللابتوب *</label>
+                    <select class="form-input" name="laptopBrand" required>
+                        <option value="">اختر ماركة اللابتوب</option>
+                        <option value="Acer">Acer</option>
+                        <option value="Apple">Apple (MacBook)</option>
+                        <option value="Asus">Asus</option>
+                        <option value="Dell">Dell</option>
+                        <option value="HP">HP</option>
+                        <option value="Lenovo">Lenovo</option>
+                        <option value="MSI">MSI</option>
+                        <option value="Microsoft">Microsoft Surface</option>
+                        <option value="Samsung">Samsung</option>
+                        <option value="Sony">Sony Vaio</option>
+                        <option value="Toshiba">Toshiba</option>
+                        <option value="LG">LG</option>
+                        <option value="Other">أخرى</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">موديل اللابتوب *</label>
+                    <input type="text" class="form-input" name="laptopModel" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الرقم التسلسلي</label>
+                    <input type="text" class="form-input" name="serialNumber">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">تاريخ الاستلام</label>
+                    <input type="date" class="form-input" name="receivedDate" value="${new Date().toISOString().split('T')[0]}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الأولوية</label>
+                    <select class="form-input" name="priority">
+                        <option value="Low">منخفضة</option>
+                        <option value="Medium" selected>متوسطة</option>
+                        <option value="High">عالية</option>
+                        <option value="Urgent">عاجلة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">وصف المشكلة *</label>
+                    <textarea class="form-textarea" name="problemDescription" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-plus"></i> إضافة الجهاز
+                </button>
+            </form>
+        `;
+
+        modalManager.create('add-device', 'إضافة جهاز جديد', content);
+        modalManager.open('add-device');
+
+        const form = document.getElementById('addDeviceForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const deviceData = {
+                laptopBrand: form.laptopBrand.value,
+                laptopModel: form.laptopModel.value,
+                serialNumber: form.serialNumber.value,
+                receivedDate: form.receivedDate.value,
+                priority: form.priority.value,
+                problemDescription: form.problemDescription.value,
+                status: 'Received',
+                cost: 0
+            };
+
+            try {
+                loading.show('جاري إضافة الجهاز...');
+                
+                const response = await fetch(`/api/bulk-requests/${bulkRequestId}/devices`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(deviceData)
+                });
+
+                if (!response.ok) throw new Error('Failed to add device');
+
+                await this.loadData();
+                this.renderBulkRequests();
+                modalManager.close('add-device');
+                loading.hide();
+                toast.success('تم إضافة الجهاز بنجاح');
+            } catch (error) {
+                loading.hide();
+                console.error('Error adding device:', error);
+                toast.error('فشل إضافة الجهاز');
+            }
+        });
     }
 
     /**

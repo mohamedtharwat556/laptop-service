@@ -897,3 +897,49 @@
         justify-content: flex-start;
     }
 }
+
+/* Bulk Request Accordion Styles */
+.bulk-request-accordion {
+    transition: var(--transition);
+}
+
+.bulk-request-accordion:hover {
+    border-color: rgba(59, 130, 246, 0.5) !important;
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.2);
+}
+
+.bulk-request-header {
+    transition: var(--transition);
+}
+
+.bulk-request-header:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.15)) !important;
+}
+
+.bulk-request-devices {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.device-card {
+    transition: var(--transition);
+}
+
+.device-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.accordion-icon {
+    transition: transform 0.3s ease;
+}
