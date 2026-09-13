@@ -70,6 +70,9 @@ class AdminManager {
             await this.loadData();
             console.log('✅ Data loaded successfully');
             
+            // Update today's counter
+            this.updateTodayCounter();
+            
             console.log('📑 Switching to dashboard section...');
             await this.switchSection('dashboard');
             
@@ -230,6 +233,9 @@ class AdminManager {
             this.checkForNewRequests(oldRequests);
             this.checkForNewBulkRequests(oldBulkRequests);
             this.checkForNewCompanyRequests(oldCompanyRequests);
+            
+            // Update today's counter
+            this.updateTodayCounter();
             
             if (this.currentSection === 'dashboard') {
                 this.renderStats();
@@ -3992,10 +3998,25 @@ class AdminManager {
         document.getElementById('brandFilter').value = 'All';
         document.getElementById('priorityFilter').value = 'All';
         
+        // Clear special filter
+        this._specialFilter = null;
+        
         this.currentPage = 1;
         this.renderRequests();
         
         toast.success('تم عرض طلبات اليوم');
+    }
+
+    /**
+     * Update today's requests counter in header
+     */
+    updateTodayCounter() {
+        const today = new Date().toDateString();
+        const todayCount = this.requests.filter(r => new Date(r.createdAt).toDateString() === today).length;
+        const todayCountElement = document.getElementById('todayCount');
+        if (todayCountElement) {
+            todayCountElement.textContent = todayCount;
+        }
     }
 
     paginate(data) {
@@ -4039,14 +4060,20 @@ class AdminManager {
             setTimeout(() => {
                 const statusFilter = document.getElementById('statusFilter');
                 if (statusFilter) {
-                    // Map special filters to select values
-                    if (filter === 'open' || filter === 'today' || filter === 'completed' || filter === 'maintenance' || filter === 'received') {
+                    // Handle 'today' filter by setting date range
+                    if (filter === 'today') {
+                        const today = new Date().toISOString().slice(0, 10);
+                        document.getElementById('dateFrom').value = today;
+                        document.getElementById('dateTo').value = today;
+                        statusFilter.value = 'All';
+                        this._specialFilter = null;
+                    } else if (filter === 'open' || filter === 'completed' || filter === 'maintenance' || filter === 'received') {
                         statusFilter.value = 'All'; // will be handled by filterRequests
+                        this._specialFilter = filter;
                     } else {
                         statusFilter.value = filter;
+                        this._specialFilter = null;
                     }
-                    // Store special filter
-                    this._specialFilter = (filter === 'open' || filter === 'today' || filter === 'completed' || filter === 'maintenance' || filter === 'received') ? filter : null;
                     this.renderRequests();
                 }
             }, 50);
