@@ -89,6 +89,12 @@
                     </a>
                 </li>
                 <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" onclick="adminManager.showTodayRequests(); return false;">
+                        <i class="fas fa-calendar-day"></i>
+                        طلبات اليوم
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
                     <a href="#" class="sidebar-nav-link" data-section="bulk-requests">
                         <i class="fas fa-boxes"></i>
                         طلبات الجملة
@@ -131,11 +137,6 @@
         <main class="dashboard-main animate__animated animate__fadeInUp">
             <div class="dashboard-header" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 1.5rem 0;">
                 <h1 style="margin: 0; font-size: 1.75rem;">لوحة التحكم</h1>
-                
-                <!-- Today's Requests Button -->
-                <button onclick="adminManager.showTodayRequests()" class="btn btn-success" style="padding: 0.75rem 1.5rem; font-size: 0.9rem; font-weight: 600; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
-                    <i class="fas fa-calendar-day"></i> طلبات اليوم
-                </button>
                 
                 <!-- Global Search -->
                 <div style="flex: 1; max-width: 600px; margin-left: auto;">
@@ -186,7 +187,6 @@
                         <input type="text" id="requestSearch" class="form-input search-input" placeholder="البحث برقم الهاتف، الاسم، الماركة...">
                         <select id="statusFilter" class="form-select filter-select">
                             <option value="All">جميع الحالات</option>
-                            <option value="today">اليوم</option>
                             <option value="yesterday">أمس</option>
                             <option value="week">آخر أسبوع</option>
                             <option value="month">آخر شهر</option>

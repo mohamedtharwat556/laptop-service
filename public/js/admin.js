@@ -3917,75 +3917,6 @@ class AdminManager {
             filtered = filtered.filter(r => maintenanceStatuses.includes(r.status));
         } else if (activeFilter === 'received') {
             filtered = filtered.filter(r => r.status === 'Received');
-        } else if (activeFilter === 'today') {
-            // Include all request types for today's filter - rebuilt from scratch
-            // Use local date string comparison to avoid timezone issues
-            const today = new Date().toDateString();
-
-            console.log('📅 Today filter - Today date (local):', today);
-            console.log('📅 Total normal requests:', this.requests.length);
-
-            // Get all today's requests from all types
-            const allTodayRequests = [];
-
-            // Normal requests - log ALL requests to debug
-            this.requests.forEach(r => {
-                const requestDate = new Date(r.createdAt).toDateString();
-                console.log('📅 Normal request:', r.requestNumber, 'Date:', r.createdAt, 'Date string:', requestDate, 'Matches today:', requestDate === today);
-                if (requestDate === today) {
-                    console.log('📅 Adding normal request:', r.requestNumber, r.createdAt);
-                    allTodayRequests.push({
-                        ...r,
-                        isBulk: false,
-                        isCompany: false
-                    });
-                }
-            });
-
-            // Bulk requests
-            this.bulkRequests.forEach(r => {
-                const requestDate = new Date(r.createdAt).toDateString();
-                if (requestDate === today) {
-                    console.log('📅 Adding bulk request:', r.requestNumber, r.createdAt);
-                    allTodayRequests.push({
-                        ...r,
-                        requestNumber: r.requestNumber,
-                        fullName: r.customerName,
-                        phone: r.customerPhone,
-                        laptopBrand: r.devices?.[0]?.laptopBrand || '',
-                        laptopModel: r.devices?.[0]?.laptopModel || '',
-                        problemDescription: r.devices?.[0]?.problemDescription || '',
-                        status: r.status,
-                        createdAt: r.createdAt,
-                        isBulk: true,
-                        isCompany: false
-                    });
-                }
-            });
-
-            // Company requests
-            this.companyRequests.forEach(r => {
-                const requestDate = new Date(r.createdAt).toDateString();
-                if (requestDate === today) {
-                    console.log('📅 Adding company request:', r.requestNumber, r.createdAt);
-                    allTodayRequests.push({
-                        ...r,
-                        requestNumber: r.requestNumber,
-                        fullName: r.companyName || r.full_name || r.fullName,
-                        phone: r.companyPhone || r.phone,
-                        laptopBrand: r.laptopBrand || r.laptop_brand,
-                        laptopModel: r.laptopModel || r.laptop_model,
-                        problemDescription: r.problemDescription || r.problem_description,
-                        status: r.status,
-                        createdAt: r.createdAt,
-                        isBulk: false,
-                        isCompany: true
-                    });
-                }
-            });
-
-            console.log('📅 Total today requests:', allTodayRequests.length);
-            filtered = allTodayRequests;
         } else if (activeFilter === 'yesterday') {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
@@ -4050,13 +3981,16 @@ class AdminManager {
         // Switch to requests section
         this.switchSection('requests');
         
-        // Set filter to today
-        document.getElementById('statusFilter').value = 'today';
+        // Set date range to today
+        const today = new Date().toISOString().slice(0, 10);
+        document.getElementById('dateFrom').value = today;
+        document.getElementById('dateTo').value = today;
+        
+        // Clear other filters
+        document.getElementById('statusFilter').value = 'All';
         document.getElementById('requestSearch').value = '';
         document.getElementById('brandFilter').value = 'All';
         document.getElementById('priorityFilter').value = 'All';
-        document.getElementById('dateFrom').value = '';
-        document.getElementById('dateTo').value = '';
         
         this.currentPage = 1;
         this.renderRequests();
