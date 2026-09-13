@@ -4011,8 +4011,24 @@ class AdminManager {
      * Update today's requests counter in header
      */
     updateTodayCounter() {
-        const today = new Date().toDateString();
-        const todayCount = this.requests.filter(r => new Date(r.createdAt).toDateString() === today).length;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Count today's requests from all types (matching calculateStatistics logic)
+        const todayNormalOrders = this.requests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+        const todayBulkOrders = this.bulkRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+        const todayCompanyOrders = this.companyRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+        const todayCount = todayNormalOrders.length + todayBulkOrders.length + todayCompanyOrders.length;
+
         const todayCountElement = document.getElementById('todayCount');
         if (todayCountElement) {
             todayCountElement.textContent = todayCount;
