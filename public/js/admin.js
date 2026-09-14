@@ -1885,7 +1885,7 @@ class AdminManager {
                 r.requestNumber.toLowerCase().includes(searchTerm) ||
                 r.customerName.toLowerCase().includes(searchTerm) ||
                 r.customerPhone.includes(searchTerm) ||
-                (r.devices && r.devices.some(d => 
+                (r.devices && r.devices.some(d =>
                     (d.laptopBrand && d.laptopBrand.toLowerCase().includes(searchTerm)) ||
                     (d.laptopModel && d.laptopModel.toLowerCase().includes(searchTerm)) ||
                     (d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm))
@@ -1894,7 +1894,21 @@ class AdminManager {
         }
 
         if (statusFilter) {
-            filtered = filtered.filter(r => r.status === statusFilter);
+            if (statusFilter === 'yesterday') {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                filtered = filtered.filter(r => new Date(r.createdAt).toDateString() === yesterday.toDateString());
+            } else if (statusFilter === 'week') {
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                filtered = filtered.filter(r => new Date(r.createdAt) >= weekAgo);
+            } else if (statusFilter === 'month') {
+                const monthAgo = new Date();
+                monthAgo.setMonth(monthAgo.getMonth() - 1);
+                filtered = filtered.filter(r => new Date(r.createdAt) >= monthAgo);
+            } else {
+                filtered = filtered.filter(r => r.status === statusFilter);
+            }
         }
 
         return filtered;
@@ -2762,7 +2776,7 @@ class AdminManager {
 
         // Search filter
         if (searchTerm) {
-            filtered = filtered.filter(r => 
+            filtered = filtered.filter(r =>
                 ((r.full_name || r.fullName) && (r.full_name || r.fullName).toLowerCase().includes(searchTerm)) ||
                 (r.phone && r.phone.includes(searchTerm)) ||
                 ((r.request_number || r.requestNumber) && (r.request_number || r.requestNumber).toLowerCase().includes(searchTerm)) ||
@@ -2781,7 +2795,21 @@ class AdminManager {
 
         // Status filter
         if (statusFilter) {
-            filtered = filtered.filter(r => r.status === statusFilter);
+            if (statusFilter === 'yesterday') {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                filtered = filtered.filter(r => new Date(r.createdAt || r.created_at).toDateString() === yesterday.toDateString());
+            } else if (statusFilter === 'week') {
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                filtered = filtered.filter(r => new Date(r.createdAt || r.created_at) >= weekAgo);
+            } else if (statusFilter === 'month') {
+                const monthAgo = new Date();
+                monthAgo.setMonth(monthAgo.getMonth() - 1);
+                filtered = filtered.filter(r => new Date(r.createdAt || r.created_at) >= monthAgo);
+            } else {
+                filtered = filtered.filter(r => r.status === statusFilter);
+            }
         }
 
         return filtered;
