@@ -157,17 +157,6 @@ class AdminManager {
                 });
             }
 
-            // Close dropdown when clicking outside
-            document.addEventListener('click', (event) => {
-                const dropdown = document.getElementById('requestStatusDropdown');
-                const filterBtn = document.querySelector('.stat-filter-btn');
-                if (dropdown && filterBtn) {
-                    if (!dropdown.contains(event.target) && !filterBtn.contains(event.target)) {
-                        dropdown.style.display = 'none';
-                    }
-                }
-            });
-
             // Setup bulk requests search and filters
             const bulkSearchInput = document.getElementById('bulkSearchInput');
             const bulkStatusFilter = document.getElementById('bulkStatusFilter');
@@ -934,25 +923,25 @@ class AdminManager {
                         <i class="fas fa-filter"></i>
                     </button>
                     <div id="requestStatusDropdown" class="stat-dropdown" style="display: none;">
-                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','All');">
+                        <div class="dropdown-item" onclick="adminManager.selectRequestStatus('All')">
                             <i class="fas fa-list"></i> جميع الطلبات
                         </div>
-                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','received');">
+                        <div class="dropdown-item" onclick="adminManager.selectRequestStatus('Received')">
                             <i class="fas fa-check-circle"></i> تم الاستلام
                         </div>
-                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','waiting');">
+                        <div class="dropdown-item" onclick="adminManager.selectRequestStatus('Waiting Inspection')">
                             <i class="fas fa-clock"></i> بانتظار الفحص
                         </div>
-                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','maintenance');">
+                        <div class="dropdown-item" onclick="adminManager.selectRequestStatus('Under Maintenance')">
                             <i class="fas fa-tools"></i> تحت الصيانة
                         </div>
-                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','waiting_parts');">
+                        <div class="dropdown-item" onclick="adminManager.selectRequestStatus('Waiting Parts')">
                             <i class="fas fa-cogs"></i> بانتظار قطع الغيار
                         </div>
-                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','ready');">
+                        <div class="dropdown-item" onclick="adminManager.selectRequestStatus('Ready')">
                             <i class="fas fa-check-double"></i> جاهز للتسليم
                         </div>
-                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','delivered');">
+                        <div class="dropdown-item" onclick="adminManager.selectRequestStatus('Delivered')">
                             <i class="fas fa-hand-holding"></i> تم التسليم
                         </div>
                     </div>
@@ -988,12 +977,38 @@ class AdminManager {
         event.stopPropagation();
         const dropdown = document.getElementById('requestStatusDropdown');
         if (dropdown) {
-            console.log('Toggling dropdown, current display:', dropdown.style.display);
             dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-            console.log('New display:', dropdown.style.display);
-        } else {
-            console.error('Dropdown element not found!');
         }
+    }
+
+    /**
+     * Select request status and navigate
+     */
+    selectRequestStatus(status) {
+        const dropdown = document.getElementById('requestStatusDropdown');
+        if (dropdown) {
+            dropdown.style.display = 'none';
+        }
+        
+        // Map status to filter
+        let filter = 'All';
+        if (status === 'All') {
+            filter = 'All';
+        } else if (status === 'Received') {
+            filter = 'received';
+        } else if (status === 'Waiting Inspection') {
+            filter = 'waiting';
+        } else if (status === 'Under Maintenance') {
+            filter = 'maintenance';
+        } else if (status === 'Waiting Parts') {
+            filter = 'waiting_parts';
+        } else if (status === 'Ready') {
+            filter = 'ready';
+        } else if (status === 'Delivered') {
+            filter = 'delivered';
+        }
+        
+        this.openStatFilter('requests', filter);
     }
 
     /**
