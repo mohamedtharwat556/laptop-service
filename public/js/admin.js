@@ -157,6 +157,17 @@ class AdminManager {
                 });
             }
 
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (event) => {
+                const dropdown = document.getElementById('requestStatusDropdown');
+                const filterBtn = document.querySelector('.stat-filter-btn');
+                if (dropdown && filterBtn) {
+                    if (!dropdown.contains(event.target) && !filterBtn.contains(event.target)) {
+                        dropdown.style.display = 'none';
+                    }
+                }
+            });
+
             // Setup bulk requests search and filters
             const bulkSearchInput = document.getElementById('bulkSearchInput');
             const bulkStatusFilter = document.getElementById('bulkStatusFilter');
