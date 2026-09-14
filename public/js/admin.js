@@ -901,26 +901,6 @@ class AdminManager {
 
         statsContainer.innerHTML = `
             <div class="stats-grid">
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','All')" title="عرض جميع الطلبات">
-                    <div class="stat-icon">
-                        <i class="fas fa-clipboard-list"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.totalRequests}</h3>
-                        <p>إجمالي الطلبات</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','completed')" title="عرض الطلبات المكتملة">
-                    <div class="stat-icon success">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.completedRequests}</h3>
-                        <p>مكتملة</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
                 <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','today')" title="عرض طلبات اليوم">
                     <div class="stat-icon">
                         <i class="fas fa-shopping-bag"></i>
@@ -931,13 +911,13 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('company-requests')" title="عرض موظفي الشركة">
-                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2);">
-                        <i class="fas fa-building" style="color: #10b981;"></i>
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','All')" title="عرض الطلبات العادية">
+                    <div class="stat-icon">
+                        <i class="fas fa-clipboard-list"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>${stats.companyTotalRequests}</h3>
-                        <p>موظفي الشركة</p>
+                        <h3>${stats.totalRequests}</h3>
+                        <p>طلبات العادية</p>
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
@@ -951,73 +931,13 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','maintenance')" title="عرض اللابات تحت الصيانة - الطلبات العادية">
-                    <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2);">
-                        <i class="fas fa-tools" style="color: #3b82f6;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.normalLaptopsUnderMaintenance}</h3>
-                        <p>لابات تحت الصيانة (عادي)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('company-requests','maintenance')" title="عرض اللابات تحت الصيانة - موظفي الشركة">
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('company-requests')" title="عرض موظفي الشركة">
                     <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2);">
-                        <i class="fas fa-tools" style="color: #10b981;"></i>
+                        <i class="fas fa-building" style="color: #10b981;"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>${stats.companyLaptopsUnderMaintenance}</h3>
-                        <p>لابات تحت الصيانة (شركة)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('bulk-requests','maintenance')" title="عرض اللابات تحت الصيانة - طلبات الجملة">
-                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2);">
-                        <i class="fas fa-tools" style="color: #f59e0b;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.bulkLaptopsUnderMaintenance}</h3>
-                        <p>لابات تحت الصيانة (جملة)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','received')" title="تم الاستلام - الطلبات العادية">
-                    <div class="stat-icon" style="background: rgba(34, 197, 94, 0.2);">
-                        <i class="fas fa-check-circle" style="color: #22c55e;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.normalLaptopsReceived}</h3>
-                        <p>تم الاستلام (عادي)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('company-requests','received')" title="تم الاستلام - موظفي الشركة">
-                    <div class="stat-icon" style="background: rgba(34, 197, 94, 0.2);">
-                        <i class="fas fa-check-circle" style="color: #22c55e;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.companyLaptopsReceived}</h3>
-                        <p>تم الاستلام (شركة)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('bulk-requests','received')" title="تم الاستلام - طلبات الجملة">
-                    <div class="stat-icon" style="background: rgba(34, 197, 94, 0.2);">
-                        <i class="fas fa-check-circle" style="color: #22c55e;"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.bulkLaptopsReceived}</h3>
-                        <p>تم الاستلام (جملة)</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('users','All')" title="عرض المستخدمين">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${this.users.length}</h3>
-                        <p>إجمالي المستخدمين</p>
+                        <h3>${stats.companyTotalRequests}</h3>
+                        <p>موظفي الشركة</p>
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
