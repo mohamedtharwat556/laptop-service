@@ -1919,10 +1919,14 @@ class AdminManager {
             console.log('🔍 Filtering bulk requests for today:', todayString);
             console.log('🔍 Total bulk requests before filter:', filtered.length);
             
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
             filtered = filtered.filter(r => {
-                const requestDateString = new Date(r.createdAt).toISOString().slice(0, 10);
-                const isToday = requestDateString === todayString;
-                console.log(`🔍 Request ${r.requestNumber}: ${requestDateString} vs ${todayString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+                const requestDate = new Date(r.createdAt || r.created_at);
+                requestDate.setHours(0, 0, 0, 0);
+                const isToday = requestDate.getTime() === today.getTime();
+                console.log(`🔍 Request ${r.requestNumber}: ${requestDate.toISOString().slice(0, 10)} vs ${todayString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
                 return isToday;
             });
             
@@ -2836,11 +2840,14 @@ class AdminManager {
             console.log('🔍 Filtering company requests for today:', todayString);
             console.log('🔍 Total company requests before filter:', filtered.length);
             
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
             filtered = filtered.filter(r => {
                 const requestDate = new Date(r.createdAt || r.created_at);
-                const requestDateString = requestDate.toISOString().slice(0, 10);
-                const isToday = requestDateString === todayString;
-                console.log(`🔍 Request ${r.requestNumber}: ${requestDateString} vs ${todayString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+                requestDate.setHours(0, 0, 0, 0);
+                const isToday = requestDate.getTime() === today.getTime();
+                console.log(`🔍 Request ${r.requestNumber}: ${requestDate.toISOString().slice(0, 10)} vs ${todayString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
                 return isToday;
             });
             
@@ -4250,14 +4257,21 @@ class AdminManager {
         } else if (activeFilter === 'yesterday') {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
-            filtered = filtered.filter(r => new Date(r.createdAt).toDateString() === yesterday.toDateString());
+            yesterday.setHours(0, 0, 0, 0);
+            filtered = filtered.filter(r => {
+                const requestDate = new Date(r.createdAt);
+                requestDate.setHours(0, 0, 0, 0);
+                return requestDate.getTime() === yesterday.getTime();
+            });
         } else if (activeFilter === 'week') {
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);
+            weekAgo.setHours(0, 0, 0, 0);
             filtered = filtered.filter(r => new Date(r.createdAt) >= weekAgo);
         } else if (activeFilter === 'month') {
             const monthAgo = new Date();
             monthAgo.setMonth(monthAgo.getMonth() - 1);
+            monthAgo.setHours(0, 0, 0, 0);
             filtered = filtered.filter(r => new Date(r.createdAt) >= monthAgo);
         } else if (activeFilter === 'open') {
             filtered = filtered.filter(r => r.status !== 'Delivered');
@@ -4279,7 +4293,9 @@ class AdminManager {
 
         // Date range filter
         if (dateFrom) {
-            filtered = filtered.filter(r => new Date(r.createdAt) >= new Date(dateFrom));
+            const fromDate = new Date(dateFrom);
+            fromDate.setHours(0, 0, 0, 0);
+            filtered = filtered.filter(r => new Date(r.createdAt) >= fromDate);
         }
         if (dateTo) {
             const toDate = new Date(dateTo);
@@ -4357,9 +4373,7 @@ class AdminManager {
         } else if (type === 'bulk') {
             console.log('🔍 Switching to bulk requests section');
             this.switchSection('bulk-requests');
-            // Use today's date filter instead of yesterday
-            const today = new Date().toISOString().slice(0, 10);
-            // Clear existing filter and manually filter for today
+            // Use today's date filter
             document.getElementById('bulkStatusFilter').value = '';
             document.getElementById('bulkSearchInput').value = '';
             this._bulkTodayFilter = today;
@@ -4371,9 +4385,7 @@ class AdminManager {
         } else if (type === 'company') {
             console.log('🔍 Switching to company requests section');
             this.switchSection('company-requests');
-            // Use today's date filter instead of yesterday
-            const today = new Date().toISOString().slice(0, 10);
-            // Clear existing filter and manually filter for today
+            // Use today's date filter
             document.getElementById('companyStatusFilter').value = '';
             document.getElementById('companySearchInput').value = '';
             this._companyTodayFilter = today;
