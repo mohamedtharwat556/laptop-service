@@ -1896,15 +1896,23 @@ class AdminManager {
         if (statusFilter) {
             if (statusFilter === 'yesterday') {
                 const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                filtered = filtered.filter(r => new Date(r.createdAt).toDateString() === yesterday.toDateString());
+                yesterday.setHours(0, 0, 0, 0);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                filtered = filtered.filter(r => {
+                    const requestDate = new Date(r.createdAt);
+                    requestDate.setHours(0, 0, 0, 0);
+                    return requestDate.getTime() === yesterday.getTime();
+                });
             } else if (statusFilter === 'week') {
                 const weekAgo = new Date();
                 weekAgo.setDate(weekAgo.getDate() - 7);
+                weekAgo.setHours(0, 0, 0, 0);
                 filtered = filtered.filter(r => new Date(r.createdAt) >= weekAgo);
             } else if (statusFilter === 'month') {
                 const monthAgo = new Date();
                 monthAgo.setMonth(monthAgo.getMonth() - 1);
+                monthAgo.setHours(0, 0, 0, 0);
                 filtered = filtered.filter(r => new Date(r.createdAt) >= monthAgo);
             } else {
                 filtered = filtered.filter(r => r.status === statusFilter);
@@ -2797,15 +2805,23 @@ class AdminManager {
         if (statusFilter) {
             if (statusFilter === 'yesterday') {
                 const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                filtered = filtered.filter(r => new Date(r.createdAt || r.created_at).toDateString() === yesterday.toDateString());
+                yesterday.setHours(0, 0, 0, 0);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                filtered = filtered.filter(r => {
+                    const requestDate = new Date(r.createdAt || r.created_at);
+                    requestDate.setHours(0, 0, 0, 0);
+                    return requestDate.getTime() === yesterday.getTime();
+                });
             } else if (statusFilter === 'week') {
                 const weekAgo = new Date();
                 weekAgo.setDate(weekAgo.getDate() - 7);
+                weekAgo.setHours(0, 0, 0, 0);
                 filtered = filtered.filter(r => new Date(r.createdAt || r.created_at) >= weekAgo);
             } else if (statusFilter === 'month') {
                 const monthAgo = new Date();
                 monthAgo.setMonth(monthAgo.getMonth() - 1);
+                monthAgo.setHours(0, 0, 0, 0);
                 filtered = filtered.filter(r => new Date(r.createdAt || r.created_at) >= monthAgo);
             } else {
                 filtered = filtered.filter(r => r.status === statusFilter);
