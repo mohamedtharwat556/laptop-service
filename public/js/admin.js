@@ -1915,19 +1915,14 @@ class AdminManager {
 
         // Handle today's filter
         if (this._bulkTodayFilter) {
-            const today = new Date(this._bulkTodayFilter);
-            today.setHours(0, 0, 0, 0);
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            console.log('🔍 Filtering bulk requests for today:', this._bulkTodayFilter);
-            console.log('🔍 Today date:', today);
-            console.log('🔍 Tomorrow date:', tomorrow);
+            const todayString = this._bulkTodayFilter;
+            console.log('🔍 Filtering bulk requests for today:', todayString);
             console.log('🔍 Total bulk requests before filter:', filtered.length);
             
             filtered = filtered.filter(r => {
-                const requestDate = new Date(r.createdAt);
-                const isToday = requestDate >= today && requestDate < tomorrow;
-                console.log(`🔍 Request ${r.requestNumber}: ${requestDate} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+                const requestDateString = new Date(r.createdAt).toISOString().slice(0, 10);
+                const isToday = requestDateString === todayString;
+                console.log(`🔍 Request ${r.requestNumber}: ${requestDateString} vs ${todayString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
                 return isToday;
             });
             
@@ -2837,19 +2832,15 @@ class AdminManager {
 
         // Handle today's filter
         if (this._companyTodayFilter) {
-            const today = new Date(this._companyTodayFilter);
-            today.setHours(0, 0, 0, 0);
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            console.log('🔍 Filtering company requests for today:', this._companyTodayFilter);
-            console.log('🔍 Today date:', today);
-            console.log('🔍 Tomorrow date:', tomorrow);
+            const todayString = this._companyTodayFilter;
+            console.log('🔍 Filtering company requests for today:', todayString);
             console.log('🔍 Total company requests before filter:', filtered.length);
             
             filtered = filtered.filter(r => {
                 const requestDate = new Date(r.createdAt || r.created_at);
-                const isToday = requestDate >= today && requestDate < tomorrow;
-                console.log(`🔍 Request ${r.requestNumber}: ${requestDate} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+                const requestDateString = requestDate.toISOString().slice(0, 10);
+                const isToday = requestDateString === todayString;
+                console.log(`🔍 Request ${r.requestNumber}: ${requestDateString} vs ${todayString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
                 return isToday;
             });
             
@@ -4440,30 +4431,29 @@ class AdminManager {
      * Update today's requests counter in header
      */
     updateTodayCounter() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        console.log('🔍 Today date for counter:', today);
+        const todayString = new Date().toISOString().slice(0, 10);
+        console.log('🔍 Today date string for counter:', todayString);
         console.log('🔍 Total requests:', this.requests.length);
         console.log('🔍 Total bulk requests:', this.bulkRequests.length);
         console.log('🔍 Total company requests:', this.companyRequests.length);
 
-        // Count today's requests from all types separately
+        // Count today's requests from all types separately using date string comparison
         const todayNormalOrders = this.requests.filter(r => {
-            const requestDate = new Date(r.createdAt);
-            const isToday = requestDate >= today;
-            console.log(`🔍 Normal request ${r.requestNumber}: ${requestDate} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+            const requestDateString = new Date(r.createdAt).toISOString().slice(0, 10);
+            const isToday = requestDateString === todayString;
+            console.log(`🔍 Normal request ${r.requestNumber}: ${requestDateString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
             return isToday;
         });
         const todayBulkOrders = this.bulkRequests.filter(r => {
-            const requestDate = new Date(r.createdAt);
-            const isToday = requestDate >= today;
-            console.log(`🔍 Bulk request ${r.requestNumber}: ${requestDate} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+            const requestDateString = new Date(r.createdAt).toISOString().slice(0, 10);
+            const isToday = requestDateString === todayString;
+            console.log(`🔍 Bulk request ${r.requestNumber}: ${requestDateString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
             return isToday;
         });
         const todayCompanyOrders = this.companyRequests.filter(r => {
-            const requestDate = new Date(r.createdAt);
-            const isToday = requestDate >= today;
-            console.log(`🔍 Company request ${r.requestNumber}: ${requestDate} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+            const requestDateString = new Date(r.createdAt).toISOString().slice(0, 10);
+            const isToday = requestDateString === todayString;
+            console.log(`🔍 Company request ${r.requestNumber}: ${requestDateString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
             return isToday;
         });
 
