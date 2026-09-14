@@ -470,6 +470,57 @@ router.put('/devices/:id', async (req, res) => {
     }
 });
 
+// Delete individual device from bulk request
+router.delete('/devices/:id', async (req, res) => {
+    try {
+        console.log('🗑️ DELETE /api/bulk-requests/devices/:id - Device ID:', req.params.id);
+        
+        // Get device info before deletion
+        const { data: device, error: fetchError } = await supabase
+            .from('bulk_request_devices')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (fetchError) throw fetchError;
+        if (!device) return res.status(404).json({ error: 'Device not found' });
+
+        const bulkRequestId = device.bulk_request_id;
+
+        // Delete the device
+        const { error: deleteError } = await supabase
+            .from('bulk_request_devices')
+            .delete()
+            .eq('id', req.params.id);
+
+        if (deleteError) throw deleteError;
+
+        // Update device_count in bulk_requests
+        const { data: updatedBulkRequest, error: updateError } = await supabase
+            .from('bulk_requests')
+            .update({
+                device_count: Math.max(0, device.device_count - 1),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', bulkRequestId)
+            .select();
+
+        if (updateError) {
+            console.error('Error updating device count:', updateError);
+            // Continue anyway - device was deleted successfully
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'تم حذف الجهاز بنجاح',
+            deviceCount: updatedBulkRequest?.[0]?.device_count || 0
+        });
+    } catch (error) {
+        console.error('Error deleting device:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Update bulk request
 router.put('/:id', async (req, res) => {
     try {

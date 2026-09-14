@@ -2023,6 +2023,10 @@ class AdminManager {
                                                         onclick="adminManager.editDevice(${bulkRequest.id}, ${index})" title="تعديل الجهاز">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
+                                                <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
+                                                        onclick="adminManager.deleteDevice(${bulkRequest.id}, ${device.id}, ${index})" title="حذف الجهاز">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -2088,6 +2092,78 @@ class AdminManager {
                 if (icon) icon.style.transform = 'rotate(0deg)';
             }
         }
+    }
+
+    /**
+     * Delete individual device from bulk request
+     */
+    async deleteDevice(bulkRequestId, deviceId, deviceIndex) {
+        const bulkRequest = this.bulkRequests.find(r => r.id === bulkRequestId);
+        if (!bulkRequest || !bulkRequest.devices || !bulkRequest.devices[deviceIndex]) return;
+
+        const device = bulkRequest.devices[deviceIndex];
+        const deviceCount = bulkRequest.devices.length;
+
+        // Don't allow deletion if it's the last device
+        if (deviceCount <= 1) {
+            toast.error('لا يمكن حذف الجهاز الأخير. استخدم زر حذف الطلب بالكامل.');
+            return;
+        }
+
+        // Show confirmation modal
+        const content = `
+            <div style="text-align: center; padding: 1rem;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #f59e0b; margin-bottom: 1rem;"></i>
+                <h3 style="margin-bottom: 0.5rem;">تأكيد حذف الجهاز</h3>
+                <p style="color: #94a3b8; margin-bottom: 1.5rem;">
+                    هل أنت متأكد من حذف الجهاز التالي؟
+                </p>
+                <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <div style="font-weight: 600;">${device.laptopBrand} ${device.laptopModel || ''}</div>
+                    ${device.serialNumber ? `<div style="font-size: 0.875rem; color: #94a3b8;" dir="ltr">SN: ${device.serialNumber}</div>` : ''}
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <button id="confirmDeleteDevice" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> نعم، احذف
+                    </button>
+                    <button onclick="modalManager.close('delete-device')" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> إلغاء
+                    </button>
+                </div>
+            </div>
+        `;
+
+        modalManager.create('delete-device', 'حذف الجهاز', content);
+        modalManager.open('delete-device');
+
+        document.getElementById('confirmDeleteDevice').addEventListener('click', async () => {
+            try {
+                loading.show('جاري حذف الجهاز...');
+
+                const response = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    throw new Error('Failed to delete device');
+                }
+
+                const result = await response.json();
+                console.log('Device deleted:', result);
+
+                await this.loadData();
+                this.renderBulkRequests();
+                modalManager.close('delete-device');
+                loading.hide();
+                toast.success('تم حذف الجهاز بنجاح');
+            } catch (error) {
+                loading.hide();
+                console.error('Error deleting device:', error);
+                toast.error('فشل حذف الجهاز: ' + error.message);
+            }
+        });
     }
 
     /**
