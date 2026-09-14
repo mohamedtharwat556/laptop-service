@@ -4251,30 +4251,110 @@ class AdminManager {
     }
 
     /**
-     * Show today's requests
+     * Show today's requests - shows all types (normal, bulk, company)
      */
     showTodayRequests() {
-        // Switch to requests section
-        this.switchSection('requests');
-        
-        // Set date range to today
         const today = new Date().toISOString().slice(0, 10);
-        document.getElementById('dateFrom').value = today;
-        document.getElementById('dateTo').value = today;
         
-        // Clear other filters
-        document.getElementById('statusFilter').value = 'All';
-        document.getElementById('requestSearch').value = '';
-        document.getElementById('brandFilter').value = 'All';
-        document.getElementById('priorityFilter').value = 'All';
+        // Show a dialog to choose which type to display
+        const content = `
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <button onclick="adminManager.showTodayByType('normal')" class="btn btn-primary" style="padding: 1rem;">
+                    <i class="fas fa-laptop"></i> طلبات الصيانة العادية
+                </button>
+                <button onclick="adminManager.showTodayByType('bulk')" class="btn btn-warning" style="padding: 1rem;">
+                    <i class="fas fa-boxes"></i> طلبات الجملة
+                </button>
+                <button onclick="adminManager.showTodayByType('company')" class="btn btn-info" style="padding: 1rem;">
+                    <i class="fas fa-building"></i> طلبات موظفي الشركة
+                </button>
+                <button onclick="adminManager.showTodayAll()" class="btn btn-success" style="padding: 1rem;">
+                    <i class="fas fa-th-large"></i> عرض جميع الأنواع
+                </button>
+            </div>
+        `;
         
-        // Clear special filter
-        this._specialFilter = null;
+        modalManager.create('today-requests', 'طلبات اليوم', content);
+        modalManager.open('today-requests');
+    }
+
+    /**
+     * Show today's requests by specific type
+     */
+    showTodayByType(type) {
+        modalManager.close('today-requests');
         
-        this.currentPage = 1;
-        this.renderRequests();
+        const today = new Date().toISOString().slice(0, 10);
         
-        toast.success('تم عرض طلبات اليوم');
+        if (type === 'normal') {
+            this.switchSection('requests');
+            document.getElementById('dateFrom').value = today;
+            document.getElementById('dateTo').value = today;
+            document.getElementById('statusFilter').value = 'All';
+            document.getElementById('requestSearch').value = '';
+            document.getElementById('brandFilter').value = 'All';
+            document.getElementById('priorityFilter').value = 'All';
+            this._specialFilter = null;
+            this.currentPage = 1;
+            this.renderRequests();
+            toast.success('تم عرض طلبات الصيانة العادية لليوم');
+        } else if (type === 'bulk') {
+            this.switchSection('bulk-requests');
+            document.getElementById('bulkStatusFilter').value = 'yesterday';
+            document.getElementById('bulkSearchInput').value = '';
+            this.currentPage = 1;
+            this.renderBulkRequests();
+            toast.success('تم عرض طلبات الجملة لليوم');
+        } else if (type === 'company') {
+            this.switchSection('company-requests');
+            document.getElementById('companyStatusFilter').value = 'yesterday';
+            document.getElementById('companySearchInput').value = '';
+            this.currentPage = 1;
+            this.renderCompanyRequests();
+            toast.success('تم عرض طلبات موظفي الشركة لليوم');
+        }
+    }
+
+    /**
+     * Show all today's requests across all types
+     */
+    showTodayAll() {
+        modalManager.close('today-requests');
+        
+        // Display a summary of all today's requests
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const todayNormal = this.requests.filter(r => new Date(r.createdAt) >= today);
+        const todayBulk = this.bulkRequests.filter(r => new Date(r.createdAt) >= today);
+        const todayCompany = this.companyRequests.filter(r => new Date(r.createdAt) >= today);
+        
+        const content = `
+            <div style="text-align: center;">
+                <h3 style="margin-bottom: 1.5rem;">ملخص طلبات اليوم</h3>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <div style="font-size: 2rem; color: #3b82f6; font-weight: 700;">${todayNormal.length}</div>
+                        <div style="color: #94a3b8; font-size: 0.875rem;">طلبات عادية</div>
+                    </div>
+                    <div style="background: rgba(245, 158, 11, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                        <div style="font-size: 2rem; color: #f59e0b; font-weight: 700;">${todayBulk.length}</div>
+                        <div style="color: #94a3b8; font-size: 0.875rem;">طلبات جملة</div>
+                    </div>
+                    <div style="background: rgba(139, 92, 246, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.3);">
+                        <div style="font-size: 2rem; color: #8b5cf6; font-weight: 700;">${todayCompany.length}</div>
+                        <div style="color: #94a3b8; font-size: 0.875rem;">طلبات شركة</div>
+                    </div>
+                </div>
+                <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    <div style="font-size: 2.5rem; color: #10b981; font-weight: 700;">${todayNormal.length + todayBulk.length + todayCompany.length}</div>
+                    <div style="color: #94a3b8;">إجمالي طلبات اليوم</div>
+                </div>
+            </div>
+        `;
+        
+        modalManager.create('today-summary', 'ملخص طلبات اليوم', content);
+        modalManager.open('today-summary');
     }
 
     /**
