@@ -22,6 +22,10 @@ class AdminManager {
         this.lastSeenCompanyRequestId = parseInt(localStorage.getItem('lastSeenCompanyRequestId') || '0');
         this.newRequestNotifications = [];
         this.unreadNotifications = JSON.parse(localStorage.getItem('unreadNotifications') || '[]');
+        this._bulkTodayFilter = null;
+        this._companyTodayFilter = null;
+        this._bulkSpecialFilter = null;
+        this._companySpecialFilter = null;
     }
 
     /**
@@ -175,6 +179,7 @@ class AdminManager {
             if (bulkSearchInput) {
                 bulkSearchInput.addEventListener('input', Utils.debounce(() => {
                     this.currentPage = 1;
+                    this._bulkTodayFilter = null; // Clear today filter when searching
                     this.renderBulkRequests();
                 }, 300));
             }
@@ -182,6 +187,7 @@ class AdminManager {
             if (bulkStatusFilter) {
                 bulkStatusFilter.addEventListener('change', () => {
                     this.currentPage = 1;
+                    this._bulkTodayFilter = null; // Clear today filter when using regular filter
                     this.renderBulkRequests();
                 });
             }
@@ -193,6 +199,7 @@ class AdminManager {
             if (companySearchInput) {
                 companySearchInput.addEventListener('input', Utils.debounce(() => {
                     this.currentPage = 1;
+                    this._companyTodayFilter = null; // Clear today filter when searching
                     this.renderCompanyRequests();
                 }, 300));
             }
@@ -200,6 +207,7 @@ class AdminManager {
             if (companyStatusFilter) {
                 companyStatusFilter.addEventListener('change', () => {
                     this.currentPage = 1;
+                    this._companyTodayFilter = null; // Clear today filter when using regular filter
                     this.renderCompanyRequests();
                 });
             }
@@ -1852,21 +1860,33 @@ class AdminManager {
                 this.renderCharts();
                 break;
             case 'requests':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
                 this.renderRequests();
                 break;
             case 'bulk-requests':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
                 this.renderBulkRequests();
                 break;
             case 'company-requests':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
                 this.renderCompanyRequests();
                 break;
             case 'users':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
                 this.renderUsers();
                 break;
             case 'products':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
                 this.renderProductsManagement();
                 break;
             case 'trash':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
                 this.renderTrash();
                 break;
         }
@@ -1893,9 +1913,22 @@ class AdminManager {
             );
         }
 
+        // Handle today's filter
+        if (this._bulkTodayFilter) {
+            const today = new Date(this._bulkTodayFilter);
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            filtered = filtered.filter(r => {
+                const requestDate = new Date(r.createdAt);
+                return requestDate >= today && requestDate < tomorrow;
+            });
+        }
+
         if (statusFilter) {
             if (statusFilter === 'yesterday') {
                 const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
                 yesterday.setHours(0, 0, 0, 0);
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -2791,6 +2824,18 @@ class AdminManager {
                 ((r.serial_number || r.serialNumber) && (r.serial_number || r.serialNumber).toLowerCase().includes(searchTerm)) ||
                 ((r.laptop_brand || r.laptopBrand) && (r.laptop_brand || r.laptopBrand).toLowerCase().includes(searchTerm))
             );
+        }
+
+        // Handle today's filter
+        if (this._companyTodayFilter) {
+            const today = new Date(this._companyTodayFilter);
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            filtered = filtered.filter(r => {
+                const requestDate = new Date(r.createdAt || r.created_at);
+                return requestDate >= today && requestDate < tomorrow;
+            });
         }
 
         // Special maintenance filter
@@ -4300,15 +4345,25 @@ class AdminManager {
             toast.success('تم عرض طلبات الصيانة العادية لليوم');
         } else if (type === 'bulk') {
             this.switchSection('bulk-requests');
-            document.getElementById('bulkStatusFilter').value = 'yesterday';
+            // Use today's date filter instead of yesterday
+            const today = new Date().toISOString().slice(0, 10);
+            // Clear existing filter and manually filter for today
+            document.getElementById('bulkStatusFilter').value = '';
             document.getElementById('bulkSearchInput').value = '';
+            this._bulkTodayFilter = today;
+            this._bulkSpecialFilter = null; // Clear special filter
             this.currentPage = 1;
             this.renderBulkRequests();
             toast.success('تم عرض طلبات الجملة لليوم');
         } else if (type === 'company') {
             this.switchSection('company-requests');
-            document.getElementById('companyStatusFilter').value = 'yesterday';
+            // Use today's date filter instead of yesterday
+            const today = new Date().toISOString().slice(0, 10);
+            // Clear existing filter and manually filter for today
+            document.getElementById('companyStatusFilter').value = '';
             document.getElementById('companySearchInput').value = '';
+            this._companyTodayFilter = today;
+            this._companySpecialFilter = null; // Clear special filter
             this.currentPage = 1;
             this.renderCompanyRequests();
             toast.success('تم عرض طلبات موظفي الشركة لليوم');
