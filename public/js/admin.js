@@ -73,10 +73,10 @@ class AdminManager {
             console.log('📊 Loading data...');
             await this.loadData();
             console.log('✅ Data loaded successfully');
-            
-            // Update today's counter
-            this.updateTodayCounter();
-            
+
+            // Update today's counter (commented out - no longer needed)
+            // this.updateTodayCounter();
+
             console.log('📑 Switching to dashboard section...');
             await this.switchSection('dashboard');
             
@@ -255,10 +255,10 @@ class AdminManager {
             this.checkForNewRequests(oldRequests);
             this.checkForNewBulkRequests(oldBulkRequests);
             this.checkForNewCompanyRequests(oldCompanyRequests);
-            
-            // Update today's counter
-            this.updateTodayCounter();
-            
+
+            // Update today's counter (commented out - no longer needed)
+            // this.updateTodayCounter();
+
             if (this.currentSection === 'dashboard') {
                 this.renderStats();
                 this.renderCharts();
@@ -4344,10 +4344,12 @@ class AdminManager {
 
     /**
      * Show today's requests - shows all types (normal, bulk, company)
+     * (Commented out - no longer needed)
      */
+    /*
     showTodayRequests() {
         const today = new Date().toISOString().slice(0, 10);
-        
+
         // Show a dialog to choose which type to display
         const content = `
             <div style="display: flex; flex-direction: column; gap: 1rem;">
@@ -4365,7 +4367,7 @@ class AdminManager {
                 </button>
             </div>
         `;
-        
+
         modalManager.create('today-requests', 'طلبات اليوم', content);
         modalManager.open('today-requests');
     }
@@ -4375,11 +4377,11 @@ class AdminManager {
      */
     showTodayByType(type) {
         modalManager.close('today-requests');
-        
+
         const today = new Date().toISOString().slice(0, 10);
         console.log('🔍 showTodayByType called with type:', type);
         console.log('🔍 Today date string:', today);
-        
+
         if (type === 'normal') {
             this.switchSection('requests');
             document.getElementById('dateFrom').value = today;
@@ -4418,21 +4420,24 @@ class AdminManager {
             toast.success('تم عرض طلبات موظفي الشركة لليوم');
         }
     }
+    */
 
     /**
      * Show all today's requests across all types
+     * (Commented out - no longer needed)
      */
+    /*
     showTodayAll() {
         modalManager.close('today-requests');
-        
+
         // Display a summary of all today's requests
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         const todayNormal = this.requests.filter(r => new Date(r.createdAt) >= today);
         const todayBulk = this.bulkRequests.filter(r => new Date(r.createdAt) >= today);
         const todayCompany = this.companyRequests.filter(r => new Date(r.createdAt) >= today);
-        
+
         const content = `
             <div style="text-align: center;">
                 <h3 style="margin-bottom: 1.5rem;">ملخص طلبات اليوم</h3>
@@ -4456,14 +4461,17 @@ class AdminManager {
                 </div>
             </div>
         `;
-        
+
         modalManager.create('today-summary', 'ملخص طلبات اليوم', content);
         modalManager.open('today-summary');
     }
+    */
 
     /**
      * Update today's requests counter in header
+     * (Commented out - no longer needed)
      */
+    /*
     updateTodayCounter() {
         const todayString = new Date().toISOString().slice(0, 10);
         console.log('🔍 Today date string for counter:', todayString);
@@ -4499,7 +4507,7 @@ class AdminManager {
         const normalCountElement = document.getElementById('todayNormalCount');
         const bulkCountElement = document.getElementById('todayBulkCount');
         const companyCountElement = document.getElementById('todayCompanyCount');
-        
+
         if (normalCountElement) {
             normalCountElement.textContent = todayNormalOrders.length;
         }
@@ -4517,6 +4525,7 @@ class AdminManager {
             todayCountElement.textContent = totalCount;
         }
     }
+    */
 
     paginate(data) {
         const start = (this.currentPage - 1) * this.itemsPerPage;
