@@ -157,6 +157,17 @@ class AdminManager {
                 });
             }
 
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (event) => {
+                const dropdown = document.getElementById('requestStatusDropdown');
+                const filterBtn = document.querySelector('.stat-filter-btn');
+                if (dropdown && filterBtn) {
+                    if (!dropdown.contains(event.target) && !filterBtn.contains(event.target)) {
+                        dropdown.style.display = 'none';
+                    }
+                }
+            });
+
             // Setup bulk requests search and filters
             const bulkSearchInput = document.getElementById('bulkSearchInput');
             const bulkStatusFilter = document.getElementById('bulkStatusFilter');
@@ -911,7 +922,7 @@ class AdminManager {
                     </div>
                     <i class="fas fa-arrow-left stat-arrow"></i>
                 </div>
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','All')" title="عرض الطلبات العادية">
+                <div class="glass-card stat-card" style="position: relative;">
                     <div class="stat-icon">
                         <i class="fas fa-clipboard-list"></i>
                     </div>
@@ -919,7 +930,32 @@ class AdminManager {
                         <h3>${stats.totalRequests}</h3>
                         <p>طلبات العادية</p>
                     </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
+                    <button onclick="adminManager.toggleRequestStatusDropdown(event)" class="stat-filter-btn" title="تصفية حسب الحالة">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                    <div id="requestStatusDropdown" class="stat-dropdown" style="display: none;">
+                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','All'); adminManager.toggleRequestStatusDropdown(event);">
+                            <i class="fas fa-list"></i> جميع الطلبات
+                        </div>
+                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','received'); adminManager.toggleRequestStatusDropdown(event);">
+                            <i class="fas fa-check-circle"></i> تم الاستلام
+                        </div>
+                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','waiting'); adminManager.toggleRequestStatusDropdown(event);">
+                            <i class="fas fa-clock"></i> بانتظار الفحص
+                        </div>
+                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','maintenance'); adminManager.toggleRequestStatusDropdown(event);">
+                            <i class="fas fa-tools"></i> تحت الصيانة
+                        </div>
+                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','waiting_parts'); adminManager.toggleRequestStatusDropdown(event);">
+                            <i class="fas fa-cogs"></i> بانتظار قطع الغيار
+                        </div>
+                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','ready'); adminManager.toggleRequestStatusDropdown(event);">
+                            <i class="fas fa-check-double"></i> جاهز للتسليم
+                        </div>
+                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','delivered'); adminManager.toggleRequestStatusDropdown(event);">
+                            <i class="fas fa-hand-holding"></i> تم التسليم
+                        </div>
+                    </div>
                 </div>
                 <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('bulk-requests')" title="عرض طلبات الجملة">
                     <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2);">
@@ -943,6 +979,17 @@ class AdminManager {
                 </div>
             </div>
         `;
+    }
+
+    /**
+     * Toggle request status dropdown
+     */
+    toggleRequestStatusDropdown(event) {
+        event.stopPropagation();
+        const dropdown = document.getElementById('requestStatusDropdown');
+        if (dropdown) {
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
     }
 
     /**
@@ -4251,6 +4298,18 @@ class AdminManager {
                     } else if (filter === 'open' || filter === 'completed' || filter === 'maintenance' || filter === 'received') {
                         statusFilter.value = 'All'; // will be handled by filterRequests
                         this._specialFilter = filter;
+                    } else if (filter === 'waiting') {
+                        statusFilter.value = 'Waiting Inspection';
+                        this._specialFilter = null;
+                    } else if (filter === 'waiting_parts') {
+                        statusFilter.value = 'Waiting Parts';
+                        this._specialFilter = null;
+                    } else if (filter === 'ready') {
+                        statusFilter.value = 'Ready';
+                        this._specialFilter = null;
+                    } else if (filter === 'delivered') {
+                        statusFilter.value = 'Delivered';
+                        this._specialFilter = null;
                     } else {
                         statusFilter.value = filter;
                         this._specialFilter = null;
