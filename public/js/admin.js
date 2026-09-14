@@ -189,6 +189,7 @@ class AdminManager {
                 bulkStatusFilter.addEventListener('change', () => {
                     this.currentPage = 1;
                     this._bulkTodayFilter = null; // Clear today filter when using regular filter
+                    this._bulkSpecialFilter = null; // Clear special filter when manually changing status filter
                     this.renderBulkRequests();
                 });
             }
@@ -209,6 +210,7 @@ class AdminManager {
                 companyStatusFilter.addEventListener('change', () => {
                     this.currentPage = 1;
                     this._companyTodayFilter = null; // Clear today filter when using regular filter
+                    this._companySpecialFilter = null; // Clear special filter when manually changing status filter
                     this.renderCompanyRequests();
                 });
             }
@@ -1935,7 +1937,13 @@ class AdminManager {
         }
 
         if (statusFilter) {
-            if (statusFilter === 'yesterday') {
+            if (statusFilter === 'today') {
+                const today = new Date().toISOString().slice(0, 10);
+                filtered = filtered.filter(r => {
+                    const requestDate = new Date(r.createdAt).toISOString().slice(0, 10);
+                    return requestDate === today;
+                });
+            } else if (statusFilter === 'yesterday') {
                 const yesterday = new Date();
                 yesterday.setDate(yesterday.getDate() - 1);
                 yesterday.setHours(0, 0, 0, 0);
@@ -2865,7 +2873,13 @@ class AdminManager {
 
         // Status filter
         if (statusFilter) {
-            if (statusFilter === 'yesterday') {
+            if (statusFilter === 'today') {
+                const today = new Date().toISOString().slice(0, 10);
+                filtered = filtered.filter(r => {
+                    const requestDate = new Date(r.createdAt || r.created_at).toISOString().slice(0, 10);
+                    return requestDate === today;
+                });
+            } else if (statusFilter === 'yesterday') {
                 const yesterday = new Date();
                 yesterday.setHours(0, 0, 0, 0);
                 const today = new Date();
