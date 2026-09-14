@@ -26,6 +26,7 @@ class AdminManager {
         this._companyTodayFilter = null;
         this._bulkSpecialFilter = null;
         this._companySpecialFilter = null;
+        this.currentSearchResults = [];
     }
 
     /**
@@ -225,7 +226,16 @@ class AdminManager {
                     this.renderRequests();
                 });
             }
-            
+
+            // Setup global search
+            const globalSearchForm = document.getElementById('globalSearchForm');
+            if (globalSearchForm) {
+                globalSearchForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.performGlobalSearch();
+                });
+            }
+
             console.log('✅ Admin dashboard initialized successfully!');
         } catch (error) {
             console.error('❌ Error initializing admin dashboard:', error);
@@ -4462,6 +4472,204 @@ class AdminManager {
                 this._companySpecialFilter = null;
                 this.renderCompanyRequests();
             }
+        }
+    }
+
+    /**
+     * Perform global search across all request types
+     */
+    performGlobalSearch() {
+        const searchTerm = document.getElementById('globalSearchInput').value.toLowerCase().trim();
+        if (!searchTerm) {
+            toast.warning('الرجاء إدخال كلمة البحث');
+            return;
+        }
+
+        const results = [];
+
+        // Search in normal requests
+        this.requests.forEach(req => {
+            if (
+                (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
+                (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
+                (req.phone && req.phone.includes(searchTerm)) ||
+                (req.serialNumber && req.serialNumber.toLowerCase().includes(searchTerm)) ||
+                (req.laptopBrand && req.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                (req.laptopModel && req.laptopModel.toLowerCase().includes(searchTerm))
+            ) {
+                results.push({
+                    type: 'normal',
+                    requestNumber: req.requestNumber,
+                    fullName: req.fullName,
+                    phone: req.phone,
+                    laptopBrand: req.laptopBrand,
+                    laptopModel: req.laptopModel,
+                    serialNumber: req.serialNumber,
+                    status: req.status,
+                    createdAt: req.createdAt,
+                    cost: req.cost
+                });
+            }
+        });
+
+        // Search in bulk requests
+        this.bulkRequests.forEach(req => {
+            if (
+                (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
+                (req.customerName && req.customerName.toLowerCase().includes(searchTerm)) ||
+                (req.customerPhone && req.customerPhone.includes(searchTerm)) ||
+                (req.devices && req.devices.some(d =>
+                    (d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm)) ||
+                    (d.laptopBrand && d.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                    (d.laptopModel && d.laptopModel.toLowerCase().includes(searchTerm))
+                ))
+            ) {
+                results.push({
+                    type: 'bulk',
+                    requestNumber: req.requestNumber,
+                    fullName: req.customerName,
+                    phone: req.customerPhone,
+                    laptopBrand: `طلب جملة (${req.devices?.length || 0} لابتوب)`,
+                    laptopModel: '',
+                    serialNumber: '',
+                    status: req.status,
+                    createdAt: req.createdAt,
+                    cost: req.totalCost || 0
+                });
+            }
+        });
+
+        // Search in company requests
+        this.companyRequests.forEach(req => {
+            if (
+                (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
+                (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
+                (req.phone && req.phone.includes(searchTerm)) ||
+                (req.serialNumber && req.serialNumber.toLowerCase().includes(searchTerm)) ||
+                (req.laptopBrand && req.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                (req.laptopModel && req.laptopModel.toLowerCase().includes(searchTerm))
+            ) {
+                results.push({
+                    type: 'company',
+                    requestNumber: req.requestNumber,
+                    fullName: req.fullName,
+                    phone: req.phone,
+                    laptopBrand: req.laptopBrand,
+                    laptopModel: req.laptopModel,
+                    serialNumber: req.serialNumber,
+                    status: req.status,
+                    createdAt: req.createdAt,
+                    cost: req.cost
+                });
+            }
+        });
+
+        this.currentSearchResults = results;
+        this.displayGlobalSearchResults(results);
+    }
+
+    /**
+     * Display global search results in modal
+     */
+    displayGlobalSearchResults(results) {
+        const resultsContainer = document.getElementById('globalSearchResults');
+        const downloadBtn = document.getElementById('downloadExcelBtn');
+
+        if (results.length === 0) {
+            resultsContainer.innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-search" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+                    <p style="color: #94a3b8;">لا توجد نتائج للبحث</p>
+                </div>
+            `;
+            downloadBtn.style.display = 'none';
+        } else {
+            const tableHTML = `
+                <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                    <thead>
+                        <tr style="background: rgba(59, 130, 246, 0.1);">
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">نوع الطلب</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">رقم الطلب</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الاسم</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الهاتف</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الماركة</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الحالة</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">التاريخ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${results.map(result => `
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                                <td style="padding: 0.75rem;">
+                                    <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; background: ${
+                                        result.type === 'normal' ? 'rgba(16, 185, 129, 0.2); color: #10b981;' :
+                                        result.type === 'bulk' ? 'rgba(245, 158, 11, 0.2); color: #f59e0b;' :
+                                        'rgba(139, 92, 246, 0.2); color: #8b5cf6;'
+                                    };">
+                                        ${result.type === 'normal' ? 'عادي' : result.type === 'bulk' ? 'جملة' : 'شركة'}
+                                    </span>
+                                </td>
+                                <td style="padding: 0.75rem;">${result.requestNumber}</td>
+                                <td style="padding: 0.75rem;">${result.fullName}</td>
+                                <td style="padding: 0.75rem;">${result.phone}</td>
+                                <td style="padding: 0.75rem;">${result.laptopBrand}</td>
+                                <td style="padding: 0.75rem;">${this.translateStatus(result.status)}</td>
+                                <td style="padding: 0.75rem;">${new Date(result.createdAt).toLocaleDateString('ar-EG')}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <p style="text-align: center; margin-top: 1rem; color: #94a3b8;">تم العثور على ${results.length} نتيجة</p>
+            `;
+            resultsContainer.innerHTML = tableHTML;
+            downloadBtn.style.display = 'block';
+        }
+
+        document.getElementById('globalSearchResultsModal').style.display = 'block';
+    }
+
+    /**
+     * Download search results to Excel
+     */
+    downloadSearchResultsToExcel() {
+        if (this.currentSearchResults.length === 0) {
+            toast.warning('لا توجد نتائج للتحميل');
+            return;
+        }
+
+        try {
+            // Prepare data for Excel
+            const excelData = this.currentSearchResults.map(result => ({
+                'نوع الطلب': result.type === 'normal' ? 'عادي' : result.type === 'bulk' ? 'جملة' : 'شركة',
+                'رقم الطلب': result.requestNumber,
+                'الاسم': result.fullName,
+                'الهاتف': result.phone,
+                'الماركة': result.laptopBrand,
+                'الموديل': result.laptopModel,
+                'الرقم التسلسلي': result.serialNumber,
+                'الحالة': this.translateStatus(result.status),
+                'التاريخ': new Date(result.createdAt).toLocaleDateString('ar-EG'),
+                'التكلفة': result.cost || 0
+            }));
+
+            // Create worksheet
+            const ws = XLSX.utils.json_to_sheet(excelData);
+
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'نتائج البحث');
+
+            // Generate filename with timestamp
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = `بحث_${timestamp}.xlsx`;
+
+            // Download file
+            XLSX.writeFile(wb, filename);
+
+            toast.success('تم تحميل ملف Excel بنجاح');
+        } catch (error) {
+            console.error('Error downloading Excel:', error);
+            toast.error('فشل تحميل ملف Excel');
         }
     }
 

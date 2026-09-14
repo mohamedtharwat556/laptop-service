@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/rtl.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="glow-orb-1"></div>
@@ -151,9 +152,14 @@
                 <div class="glass-card" style="max-width: 900px; margin: 0 auto; padding: 2rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                         <h2>نتائج البحث الشامل</h2>
-                        <button onclick="document.getElementById('globalSearchResultsModal').style.display = 'none'" style="background: none; border: none; color: var(--white); font-size: 1.5rem; cursor: pointer;">
-                            <i class="fas fa-times"></i>
-                        </button>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <button id="downloadExcelBtn" onclick="adminManager.downloadSearchResultsToExcel()" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; display: none;">
+                                <i class="fas fa-file-excel"></i> تحميل Excel
+                            </button>
+                            <button onclick="document.getElementById('globalSearchResultsModal').style.display = 'none'" style="background: none; border: none; color: var(--white); font-size: 1.5rem; cursor: pointer;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                     </div>
                     <div id="globalSearchResults"></div>
                 </div>
