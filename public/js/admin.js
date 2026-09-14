@@ -2052,6 +2052,10 @@ class AdminManager {
                                     </div>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <button class="btn btn-success" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; background: linear-gradient(135deg, #10b981, #059669); border: none;"
+                                            onclick="event.stopPropagation(); adminManager.downloadBulkRequestDevicesToExcel(${bulkRequest.id})" title="تحميل Excel للأجهزة">
+                                        <i class="fas fa-file-excel"></i>
+                                    </button>
                                     <span class="priority-badge ${this.getPriorityClass(bulkRequest.priority)}">${this.translatePriority(bulkRequest.priority)}</span>
                                     <span class="status-badge status-${this.getStatusClass(bulkRequest.status)}">${this.translateStatus(bulkRequest.status)}</span>
                                     <i class="fas fa-chevron-down accordion-icon" id="accordion-icon-${bulkRequest.id}" style="transition: transform 0.3s;"></i>
@@ -2097,6 +2101,10 @@ class AdminManager {
                                 
                                 <!-- Bulk Request Actions -->
                                 <div style="display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                                    <button class="btn btn-success" style="padding: 0.5rem 1rem; font-size: 0.875rem; background: linear-gradient(135deg, #10b981, #059669); border: none;"
+                                            onclick="adminManager.downloadBulkRequestDevicesToExcel(${bulkRequest.id})" title="تحميل Excel للأجهزة">
+                                        <i class="fas fa-file-excel"></i> تحميل Excel
+                                    </button>
                                     <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;"
                                             onclick="adminManager.addDeviceToBulkRequest(${bulkRequest.id})" title="إضافة جهاز جديد">
                                         <i class="fas fa-plus"></i> إضافة جهاز
@@ -4669,6 +4677,53 @@ class AdminManager {
             toast.success('تم تحميل ملف Excel بنجاح');
         } catch (error) {
             console.error('Error downloading Excel:', error);
+            toast.error('فشل تحميل ملف Excel');
+        }
+    }
+
+    /**
+     * Download devices of a specific bulk request to Excel
+     */
+    downloadBulkRequestDevicesToExcel(bulkRequestId) {
+        const bulkRequest = this.bulkRequests.find(r => r.id === bulkRequestId);
+        if (!bulkRequest || !bulkRequest.devices || bulkRequest.devices.length === 0) {
+            toast.warning('لا توجد أجهزة في هذا الطلب');
+            return;
+        }
+
+        try {
+            // Prepare data for Excel
+            const excelData = bulkRequest.devices.map((device, index) => ({
+                'رقم الطلب': bulkRequest.requestNumber,
+                'اسم العميل': bulkRequest.customerName,
+                'رقم الهاتف': bulkRequest.customerPhone,
+                'رقم الجهاز': index + 1,
+                'الماركة': device.laptopBrand,
+                'الموديل': device.laptopModel,
+                'الرقم التسلسلي': device.serialNumber,
+                'وصف المشكلة': device.problemDescription,
+                'الحالة': this.translateStatus(device.status),
+                'التكلفة': device.cost || 0,
+                'الملاحظات': device.notes || ''
+            }));
+
+            // Create worksheet
+            const ws = XLSX.utils.json_to_sheet(excelData);
+
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'أجهزة الطلب');
+
+            // Generate filename with request number and timestamp
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = `طلب_${bulkRequest.requestNumber}_${timestamp}.xlsx`;
+
+            // Download file
+            XLSX.writeFile(wb, filename);
+
+            toast.success('تم تحميل ملف Excel بنجاح');
+        } catch (error) {
+            console.error('Error downloading bulk request Excel:', error);
             toast.error('فشل تحميل ملف Excel');
         }
     }
