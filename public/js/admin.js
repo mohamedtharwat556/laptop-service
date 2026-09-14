@@ -74,9 +74,6 @@ class AdminManager {
             await this.loadData();
             console.log('✅ Data loaded successfully');
 
-            // Update today's counter
-            this.updateTodayCounter();
-
             console.log('📑 Switching to dashboard section...');
             await this.switchSection('dashboard');
             
@@ -255,9 +252,6 @@ class AdminManager {
             this.checkForNewRequests(oldRequests);
             this.checkForNewBulkRequests(oldBulkRequests);
             this.checkForNewCompanyRequests(oldCompanyRequests);
-
-            // Update today's counter
-            this.updateTodayCounter();
 
             if (this.currentSection === 'dashboard') {
                 this.renderStats();
@@ -923,16 +917,6 @@ class AdminManager {
 
         statsContainer.innerHTML = `
             <div class="stats-grid">
-                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','today')" title="عرض طلبات اليوم">
-                    <div class="stat-icon">
-                        <i class="fas fa-shopping-bag"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${stats.todayOrders}</h3>
-                        <p>طلبات اليوم</p>
-                    </div>
-                    <i class="fas fa-arrow-left stat-arrow"></i>
-                </div>
                 <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','All')" style="position: relative;">
                     <div class="stat-icon">
                         <i class="fas fa-clipboard-list"></i>
@@ -1937,13 +1921,7 @@ class AdminManager {
         }
 
         if (statusFilter) {
-            if (statusFilter === 'today') {
-                const today = new Date().toISOString().slice(0, 10);
-                filtered = filtered.filter(r => {
-                    const requestDate = new Date(r.createdAt).toISOString().slice(0, 10);
-                    return requestDate === today;
-                });
-            } else if (statusFilter === 'yesterday') {
+            if (statusFilter === 'yesterday') {
                 const yesterday = new Date();
                 yesterday.setDate(yesterday.getDate() - 1);
                 yesterday.setHours(0, 0, 0, 0);
@@ -2873,13 +2851,7 @@ class AdminManager {
 
         // Status filter
         if (statusFilter) {
-            if (statusFilter === 'today') {
-                const today = new Date().toISOString().slice(0, 10);
-                filtered = filtered.filter(r => {
-                    const requestDate = new Date(r.createdAt || r.created_at).toISOString().slice(0, 10);
-                    return requestDate === today;
-                });
-            } else if (statusFilter === 'yesterday') {
+            if (statusFilter === 'yesterday') {
                 const yesterday = new Date();
                 yesterday.setHours(0, 0, 0, 0);
                 const today = new Date();
@@ -4340,63 +4312,6 @@ class AdminManager {
         this._specialFilter = null; // Clear special filter
         this.currentPage = 1;
         this.renderRequests();
-    }
-
-    /**
-     * Update today's requests counter in header
-     */
-    updateTodayCounter() {
-        const todayString = new Date().toISOString().slice(0, 10);
-        console.log('🔍 Today date string for counter:', todayString);
-        console.log('🔍 Total requests:', this.requests.length);
-        console.log('🔍 Total bulk requests:', this.bulkRequests.length);
-        console.log('🔍 Total company requests:', this.companyRequests.length);
-
-        // Count today's requests from all types separately using date string comparison
-        const todayNormalOrders = this.requests.filter(r => {
-            const requestDateString = new Date(r.createdAt).toISOString().slice(0, 10);
-            const isToday = requestDateString === todayString;
-            console.log(`🔍 Normal request ${r.requestNumber}: ${requestDateString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
-            return isToday;
-        });
-        const todayBulkOrders = this.bulkRequests.filter(r => {
-            const requestDateString = new Date(r.createdAt).toISOString().slice(0, 10);
-            const isToday = requestDateString === todayString;
-            console.log(`🔍 Bulk request ${r.requestNumber}: ${requestDateString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
-            return isToday;
-        });
-        const todayCompanyOrders = this.companyRequests.filter(r => {
-            const requestDateString = new Date(r.createdAt).toISOString().slice(0, 10);
-            const isToday = requestDateString === todayString;
-            console.log(`🔍 Company request ${r.requestNumber}: ${requestDateString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
-            return isToday;
-        });
-
-        console.log('🔍 Today normal orders:', todayNormalOrders.length);
-        console.log('🔍 Today bulk orders:', todayBulkOrders.length);
-        console.log('🔍 Today company orders:', todayCompanyOrders.length);
-
-        // Update separate counters for each type
-        const normalCountElement = document.getElementById('todayNormalCount');
-        const bulkCountElement = document.getElementById('todayBulkCount');
-        const companyCountElement = document.getElementById('todayCompanyCount');
-
-        if (normalCountElement) {
-            normalCountElement.textContent = todayNormalOrders.length;
-        }
-        if (bulkCountElement) {
-            bulkCountElement.textContent = todayBulkOrders.length;
-        }
-        if (companyCountElement) {
-            companyCountElement.textContent = todayCompanyOrders.length;
-        }
-
-        // Update total counter if exists
-        const totalCount = todayNormalOrders.length + todayBulkOrders.length + todayCompanyOrders.length;
-        const todayCountElement = document.getElementById('todayCount');
-        if (todayCountElement) {
-            todayCountElement.textContent = totalCount;
-        }
     }
 
     paginate(data) {

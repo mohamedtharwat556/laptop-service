@@ -143,26 +143,6 @@
                         </div>
                         <div id="globalSearchSuggestions" class="search-suggestions" style="display: none;"></div>
                     </form>
-                    <!-- Today's Requests Counter -->
-                    <div id="todayRequestsCounter" style="margin-top: 0.75rem; padding: 0.5rem 1rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.1)); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; text-align: center; color: #10b981; font-size: 0.9rem; font-weight: 600; backdrop-filter: blur(10px);">
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fas fa-laptop"></i>
-                                <span>عادية:</span>
-                                <span id="todayNormalCount" style="font-size: 1.1rem; font-weight: 700; margin-left: 0.25rem;">0</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fas fa-boxes"></i>
-                                <span>جملة:</span>
-                                <span id="todayBulkCount" style="font-size: 1.1rem; font-weight: 700; margin-left: 0.25rem;">0</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fas fa-building"></i>
-                                <span>شركة:</span>
-                                <span id="todayCompanyCount" style="font-size: 1.1rem; font-weight: 700; margin-left: 0.25rem;">0</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -201,7 +181,6 @@
                         <input type="text" id="requestSearch" class="form-input search-input" placeholder="البحث برقم الهاتف، الاسم، الماركة...">
                         <select id="statusFilter" class="form-select filter-select">
                             <option value="All">جميع الحالات</option>
-                            <option value="today">طلبات اليوم</option>
                             <option value="yesterday">أمس</option>
                             <option value="week">آخر أسبوع</option>
                             <option value="month">آخر شهر</option>
@@ -255,7 +234,6 @@
                         <input type="text" id="bulkSearchInput" class="form-input" placeholder="بحث برقم الطلب أو اسم العميل..." style="width: 300px;">
                         <select id="bulkStatusFilter" class="form-select" style="width: auto;">
                             <option value="">جميع الحالات</option>
-                            <option value="today">طلبات اليوم</option>
                             <option value="yesterday">أمس</option>
                             <option value="week">آخر أسبوع</option>
                             <option value="month">آخر شهر</option>
@@ -282,7 +260,6 @@
                         <input type="text" id="companySearchInput" class="form-input" placeholder="بحث برقم الطلب أو اسم الشركة..." style="width: 300px;">
                         <select id="companyStatusFilter" class="form-select" style="width: auto;">
                             <option value="">جميع الحالات</option>
-                            <option value="today">طلبات اليوم</option>
                             <option value="yesterday">أمس</option>
                             <option value="week">آخر أسبوع</option>
                             <option value="month">آخر شهر</option>
