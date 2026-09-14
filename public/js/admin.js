@@ -1919,10 +1919,19 @@ class AdminManager {
             today.setHours(0, 0, 0, 0);
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
+            console.log('🔍 Filtering bulk requests for today:', this._bulkTodayFilter);
+            console.log('🔍 Today date:', today);
+            console.log('🔍 Tomorrow date:', tomorrow);
+            console.log('🔍 Total bulk requests before filter:', filtered.length);
+            
             filtered = filtered.filter(r => {
                 const requestDate = new Date(r.createdAt);
-                return requestDate >= today && requestDate < tomorrow;
+                const isToday = requestDate >= today && requestDate < tomorrow;
+                console.log(`🔍 Request ${r.requestNumber}: ${requestDate} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+                return isToday;
             });
+            
+            console.log('🔍 Total bulk requests after filter:', filtered.length);
         }
 
         if (statusFilter) {
@@ -2832,10 +2841,19 @@ class AdminManager {
             today.setHours(0, 0, 0, 0);
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
+            console.log('🔍 Filtering company requests for today:', this._companyTodayFilter);
+            console.log('🔍 Today date:', today);
+            console.log('🔍 Tomorrow date:', tomorrow);
+            console.log('🔍 Total company requests before filter:', filtered.length);
+            
             filtered = filtered.filter(r => {
                 const requestDate = new Date(r.createdAt || r.created_at);
-                return requestDate >= today && requestDate < tomorrow;
+                const isToday = requestDate >= today && requestDate < tomorrow;
+                console.log(`🔍 Request ${r.requestNumber}: ${requestDate} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+                return isToday;
             });
+            
+            console.log('🔍 Total company requests after filter:', filtered.length);
         }
 
         // Special maintenance filter
@@ -4330,6 +4348,8 @@ class AdminManager {
         modalManager.close('today-requests');
         
         const today = new Date().toISOString().slice(0, 10);
+        console.log('🔍 showTodayByType called with type:', type);
+        console.log('🔍 Today date string:', today);
         
         if (type === 'normal') {
             this.switchSection('requests');
@@ -4344,6 +4364,7 @@ class AdminManager {
             this.renderRequests();
             toast.success('تم عرض طلبات الصيانة العادية لليوم');
         } else if (type === 'bulk') {
+            console.log('🔍 Switching to bulk requests section');
             this.switchSection('bulk-requests');
             // Use today's date filter instead of yesterday
             const today = new Date().toISOString().slice(0, 10);
@@ -4353,9 +4374,11 @@ class AdminManager {
             this._bulkTodayFilter = today;
             this._bulkSpecialFilter = null; // Clear special filter
             this.currentPage = 1;
+            console.log('🔍 Calling renderBulkRequests with today filter');
             this.renderBulkRequests();
             toast.success('تم عرض طلبات الجملة لليوم');
         } else if (type === 'company') {
+            console.log('🔍 Switching to company requests section');
             this.switchSection('company-requests');
             // Use today's date filter instead of yesterday
             const today = new Date().toISOString().slice(0, 10);
@@ -4365,6 +4388,7 @@ class AdminManager {
             this._companyTodayFilter = today;
             this._companySpecialFilter = null; // Clear special filter
             this.currentPage = 1;
+            console.log('🔍 Calling renderCompanyRequests with today filter');
             this.renderCompanyRequests();
             toast.success('تم عرض طلبات موظفي الشركة لليوم');
         }
@@ -4418,20 +4442,34 @@ class AdminManager {
     updateTodayCounter() {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        console.log('🔍 Today date for counter:', today);
+        console.log('🔍 Total requests:', this.requests.length);
+        console.log('🔍 Total bulk requests:', this.bulkRequests.length);
+        console.log('🔍 Total company requests:', this.companyRequests.length);
 
         // Count today's requests from all types separately
         const todayNormalOrders = this.requests.filter(r => {
             const requestDate = new Date(r.createdAt);
-            return requestDate >= today;
+            const isToday = requestDate >= today;
+            console.log(`🔍 Normal request ${r.requestNumber}: ${requestDate} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+            return isToday;
         });
         const todayBulkOrders = this.bulkRequests.filter(r => {
             const requestDate = new Date(r.createdAt);
-            return requestDate >= today;
+            const isToday = requestDate >= today;
+            console.log(`🔍 Bulk request ${r.requestNumber}: ${requestDate} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+            return isToday;
         });
         const todayCompanyOrders = this.companyRequests.filter(r => {
             const requestDate = new Date(r.createdAt);
-            return requestDate >= today;
+            const isToday = requestDate >= today;
+            console.log(`🔍 Company request ${r.requestNumber}: ${requestDate} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+            return isToday;
         });
+
+        console.log('🔍 Today normal orders:', todayNormalOrders.length);
+        console.log('🔍 Today bulk orders:', todayBulkOrders.length);
+        console.log('🔍 Today company orders:', todayCompanyOrders.length);
 
         // Update separate counters for each type
         const normalCountElement = document.getElementById('todayNormalCount');
