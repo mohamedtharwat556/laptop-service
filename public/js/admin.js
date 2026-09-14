@@ -988,7 +988,11 @@ class AdminManager {
         event.stopPropagation();
         const dropdown = document.getElementById('requestStatusDropdown');
         if (dropdown) {
+            console.log('Toggling dropdown, current display:', dropdown.style.display);
             dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            console.log('New display:', dropdown.style.display);
+        } else {
+            console.error('Dropdown element not found!');
         }
     }
 
