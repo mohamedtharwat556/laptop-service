@@ -143,6 +143,7 @@ class AdminManager {
             if (statusFilter) {
                 statusFilter.addEventListener('change', () => {
                     this.currentPage = 1;
+                    this._specialFilter = null; // Clear special filter when manually changing status filter
                     this.renderRequests();
                 });
             }
@@ -4254,6 +4255,12 @@ class AdminManager {
             filtered = filtered.filter(r => maintenanceStatuses.includes(r.status));
         } else if (activeFilter === 'received') {
             filtered = filtered.filter(r => r.status === 'Received');
+        } else if (activeFilter === 'today') {
+            const today = new Date().toISOString().slice(0, 10);
+            filtered = filtered.filter(r => {
+                const requestDate = new Date(r.createdAt).toISOString().slice(0, 10);
+                return requestDate === today;
+            });
         } else if (activeFilter === 'yesterday') {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
@@ -4316,6 +4323,7 @@ class AdminManager {
         document.getElementById('priorityFilter').value = 'All';
         document.getElementById('dateFrom').value = '';
         document.getElementById('dateTo').value = '';
+        this._specialFilter = null; // Clear special filter
         this.currentPage = 1;
         this.renderRequests();
     }
