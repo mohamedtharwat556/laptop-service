@@ -4435,6 +4435,36 @@ class AdminManager {
         }
     }
 
+    /**
+     * Set today's filter for a specific section
+     */
+    setTodayFilter(section) {
+        this.currentPage = 1;
+
+        if (section === 'requests') {
+            const statusFilter = document.getElementById('statusFilter');
+            if (statusFilter) {
+                statusFilter.value = 'today';
+                this._specialFilter = null;
+                this.renderRequests();
+            }
+        } else if (section === 'bulk') {
+            const statusFilter = document.getElementById('bulkStatusFilter');
+            if (statusFilter) {
+                statusFilter.value = 'today';
+                this._bulkSpecialFilter = null;
+                this.renderBulkRequests();
+            }
+        } else if (section === 'company') {
+            const statusFilter = document.getElementById('companyStatusFilter');
+            if (statusFilter) {
+                statusFilter.value = 'today';
+                this._companySpecialFilter = null;
+                this.renderCompanyRequests();
+            }
+        }
+    }
+
     viewRequest(requestId) {
         const request = this.requests.find(r => r.id === requestId);
         if (!request) return;

@@ -179,6 +179,9 @@
                     <h2>إدارة الطلبات</h2>
                     <div class="search-container">
                         <input type="text" id="requestSearch" class="form-input search-input" placeholder="البحث برقم الهاتف، الاسم، الماركة...">
+                        <button onclick="adminManager.setTodayFilter('requests')" class="btn btn-primary" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
+                            <i class="fas fa-calendar-day"></i> طلبات اليوم
+                        </button>
                         <select id="statusFilter" class="form-select filter-select">
                             <option value="All">جميع الحالات</option>
                             <option value="today">طلبات اليوم</option>
@@ -233,6 +236,9 @@
                     <h2>إدارة طلبات الجملة</h2>
                     <div class="search-container">
                         <input type="text" id="bulkSearchInput" class="form-input" placeholder="بحث برقم الطلب أو اسم العميل..." style="width: 300px;">
+                        <button onclick="adminManager.setTodayFilter('bulk')" class="btn btn-primary" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
+                            <i class="fas fa-calendar-day"></i> طلبات اليوم
+                        </button>
                         <select id="bulkStatusFilter" class="form-select" style="width: auto;">
                             <option value="">جميع الحالات</option>
                             <option value="today">طلبات اليوم</option>
@@ -260,6 +266,9 @@
                     <h2>موظفي الشركة</h2>
                     <div class="search-container">
                         <input type="text" id="companySearchInput" class="form-input" placeholder="بحث برقم الطلب أو اسم الشركة..." style="width: 300px;">
+                        <button onclick="adminManager.setTodayFilter('company')" class="btn btn-primary" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
+                            <i class="fas fa-calendar-day"></i> طلبات اليوم
+                        </button>
                         <select id="companyStatusFilter" class="form-select" style="width: auto;">
                             <option value="">جميع الحالات</option>
                             <option value="today">طلبات اليوم</option>
