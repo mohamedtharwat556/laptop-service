@@ -74,8 +74,8 @@ class AdminManager {
             await this.loadData();
             console.log('✅ Data loaded successfully');
 
-            // Update today's counter (commented out - no longer needed)
-            // this.updateTodayCounter();
+            // Update today's counter
+            this.updateTodayCounter();
 
             console.log('📑 Switching to dashboard section...');
             await this.switchSection('dashboard');
@@ -256,8 +256,8 @@ class AdminManager {
             this.checkForNewBulkRequests(oldBulkRequests);
             this.checkForNewCompanyRequests(oldCompanyRequests);
 
-            // Update today's counter (commented out - no longer needed)
-            // this.updateTodayCounter();
+            // Update today's counter
+            this.updateTodayCounter();
 
             if (this.currentSection === 'dashboard') {
                 this.renderStats();
@@ -4342,7 +4342,62 @@ class AdminManager {
         this.renderRequests();
     }
 
+    /**
+     * Update today's requests counter in header
+     */
+    updateTodayCounter() {
+        const todayString = new Date().toISOString().slice(0, 10);
+        console.log('🔍 Today date string for counter:', todayString);
+        console.log('🔍 Total requests:', this.requests.length);
+        console.log('🔍 Total bulk requests:', this.bulkRequests.length);
+        console.log('🔍 Total company requests:', this.companyRequests.length);
 
+        // Count today's requests from all types separately using date string comparison
+        const todayNormalOrders = this.requests.filter(r => {
+            const requestDateString = new Date(r.createdAt).toISOString().slice(0, 10);
+            const isToday = requestDateString === todayString;
+            console.log(`🔍 Normal request ${r.requestNumber}: ${requestDateString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+            return isToday;
+        });
+        const todayBulkOrders = this.bulkRequests.filter(r => {
+            const requestDateString = new Date(r.createdAt).toISOString().slice(0, 10);
+            const isToday = requestDateString === todayString;
+            console.log(`🔍 Bulk request ${r.requestNumber}: ${requestDateString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+            return isToday;
+        });
+        const todayCompanyOrders = this.companyRequests.filter(r => {
+            const requestDateString = new Date(r.createdAt).toISOString().slice(0, 10);
+            const isToday = requestDateString === todayString;
+            console.log(`🔍 Company request ${r.requestNumber}: ${requestDateString} -> ${isToday ? 'TODAY' : 'NOT TODAY'}`);
+            return isToday;
+        });
+
+        console.log('🔍 Today normal orders:', todayNormalOrders.length);
+        console.log('🔍 Today bulk orders:', todayBulkOrders.length);
+        console.log('🔍 Today company orders:', todayCompanyOrders.length);
+
+        // Update separate counters for each type
+        const normalCountElement = document.getElementById('todayNormalCount');
+        const bulkCountElement = document.getElementById('todayBulkCount');
+        const companyCountElement = document.getElementById('todayCompanyCount');
+
+        if (normalCountElement) {
+            normalCountElement.textContent = todayNormalOrders.length;
+        }
+        if (bulkCountElement) {
+            bulkCountElement.textContent = todayBulkOrders.length;
+        }
+        if (companyCountElement) {
+            companyCountElement.textContent = todayCompanyOrders.length;
+        }
+
+        // Update total counter if exists
+        const totalCount = todayNormalOrders.length + todayBulkOrders.length + todayCompanyOrders.length;
+        const todayCountElement = document.getElementById('todayCount');
+        if (todayCountElement) {
+            todayCountElement.textContent = totalCount;
+        }
+    }
 
     paginate(data) {
         const start = (this.currentPage - 1) * this.itemsPerPage;
