@@ -1921,7 +1921,13 @@ class AdminManager {
         }
 
         if (statusFilter) {
-            if (statusFilter === 'yesterday') {
+            if (statusFilter === 'today') {
+                const today = new Date().toISOString().slice(0, 10);
+                filtered = filtered.filter(r => {
+                    const requestDate = new Date(r.createdAt || r.created_at).toISOString().slice(0, 10);
+                    return requestDate === today;
+                });
+            } else if (statusFilter === 'yesterday') {
                 const yesterday = new Date();
                 yesterday.setDate(yesterday.getDate() - 1);
                 yesterday.setHours(0, 0, 0, 0);
@@ -2851,7 +2857,13 @@ class AdminManager {
 
         // Status filter
         if (statusFilter) {
-            if (statusFilter === 'yesterday') {
+            if (statusFilter === 'today') {
+                const today = new Date().toISOString().slice(0, 10);
+                filtered = filtered.filter(r => {
+                    const requestDate = new Date(r.createdAt || r.created_at).toISOString().slice(0, 10);
+                    return requestDate === today;
+                });
+            } else if (statusFilter === 'yesterday') {
                 const yesterday = new Date();
                 yesterday.setHours(0, 0, 0, 0);
                 const today = new Date();
@@ -3305,7 +3317,15 @@ class AdminManager {
 
         // Status filter
         if (statusFilter !== 'All' && statusFilter !== '') {
-            filtered = filtered.filter(r => r.status === statusFilter);
+            if (statusFilter === 'today') {
+                const today = new Date().toISOString().slice(0, 10);
+                filtered = filtered.filter(r => {
+                    const requestDate = new Date(r.createdAt || r.created_at).toISOString().slice(0, 10);
+                    return requestDate === today;
+                });
+            } else {
+                filtered = filtered.filter(r => r.status === statusFilter);
+            }
         }
 
         return filtered;
