@@ -930,29 +930,29 @@ class AdminManager {
                         <h3>${stats.totalRequests}</h3>
                         <p>طلبات العادية</p>
                     </div>
-                    <button onclick="adminManager.toggleRequestStatusDropdown(event)" class="stat-filter-btn" title="تصفية حسب الحالة">
+                    <button onclick="event.stopPropagation(); adminManager.toggleRequestStatusDropdown(event)" class="stat-filter-btn" title="تصفية حسب الحالة">
                         <i class="fas fa-filter"></i>
                     </button>
                     <div id="requestStatusDropdown" class="stat-dropdown" style="display: none;">
-                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','All'); adminManager.toggleRequestStatusDropdown(event);">
+                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','All');">
                             <i class="fas fa-list"></i> جميع الطلبات
                         </div>
-                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','received'); adminManager.toggleRequestStatusDropdown(event);">
+                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','received');">
                             <i class="fas fa-check-circle"></i> تم الاستلام
                         </div>
-                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','waiting'); adminManager.toggleRequestStatusDropdown(event);">
+                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','waiting');">
                             <i class="fas fa-clock"></i> بانتظار الفحص
                         </div>
-                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','maintenance'); adminManager.toggleRequestStatusDropdown(event);">
+                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','maintenance');">
                             <i class="fas fa-tools"></i> تحت الصيانة
                         </div>
-                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','waiting_parts'); adminManager.toggleRequestStatusDropdown(event);">
+                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','waiting_parts');">
                             <i class="fas fa-cogs"></i> بانتظار قطع الغيار
                         </div>
-                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','ready'); adminManager.toggleRequestStatusDropdown(event);">
+                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','ready');">
                             <i class="fas fa-check-double"></i> جاهز للتسليم
                         </div>
-                        <div class="dropdown-item" onclick="adminManager.openStatFilter('requests','delivered'); adminManager.toggleRequestStatusDropdown(event);">
+                        <div class="dropdown-item" onclick="event.stopPropagation(); adminManager.openStatFilter('requests','delivered');">
                             <i class="fas fa-hand-holding"></i> تم التسليم
                         </div>
                     </div>
