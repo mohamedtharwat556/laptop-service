@@ -6,19 +6,41 @@
 // Utility Functions
 class Utils {
     /**
-     * Format date to readable string
+     * Format date to readable string with Arabic day name
      */
     static formatDate(dateString) {
         if (!dateString) return '—';
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return '—';
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        
+        // Arabic day names
+        const arabicDays = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 
+                             'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        
+        const dayName = arabicDays[date.getDay()];
+        const day = date.getDate();
+        const month = arabicMonths[date.getMonth()];
+        const year = date.getFullYear();
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        
+        return `${dayName}، ${day} ${month} ${year} - ${hours}:${minutes}`;
+    }
+
+    /**
+     * Format date to simple Arabic format (day/month/year)
+     */
+    static formatDateSimple(dateString) {
+        if (!dateString) return '—';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '—';
+        
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        
+        return `${day}/${month}/${year}`;
     }
 
     /**
