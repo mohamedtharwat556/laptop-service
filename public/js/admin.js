@@ -2011,7 +2011,7 @@ class AdminManager {
                                                 </div>
                                             </div>
                                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1); min-width: 140px;" onchange="adminManager.updateDeviceStatus(${bulkRequest.id}, ${index}, this.value)">
+                                                <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1); min-width: 140px;" onchange="adminManager.updateDeviceStatus(${bulkRequest.id}, ${device.id}, this.value)">
                                                     <option value="Received" ${device.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
                                                     <option value="Waiting Inspection" ${device.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
                                                     <option value="Under Maintenance" ${device.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
@@ -2175,7 +2175,14 @@ class AdminManager {
                     body: JSON.stringify(deviceData)
                 });
 
-                if (!response.ok) throw new Error('Failed to update device');
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    throw new Error('Failed to update device');
+                }
+
+                const result = await response.json();
+                console.log('Device updated:', result);
 
                 await this.loadData();
                 this.renderBulkRequests();
@@ -2185,7 +2192,7 @@ class AdminManager {
             } catch (error) {
                 loading.hide();
                 console.error('Error updating device:', error);
-                toast.error('فشل تحديث الجهاز');
+                toast.error('فشل تحديث الجهاز: ' + error.message);
             }
         });
     }
@@ -2276,7 +2283,14 @@ class AdminManager {
                     body: JSON.stringify(deviceData)
                 });
 
-                if (!response.ok) throw new Error('Failed to add device');
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    throw new Error('Failed to add device');
+                }
+
+                const result = await response.json();
+                console.log('Device added:', result);
 
                 await this.loadData();
                 this.renderBulkRequests();
@@ -2286,7 +2300,7 @@ class AdminManager {
             } catch (error) {
                 loading.hide();
                 console.error('Error adding device:', error);
-                toast.error('فشل إضافة الجهاز');
+                toast.error('فشل إضافة الجهاز: ' + error.message);
             }
         });
     }
@@ -3337,6 +3351,8 @@ class AdminManager {
      */
     async updateDeviceStatus(bulkRequestId, deviceId, newStatus) {
         try {
+            console.log('Updating device status:', { bulkRequestId, deviceId, newStatus });
+            
             // Update device status using the device-specific endpoint
             const updateResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
                 method: 'PUT',
@@ -3344,22 +3360,23 @@ class AdminManager {
                 body: JSON.stringify({ status: newStatus })
             });
 
-            if (!updateResponse.ok) throw new Error('Failed to update device status');
-
-            // Update local data instead of reloading everything
-            const bulkRequestIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-            if (bulkRequestIndex !== -1) {
-                const deviceIndex = this.bulkRequests[bulkRequestIndex].devices.findIndex(d => d.id === deviceId);
-                if (deviceIndex !== -1) {
-                    this.bulkRequests[bulkRequestIndex].devices[deviceIndex].status = newStatus;
-                    this.renderBulkRequests();
-                }
+            if (!updateResponse.ok) {
+                const errorText = await updateResponse.text();
+                console.error('Error response:', errorText);
+                throw new Error('Failed to update device status');
             }
+
+            const result = await updateResponse.json();
+            console.log('Device status updated:', result);
+
+            // Reload data from server to get fresh data
+            await this.loadData();
+            this.renderBulkRequests();
 
             toast.success('تم تحديث حالة الجهاز بنجاح');
         } catch (error) {
             console.error('Error updating device status:', error);
-            toast.error('فشل تحديث حالة الجهاز');
+            toast.error('فشل تحديث حالة الجهاز: ' + error.message);
         }
     }
 
@@ -3902,122 +3919,7 @@ class AdminManager {
         }
     }
 
-    async showAddDeviceModal(bulkRequestId) {
-        const modal = document.createElement('div');
-        modal.className = 'modal active';
-        modal.innerHTML = `
-            <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
-                <div class="modal-header">
-                    <h3>إضافة لابتوب جديد لطلب الجملة</h3>
-                    <button type="button" class="modal-close" onclick="this.closest('.modal').remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <form id="addDeviceForm">
-                    <div class="form-group">
-                        <label class="form-label">ماركة اللابتوب</label>
-                        <select class="form-select" name="laptopBrand" required>
-                            <option value="">اختر الماركة</option>
-                            <option value="HP">HP</option>
-                            <option value="Dell">Dell</option>
-                            <option value="Lenovo">Lenovo</option>
-                            <option value="Asus">Asus</option>
-                            <option value="Acer">Acer</option>
-                            <option value="Toshiba">Toshiba</option>
-                            <option value="Samsung">Samsung</option>
-                            <option value="MSI">MSI</option>
-                            <option value="Apple">Apple</option>
-                            <option value="Sony">Sony</option>
-                            <option value="Other">أخرى</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">موديل اللابتوب</label>
-                        <input type="text" class="form-input" name="laptopModel" placeholder="أدخل الموديل" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">الرقم التسلسلي (اختياري)</label>
-                        <input type="text" class="form-input" name="serialNumber" placeholder="أدخل الرقم التسلسلي">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">تاريخ الاستلام</label>
-                        <input type="date" class="form-input" name="receivedDate" value="${new Date().toISOString().split('T')[0]}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">الأولوية</label>
-                        <select class="form-select" name="priority">
-                            <option value="Low">منخفضة</option>
-                            <option value="Medium" selected>متوسطة</option>
-                            <option value="High">عالية</option>
-                            <option value="Urgent">عاجلة</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">وصف المشكلة</label>
-                        <textarea class="form-textarea" name="problemDescription" rows="3" placeholder="أدخل وصف المشكلة" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">التكلفة (اختياري)</label>
-                        <input type="number" class="form-input" name="cost" placeholder="أدخل التكلفة" min="0" step="0.01">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">إلغاء</button>
-                        <button type="submit" class="btn btn-primary">إضافة اللابتوب</button>
-                    </div>
-                </form>
-            </div>
-        `;
-        document.body.appendChild(modal);
 
-        const form = document.getElementById('addDeviceForm');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await this.addDeviceToBulkRequest(bulkRequestId, new FormData(form));
-            modal.remove();
-        });
-    }
-
-    /**
-     * Add device to existing bulk request
-     */
-    async addDeviceToBulkRequest(bulkRequestId, formData) {
-        const deviceData = {
-            laptopBrand: formData.get('laptopBrand'),
-            laptopModel: formData.get('laptopModel'),
-            serialNumber: formData.get('serialNumber'),
-            receivedDate: formData.get('receivedDate'),
-            priority: formData.get('priority'),
-            problemDescription: formData.get('problemDescription'),
-            cost: parseFloat(formData.get('cost')) || 0
-        };
-
-        try {
-            loading.show('جاري إضافة اللابتوب...');
-            const response = await fetch(`/api/bulk-requests/${bulkRequestId}/devices`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(deviceData)
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                toast.success('تم إضافة اللابتوب بنجاح');
-                await this.loadData();
-                this.renderBulkRequests();
-                // Refresh the modal to show updated devices
-                this.viewBulkRequest(bulkRequestId);
-            } else {
-                throw new Error('Failed to add device');
-            }
-        } catch (error) {
-            console.error('Error adding device to bulk request:', error);
-            toast.error('فشل في إضافة اللابتوب');
-        } finally {
-            loading.hide();
-        }
-    }
 
     /**
      * Render requests table
