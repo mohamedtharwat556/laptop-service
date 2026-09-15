@@ -3326,7 +3326,7 @@ class AdminManager {
 
             // Use filtered requests based on current filters
             const filteredRequests = this.filterRequests();
-            
+
             if (filteredRequests.length === 0) {
                 toast.error('لا توجد طلبات للتصدير');
                 loading.hide();
@@ -3339,7 +3339,7 @@ class AdminManager {
                 loading.hide();
                 return;
             }
-            
+
             // Prepare data for Excel
             const excelData = filteredRequests.map(request => ({
                 'رقم الطلب': request.requestNumber,
@@ -3356,7 +3356,8 @@ class AdminManager {
                 'تاريخ الاستلام': request.receivedDate || '',
                 'تاريخ الاستلام المتوقع': request.estimatedCompletionDate ? Utils.formatDate(request.estimatedCompletionDate) : (request.estimated_completion_date ? Utils.formatDate(request.estimated_completion_date) : ''),
                 'تاريخ الإنشاء': Utils.formatDate(request.createdAt),
-                'ملاحظات': request.notes || ''
+                'ملاحظات': request.notes || '',
+                'رد الإدارة': request.adminReply || ''
             }));
 
             // Create worksheet
@@ -3501,7 +3502,8 @@ class AdminManager {
                 'تاريخ الاستلام': request.receivedDate || '',
                 'تاريخ الاستلام المتوقع': request.estimatedCompletionDate ? Utils.formatDate(request.estimatedCompletionDate) : (request.estimated_completion_date ? Utils.formatDate(request.estimated_completion_date) : ''),
                 'تاريخ الإنشاء': Utils.formatDate(request.createdAt),
-                'ملاحظات': request.notes || ''
+                'ملاحظات': request.notes || '',
+                'رد الإدارة': request.adminReply || ''
             }));
 
             // Create worksheet
