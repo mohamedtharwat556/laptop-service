@@ -1275,7 +1275,107 @@ class AdminManager {
         this.renderRequestsChart();
         this.renderBulkRequestsChart();
         this.renderCompanyRequestsChart();
-        this.renderAllRequestsOverviewChart();
+        // Get current calculation mode from dropdown or default to 'devices'
+        const mode = document.getElementById('calculationMode')?.value || 'devices';
+        this.renderAllRequestsOverviewChart(mode);
+    }
+
+    /**
+     * Change calculation mode for all requests overview chart
+     */
+    changeCalculationMode() {
+        const mode = document.getElementById('calculationMode').value;
+        this.renderAllRequestsOverviewChart(mode);
+    }
+
+    /**
+     * Translate status to Arabic
+     */
+    translateStatus(status) {
+        const translations = {
+            'Received': 'تم الاستلام',
+            'Waiting Inspection': 'بانتظار الفحص',
+            'Under Maintenance': 'قيد الصيانة',
+            'Waiting Parts': 'بانتظار قطع الغيار',
+            'Ready': 'جاهز',
+            'Delivered': 'تم التسليم'
+        };
+        return translations[status] || status;
+    }
+
+    /**
+     * Update distribution details panel
+     */
+    updateDistributionDetails(statusCounts, detailedCounts, total, calculationMode) {
+        const detailsContainer = document.getElementById('distributionStats');
+        if (!detailsContainer) return;
+
+        const unit = calculationMode === 'devices' ? 'جهاز' : 'طلب';
+        
+        let html = `
+            <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #94a3b8; font-size: 0.875rem;">الإجمالي</span>
+                    <span style="color: #3b82f6; font-weight: 700; font-size: 1.25rem;">${total} ${unit}</span>
+                </div>
+            </div>
+            
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #94a3b8; font-size: 0.875rem;">الطلبات العادية</span>
+                    <span style="color: #10b981; font-weight: 600; font-size: 1rem;">${detailedCounts.normalRequests}</span>
+                </div>
+            </div>
+            
+            <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #94a3b8; font-size: 0.875rem;">طلبات الجملة</span>
+                    <span style="color: #f59e0b; font-weight: 600; font-size: 1rem;">${calculationMode === 'devices' ? detailedCounts.bulkDevices : detailedCounts.bulkRequests}</span>
+                </div>
+                ${calculationMode === 'devices' ? `<div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">${detailedCounts.bulkRequests} طلب يحتوي على ${detailedCounts.bulkDevices} جهاز</div>` : ''}
+            </div>
+            
+            <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; padding: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #94a3b8; font-size: 0.875rem;">طلبات الشركات</span>
+                    <span style="color: #8b5cf6; font-weight: 600; font-size: 1rem;">${detailedCounts.companyRequests}</span>
+                </div>
+            </div>
+            
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.75rem; margin-top: 0.5rem;">
+                <h5 style="margin: 0 0 0.5rem 0; color: #e2e8f0; font-size: 0.875rem;">التوزيع حسب الحالة:</h5>
+        `;
+
+        Object.entries(statusCounts).forEach(([status, count]) => {
+            if (count > 0) {
+                const percentage = ((count / total) * 100).toFixed(1);
+                const statusColors = {
+                    'Received': '#3b82f6',
+                    'Waiting Inspection': '#f59e0b',
+                    'Under Maintenance': '#8b5cf6',
+                    'Waiting Parts': '#ec4899',
+                    'Ready': '#10b981',
+                    'Delivered': '#22c55e'
+                };
+                const color = statusColors[status] || '#94a3b8';
+                
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="width: 8px; height: 8px; border-radius: 50%; background: ${color};"></div>
+                            <span style="color: #94a3b8; font-size: 0.8rem;">${this.translateStatus(status)}</span>
+                        </div>
+                        <div style="text-align: left;">
+                            <span style="color: #e2e8f0; font-weight: 600; font-size: 0.875rem;">${count}</span>
+                            <span style="color: #64748b; font-size: 0.75rem;">(${percentage}%)</span>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        html += '</div>';
+        detailsContainer.innerHTML = html;
     }
 
     /**
@@ -1652,8 +1752,9 @@ class AdminManager {
 
     /**
      * Render all requests overview chart - Combined view based on real data
+     * @param {string} calculationMode - 'devices' (count each device) or 'requests' (count each request)
      */
-    renderAllRequestsOverviewChart() {
+    renderAllRequestsOverviewChart(calculationMode = 'devices') {
         const ctx = document.getElementById('allRequestsOverviewChart');
         if (!ctx) return;
 
@@ -1667,21 +1768,40 @@ class AdminManager {
             'Delivered': 0
         };
 
+        // Track detailed counts for better insights
+        const detailedCounts = {
+            normalRequests: 0,
+            bulkRequests: 0,
+            bulkDevices: 0,
+            companyRequests: 0
+        };
+
         // Add normal requests
         this.requests.forEach(r => {
             if (combinedStatusCounts.hasOwnProperty(r.status)) {
                 combinedStatusCounts[r.status]++;
+                detailedCounts.normalRequests++;
             }
         });
 
-        // Add bulk request devices
+        // Add bulk requests based on calculation mode
         this.bulkRequests.forEach(bulk => {
-            if (bulk.devices && bulk.devices.length > 0) {
-                bulk.devices.forEach(device => {
-                    if (combinedStatusCounts.hasOwnProperty(device.status)) {
-                        combinedStatusCounts[device.status]++;
-                    }
-                });
+            if (calculationMode === 'devices') {
+                // Count each device separately (more detailed)
+                if (bulk.devices && bulk.devices.length > 0) {
+                    bulk.devices.forEach(device => {
+                        if (combinedStatusCounts.hasOwnProperty(device.status)) {
+                            combinedStatusCounts[device.status]++;
+                            detailedCounts.bulkDevices++;
+                        }
+                    });
+                }
+            } else {
+                // Count each bulk request as one (regardless of device count)
+                if (combinedStatusCounts.hasOwnProperty(bulk.status)) {
+                    combinedStatusCounts[bulk.status]++;
+                    detailedCounts.bulkRequests++;
+                }
             }
         });
 
@@ -1689,12 +1809,18 @@ class AdminManager {
         this.companyRequests.forEach(r => {
             if (combinedStatusCounts.hasOwnProperty(r.status)) {
                 combinedStatusCounts[r.status]++;
+                detailedCounts.companyRequests++;
             }
         });
 
         const labels = Object.keys(combinedStatusCounts).map(status => this.translateStatus(status));
         const data = Object.values(combinedStatusCounts);
         const total = data.reduce((sum, val) => sum + val, 0);
+
+        // Calculate mode description
+        const modeDescription = calculationMode === 'devices' 
+            ? 'حسب الأجهزة الفعلية' 
+            : 'حسب عدد الطلبات';
 
         // If no data, show message
         if (total === 0) {
@@ -1718,6 +1844,35 @@ class AdminManager {
             'rgba(34, 197, 94, 0.9)'     // Delivered - Completed (Green)
         ];
 
+        // Register custom plugin for center text
+        const centerTextPlugin = {
+            id: 'centerText',
+            beforeDraw: (chart) => {
+                const ctx = chart.ctx;
+                const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+                const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+                
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Draw total count
+                ctx.font = 'bold 24px Tajawal, sans-serif';
+                ctx.fillStyle = '#e2e8f0';
+                ctx.fillText(total.toString(), centerX, centerY - 10);
+                
+                // Draw mode label
+                ctx.font = '12px Tajawal, sans-serif';
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText(modeDescription, centerX, centerY + 15);
+                
+                ctx.restore();
+            }
+        };
+
+        // Update distribution details panel
+        this.updateDistributionDetails(combinedStatusCounts, detailedCounts, total, calculationMode);
+
         this.charts.allRequestsOverview = new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -1730,6 +1885,7 @@ class AdminManager {
                     hoverOffset: 15
                 }]
             },
+            plugins: [centerTextPlugin],
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -1785,7 +1941,7 @@ class AdminManager {
                                 return [
                                     `العدد: ${value}`,
                                     `النسبة: ${percentage}%`,
-                                    `من إجمالي ${total} طلب/جهاز`
+                                    `من إجمالي ${total} ${calculationMode === 'devices' ? 'جهاز' : 'طلب'}`
                                 ];
                             }
                         }
