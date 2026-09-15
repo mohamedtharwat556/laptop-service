@@ -320,11 +320,20 @@
                 <div class="dashboard-header" style="flex-wrap:wrap; gap:1rem;">
                     <h2><i class="fas fa-file-excel" style="color:#10b981;"></i> التقارير</h2>
                     <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
-                        <select id="reportType" class="form-select" style="width:auto; min-width:150px;">
-                            <option value="single">طلبات عادية</option>
-                            <option value="bulk">طلبات جملة</option>
-                            <option value="company">طلبات شركات</option>
-                        </select>
+                        <div style="display:flex; gap:1rem; align-items:center; background: rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 8px;">
+                            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; color: var(--white);">
+                                <input type="checkbox" id="reportTypeSingle" value="single" checked style="width:16px; height:16px; cursor:pointer;">
+                                <span>طلبات عادية</span>
+                            </label>
+                            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; color: var(--white);">
+                                <input type="checkbox" id="reportTypeBulk" value="bulk" style="width:16px; height:16px; cursor:pointer;">
+                                <span>طلبات جملة</span>
+                            </label>
+                            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; color: var(--white);">
+                                <input type="checkbox" id="reportTypeCompany" value="company" style="width:16px; height:16px; cursor:pointer;">
+                                <span>طلبات شركات</span>
+                            </label>
+                        </div>
                         <input type="date" id="reportStartDate" class="form-input" style="width:auto;">
                         <input type="date" id="reportEndDate" class="form-input" style="width:auto;">
                         <button class="btn btn-primary" onclick="adminManager.generateReport()">

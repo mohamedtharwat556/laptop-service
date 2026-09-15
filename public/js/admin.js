@@ -5853,53 +5853,79 @@ class AdminManager {
     }
 
     /**
-     * Generate report based on selected period
+     * Generate report based on selected period and multiple request types
      */
     generateReport() {
-        const reportType = document.getElementById('reportType');
+        const reportTypeSingle = document.getElementById('reportTypeSingle');
+        const reportTypeBulk = document.getElementById('reportTypeBulk');
+        const reportTypeCompany = document.getElementById('reportTypeCompany');
         const reportStartDate = document.getElementById('reportStartDate');
         const reportEndDate = document.getElementById('reportEndDate');
 
-        let filteredRequests = [];
+        // Get selected report types
+        const selectedTypes = [];
+        if (reportTypeSingle && reportTypeSingle.checked) selectedTypes.push('single');
+        if (reportTypeBulk && reportTypeBulk.checked) selectedTypes.push('bulk');
+        if (reportTypeCompany && reportTypeCompany.checked) selectedTypes.push('company');
 
-        // Filter by request type
-        const type = reportType ? reportType.value : 'single';
-        let requestsByType;
-        if (type === 'bulk') {
-            requestsByType = this.bulkRequests || [];
-        } else if (type === 'company') {
-            requestsByType = this.companyRequests || [];
-        } else {
-            requestsByType = this.requests;
+        if (selectedTypes.length === 0) {
+            toast.warning('الرجاء اختيار نوع واحد على الأقل للتقرير');
+            return;
         }
+
+        console.log('📊 Generating report for types:', selectedTypes);
+
+        let allFilteredRequests = [];
 
         // Filter by date range
         const startDate = reportStartDate ? reportStartDate.value : null;
         const endDate = reportEndDate ? reportEndDate.value : null;
 
-        if (startDate && endDate) {
-            filteredRequests = requestsByType.filter(r => {
-                const d = new Date(r.createdAt);
-                const requestDate = d.toISOString().slice(0, 10);
-                return requestDate >= startDate && requestDate <= endDate;
-            });
-        } else if (startDate) {
-            filteredRequests = requestsByType.filter(r => {
-                const d = new Date(r.createdAt);
-                return d.toISOString().slice(0, 10) === startDate;
-            });
-        } else {
-            // If no date selected, show all
-            filteredRequests = requestsByType;
-        }
+        // Process each selected type
+        selectedTypes.forEach(type => {
+            let requestsByType;
+            if (type === 'bulk') {
+                requestsByType = this.bulkRequests || [];
+            } else if (type === 'company') {
+                requestsByType = this.companyRequests || [];
+            } else {
+                requestsByType = this.requests;
+            }
 
-        this.renderReportTable(filteredRequests, type);
+            // Filter by date range
+            let filteredRequests;
+            if (startDate && endDate) {
+                filteredRequests = requestsByType.filter(r => {
+                    const d = new Date(r.createdAt);
+                    const requestDate = d.toISOString().slice(0, 10);
+                    return requestDate >= startDate && requestDate <= endDate;
+                });
+            } else if (startDate) {
+                filteredRequests = requestsByType.filter(r => {
+                    const d = new Date(r.createdAt);
+                    return d.toISOString().slice(0, 10) === startDate;
+                });
+            } else {
+                // If no date selected, show all
+                filteredRequests = requestsByType;
+            }
+
+            // Add type to each request for identification
+            filteredRequests = filteredRequests.map(r => ({
+                ...r,
+                reportType: type
+            }));
+
+            allFilteredRequests.push(...filteredRequests);
+        });
+
+        this.renderReportTable(allFilteredRequests, selectedTypes);
     }
 
     /**
-     * Render report table
+     * Render report table with support for multiple request types
      */
-    renderReportTable(requests, type = 'single') {
+    renderReportTable(requests, types = ['single']) {
         const container = document.getElementById('reportContainer');
         if (!container) return;
 
@@ -5913,35 +5939,65 @@ class AdminManager {
             return;
         }
 
+        // Build type summary
+        const typeSummary = types.map(type => {
+            const count = requests.filter(r => r.reportType === type).length;
+            const typeName = type === 'single' ? 'عادي' : type === 'bulk' ? 'جملة' : 'شركة';
+            return `${typeName}: ${count}`;
+        }).join(' | ');
+
         // For bulk requests, show all device details like single requests
-        if (type === 'bulk') {
+        if (types.includes('bulk')) {
             const deviceRows = [];
-            requests.forEach(bulkRequest => {
-                if (bulkRequest.devices && bulkRequest.devices.length > 0) {
-                    bulkRequest.devices.forEach(device => {
+            requests.forEach(request => {
+                if (request.reportType === 'bulk' && request.devices && request.devices.length > 0) {
+                    request.devices.forEach(device => {
                         deviceRows.push({
-                            requestNumber: bulkRequest.requestNumber,
-                            customerName: bulkRequest.customerName,
-                            customerPhone: bulkRequest.customerPhone,
+                            requestNumber: request.requestNumber,
+                            customerName: request.customerName,
+                            customerPhone: request.customerPhone,
                             laptopBrand: device.laptopBrand,
                             laptopModel: device.laptopModel,
                             serialNumber: device.serialNumber,
                             problemDescription: device.problemDescription,
                             status: device.status,
-                            cost: bulkRequest.cost || 0,
-                            technician: bulkRequest.technician || '—',
-                            createdAt: bulkRequest.createdAt
+                            cost: request.cost || 0,
+                            technician: request.technician || '—',
+                            createdAt: request.createdAt,
+                            reportType: 'bulk'
                         });
+                    });
+                } else if (request.reportType !== 'bulk') {
+                    // For non-bulk requests, add as is
+                    deviceRows.push({
+                        requestNumber: request.requestNumber,
+                        customerName: request.fullName || request.customerName,
+                        customerPhone: request.phone || request.customerPhone,
+                        laptopBrand: request.laptopBrand,
+                        laptopModel: request.laptopModel,
+                        serialNumber: request.serialNumber,
+                        problemDescription: request.problemDescription,
+                        status: request.status,
+                        cost: request.cost || 0,
+                        technician: request.technician || '—',
+                        createdAt: request.createdAt,
+                        reportType: request.reportType
                     });
                 }
             });
 
             container.innerHTML = `
                 <div class="glass-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
+                        <p style="color: #3b82f6; margin: 0;">
+                            <i class="fas fa-info-circle"></i> إجمالي الطلبات: ${deviceRows.length} (${typeSummary})
+                        </p>
+                    </div>
                     <div style="overflow-x: auto;">
                         <table class="table">
                             <thead>
                                 <tr>
+                                    <th>نوع الطلب</th>
                                     <th>رقم الطلب</th>
                                     <th>اسم العميل</th>
                                     <th>الهاتف</th>
@@ -5956,6 +6012,15 @@ class AdminManager {
                             <tbody>
                                 ${deviceRows.map(r => `
                                     <tr>
+                                        <td>
+                                            <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; background: ${
+                                                r.reportType === 'single' ? 'rgba(16, 185, 129, 0.2); color: #10b981;' :
+                                                r.reportType === 'bulk' ? 'rgba(245, 158, 11, 0.2); color: #f59e0b;' :
+                                                'rgba(139, 92, 246, 0.2); color: #8b5cf6;'
+                                            };">
+                                                ${r.reportType === 'single' ? 'عادي' : r.reportType === 'bulk' ? 'جملة' : 'شركة'}
+                                            </span>
+                                        </td>
                                         <td style="font-weight: 600;">${r.requestNumber}</td>
                                         <td>${r.customerName}</td>
                                         <td dir="ltr">${r.customerPhone}</td>
@@ -5971,61 +6036,24 @@ class AdminManager {
                         </table>
                     </div>
                     <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
-                        <strong>إجمالي الطلبات:</strong> ${requests.length} | 
-                        <strong>إجمالي الأجهزة:</strong> ${deviceRows.length}
+                        <strong>إجمالي الطلبات:</strong> ${deviceRows.length}
                     </div>
                 </div>
             `;
-        } else if (type === 'company') {
-            // Company requests - apply dashboard style
-            container.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h3 style="margin: 0;">طلبات موظفي الشركة (${requests.length})</h3>
-                </div>
-                <div class="table-container" style="overflow-x: auto;">
-                    <table class="table" style="min-width: 1000px;">
-                        <thead>
-                            <tr>
-                                <th>رقم الطلب</th>
-                                <th>اسم الشركة</th>
-                                <th>الهاتف</th>
-                                <th>الجهاز</th>
-                                <th>المشكلة</th>
-                                <th>الحالة</th>
-                                <th>التكلفة</th>
-                                <th>الفني</th>
-                                <th>التاريخ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${requests.map(r => `
-                                <tr style="transition: background-color 0.2s;">
-                                    <td style="font-weight: 600; color: #3b82f6;">${r.requestNumber}</td>
-                                    <td style="font-weight: 600;">${r.companyName || r.full_name || r.fullName || '—'}</td>
-                                    <td dir="ltr">${r.companyPhone || r.phone || '—'}</td>
-                                    <td>${r.laptopBrand || r.laptop_brand || ''} ${r.laptopModel || r.laptop_model || ''}</td>
-                                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription || r.problem_description || '—'}</td>
-                                    <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
-                                    <td>${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
-                                    <td>${r.technician || '—'}</td>
-                                    <td>${Utils.formatDate(r.createdAt)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
-                    <strong>إجمالي طلبات الشركات:</strong> ${requests.length}
-                </div>
-            `;
         } else {
-            // Single requests (existing logic)
+            // Single requests and mixed types - apply dashboard style
             container.innerHTML = `
                 <div class="glass-card">
-                    <div style="overflow-x: auto;">
-                        <table class="table">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
+                        <p style="color: #3b82f6; margin: 0;">
+                            <i class="fas fa-info-circle"></i> إجمالي الطلبات: ${requests.length} (${typeSummary})
+                        </p>
+                    </div>
+                    <div class="table-container" style="overflow-x: auto;">
+                        <table class="table" style="min-width: 1000px;">
                             <thead>
                                 <tr>
+                                    <th>نوع الطلب</th>
                                     <th>رقم الطلب</th>
                                     <th>اسم العميل</th>
                                     <th>الهاتف</th>
@@ -6033,19 +6061,30 @@ class AdminManager {
                                     <th>المشكلة</th>
                                     <th>الحالة</th>
                                     <th>التكلفة</th>
+                                    <th>الفني</th>
                                     <th>التاريخ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${requests.map(r => `
-                                    <tr>
-                                        <td style="font-weight: 600;">${r.requestNumber}</td>
-                                        <td>${r.fullName}</td>
-                                        <td dir="ltr">${r.phone}</td>
+                                    <tr style="transition: background-color 0.2s;">
+                                        <td>
+                                            <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; background: ${
+                                                r.reportType === 'single' ? 'rgba(16, 185, 129, 0.2); color: #10b981;' :
+                                                r.reportType === 'bulk' ? 'rgba(245, 158, 11, 0.2); color: #f59e0b;' :
+                                                'rgba(139, 92, 246, 0.2); color: #8b5cf6;'
+                                            };">
+                                                ${r.reportType === 'single' ? 'عادي' : r.reportType === 'bulk' ? 'جملة' : 'شركة'}
+                                            </span>
+                                        </td>
+                                        <td style="font-weight: 600; color: #3b82f6;">${r.requestNumber}</td>
+                                        <td>${r.fullName || r.customerName}</td>
+                                        <td dir="ltr">${r.phone || r.customerPhone}</td>
                                         <td>${r.laptopBrand} ${r.laptopModel || ''}</td>
                                         <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription}</td>
                                         <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
                                         <td>${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
+                                        <td>${r.technician || '—'}</td>
                                         <td>${Utils.formatDate(r.createdAt)}</td>
                                     </tr>
                                 `).join('')}
@@ -6053,8 +6092,7 @@ class AdminManager {
                         </table>
                     </div>
                     <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
-                        <strong>إجمالي الطلبات:</strong> ${requests.length} |
-                        <strong>إجمالي التكلفة:</strong> ${Utils.formatCurrency(requests.reduce((sum, r) => sum + (r.cost || 0), 0))}
+                        <strong>إجمالي الطلبات:</strong> ${requests.length}
                     </div>
                 </div>
             `;
@@ -6069,37 +6107,50 @@ class AdminManager {
     }
 
     /**
-     * Export daily report as Excel
+     * Export daily report as Excel with support for multiple request types
      */
     exportDailyReport() {
-        const reportType = document.getElementById('reportType');
+        const reportTypeSingle = document.getElementById('reportTypeSingle');
+        const reportTypeBulk = document.getElementById('reportTypeBulk');
+        const reportTypeCompany = document.getElementById('reportTypeCompany');
         const reportStartDate = document.getElementById('reportStartDate');
         const reportEndDate = document.getElementById('reportEndDate');
 
-        let filteredRequests = [];
+        // Get selected report types
+        const selectedTypes = [];
+        if (reportTypeSingle && reportTypeSingle.checked) selectedTypes.push('single');
+        if (reportTypeBulk && reportTypeBulk.checked) selectedTypes.push('bulk');
+        if (reportTypeCompany && reportTypeCompany.checked) selectedTypes.push('company');
 
-        // Filter by request type
-        const type = reportType ? reportType.value : 'single';
-        let requestsByType;
-        if (type === 'bulk') {
-            requestsByType = this.bulkRequests || [];
-        } else if (type === 'company') {
-            requestsByType = this.companyRequests || [];
-        } else {
-            requestsByType = this.requests;
+        if (selectedTypes.length === 0) {
+            toast.warning('الرجاء اختيار نوع واحد على الأقل للتقرير');
+            return;
         }
 
-        console.log('📊 Report type:', type);
-        console.log('📊 Total requests:', requestsByType.length);
-        let fileName = 'تقرير';
+        console.log('📊 Exporting report for types:', selectedTypes);
+
+        let allFilteredRequests = [];
 
         // Filter by date range
         const startDate = reportStartDate ? reportStartDate.value : null;
         const endDate = reportEndDate ? reportEndDate.value : null;
 
-        if (startDate && endDate) {
-            filteredRequests = requestsByType.filter(r => {
-                const d = new Date(r.createdAt);
+        // Process each selected type
+        selectedTypes.forEach(type => {
+            let requestsByType;
+            if (type === 'bulk') {
+                requestsByType = this.bulkRequests || [];
+            } else if (type === 'company') {
+                requestsByType = this.companyRequests || [];
+            } else {
+                requestsByType = this.requests;
+            }
+
+            // Filter by date range
+            let filteredRequests;
+            if (startDate && endDate) {
+                filteredRequests = requestsByType.filter(r => {
+                    const d = new Date(r.createdAt);
                 const requestDate = d.toISOString().slice(0, 10);
                 return requestDate >= startDate && requestDate <= endDate;
             });
@@ -6109,92 +6160,115 @@ class AdminManager {
                 const d = new Date(r.createdAt);
                 return d.toISOString().slice(0, 10) === startDate;
             });
-            fileName = type === 'bulk' ? `تقرير-جملة-${startDate}` : type === 'company' ? `تقرير-شركات-${startDate}` : `تقرير-${startDate}`;
         } else {
             // If no date selected, show all
             filteredRequests = requestsByType;
-            fileName = type === 'bulk' ? 'تقرير-طلبات-جملة' : type === 'company' ? 'تقرير-طلبات-شركات' : 'تقرير-كل-الطلبات';
         }
 
-        console.log('📊 Filtered requests:', filteredRequests.length);
+        // Add type to each request for identification
+        filteredRequests = filteredRequests.map(r => ({
+            ...r,
+            reportType: type
+        }));
 
-        if (filteredRequests.length === 0) {
+        allFilteredRequests.push(...filteredRequests);
+        });
+
+        if (allFilteredRequests.length === 0) {
             toast.error('لا توجد طلبات في الفترة المحددة');
             return;
         }
 
-        let data;
-        if (type === 'bulk') {
-            // For bulk requests, show each request as a row with summary info
-            data = [
-                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'عدد اللابتوبات', 'الحالة', 'التكلفة', 'الفني', 'رد الإدارة', 'تاريخ الاستلام المتوقع', 'تاريخ الطلب'],
-                ...filteredRequests.map((r, i) => [
-                    i + 1,
-                    r.requestNumber,
-                    r.customerName,
-                    r.customerPhone,
-                    r.deviceCount,
-                    this.translateStatus(r.status),
-                    r.cost > 0 ? r.cost : 0,
-                    r.technician || '—',
-                    r.adminReply || '—',
-                    r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—',
-                    Utils.formatDate(r.createdAt)
-                ])
-            ];
-        } else if (type === 'company') {
-            // Company requests
-            data = [
-                ['#', 'رقم الطلب', 'الاسم', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
-                ...filteredRequests.map((r, i) => [
-                    i + 1,
-                    r.requestNumber || r.request_number,
-                    r.fullName || r.full_name,
-                    r.phone,
-                    `${r.laptopBrand || r.laptop_brand}${r.laptopModel || r.laptop_model ? ' ' + (r.laptopModel || r.laptop_model) : ''}`,
-                    r.serialNumber || r.serial_number || '—',
-                    r.problemDescription || r.problem_description,
-                    r.adminReply || r.admin_reply || '—',
-                    this.translateStatus(r.status),
-                    r.cost > 0 ? r.cost : 0,
-                    r.technician || '—',
-                    r.receivedDate || r.received_date ? Utils.formatDate(r.receivedDate || r.received_date) : '—',
-                    r.estimatedCompletionDate || r.estimated_completion_date ? Utils.formatDate(r.estimatedCompletionDate || r.estimated_completion_date) : '—',
-                    Utils.formatDate(r.createdAt || r.created_at)
-                ])
-            ];
-        } else {
-            // Single requests
-            data = [
-                ['#', 'رقم الطلب', 'اسم العميل', 'الهاتف', 'الجهاز', 'الرقم التسلسلي', 'المشكلة', 'رد الإدارة', 'الحالة', 'التكلفة', 'الفني', 'تاريخ الاستلام', 'تاريخ التسليم المتوقع', 'تاريخ الطلب'],
-                ...filteredRequests.map((r, i) => [
-                    i + 1,
-                    r.requestNumber,
-                    r.fullName,
-                    r.phone,
-                    `${r.laptopBrand}${r.laptopModel ? ' ' + r.laptopModel : ''}`,
-                    r.serialNumber || '—',
-                    r.problemDescription,
-                    r.adminReply || '—',
-                    this.translateStatus(r.status),
-                    r.cost > 0 ? r.cost : 0,
-                    r.technician || '—',
-                    r.receivedDate ? Utils.formatDate(r.receivedDate) : '—',
-                    r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : '—',
-                    Utils.formatDate(r.createdAt)
-                ])
-            ];
+        // Build unified data for Excel export
+        const typeSummary = selectedTypes.map(type => {
+            const count = allFilteredRequests.filter(r => r.reportType === type).length;
+            const typeName = type === 'single' ? 'عادي' : type === 'bulk' ? 'جملة' : 'شركة';
+            return `${typeName}: ${count}`;
+        }).join(' | ');
+
+        console.log('📊 Total requests for export:', allFilteredRequests.length);
+        console.log('📊 Type summary:', typeSummary);
+
+        let fileName = 'تقرير_شامل';
+
+        // Build filename based on date range
+        if (startDate && endDate) {
+            fileName = `تقرير_شامل_${startDate}_${endDate}`;
+        } else if (startDate) {
+            fileName = `تقرير_شامل_${startDate}`;
         }
 
-        const ws = XLSX.utils.aoa_to_sheet(data);
-        // Column widths - same for all types now
+        // Process data for Excel
+        let excelData = [];
+        let rowIndex = 1;
+
+        allFilteredRequests.forEach(r => {
+            const typeName = r.reportType === 'single' ? 'عادي' : r.reportType === 'bulk' ? 'جملة' : 'شركة';
+            
+            if (r.reportType === 'bulk' && r.devices && r.devices.length > 0) {
+                // For bulk requests, export each device separately
+                r.devices.forEach(device => {
+                    excelData.push({
+                        '#': rowIndex++,
+                        'نوع الطلب': typeName,
+                        'رقم الطلب': r.requestNumber,
+                        'اسم العميل': r.customerName,
+                        'الهاتف': r.customerPhone,
+                        'الجهاز': `${device.laptopBrand}${device.laptopModel ? ' ' + device.laptopModel : ''}`,
+                        'الرقم التسلسلي': device.serialNumber || '—',
+                        'المشكلة': device.problemDescription,
+                        'الحالة': this.translateStatus(device.status),
+                        'التكلفة': r.cost > 0 ? r.cost : 0,
+                        'الفني': r.technician || '—',
+                        'تاريخ الطلب': Utils.formatDate(r.createdAt)
+                    });
+                });
+            } else {
+                // For single and company requests
+                excelData.push({
+                    '#': rowIndex++,
+                    'نوع الطلب': typeName,
+                    'رقم الطلب': r.requestNumber,
+                    'اسم العميل': r.fullName || r.customerName,
+                    'الهاتف': r.phone || r.customerPhone,
+                    'الجهاز': `${r.laptopBrand || r.laptop_brand}${r.laptopModel || r.laptop_model ? ' ' + (r.laptopModel || r.laptop_model) : ''}`,
+                    'الرقم التسلسلي': r.serialNumber || r.serial_number || '—',
+                    'المشكلة': r.problemDescription || r.problem_description,
+                    'الحالة': this.translateStatus(r.status),
+                    'التكلفة': r.cost > 0 ? r.cost : 0,
+                    'الفني': r.technician || '—',
+                    'تاريخ الطلب': Utils.formatDate(r.createdAt)
+                });
+            }
+        });
+
+        // Create worksheet
+        const ws = XLSX.utils.json_to_sheet(excelData);
+
+        // Set column widths
         ws['!cols'] = [
-            {wch:4},{wch:14},{wch:20},{wch:14},{wch:15},{wch:18},{wch:10},{wch:15},{wch:25},{wch:18},{wch:20}
+            { wch: 8 },   // #
+            { wch: 12 },  // نوع الطلب
+            { wch: 18 },  // رقم الطلب
+            { wch: 25 },  // اسم العميل
+            { wch: 15 },  // الهاتف
+            { wch: 25 },  // الجهاز
+            { wch: 25 },  // الرقم التسلسلي
+            { wch: 30 },  // المشكلة
+            { wch: 15 },  // الحالة
+            { wch: 12 },  // التكلفة
+            { wch: 15 },  // الفني
+            { wch: 15 }   // تاريخ الطلب
         ];
+
+        // Create workbook
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'التقرير');
-        XLSX.writeFile(wb, `YAS-${fileName}.xlsx`);
-        toast.success(`تم تصدير ${filteredRequests.length} طلب بنجاح ✅`);
+        XLSX.utils.book_append_sheet(wb, ws, 'التقرير الشامل');
+
+        // Download file
+        XLSX.writeFile(wb, `${fileName}.xlsx`);
+
+        toast.success(`تم تحميل ${excelData.length} سجل في ملف Excel بنجاح (${typeSummary})`);
     }
 
 }
