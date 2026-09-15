@@ -6228,6 +6228,12 @@ class AdminManager {
             // Navigate to the appropriate section and wait for data to load
             await this.switchSection(type === 'normal' ? 'requests' : type === 'bulk' ? 'bulk-requests' : 'company-requests');
 
+            // Wait for data to load completely
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Reload data to ensure we have the latest information
+            await this.loadData();
+
             // Wait a bit for rendering to complete
             await new Promise(resolve => setTimeout(resolve, 300));
 
