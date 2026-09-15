@@ -1158,24 +1158,68 @@ class AdminManager {
 
         const totalLaptopsReceived = normalLaptopsReceived + companyLaptopsReceived + bulkLaptopsReceived;
 
+        // Calculate status distributions for better analytics
+        const calculateStatusDistribution = (requests) => {
+            const distribution = {
+                'Received': 0,
+                'Waiting Inspection': 0,
+                'Under Maintenance': 0,
+                'Waiting Parts': 0,
+                'Ready': 0,
+                'Delivered': 0
+            };
+            
+            requests.forEach(r => {
+                if (distribution.hasOwnProperty(r.status)) {
+                    distribution[r.status]++;
+                }
+            });
+            
+            const total = Object.values(distribution).reduce((sum, val) => sum + val, 0);
+            const percentages = {};
+            
+            Object.keys(distribution).forEach(status => {
+                percentages[status] = total > 0 ? ((distribution[status] / total) * 100).toFixed(1) : 0;
+            });
+            
+            return { distribution, percentages, total };
+        };
+
+        const normalStats = calculateStatusDistribution(this.requests);
+        
+        // Calculate bulk devices distribution
+        const bulkDevices = [];
+        this.bulkRequests.forEach(bulk => {
+            if (bulk.devices && bulk.devices.length > 0) {
+                bulk.devices.forEach(device => bulkDevices.push(device));
+            }
+        });
+        const bulkStats = calculateStatusDistribution(bulkDevices);
+        
+        const companyStats = calculateStatusDistribution(this.companyRequests);
+
         return {
             // Normal requests stats
             totalRequests: this.requests.length,
             completedRequests: completedRequests.length,
             todayOrders: todayOrders,
             totalRevenue: totalRevenue,
+            normalStatusDistribution: normalStats,
             
             // Company requests stats (separate)
             companyTotalRequests: this.companyRequests.length,
             companyOpenRequests: companyOpenRequests.length,
             companyCompletedRequests: companyCompletedRequests.length,
             companyRevenue: companyRevenue,
+            companyStatusDistribution: companyStats,
             
             // Bulk requests stats (separate)
             bulkTotalRequests: this.bulkRequests.length,
             bulkOpenRequests: bulkOpenRequests.length,
             bulkCompletedRequests: bulkCompletedRequests.length,
             bulkRevenue: bulkRevenue,
+            bulkStatusDistribution: bulkStats,
+            bulkTotalDevices: bulkDevices.length,
             
             // Laptops under maintenance stats
             totalLaptopsUnderMaintenance: totalLaptopsUnderMaintenance,
@@ -1202,6 +1246,9 @@ class AdminManager {
     renderCharts() {
         this.destroyCharts();
         this.renderRequestsChart();
+        this.renderBulkRequestsChart();
+        this.renderCompanyRequestsChart();
+        this.renderAllRequestsOverviewChart();
     }
 
     /**
@@ -1215,7 +1262,7 @@ class AdminManager {
     }
 
     /**
-     * Render requests chart
+     * Render requests chart - Enhanced with professional distribution
      */
     renderRequestsChart() {
         const ctx = document.getElementById('requestsChart');
@@ -1236,21 +1283,136 @@ class AdminManager {
             }
         });
 
+        const labels = Object.keys(statusCounts).map(status => this.translateStatus(status));
+        const data = Object.values(statusCounts);
+        const total = data.reduce((sum, val) => sum + val, 0);
+
+        // Professional color scheme with gradients
+        const backgroundColors = [
+            'rgba(59, 130, 246, 0.8)',   // Received - Blue
+            'rgba(245, 158, 11, 0.8)',   // Waiting Inspection - Amber
+            'rgba(139, 92, 246, 0.8)',   // Under Maintenance - Purple
+            'rgba(236, 72, 153, 0.8)',   // Waiting Parts - Pink
+            'rgba(16, 185, 129, 0.8)',   // Ready - Emerald
+            'rgba(34, 197, 94, 0.8)'     // Delivered - Green
+        ];
+
+        const borderColors = [
+            '#3b82f6',
+            '#f59e0b',
+            '#8b5cf6',
+            '#ec4899',
+            '#10b981',
+            '#22c55e'
+        ];
+
         this.charts.requests = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: Object.keys(statusCounts),
+                labels: labels,
                 datasets: [{
-                    data: Object.values(statusCounts),
-                    backgroundColor: [
-                        '#3b82f6',
-                        '#f59e0b',
-                        '#8b5cf6',
-                        '#ec4899',
-                        '#10b981',
-                        '#22c55e'
-                    ],
-                    borderWidth: 0
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 2,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#94a3b8',
+                            padding: 15,
+                            font: {
+                                size: 12,
+                                family: 'Tajawal, sans-serif'
+                            },
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleColor: '#e2e8f0',
+                        bodyColor: '#94a3b8',
+                        borderColor: 'rgba(59, 130, 246, 0.3)',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    }
+
+    /**
+     * Render bulk requests chart
+     */
+    renderBulkRequestsChart() {
+        const ctx = document.getElementById('bulkRequestsChart');
+        if (!ctx) return;
+
+        const statusCounts = {
+            'Received': 0,
+            'Waiting Inspection': 0,
+            'Under Maintenance': 0,
+            'Waiting Parts': 0,
+            'Ready': 0,
+            'Delivered': 0
+        };
+
+        // Count devices from bulk requests
+        this.bulkRequests.forEach(bulk => {
+            if (bulk.devices && bulk.devices.length > 0) {
+                bulk.devices.forEach(device => {
+                    if (statusCounts.hasOwnProperty(device.status)) {
+                        statusCounts[device.status]++;
+                    }
+                });
+            }
+        });
+
+        const labels = Object.keys(statusCounts).map(status => this.translateStatus(status));
+        const data = Object.values(statusCounts);
+        const total = data.reduce((sum, val) => sum + val, 0);
+
+        if (total === 0) return;
+
+        const backgroundColors = [
+            'rgba(245, 158, 11, 0.8)',   // Orange theme for bulk
+            'rgba(251, 146, 60, 0.8)',
+            'rgba(234, 88, 12, 0.8)',
+            'rgba(194, 65, 12, 0.8)',
+            'rgba(154, 52, 18, 0.8)',
+            'rgba(124, 45, 18, 0.8)'
+        ];
+
+        this.charts.bulkRequests = new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderWidth: 2,
+                    borderColor: '#1e293b'
                 }]
             },
             options: {
@@ -1261,9 +1423,269 @@ class AdminManager {
                         position: 'bottom',
                         labels: {
                             color: '#94a3b8',
-                            padding: 20
+                            padding: 12,
+                            font: {
+                                size: 11,
+                                family: 'Tajawal, sans-serif'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
                         }
                     }
+                },
+                scales: {
+                    r: {
+                        ticks: {
+                            display: false
+                        },
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Render company requests chart
+     */
+    renderCompanyRequestsChart() {
+        const ctx = document.getElementById('companyRequestsChart');
+        if (!ctx) return;
+
+        const statusCounts = {
+            'Received': 0,
+            'Waiting Inspection': 0,
+            'Under Maintenance': 0,
+            'Waiting Parts': 0,
+            'Ready': 0,
+            'Delivered': 0
+        };
+
+        this.companyRequests.forEach(r => {
+            if (statusCounts.hasOwnProperty(r.status)) {
+                statusCounts[r.status]++;
+            }
+        });
+
+        const labels = Object.keys(statusCounts).map(status => this.translateStatus(status));
+        const data = Object.values(statusCounts);
+        const total = data.reduce((sum, val) => sum + val, 0);
+
+        if (total === 0) return;
+
+        const backgroundColors = [
+            'rgba(139, 92, 246, 0.8)',   // Purple theme for company
+            'rgba(124, 58, 237, 0.8)',
+            'rgba(109, 40, 217, 0.8)',
+            'rgba(168, 85, 247, 0.8)',
+            'rgba(192, 132, 252, 0.8)',
+            'rgba(217, 70, 239, 0.8)'
+        ];
+
+        this.charts.companyRequests = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'طلبات الشركات',
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderColor: backgroundColors.map(color => color.replace('0.8', '1')),
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#94a3b8',
+                            stepSize: 1
+                        },
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#94a3b8',
+                            font: {
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Render all requests overview chart - Combined view
+     */
+    renderAllRequestsOverviewChart() {
+        const ctx = document.getElementById('allRequestsOverviewChart');
+        if (!ctx) return;
+
+        // Calculate combined status counts from all request types
+        const combinedStatusCounts = {
+            'Received': 0,
+            'Waiting Inspection': 0,
+            'Under Maintenance': 0,
+            'Waiting Parts': 0,
+            'Ready': 0,
+            'Delivered': 0
+        };
+
+        // Add normal requests
+        this.requests.forEach(r => {
+            if (combinedStatusCounts.hasOwnProperty(r.status)) {
+                combinedStatusCounts[r.status]++;
+            }
+        });
+
+        // Add bulk request devices
+        this.bulkRequests.forEach(bulk => {
+            if (bulk.devices && bulk.devices.length > 0) {
+                bulk.devices.forEach(device => {
+                    if (combinedStatusCounts.hasOwnProperty(device.status)) {
+                        combinedStatusCounts[device.status]++;
+                    }
+                });
+            }
+        });
+
+        // Add company requests
+        this.companyRequests.forEach(r => {
+            if (combinedStatusCounts.hasOwnProperty(r.status)) {
+                combinedStatusCounts[r.status]++;
+            }
+        });
+
+        const labels = Object.keys(combinedStatusCounts).map(status => this.translateStatus(status));
+        const data = Object.values(combinedStatusCounts);
+        const total = data.reduce((sum, val) => sum + val, 0);
+
+        if (total === 0) return;
+
+        // Premium gradient colors
+        const backgroundColors = [
+            'rgba(59, 130, 246, 0.9)',   // Received - Premium Blue
+            'rgba(245, 158, 11, 0.9)',   // Waiting Inspection - Amber
+            'rgba(139, 92, 246, 0.9)',   // Under Maintenance - Purple
+            'rgba(236, 72, 153, 0.9)',   // Waiting Parts - Pink
+            'rgba(16, 185, 129, 0.9)',   // Ready - Emerald
+            'rgba(34, 197, 94, 0.9)'     // Delivered - Green
+        ];
+
+        this.charts.allRequestsOverview = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderColor: '#1e293b',
+                    borderWidth: 3,
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '50%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: '#e2e8f0',
+                            padding: 20,
+                            font: {
+                                size: 13,
+                                family: 'Tajawal, sans-serif',
+                                weight: '600'
+                            },
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                return data.labels.map((label, i) => {
+                                    const value = data.datasets[0].data[i];
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return {
+                                        text: `${label}: ${value} (${percentage}%)`,
+                                        fillStyle: data.datasets[0].backgroundColor[i],
+                                        hidden: false,
+                                        index: i
+                                    };
+                                });
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#e2e8f0',
+                        bodyColor: '#94a3b8',
+                        borderColor: 'rgba(59, 130, 246, 0.5)',
+                        borderWidth: 2,
+                        padding: 16,
+                        titleFont: {
+                            size: 14,
+                            family: 'Tajawal, sans-serif',
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13,
+                            family: 'Tajawal, sans-serif'
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return [
+                                    `العدد: ${value}`,
+                                    `النسبة: ${percentage}%`,
+                                    `من إجمالي ${total} طلب/جهاز`
+                                ];
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 1500,
+                    easing: 'easeOutElastic'
                 }
             }
         });

@@ -173,10 +173,35 @@
                 <div id="adminStats"></div>
                 
                 <div class="charts-grid">
+                    <!-- All Requests Overview - Main Chart -->
+                    <div class="glass-card chart-card" style="grid-column: span 2;">
+                        <h3>📊 التوزيع الشامل لجميع الطلبات</h3>
+                        <div class="chart-container" style="height: 350px;">
+                            <canvas id="allRequestsOverviewChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Normal Requests Chart -->
                     <div class="glass-card chart-card">
-                        <h3>توزيع حالات الطلبات</h3>
+                        <h3>🔵 الطلبات العادية</h3>
                         <div class="chart-container">
                             <canvas id="requestsChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Bulk Requests Chart -->
+                    <div class="glass-card chart-card">
+                        <h3>📦 طلبات الجملة</h3>
+                        <div class="chart-container">
+                            <canvas id="bulkRequestsChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Company Requests Chart -->
+                    <div class="glass-card chart-card">
+                        <h3>🏢 طلبات الشركات</h3>
+                        <div class="chart-container">
+                            <canvas id="companyRequestsChart"></canvas>
                         </div>
                     </div>
                 </div>
