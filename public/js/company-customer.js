@@ -29,11 +29,21 @@ class CompanyCustomerManager {
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const formData = new FormData(form);
             const laptopBrand = formData.get('laptopBrand');
             const laptopBrandOther = formData.get('laptopBrandOther');
             const finalLaptopBrand = laptopBrand === 'Other' ? laptopBrandOther : laptopBrand;
+
+            // Handle estimated completion date
+            const estimatedCompletionDateValue = formData.get('estimatedCompletionDate');
+            let estimatedCompletionDate = null;
+            if (estimatedCompletionDateValue) {
+                const dateObj = new Date(estimatedCompletionDateValue);
+                if (!isNaN(dateObj.getTime())) {
+                    estimatedCompletionDate = dateObj.toISOString();
+                }
+            }
 
             const requestData = {
                 fullName: formData.get('fullName'),
@@ -44,7 +54,8 @@ class CompanyCustomerManager {
                 receivedDate: formData.get('receivedDate'),
                 problemDescription: formData.get('problemDescription'),
                 priority: formData.get('priority'),
-                deviceImage: null
+                deviceImage: null,
+                estimatedCompletionDate: estimatedCompletionDate
             };
 
             try {

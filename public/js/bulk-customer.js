@@ -310,10 +310,20 @@ class BulkCustomerManager {
         const formData = new FormData(form);
         
         // Collect customer info
+        const estimatedCompletionDateValue = formData.get('estimatedCompletionDate');
+        let estimatedCompletionDate = null;
+        if (estimatedCompletionDateValue) {
+            const dateObj = new Date(estimatedCompletionDateValue);
+            if (!isNaN(dateObj.getTime())) {
+                estimatedCompletionDate = dateObj.toISOString();
+            }
+        }
+
         const customerData = {
             fullName: formData.get('fullName'),
             phone: formData.get('phone'),
-            deviceCount: parseInt(formData.get('deviceCount'))
+            deviceCount: parseInt(formData.get('deviceCount')),
+            estimatedCompletionDate: estimatedCompletionDate
         };
 
         // Collect devices data
@@ -350,7 +360,8 @@ class BulkCustomerManager {
                 deviceCount: customerData.deviceCount,
                 devices: devicesData,
                 status: 'Received',
-                priority: 'Medium'
+                priority: 'Medium',
+                estimatedCompletionDate: customerData.estimatedCompletionDate
             };
 
             console.log('📤 Sending bulk request:', requestData);
