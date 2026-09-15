@@ -27,6 +27,7 @@ class AdminManager {
         this._bulkSpecialFilter = null;
         this._companySpecialFilter = null;
         this.currentSearchResults = [];
+        this.openBulkAccordions = new Set(); // Track which bulk accordions are open
     }
 
     /**
@@ -270,6 +271,17 @@ class AdminManager {
                 this.renderRequests();
             } else if (this.currentSection === 'bulk-requests') {
                 this.renderBulkRequests();
+                // Restore open accordions after re-render
+                setTimeout(() => {
+                    this.openBulkAccordions.forEach(id => {
+                        const devicesContainer = document.getElementById(`bulk-request-devices-${id}`);
+                        const icon = document.getElementById(`accordion-icon-${id}`);
+                        if (devicesContainer) {
+                            devicesContainer.style.display = 'block';
+                            if (icon) icon.style.transform = 'rotate(180deg)';
+                        }
+                    });
+                }, 100);
             } else if (this.currentSection === 'company-requests') {
                 this.renderCompanyRequests();
             } else if (this.currentSection === 'users') {
@@ -2058,12 +2070,12 @@ class AdminManager {
                                     </button>
                                     <span class="priority-badge ${this.getPriorityClass(bulkRequest.priority)}">${this.translatePriority(bulkRequest.priority)}</span>
                                     <span class="status-badge status-${this.getStatusClass(bulkRequest.status)}">${this.translateStatus(bulkRequest.status)}</span>
-                                    <i class="fas fa-chevron-down accordion-icon" id="accordion-icon-${bulkRequest.id}" style="transition: transform 0.3s;"></i>
+                                    <i class="fas fa-chevron-down accordion-icon" id="accordion-icon-${bulkRequest.id}" style="transition: transform 0.3s; transform: ${this.openBulkAccordions.has(bulkRequest.id) ? 'rotate(180deg)' : 'rotate(0deg)'};"></i>
                                 </div>
                             </div>
                             
                             <!-- Devices List (collapsible) -->
-                            <div class="bulk-request-devices" id="bulk-request-devices-${bulkRequest.id}" style="display: none; padding: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                            <div class="bulk-request-devices" id="bulk-request-devices-${bulkRequest.id}" style="display: ${this.openBulkAccordions.has(bulkRequest.id) ? 'block' : 'none'}; padding: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
                                 ${devices.map((device, index) => `
                                     <div class="glass-card device-card" style="margin-bottom: 1rem; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;">
                                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem;">
@@ -2142,9 +2154,11 @@ class AdminManager {
             if (devicesContainer.style.display === 'none') {
                 devicesContainer.style.display = 'block';
                 if (icon) icon.style.transform = 'rotate(180deg)';
+                this.openBulkAccordions.add(bulkRequestId); // Track as open
             } else {
                 devicesContainer.style.display = 'none';
                 if (icon) icon.style.transform = 'rotate(0deg)';
+                this.openBulkAccordions.delete(bulkRequestId); // Remove from open set
             }
         }
     }
