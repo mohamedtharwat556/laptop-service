@@ -7594,11 +7594,10 @@ class AdminManager {
             if (startDate && endDate) {
                 filteredRequests = requestsByType.filter(r => {
                     const d = new Date(r.createdAt);
-                const requestDate = d.toISOString().slice(0, 10);
-                return requestDate >= startDate && requestDate <= endDate;
-            });
-            fileName = type === 'bulk' ? `تقرير-جملة-${startDate}-${endDate}` : type === 'company' ? `تقرير-شركات-${startDate}-${endDate}` : `تقرير-${startDate}-${endDate}`;
-        } else if (startDate) {
+                    const requestDate = d.toISOString().slice(0, 10);
+                    return requestDate >= startDate && requestDate <= endDate;
+                });
+            } else if (startDate) {
             filteredRequests = requestsByType.filter(r => {
                 const d = new Date(r.createdAt);
                 return d.toISOString().slice(0, 10) === startDate;
@@ -7712,6 +7711,216 @@ class AdminManager {
         XLSX.writeFile(wb, `${fileName}.xlsx`);
 
         toast.success(`تم تحميل ${excelData.length} سجل في ملف Excel بنجاح (${typeSummary})`);
+    }
+
+    /**
+     * Export daily report as PDF with support for multiple request types
+     */
+    exportDailyReportPDF() {
+        const reportTypeSingle = document.getElementById('reportTypeSingle');
+        const reportTypeBulk = document.getElementById('reportTypeBulk');
+        const reportTypeCompany = document.getElementById('reportTypeCompany');
+        const reportStartDate = document.getElementById('reportStartDate');
+        const reportEndDate = document.getElementById('reportEndDate');
+
+        // Get selected report types
+        const selectedTypes = [];
+        if (reportTypeSingle && reportTypeSingle.checked) selectedTypes.push('single');
+        if (reportTypeBulk && reportTypeBulk.checked) selectedTypes.push('bulk');
+        if (reportTypeCompany && reportTypeCompany.checked) selectedTypes.push('company');
+
+        if (selectedTypes.length === 0) {
+            toast.warning('الرجاء اختيار نوع واحد على الأقل للتقرير');
+            return;
+        }
+
+        console.log('📊 Exporting PDF report for types:', selectedTypes);
+
+        let allFilteredRequests = [];
+
+        // Filter by date range
+        const startDate = reportStartDate ? reportStartDate.value : null;
+        const endDate = reportEndDate ? reportEndDate.value : null;
+
+        // Process each selected type
+        selectedTypes.forEach(type => {
+            let requestsByType;
+            if (type === 'bulk') {
+                requestsByType = this.bulkRequests || [];
+            } else if (type === 'company') {
+                requestsByType = this.companyRequests || [];
+            } else {
+                requestsByType = this.requests;
+            }
+
+            // Filter by date range
+            let filteredRequests;
+            if (startDate && endDate) {
+                filteredRequests = requestsByType.filter(r => {
+                    const d = new Date(r.createdAt);
+                    const requestDate = d.toISOString().slice(0, 10);
+                    return requestDate >= startDate && requestDate <= endDate;
+                });
+            } else if (startDate) {
+                filteredRequests = requestsByType.filter(r => {
+                    const d = new Date(r.createdAt);
+                    return d.toISOString().slice(0, 10) === startDate;
+                });
+            } else {
+                // If no date selected, show all
+                filteredRequests = requestsByType;
+            }
+
+            // Add type to each request for identification
+            filteredRequests = filteredRequests.map(r => ({
+                ...r,
+                reportType: type
+            }));
+
+            allFilteredRequests.push(...filteredRequests);
+        });
+
+        if (allFilteredRequests.length === 0) {
+            toast.error('لا توجد طلبات في الفترة المحددة');
+            return;
+        }
+
+        // Build unified data for PDF export
+        const typeSummary = selectedTypes.map(type => {
+            const count = allFilteredRequests.filter(r => r.reportType === type).length;
+            const typeName = type === 'single' ? 'عادي' : type === 'bulk' ? 'جملة' : 'شركة';
+            return `${typeName}: ${count}`;
+        }).join(' | ');
+
+        console.log('📊 Total requests for PDF export:', allFilteredRequests.length);
+        console.log('📊 Type summary:', typeSummary);
+
+        let fileName = 'تقرير_شامل';
+
+        // Build filename based on date range
+        if (startDate && endDate) {
+            fileName = `تقرير_شامل_${startDate}_${endDate}`;
+        } else if (startDate) {
+            fileName = `تقرير_شامل_${startDate}`;
+        }
+
+        // Process data for PDF
+        let pdfData = [];
+
+        allFilteredRequests.forEach(r => {
+            const typeName = r.reportType === 'single' ? 'عادي' : r.reportType === 'bulk' ? 'جملة' : 'شركة';
+
+            if (r.reportType === 'bulk' && r.devices && r.devices.length > 0) {
+                // For bulk requests, export each device separately
+                r.devices.forEach(device => {
+                    pdfData.push({
+                        'النوع': typeName,
+                        'رقم الطلب': r.requestNumber,
+                        'اسم العميل': r.customerName,
+                        'رقم الهاتف': r.customerPhone,
+                        'رقم الجهاز': device.deviceNumber,
+                        'ماركة اللابتوب': device.laptopBrand || '',
+                        'موديل اللابتوب': device.laptopModel || '',
+                        'الرقم التسلسلي': device.serialNumber || '',
+                        'وصف المشكلة': device.problemDescription || '',
+                        'حالة الجهاز': device.status || '',
+                        'حالة الطلب': r.status,
+                        'الأولوية': r.priority,
+                        'تاريخ الاستلام المتوقع': device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : (device.estimated_completion_date ? Utils.formatDate(device.estimated_completion_date) : ''),
+                        'التاريخ': Utils.formatDate(r.createdAt),
+                        'ملاحظات': r.notes || ''
+                    });
+                });
+            } else {
+                // For single and company requests
+                pdfData.push({
+                    'النوع': typeName,
+                    'رقم الطلب': r.requestNumber,
+                    'الاسم': r.fullName || r.customerName || '',
+                    'رقم الهاتف': r.phone || r.customerPhone || '',
+                    'ماركة اللابتوب': r.laptopBrand || '',
+                    'موديل اللابتوب': r.laptopModel || '',
+                    'الرقم التسلسلي': r.serialNumber || '',
+                    'وصف المشكلة': r.problemDescription || '',
+                    'الحالة': r.status,
+                    'الأولوية': r.priority,
+                    'التكلفة': r.cost || 0,
+                    'الفني': r.technician || '',
+                    'تاريخ الاستلام': r.receivedDate || '',
+                    'تاريخ الاستلام المتوقع': r.estimatedCompletionDate ? Utils.formatDate(r.estimatedCompletionDate) : (r.estimated_completion_date ? Utils.formatDate(r.estimated_completion_date) : ''),
+                    'تاريخ الإنشاء': Utils.formatDate(r.createdAt),
+                    'ملاحظات': r.notes || ''
+                });
+            }
+        });
+
+        // Generate PDF using jsPDF
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            // Add Arabic font support
+            doc.setFont('helvetica');
+
+            // Add title
+            doc.setFontSize(18);
+            doc.text('تقرير شامل - مركز خدمة لابتوب YAS', 148, 15, { align: 'center' });
+
+            // Add date range
+            doc.setFontSize(12);
+            let dateRangeText = '';
+            if (startDate && endDate) {
+                dateRangeText = `من ${startDate} إلى ${endDate}`;
+            } else if (startDate) {
+                dateRangeText = `التاريخ: ${startDate}`;
+            } else {
+                dateRangeText = 'جميع التواريخ';
+            }
+            doc.text(dateRangeText, 148, 22, { align: 'center' });
+
+            // Add type summary
+            doc.text(typeSummary, 148, 28, { align: 'center' });
+
+            // Add total count
+            doc.text(`إجمالي السجلات: ${pdfData.length}`, 148, 34, { align: 'center' });
+
+            // Generate table
+            const tableColumn = Object.keys(pdfData[0]);
+            const tableRows = pdfData.map(row => Object.values(row));
+
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 40,
+                styles: {
+                    font: 'helvetica',
+                    fontSize: 8,
+                    cellPadding: 2,
+                    overflow: 'linebreak'
+                },
+                headStyles: {
+                    fillColor: [59, 130, 246],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [240, 240, 240]
+                },
+                margin: { top: 40, right: 10, bottom: 10, left: 10 }
+            });
+
+            // Save PDF
+            doc.save(`${fileName}.pdf`);
+
+            toast.success(`تم تحميل ${pdfData.length} سجل في ملف PDF بنجاح (${typeSummary})`);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            toast.error('فشل تحميل ملف PDF');
+        }
     }
 
     /**
