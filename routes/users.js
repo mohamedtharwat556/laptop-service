@@ -30,7 +30,12 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const { data, error } = await supabase.from('users').select('*').eq('id', req.params.id).single();
-        if (error) throw error;
+        if (error) {
+            if (error.code === 'PGRST116') {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            throw error;
+        }
         if (!data) return res.status(404).json({ error: 'User not found' });
         res.json(data);
     } catch (error) {
@@ -42,7 +47,11 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const { password, ...userData } = req.body;
-        const newUser = { ...userData, created_at: new Date().toISOString() };
+        const newUser = { 
+            ...userData, 
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
         const { data, error } = await supabase.from('users').insert([newUser]).select();
         if (error) throw error;
         res.status(201).json(data[0]);

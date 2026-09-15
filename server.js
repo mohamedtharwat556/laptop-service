@@ -254,7 +254,11 @@ app.get('/api/orders/:id', async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
     try {
-        const newOrder = { ...req.body, created_at: new Date().toISOString() };
+        const newOrder = { 
+            ...req.body, 
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
         const { data, error } = await supabase.from('orders').insert([newOrder]).select();
         if (error) throw error;
         res.status(201).json(data[0]);

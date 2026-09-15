@@ -172,47 +172,6 @@
             <div id="dashboardSection" class="dashboard-section active">
                 <div id="adminStats"></div>
                 
-                <!-- Financial Analytics Section -->
-                <div class="glass-card" style="margin-bottom: 2rem; padding: 2rem;">
-                    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-chart-line" style="color: #10b981;"></i>
-                        التحليلات المالية وحالة الصيانة
-                    </h3>
-                    <div class="financial-analytics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
-                        <div class="financial-metric" style="background: rgba(59, 130, 246, 0.1); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
-                            <div style="font-size: 0.875rem; color: #94a3b8; margin-bottom: 0.5rem;">إجمالي الإيرادات المتوقعة</div>
-                            <div id="totalExpectedRevenue" style="font-size: 1.75rem; font-weight: 700; color: #3b82f6;">0 ج.م</div>
-                            <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">من جميع الطلبات النشطة</div>
-                        </div>
-                        <div class="financial-metric" style="background: rgba(16, 185, 129, 0.1); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3);">
-                            <div style="font-size: 0.875rem; color: #94a3b8; margin-bottom: 0.5rem;">الإيرادات المحققة</div>
-                            <div id="realizedRevenue" style="font-size: 1.75rem; font-weight: 700; color: #10b981;">0 ج.م</div>
-                            <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">من الطلبات المكتملة</div>
-                        </div>
-                        <div class="financial-metric" style="background: rgba(245, 158, 11, 0.1); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.3);">
-                            <div style="font-size: 0.875rem; color: #94a3b8; margin-bottom: 0.5rem;">متوسط تكلفة الصيانة</div>
-                            <div id="avgMaintenanceCost" style="font-size: 1.75rem; font-weight: 700; color: #f59e0b;">0 ج.م</div>
-                            <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">لكل جهاز تحت الصيانة</div>
-                        </div>
-                        <div class="financial-metric" style="background: rgba(139, 92, 246, 0.1); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.3);">
-                            <div style="font-size: 0.875rem; color: #94a3b8; margin-bottom: 0.5rem;">نسبة الإنجاز</div>
-                            <div id="completionRate" style="font-size: 1.75rem; font-weight: 700; color: #8b5cf6;">0%</div>
-                            <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">من إجمالي الطلبات</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Detailed Status Analytics -->
-                <div class="glass-card" style="margin-bottom: 2rem; padding: 2rem;">
-                    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-tasks" style="color: #3b82f6;"></i>
-                        تحليلات الحالة التفصيلية
-                    </h3>
-                    <div class="status-analytics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;" id="statusAnalyticsContainer">
-                        <!-- Will be populated by JavaScript -->
-                    </div>
-                </div>
-                
                 <div class="charts-grid">
                     <!-- All Requests Overview - Main Chart -->
                     <div class="glass-card chart-card" style="grid-column: span 2;">

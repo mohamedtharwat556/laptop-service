@@ -72,7 +72,7 @@ router.put('/:id/restore', async (req, res) => {
     }
 });
 
-// Get all trash (deleted items)
+// Get all trash (deleted items) - MUST come before /:id route
 router.get('/trash', async (req, res) => {
     try {
         console.log('📋 GET /api/company-requests/trash');

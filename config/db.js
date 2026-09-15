@@ -23,13 +23,22 @@ if (supabaseUrl && supabaseKey) {
   // Mock Supabase client for local development
   const mockSupabase = {
     from: (table) => ({
-      select: () => ({ data: [], error: null }),
+      select: (columns) => ({
+        data: [],
+        error: null,
+        eq: () => ({
+          data: [],
+          error: null,
+          single: () => ({ data: null, error: null }),
+          order: () => ({ data: [], error: null })
+        }),
+        order: () => ({ data: [], error: null }),
+        is: () => ({ data: [], error: null }),
+        not: () => ({ data: [], error: null })
+      }),
       insert: () => ({ data: null, error: null }),
       update: () => ({ data: null, error: null }),
-      delete: () => ({ data: null, error: null }),
-      eq: () => ({ single: () => ({ data: null, error: null }) }),
-      order: () => ({ data: [], error: null }),
-      or: () => ({ data: [], error: null })
+      delete: () => ({ data: null, error: null })
     })
   };
   module.exports = mockSupabase;

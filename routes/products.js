@@ -19,7 +19,12 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const { data, error } = await supabase.from('products').select('*').eq('id', req.params.id).single();
-        if (error) throw error;
+        if (error) {
+            if (error.code === 'PGRST116') {
+                return res.status(404).json({ error: 'Product not found' });
+            }
+            throw error;
+        }
         if (!data) return res.status(404).json({ error: 'Product not found' });
         res.json(data);
     } catch (error) {
@@ -35,6 +40,8 @@ router.post('/', async (req, res) => {
             category: req.body.category,
             price: req.body.price,
             stock: req.body.stock,
+            description: req.body.description || null,
+            image: req.body.image || null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };

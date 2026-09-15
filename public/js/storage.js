@@ -6,9 +6,11 @@
 class StorageManager {
     constructor() {
         this.prefix = 'YAS_';
-        this.syncFromServerAsync().catch(err => console.warn('Initial sync failed:', err));
+        // Disable server sync since we're using Supabase directly
+        // this.syncFromServerAsync().catch(err => console.warn('Initial sync failed:', err));
         this.initializeData();
-        this.startAutoSync();
+        // Disable auto sync since we're using Supabase directly
+        // this.startAutoSync();
     }
 
     async syncFromServerAsync() {

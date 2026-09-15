@@ -75,7 +75,7 @@ router.put('/:id/restore', async (req, res) => {
     }
 });
 
-// Get all trash (deleted items)
+// Get all trash (deleted items) - MUST come before /:id route
 router.get('/trash', async (req, res) => {
     try {
         console.log('📋 GET /api/requests/trash');
@@ -152,15 +152,15 @@ router.post('/', async (req, res) => {
 
         const newRequest = {
             request_number: req.body.requestNumber || requestNumber,
-            full_name: req.body.fullName,
+            full_name: req.body.fullName || req.body.full_name,
             phone: req.body.phone,
             email: req.body.email || '',
-            referral_code: req.body.referralCode || '',
-            laptop_brand: req.body.laptopBrand,
-            laptop_model: req.body.laptopModel,
-            serial_number: req.body.serialNumber,
-            received_date: req.body.receivedDate,
-            problem_description: req.body.problemDescription,
+            referral_code: req.body.referralCode || req.body.referral_code || '',
+            laptop_brand: req.body.laptopBrand || req.body.laptop_brand,
+            laptop_model: req.body.laptopModel || req.body.laptop_model,
+            serial_number: req.body.serialNumber || req.body.serial_number,
+            received_date: req.body.receivedDate || req.body.received_date,
+            problem_description: req.body.problemDescription || req.body.problem_description,
             status: req.body.status || 'Received',
             priority: req.body.priority || 'Medium',
             cost: req.body.cost || 0,
@@ -185,7 +185,39 @@ router.post('/', async (req, res) => {
             throw error;
         }
         console.log('✅ Request inserted successfully:', data[0]);
-        res.status(201).json(data[0]);
+        
+        // Convert response to camelCase for consistency
+        const responseData = data[0];
+        const camelCaseResponse = {
+            id: responseData.id,
+            requestNumber: responseData.request_number,
+            fullName: responseData.full_name,
+            phone: responseData.phone,
+            email: responseData.email || '',
+            referralCode: responseData.referral_code || '',
+            deviceType: responseData.device_type,
+            laptopBrand: responseData.laptop_brand,
+            laptopModel: responseData.laptop_model,
+            serialNumber: responseData.serial_number,
+            receivedDate: responseData.received_date,
+            problemDescription: responseData.problem_description,
+            priority: responseData.priority,
+            status: responseData.status,
+            cost: responseData.cost,
+            estimatedCompletionDate: responseData.estimated_completion_date,
+            deviceImage: responseData.device_image,
+            repairImages: responseData.repair_images,
+            replacementParts: responseData.replacement_parts,
+            notes: responseData.notes,
+            technicianNotes: responseData.technician_notes,
+            technician: responseData.technician,
+            adminReply: responseData.admin_reply,
+            createdAt: responseData.created_at,
+            updatedAt: responseData.updated_at,
+            deletedAt: responseData.deleted_at
+        };
+        
+        res.status(201).json(camelCaseResponse);
     } catch (error) {
         console.error('❌ POST /api/requests error:', error);
         res.status(500).json({ error: error.message });
