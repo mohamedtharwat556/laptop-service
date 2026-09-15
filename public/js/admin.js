@@ -3226,6 +3226,7 @@ class AdminManager {
                         'حالة الجهاز': device.status || '',
                         'حالة الطلب': bulkRequest.status,
                         'الأولوية': bulkRequest.priority,
+                        'تاريخ الاستلام المتوقع': device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : (device.estimated_completion_date ? Utils.formatDate(device.estimated_completion_date) : ''),
                         'التاريخ': Utils.formatDate(bulkRequest.createdAt),
                         'ملاحظات': bulkRequest.notes || ''
                     });
@@ -3290,7 +3291,7 @@ class AdminManager {
                     'حالة الجهاز': device.status || '',
                     'حالة الطلب': bulkRequest.status,
                     'الأولوية': bulkRequest.priority,
-                    'تاريخ الاستلام المتوقع': device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : '',
+                    'تاريخ الاستلام المتوقع': device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : (device.estimated_completion_date ? Utils.formatDate(device.estimated_completion_date) : ''),
                     'التاريخ': Utils.formatDate(bulkRequest.createdAt),
                     'ملاحظات': bulkRequest.notes || ''
                 });
@@ -3352,7 +3353,7 @@ class AdminManager {
                 'التكلفة': request.cost || 0,
                 'الفني': request.technician || '',
                 'تاريخ الاستلام': request.receivedDate || '',
-                'تاريخ الاستلام المتوقع': request.estimatedCompletionDate ? Utils.formatDate(request.estimatedCompletionDate) : '',
+                'تاريخ الاستلام المتوقع': request.estimatedCompletionDate ? Utils.formatDate(request.estimatedCompletionDate) : (request.estimated_completion_date ? Utils.formatDate(request.estimated_completion_date) : ''),
                 'تاريخ الإنشاء': Utils.formatDate(request.createdAt),
                 'ملاحظات': request.notes || ''
             }));
@@ -3497,7 +3498,7 @@ class AdminManager {
                 'التكلفة': request.cost || 0,
                 'الفني': request.technician || '',
                 'تاريخ الاستلام': request.receivedDate || '',
-                'تاريخ الاستلام المتوقع': request.estimatedCompletionDate ? Utils.formatDate(request.estimatedCompletionDate) : '',
+                'تاريخ الاستلام المتوقع': request.estimatedCompletionDate ? Utils.formatDate(request.estimatedCompletionDate) : (request.estimated_completion_date ? Utils.formatDate(request.estimated_completion_date) : ''),
                 'تاريخ الإنشاء': Utils.formatDate(request.createdAt),
                 'ملاحظات': request.notes || ''
             }));
@@ -3612,7 +3613,7 @@ class AdminManager {
                             'الحالة': device.status,
                             'التكلفة': request.cost || 0,
                             'الفني': request.technician || '',
-                            'تاريخ الاستلام المتوقع': device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : '',
+                            'تاريخ الاستلام المتوقع': device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : (device.estimated_completion_date ? Utils.formatDate(device.estimated_completion_date) : ''),
                             'تاريخ الإنشاء': Utils.formatDate(request.createdAt),
                             'ملاحظات': request.notes || ''
                         });
