@@ -3001,6 +3001,10 @@ class AdminManager {
                     <label class="form-label">التكلفة</label>
                     <input type="number" class="form-input" name="cost" value="${device.cost || 0}" min="0" step="0.01">
                 </div>
+                <div class="form-group">
+                    <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
+                    <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${device.estimatedCompletionDate ? new Date(device.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
+                </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
                     <i class="fas fa-save"></i> حفظ التغييرات
                 </button>
@@ -3014,6 +3018,16 @@ class AdminManager {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            // Handle estimated completion date
+            const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+            let estimatedCompletionDate = null;
+            if (estimatedCompletionDateValue) {
+                const dateObj = new Date(estimatedCompletionDateValue);
+                if (!isNaN(dateObj.getTime())) {
+                    estimatedCompletionDate = dateObj.toISOString();
+                }
+            }
+            
             const deviceData = {
                 laptopBrand: form.laptopBrand.value,
                 laptopModel: form.laptopModel.value,
@@ -3022,8 +3036,15 @@ class AdminManager {
                 priority: form.priority.value,
                 problemDescription: form.problemDescription.value,
                 status: form.status.value,
-                cost: parseFloat(form.cost.value) || 0
+                cost: parseFloat(form.cost.value) || 0,
+                estimatedCompletionDate: estimatedCompletionDate
             };
+
+            // Check if changing to Delivered status without estimated completion date
+            if (deviceData.status === 'Delivered' && !deviceData.estimatedCompletionDate) {
+                toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
+                return;
+            }
 
             try {
                 loading.show('جاري حفظ التغييرات...');
@@ -4017,6 +4038,7 @@ class AdminManager {
                         </div>
                         <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptop_brand || companyRequest.laptopBrand || ''} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${companyRequest.serial_number || companyRequest.serialNumber || '—'}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام المتوقع</span><span class="request-detail-value">${companyRequest.estimated_completion_date || companyRequest.estimatedCompletionDate ? Utils.formatDate(companyRequest.estimated_completion_date || companyRequest.estimatedCompletionDate) : '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(companyRequest.created_at || companyRequest.createdAt)}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${companyRequest.problem_description || companyRequest.problemDescription || ''}</span></div>
                     </div>
@@ -4133,6 +4155,12 @@ class AdminManager {
                     estimated_completion_date: estimatedCompletionDate,
                     status: form.status.value
                 };
+
+                // Check if changing to Delivered status without estimated completion date
+                if (updateData.status === 'Delivered' && !updateData.estimated_completion_date) {
+                    toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
+                    return;
+                }
 
                 try {
                     const response = await fetch(`/api/company-requests/${companyRequestId}`, {
@@ -6276,6 +6304,7 @@ class AdminManager {
                     <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${request.laptopBrand} ${request.laptopModel || ''}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${request.serialNumber || '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${request.receivedDate || '—'}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام المتوقع</span><span class="request-detail-value">${request.estimatedCompletionDate ? Utils.formatDate(request.estimatedCompletionDate) : '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(request.createdAt)}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${request.problemDescription}</span></div>
                     ${request.deviceImage ? `
@@ -6401,12 +6430,10 @@ class AdminManager {
 
             console.log('📝 Updating request with data:', updateData);
 
-            // Auto-set estimated completion date if admin replies and no date is set
-            if (updateData.adminReply && !updateData.estimatedCompletionDate) {
-                const today = new Date();
-                today.setDate(today.getDate() + 3); // Default to 3 days from now
-                updateData.estimatedCompletionDate = today.toISOString();
-                form.estimatedCompletionDate.value = today.toISOString().slice(0, 16);
+            // Check if changing to Delivered status without estimated completion date
+            if (updateData.status === 'Delivered' && !updateData.estimatedCompletionDate) {
+                toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
+                return;
             }
 
             this.updateRequest(requestId, updateData);
