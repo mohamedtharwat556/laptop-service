@@ -2131,30 +2131,14 @@ class AdminManager {
     }
 
     /**
-     * Toggle bulk request accordion (closes others when opening)
+     * Toggle bulk request accordion (allows multiple to be open)
      */
     toggleBulkRequestAccordion(bulkRequestId) {
         const devicesContainer = document.getElementById(`bulk-request-devices-${bulkRequestId}`);
         const icon = document.getElementById(`accordion-icon-${bulkRequestId}`);
-        
+
         if (devicesContainer) {
-            // Close all other accordions first
-            const allDevicesContainers = document.querySelectorAll('.bulk-request-devices');
-            const allIcons = document.querySelectorAll('.accordion-icon');
-            
-            allDevicesContainers.forEach((container) => {
-                if (container.id !== `bulk-request-devices-${bulkRequestId}`) {
-                    container.style.display = 'none';
-                }
-            });
-            
-            allIcons.forEach((ic) => {
-                if (ic.id !== `accordion-icon-${bulkRequestId}`) {
-                    ic.style.transform = 'rotate(0deg)';
-                }
-            });
-            
-            // Toggle the current one
+            // Toggle the current one without closing others
             if (devicesContainer.style.display === 'none') {
                 devicesContainer.style.display = 'block';
                 if (icon) icon.style.transform = 'rotate(180deg)';
