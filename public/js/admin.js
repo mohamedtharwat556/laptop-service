@@ -1262,7 +1262,7 @@ class AdminManager {
     }
 
     /**
-     * Render requests chart - Enhanced with professional distribution
+     * Render requests chart - Enhanced with professional distribution based on real data
      */
     renderRequestsChart() {
         const ctx = document.getElementById('requestsChart');
@@ -1277,6 +1277,7 @@ class AdminManager {
             'Delivered': 0
         };
 
+        // Count real data from actual requests
         this.requests.forEach(r => {
             if (statusCounts.hasOwnProperty(r.status)) {
                 statusCounts[r.status]++;
@@ -1287,14 +1288,25 @@ class AdminManager {
         const data = Object.values(statusCounts);
         const total = data.reduce((sum, val) => sum + val, 0);
 
-        // Professional color scheme with gradients
+        // If no data, show message
+        if (total === 0) {
+            ctx.parentElement.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">
+                    <i class="fas fa-chart-pie" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p style="text-align: center;">لا توجد بيانات كافية للعرض</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Professional color scheme with gradients based on workflow logic
         const backgroundColors = [
-            'rgba(59, 130, 246, 0.8)',   // Received - Blue
-            'rgba(245, 158, 11, 0.8)',   // Waiting Inspection - Amber
-            'rgba(139, 92, 246, 0.8)',   // Under Maintenance - Purple
-            'rgba(236, 72, 153, 0.8)',   // Waiting Parts - Pink
-            'rgba(16, 185, 129, 0.8)',   // Ready - Emerald
-            'rgba(34, 197, 94, 0.8)'     // Delivered - Green
+            'rgba(59, 130, 246, 0.8)',   // Received - Start of process (Blue)
+            'rgba(245, 158, 11, 0.8)',   // Waiting Inspection - Next step (Amber)
+            'rgba(139, 92, 246, 0.8)',   // Under Maintenance - Active work (Purple)
+            'rgba(236, 72, 153, 0.8)',   // Waiting Parts - Blocked (Pink)
+            'rgba(16, 185, 129, 0.8)',   // Ready - Near completion (Emerald)
+            'rgba(34, 197, 94, 0.8)'     // Delivered - Completed (Green)
         ];
 
         const borderColors = [
@@ -1333,7 +1345,20 @@ class AdminManager {
                                 family: 'Tajawal, sans-serif'
                             },
                             usePointStyle: true,
-                            pointStyle: 'circle'
+                            pointStyle: 'circle',
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                return data.labels.map((label, i) => {
+                                    const value = data.datasets[0].data[i];
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return {
+                                        text: `${label}: ${value} (${percentage}%)`,
+                                        fillStyle: data.datasets[0].backgroundColor[i],
+                                        hidden: false,
+                                        index: i
+                                    };
+                                });
+                            }
                         }
                     },
                     tooltip: {
@@ -1347,7 +1372,11 @@ class AdminManager {
                             label: function(context) {
                                 const value = context.raw;
                                 const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                return `${context.label}: ${value} (${percentage}%)`;
+                                return [
+                                    `العدد: ${value}`,
+                                    `النسبة: ${percentage}%`,
+                                    `من إجمالي ${total} طلب`
+                                ];
                             }
                         }
                     }
@@ -1363,7 +1392,7 @@ class AdminManager {
     }
 
     /**
-     * Render bulk requests chart
+     * Render bulk requests chart - Based on real device data
      */
     renderBulkRequestsChart() {
         const ctx = document.getElementById('bulkRequestsChart');
@@ -1378,12 +1407,14 @@ class AdminManager {
             'Delivered': 0
         };
 
-        // Count devices from bulk requests
+        // Count real devices from bulk requests
+        let totalDevices = 0;
         this.bulkRequests.forEach(bulk => {
             if (bulk.devices && bulk.devices.length > 0) {
                 bulk.devices.forEach(device => {
                     if (statusCounts.hasOwnProperty(device.status)) {
                         statusCounts[device.status]++;
+                        totalDevices++;
                     }
                 });
             }
@@ -1393,15 +1424,25 @@ class AdminManager {
         const data = Object.values(statusCounts);
         const total = data.reduce((sum, val) => sum + val, 0);
 
-        if (total === 0) return;
+        // If no data, show message
+        if (total === 0) {
+            ctx.parentElement.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">
+                    <i class="fas fa-boxes" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p style="text-align: center;">لا توجد أجهزة في طلبات الجملة</p>
+                </div>
+            `;
+            return;
+        }
 
+        // Orange gradient theme for bulk requests
         const backgroundColors = [
-            'rgba(245, 158, 11, 0.8)',   // Orange theme for bulk
-            'rgba(251, 146, 60, 0.8)',
-            'rgba(234, 88, 12, 0.8)',
-            'rgba(194, 65, 12, 0.8)',
-            'rgba(154, 52, 18, 0.8)',
-            'rgba(124, 45, 18, 0.8)'
+            'rgba(245, 158, 11, 0.8)',   // Received
+            'rgba(251, 146, 60, 0.8)',   // Waiting Inspection
+            'rgba(234, 88, 12, 0.8)',    // Under Maintenance
+            'rgba(194, 65, 12, 0.8)',    // Waiting Parts
+            'rgba(154, 52, 18, 0.8)',    // Ready
+            'rgba(124, 45, 18, 0.8)'     // Delivered
         ];
 
         this.charts.bulkRequests = new Chart(ctx, {
@@ -1427,6 +1468,19 @@ class AdminManager {
                             font: {
                                 size: 11,
                                 family: 'Tajawal, sans-serif'
+                            },
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                return data.labels.map((label, i) => {
+                                    const value = data.datasets[0].data[i];
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return {
+                                        text: `${label}: ${value} (${percentage}%)`,
+                                        fillStyle: data.datasets[0].backgroundColor[i],
+                                        hidden: false,
+                                        index: i
+                                    };
+                                });
                             }
                         }
                     },
@@ -1436,7 +1490,11 @@ class AdminManager {
                             label: function(context) {
                                 const value = context.raw;
                                 const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                return `${context.label}: ${value} (${percentage}%)`;
+                                return [
+                                    `العدد: ${value}`,
+                                    `النسبة: ${percentage}%`,
+                                    `من إجمالي ${total} جهاز`
+                                ];
                             }
                         }
                     }
@@ -1456,7 +1514,7 @@ class AdminManager {
     }
 
     /**
-     * Render company requests chart
+     * Render company requests chart - Based on real company request data
      */
     renderCompanyRequestsChart() {
         const ctx = document.getElementById('companyRequestsChart');
@@ -1471,6 +1529,7 @@ class AdminManager {
             'Delivered': 0
         };
 
+        // Count real company requests
         this.companyRequests.forEach(r => {
             if (statusCounts.hasOwnProperty(r.status)) {
                 statusCounts[r.status]++;
@@ -1481,15 +1540,25 @@ class AdminManager {
         const data = Object.values(statusCounts);
         const total = data.reduce((sum, val) => sum + val, 0);
 
-        if (total === 0) return;
+        // If no data, show message
+        if (total === 0) {
+            ctx.parentElement.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">
+                    <i class="fas fa-building" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p style="text-align: center;">لا توجد طلبات شركات</p>
+                </div>
+            `;
+            return;
+        }
 
+        // Purple gradient theme for company requests
         const backgroundColors = [
-            'rgba(139, 92, 246, 0.8)',   // Purple theme for company
-            'rgba(124, 58, 237, 0.8)',
-            'rgba(109, 40, 217, 0.8)',
-            'rgba(168, 85, 247, 0.8)',
-            'rgba(192, 132, 252, 0.8)',
-            'rgba(217, 70, 239, 0.8)'
+            'rgba(139, 92, 246, 0.8)',   // Received
+            'rgba(124, 58, 237, 0.8)',   // Waiting Inspection
+            'rgba(109, 40, 217, 0.8)',   // Under Maintenance
+            'rgba(168, 85, 247, 0.8)',   // Waiting Parts
+            'rgba(192, 132, 252, 0.8)', // Ready
+            'rgba(217, 70, 239, 0.8)'    // Delivered
         ];
 
         this.charts.companyRequests = new Chart(ctx, {
@@ -1518,7 +1587,11 @@ class AdminManager {
                             label: function(context) {
                                 const value = context.raw;
                                 const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                return `${context.label}: ${value} (${percentage}%)`;
+                                return [
+                                    `العدد: ${value}`,
+                                    `النسبة: ${percentage}%`,
+                                    `من إجمالي ${total} طلب`
+                                ];
                             }
                         }
                     }
@@ -1551,7 +1624,7 @@ class AdminManager {
     }
 
     /**
-     * Render all requests overview chart - Combined view
+     * Render all requests overview chart - Combined view based on real data
      */
     renderAllRequestsOverviewChart() {
         const ctx = document.getElementById('allRequestsOverviewChart');
@@ -1596,16 +1669,26 @@ class AdminManager {
         const data = Object.values(combinedStatusCounts);
         const total = data.reduce((sum, val) => sum + val, 0);
 
-        if (total === 0) return;
+        // If no data, show message
+        if (total === 0) {
+            ctx.parentElement.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">
+                    <i class="fas fa-chart-pie" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p style="text-align: center; font-size: 1.1rem;">لا توجد بيانات كافية للعرض</p>
+                    <p style="text-align: center; font-size: 0.9rem; margin-top: 0.5rem;">أضف طلبات لبدء التحليل</p>
+                </div>
+            `;
+            return;
+        }
 
-        // Premium gradient colors
+        // Premium gradient colors based on workflow logic
         const backgroundColors = [
-            'rgba(59, 130, 246, 0.9)',   // Received - Premium Blue
-            'rgba(245, 158, 11, 0.9)',   // Waiting Inspection - Amber
-            'rgba(139, 92, 246, 0.9)',   // Under Maintenance - Purple
-            'rgba(236, 72, 153, 0.9)',   // Waiting Parts - Pink
-            'rgba(16, 185, 129, 0.9)',   // Ready - Emerald
-            'rgba(34, 197, 94, 0.9)'     // Delivered - Green
+            'rgba(59, 130, 246, 0.9)',   // Received - Start of process (Premium Blue)
+            'rgba(245, 158, 11, 0.9)',   // Waiting Inspection - Next step (Amber)
+            'rgba(139, 92, 246, 0.9)',   // Under Maintenance - Active work (Purple)
+            'rgba(236, 72, 153, 0.9)',   // Waiting Parts - Blocked (Pink)
+            'rgba(16, 185, 129, 0.9)',   // Ready - Near completion (Emerald)
+            'rgba(34, 197, 94, 0.9)'     // Delivered - Completed (Green)
         ];
 
         this.charts.allRequestsOverview = new Chart(ctx, {
