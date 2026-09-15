@@ -7854,71 +7854,66 @@ class AdminManager {
             }
         });
 
-        // Generate PDF using jsPDF
+        // Generate HTML table for PDF conversion
+        const tableHTML = `
+            <div style="font-family: Arial, sans-serif; direction: rtl; padding: 20px;">
+                <h1 style="text-align: center; color: #1e3a8a;">تقرير شامل - مركز خدمة لابتوب YAS</h1>
+                <p style="text-align: center; font-size: 14px; margin: 10px 0;">
+                    ${startDate && endDate ? `من ${startDate} إلى ${endDate}` : startDate ? `التاريخ: ${startDate}` : 'جميع التواريخ'}
+                </p>
+                <p style="text-align: center; font-size: 14px; margin: 10px 0;">${typeSummary}</p>
+                <p style="text-align: center; font-size: 14px; margin: 10px 0;">إجمالي السجلات: ${pdfData.length}</p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 10px;">
+                    <thead>
+                        <tr style="background-color: #3b82f6; color: white;">
+                            ${Object.keys(pdfData[0]).map(key => `<th style="border: 1px solid #ddd; padding: 8px; text-align: right;">${key}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pdfData.map(row => `
+                            <tr>
+                                ${Object.values(row).map(value => `<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${value || ''}</td>`).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        // Create a temporary container for the HTML
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.width = '800px';
+        tempContainer.innerHTML = tableHTML;
+        document.body.appendChild(tempContainer);
+
+        // Generate PDF using html2canvas and jsPDF
         try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({
-                orientation: 'landscape',
-                unit: 'mm',
-                format: 'a4'
+            html2canvas(tempContainer, {
+                scale: 2,
+                useCORS: true,
+                logging: false
+            }).then(canvas => {
+                const { jsPDF } = window.jspdf;
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('l', 'mm', 'a4');
+                const imgWidth = 297;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                pdf.save(`${fileName}.pdf`);
+
+                document.body.removeChild(tempContainer);
+                toast.success(`تم تحميل ${pdfData.length} سجل في ملف PDF بنجاح (${typeSummary})`);
+            }).catch(error => {
+                console.error('Error generating PDF:', error);
+                document.body.removeChild(tempContainer);
+                toast.error('فشل تحميل ملف PDF');
             });
-
-            // Add Arabic font support
-            doc.setFont('helvetica');
-
-            // Add title
-            doc.setFontSize(18);
-            doc.text('تقرير شامل - مركز خدمة لابتوب YAS', 148, 15, { align: 'center' });
-
-            // Add date range
-            doc.setFontSize(12);
-            let dateRangeText = '';
-            if (startDate && endDate) {
-                dateRangeText = `من ${startDate} إلى ${endDate}`;
-            } else if (startDate) {
-                dateRangeText = `التاريخ: ${startDate}`;
-            } else {
-                dateRangeText = 'جميع التواريخ';
-            }
-            doc.text(dateRangeText, 148, 22, { align: 'center' });
-
-            // Add type summary
-            doc.text(typeSummary, 148, 28, { align: 'center' });
-
-            // Add total count
-            doc.text(`إجمالي السجلات: ${pdfData.length}`, 148, 34, { align: 'center' });
-
-            // Generate table
-            const tableColumn = Object.keys(pdfData[0]);
-            const tableRows = pdfData.map(row => Object.values(row));
-
-            doc.autoTable({
-                head: [tableColumn],
-                body: tableRows,
-                startY: 40,
-                styles: {
-                    font: 'helvetica',
-                    fontSize: 8,
-                    cellPadding: 2,
-                    overflow: 'linebreak'
-                },
-                headStyles: {
-                    fillColor: [59, 130, 246],
-                    textColor: [255, 255, 255],
-                    fontStyle: 'bold'
-                },
-                alternateRowStyles: {
-                    fillColor: [240, 240, 240]
-                },
-                margin: { top: 40, right: 10, bottom: 10, left: 10 }
-            });
-
-            // Save PDF
-            doc.save(`${fileName}.pdf`);
-
-            toast.success(`تم تحميل ${pdfData.length} سجل في ملف PDF بنجاح (${typeSummary})`);
         } catch (error) {
             console.error('Error generating PDF:', error);
+            document.body.removeChild(tempContainer);
             toast.error('فشل تحميل ملف PDF');
         }
     }
