@@ -3792,7 +3792,7 @@ class AdminManager {
                 'التكلفة': request.cost || 0,
                 'الفني': request.technician || '',
                 'تاريخ الاستلام': request.receivedDate || '',
-                'تاريخ الاستلام المتوقع': request.estimatedCompletionDate || request.estimated_completion_date ? Utils.formatDate(request.estimatedCompletionDate || request.estimated_completion_date) : '',
+                'تاريخ الاستلام المتوقع': request.estimatedCompletionDate ? Utils.formatDate(request.estimatedCompletionDate) : (request.estimated_completion_date ? Utils.formatDate(request.estimated_completion_date) : ''),
                 'تاريخ الإنشاء': Utils.formatDate(request.createdAt || request.created_at),
                 'ملاحظات': request.notes || ''
             }));
@@ -4038,7 +4038,7 @@ class AdminManager {
                         </div>
                         <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptop_brand || companyRequest.laptopBrand || ''} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${companyRequest.serial_number || companyRequest.serialNumber || '—'}</span></div>
-                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام المتوقع</span><span class="request-detail-value">${companyRequest.estimated_completion_date || companyRequest.estimatedCompletionDate ? Utils.formatDate(companyRequest.estimated_completion_date || companyRequest.estimatedCompletionDate) : '—'}</span></div>
+                        <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام المتوقع</span><span class="request-detail-value">${companyRequest.estimatedCompletionDate ? Utils.formatDate(companyRequest.estimatedCompletionDate) : (companyRequest.estimated_completion_date ? Utils.formatDate(companyRequest.estimated_completion_date) : '—')}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(companyRequest.created_at || companyRequest.createdAt)}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${companyRequest.problem_description || companyRequest.problemDescription || ''}</span></div>
                     </div>
@@ -4112,7 +4112,7 @@ class AdminManager {
                         </div>
                         <div class="form-group">
                             <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
-                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${companyRequest.estimated_completion_date || companyRequest.estimatedCompletionDate ? new Date(companyRequest.estimated_completion_date || companyRequest.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
+                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${companyRequest.estimatedCompletionDate ? new Date(companyRequest.estimatedCompletionDate).toISOString().slice(0, 16) : (companyRequest.estimated_completion_date ? new Date(companyRequest.estimated_completion_date).toISOString().slice(0, 16) : '')}">
                         </div>
                         <div class="form-group">
                             <label class="form-label">تحديث الحالة</label>
@@ -4148,16 +4148,16 @@ class AdminManager {
 
                 const updateData = {
                     phone: form.phone.value,
-                    problem_description: form.problemDescription.value,
-                    admin_reply: form.adminReply.value,
+                    problemDescription: form.problemDescription.value,
+                    adminReply: form.adminReply.value,
                     cost: parseFloat(form.cost.value) || 0,
                     technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-                    estimated_completion_date: estimatedCompletionDate,
+                    estimatedCompletionDate: estimatedCompletionDate,
                     status: form.status.value
                 };
 
                 // Check if changing to Delivered status without estimated completion date
-                if (updateData.status === 'Delivered' && !updateData.estimated_completion_date) {
+                if (updateData.status === 'Delivered' && !updateData.estimatedCompletionDate) {
                     toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
                     return;
                 }
@@ -5081,6 +5081,7 @@ class AdminManager {
                     <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${firstDevice ? `${firstDevice.laptopBrand} ${firstDevice.laptopModel || ''}` : '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${firstDevice ? (firstDevice.serialNumber || '—') : '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${firstDevice ? (firstDevice.receivedDate ? Utils.formatDate(firstDevice.receivedDate) : '—') : '—'}</span></div>
+                    <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام المتوقع</span><span class="request-detail-value">${bulkRequest.estimatedCompletionDate ? Utils.formatDate(bulkRequest.estimatedCompletionDate) : (bulkRequest.estimated_completion_date ? Utils.formatDate(bulkRequest.estimated_completion_date) : '—')}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">تاريخ الطلب</span><span class="request-detail-value">${Utils.formatDate(bulkRequest.createdAt)}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${firstDevice ? firstDevice.problemDescription : '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">عدد الأجهزة</span><span class="request-detail-value">${bulkRequest.deviceCount}</span></div>
@@ -5197,7 +5198,7 @@ class AdminManager {
                     </div>
                     <div class="form-group">
                         <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
-                        <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${bulkRequest.estimatedCompletionDate ? new Date(bulkRequest.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
+                        <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${bulkRequest.estimatedCompletionDate ? new Date(bulkRequest.estimatedCompletionDate).toISOString().slice(0, 16) : (bulkRequest.estimated_completion_date ? new Date(bulkRequest.estimated_completion_date).toISOString().slice(0, 16) : '')}">
                     </div>
                     <div class="form-group">
                         <label class="form-label">تحديث الحالة</label>
