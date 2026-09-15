@@ -27,6 +27,7 @@ class AdminManager {
         this._bulkSpecialFilter = null;
         this._companySpecialFilter = null;
         this.currentSearchResults = [];
+        this.selectedSearchResults = new Set(); // Track selected search results for editing
         this.openBulkAccordions = new Set(); // Track which bulk accordions are open
         this.currentTodayTab = 'all'; // Track current tab in today's requests
     }
@@ -6102,6 +6103,9 @@ class AdminManager {
                 <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; background: var(--card-bg, rgba(255, 255, 255, 0.05)); color: var(--text-primary, #e2e8f0);">
                     <thead>
                         <tr style="background: var(--table-header-bg, rgba(59, 130, 246, 0.1));">
+                            <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: var(--text-primary, #e2e8f0); width: 50px;">
+                                <input type="checkbox" id="selectAllResults" onchange="window.adminManager.toggleSelectAllResults()" style="cursor: pointer;">
+                            </th>
                             <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: var(--text-primary, #e2e8f0);">نوع الطلب</th>
                             <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: var(--text-primary, #e2e8f0);">رقم الطلب</th>
                             <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: var(--text-primary, #e2e8f0);">الاسم</th>
@@ -6122,7 +6126,10 @@ class AdminManager {
                                 '<span style="margin-right: 0.5rem; background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">📅 اليوم</span>' : '';
                             
                             return `
-                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: var(--text-primary, #e2e8f0);">
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: var(--text-primary, #e2e8f0); cursor: pointer;" onclick="window.adminManager.openSearchResultEdit('${result.type}', ${result.id})">
+                                <td style="padding: 0.75rem; text-align: center;" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="result-checkbox" data-type="${result.type}" data-id="${result.id}" onchange="window.adminManager.handleResultCheckboxChange(this)" style="cursor: pointer;">
+                                </td>
                                 <td style="padding: 0.75rem;">
                                     <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; background: ${
                                         result.type === 'normal' ? 'rgba(16, 185, 129, 0.2); color: #10b981;' :
@@ -6147,9 +6154,112 @@ class AdminManager {
             `;
             resultsContainer.innerHTML = tableHTML;
             downloadBtn.style.display = 'block';
+            this.updateEditButtonState();
         }
 
         document.getElementById('globalSearchResultsModal').style.display = 'block';
+    }
+
+    /**
+     * Toggle select all search results
+     */
+    toggleSelectAllResults() {
+        const selectAllCheckbox = document.getElementById('selectAllResults');
+        const checkboxes = document.querySelectorAll('.result-checkbox');
+        this.selectedSearchResults.clear();
+
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+            if (selectAllCheckbox.checked) {
+                this.selectedSearchResults.add(`${checkbox.dataset.type}-${checkbox.dataset.id}`);
+            }
+        });
+        this.updateEditButtonState();
+    }
+
+    /**
+     * Handle individual checkbox change
+     */
+    handleResultCheckboxChange(checkbox) {
+        const key = `${checkbox.dataset.type}-${checkbox.dataset.id}`;
+        if (checkbox.checked) {
+            this.selectedSearchResults.add(key);
+        } else {
+            this.selectedSearchResults.delete(key);
+        }
+        this.updateEditButtonState();
+    }
+
+    /**
+     * Update edit button state based on selected results
+     */
+    updateEditButtonState() {
+        const editBtn = document.getElementById('editSelectedResultBtn');
+        const selectedCheckboxes = document.querySelectorAll('.result-checkbox:checked');
+
+        if (selectedCheckboxes.length === 1) {
+            editBtn.style.display = 'block';
+            editBtn.disabled = false;
+            editBtn.style.opacity = '1';
+            editBtn.style.cursor = 'pointer';
+            editBtn.title = 'تعديل النتيجة المحددة';
+        } else if (selectedCheckboxes.length > 1) {
+            editBtn.style.display = 'block';
+            editBtn.disabled = true;
+            editBtn.style.opacity = '0.5';
+            editBtn.style.cursor = 'not-allowed';
+            editBtn.title = 'يمكنك تعديل نتيجة واحدة فقط في كل مرة';
+        } else {
+            editBtn.style.display = 'none';
+        }
+    }
+
+    /**
+     * Open edit modal for a specific search result
+     */
+    async openSearchResultEdit(type, id) {
+        // Close the search modal first
+        document.getElementById('globalSearchResultsModal').style.display = 'none';
+
+        try {
+            // Navigate to the appropriate section and wait for data to load
+            await this.switchSection(type === 'normal' ? 'requests' : type === 'bulk' ? 'bulk-requests' : 'company-requests');
+
+            // Wait a bit for rendering to complete
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            // Open the edit modal based on type
+            switch(type) {
+                case 'normal':
+                    this.viewRequest(id);
+                    break;
+                case 'bulk':
+                    this.viewBulkRequest(id);
+                    break;
+                case 'company':
+                    this.viewCompanyRequest(id);
+                    break;
+            }
+        } catch (error) {
+            console.error('Error opening search result edit:', error);
+            toast.error('فشل فتح نافذة التعديل');
+        }
+    }
+
+    /**
+     * Edit the selected search result
+     */
+    editSelectedSearchResult() {
+        const selectedCheckbox = document.querySelector('.result-checkbox:checked');
+        if (!selectedCheckbox) {
+            toast.warning('يرجى اختيار نتيجة للتعديل');
+            return;
+        }
+
+        const type = selectedCheckbox.dataset.type;
+        const id = parseInt(selectedCheckbox.dataset.id);
+        
+        this.openSearchResultEdit(type, id);
     }
 
     /**
@@ -7974,6 +8084,24 @@ class AdminManager {
         toast.success(`تم تحميل ${excelData.length} طلب من اليوم في ملف Excel بنجاح`);
     }
 
+    // Static wrapper methods for global access
+    static toggleSelectAllResults() {
+        if (window.adminManager) {
+            window.adminManager.toggleSelectAllResults();
+        }
+    }
+
+    static handleResultCheckboxChange(checkbox) {
+        if (window.adminManager) {
+            window.adminManager.handleResultCheckboxChange(checkbox);
+        }
+    }
+
+    static openSearchResultEdit(type, id) {
+        if (window.adminManager) {
+            window.adminManager.openSearchResultEdit(type, id);
+        }
+    }
 }
 
 // Create global instance
