@@ -4479,17 +4479,32 @@ class AdminManager {
             return;
         }
 
+        // Split search terms by comma or space to allow multiple searches
+        const searchTerms = searchTerm.split(/[,،\s]+/).filter(term => term.trim().length > 0);
+
+        if (searchTerms.length === 0) {
+            toast.warning('الرجاء إدخال كلمة البحث');
+            return;
+        }
+
         const results = [];
+
+        // Helper function to check if any search term matches
+        const matchesSearch = (text) => {
+            if (!text) return false;
+            const textLower = text.toLowerCase();
+            return searchTerms.some(term => textLower.includes(term));
+        };
 
         // Search in normal requests
         this.requests.forEach(req => {
             if (
-                (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
-                (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
-                (req.phone && req.phone.includes(searchTerm)) ||
-                (req.serialNumber && req.serialNumber.toLowerCase().includes(searchTerm)) ||
-                (req.laptopBrand && req.laptopBrand.toLowerCase().includes(searchTerm)) ||
-                (req.laptopModel && req.laptopModel.toLowerCase().includes(searchTerm))
+                matchesSearch(req.requestNumber) ||
+                matchesSearch(req.fullName) ||
+                matchesSearch(req.phone) ||
+                matchesSearch(req.serialNumber) ||
+                matchesSearch(req.laptopBrand) ||
+                matchesSearch(req.laptopModel)
             ) {
                 results.push({
                     type: 'normal',
@@ -4508,16 +4523,18 @@ class AdminManager {
 
         // Search in bulk requests
         this.bulkRequests.forEach(req => {
-            if (
-                (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
-                (req.customerName && req.customerName.toLowerCase().includes(searchTerm)) ||
-                (req.customerPhone && req.customerPhone.includes(searchTerm)) ||
-                (req.devices && req.devices.some(d =>
-                    (d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm)) ||
-                    (d.laptopBrand && d.laptopBrand.toLowerCase().includes(searchTerm)) ||
-                    (d.laptopModel && d.laptopModel.toLowerCase().includes(searchTerm))
-                ))
-            ) {
+            const matchesHeader =
+                matchesSearch(req.requestNumber) ||
+                matchesSearch(req.customerName) ||
+                matchesSearch(req.customerPhone);
+
+            const matchesDevices = req.devices && req.devices.some(d =>
+                matchesSearch(d.serialNumber) ||
+                matchesSearch(d.laptopBrand) ||
+                matchesSearch(d.laptopModel)
+            );
+
+            if (matchesHeader || matchesDevices) {
                 results.push({
                     type: 'bulk',
                     requestNumber: req.requestNumber,
@@ -4536,12 +4553,12 @@ class AdminManager {
         // Search in company requests
         this.companyRequests.forEach(req => {
             if (
-                (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
-                (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
-                (req.phone && req.phone.includes(searchTerm)) ||
-                (req.serialNumber && req.serialNumber.toLowerCase().includes(searchTerm)) ||
-                (req.laptopBrand && req.laptopBrand.toLowerCase().includes(searchTerm)) ||
-                (req.laptopModel && req.laptopModel.toLowerCase().includes(searchTerm))
+                matchesSearch(req.requestNumber) ||
+                matchesSearch(req.fullName) ||
+                matchesSearch(req.phone) ||
+                matchesSearch(req.serialNumber) ||
+                matchesSearch(req.laptopBrand) ||
+                matchesSearch(req.laptopModel)
             ) {
                 results.push({
                     type: 'company',
@@ -4559,13 +4576,13 @@ class AdminManager {
         });
 
         this.currentSearchResults = results;
-        this.displayGlobalSearchResults(results);
+        this.displayGlobalSearchResults(results, searchTerms);
     }
 
     /**
      * Display global search results in modal
      */
-    displayGlobalSearchResults(results) {
+    displayGlobalSearchResults(results, searchTerms = []) {
         const resultsContainer = document.getElementById('globalSearchResults');
         const downloadBtn = document.getElementById('downloadExcelBtn');
 
@@ -4574,11 +4591,20 @@ class AdminManager {
                 <div style="text-align: center; padding: 2rem;">
                     <i class="fas fa-search" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
                     <p style="color: #94a3b8;">لا توجد نتائج للبحث</p>
+                    ${searchTerms.length > 0 ? `<p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">تم البحث عن: ${searchTerms.join('، ')}</p>` : ''}
                 </div>
             `;
             downloadBtn.style.display = 'none';
         } else {
             const tableHTML = `
+                <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                    <p style="margin: 0; color: #3b82f6; font-size: 0.875rem;">
+                        <i class="fas fa-search"></i> تم البحث عن: <strong>${searchTerms.join('، ')}</strong>
+                    </p>
+                    <p style="margin: 0.25rem 0 0 0; color: #94a3b8; font-size: 0.8rem;">
+                        يمكنك البحث عن عدة كلمات مفصولة بفاصلة أو مسافة
+                    </p>
+                </div>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
                     <thead>
                         <tr style="background: rgba(59, 130, 246, 0.1);">
@@ -4632,6 +4658,10 @@ class AdminManager {
         }
 
         try {
+            // Get search terms from input
+            const searchTerm = document.getElementById('globalSearchInput').value.toLowerCase().trim();
+            const searchTerms = searchTerm.split(/[,،\s]+/).filter(term => term.trim().length > 0);
+
             // Prepare data for Excel
             const excelData = this.currentSearchResults.map(result => ({
                 'نوع الطلب': result.type === 'normal' ? 'عادي' : result.type === 'bulk' ? 'جملة' : 'شركة',
@@ -4653,9 +4683,12 @@ class AdminManager {
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'نتائج البحث');
 
-            // Generate filename with timestamp
+            // Generate filename with search terms and timestamp
             const timestamp = new Date().toISOString().slice(0, 10);
-            const filename = `بحث_${timestamp}.xlsx`;
+            const searchTermsForFilename = searchTerms.slice(0, 2).join('_'); // Limit to 2 terms for filename
+            const filename = searchTermsForFilename
+                ? `بحث_${searchTermsForFilename}_${timestamp}.xlsx`
+                : `بحث_${timestamp}.xlsx`;
 
             // Download file
             XLSX.writeFile(wb, filename);
