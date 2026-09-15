@@ -5793,6 +5793,7 @@ class AdminManager {
                             priority: req.priority,
                             createdAt: req.createdAt,
                             cost: req.cost,
+                            estimatedCompletionDate: req.estimatedCompletionDate || null,
                             matchedTerm: searchTerm,
                             isToday: isRequestToday
                         });
@@ -5826,6 +5827,7 @@ class AdminManager {
                             priority: req.priority,
                             createdAt: req.createdAt,
                             cost: req.totalCost || 0,
+                            estimatedCompletionDate: req.estimatedCompletionDate || null,
                             matchedTerm: searchTerm,
                             isToday: isRequestToday
                         });
@@ -5848,6 +5850,7 @@ class AdminManager {
                             priority: req.priority,
                             createdAt: req.createdAt,
                             cost: req.cost,
+                            estimatedCompletionDate: req.estimatedCompletionDate || null,
                             matchedTerm: searchTerm,
                             isToday: isRequestToday
                         });
