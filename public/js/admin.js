@@ -3269,6 +3269,7 @@ class AdminManager {
                     'حالة الجهاز': device.status || '',
                     'حالة الطلب': bulkRequest.status,
                     'الأولوية': bulkRequest.priority,
+                    'تاريخ الاستلام المتوقع': device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : '',
                     'التاريخ': Utils.formatDate(bulkRequest.createdAt),
                     'ملاحظات': bulkRequest.notes || ''
                 });
@@ -3330,6 +3331,7 @@ class AdminManager {
                 'التكلفة': request.cost || 0,
                 'الفني': request.technician || '',
                 'تاريخ الاستلام': request.receivedDate || '',
+                'تاريخ الاستلام المتوقع': request.estimatedCompletionDate ? Utils.formatDate(request.estimatedCompletionDate) : '',
                 'تاريخ الإنشاء': Utils.formatDate(request.createdAt),
                 'ملاحظات': request.notes || ''
             }));
@@ -3474,6 +3476,7 @@ class AdminManager {
                 'التكلفة': request.cost || 0,
                 'الفني': request.technician || '',
                 'تاريخ الاستلام': request.receivedDate || '',
+                'تاريخ الاستلام المتوقع': request.estimatedCompletionDate ? Utils.formatDate(request.estimatedCompletionDate) : '',
                 'تاريخ الإنشاء': Utils.formatDate(request.createdAt),
                 'ملاحظات': request.notes || ''
             }));
@@ -3588,6 +3591,7 @@ class AdminManager {
                             'الحالة': device.status,
                             'التكلفة': request.cost || 0,
                             'الفني': request.technician || '',
+                            'تاريخ الاستلام المتوقع': device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : '',
                             'تاريخ الإنشاء': Utils.formatDate(request.createdAt),
                             'ملاحظات': request.notes || ''
                         });
@@ -3767,6 +3771,7 @@ class AdminManager {
                 'التكلفة': request.cost || 0,
                 'الفني': request.technician || '',
                 'تاريخ الاستلام': request.receivedDate || '',
+                'تاريخ الاستلام المتوقع': request.estimatedCompletionDate || request.estimated_completion_date ? Utils.formatDate(request.estimatedCompletionDate || request.estimated_completion_date) : '',
                 'تاريخ الإنشاء': Utils.formatDate(request.createdAt || request.created_at),
                 'ملاحظات': request.notes || ''
             }));
@@ -4592,6 +4597,43 @@ class AdminManager {
      */
     async updateCompanyRequestStatus(companyRequestId, newStatus) {
         try {
+            // Check if changing to Delivered status
+            if (newStatus === 'Delivered') {
+                const request = this.companyRequests.find(r => r.id === companyRequestId);
+                if (!request || !request.estimatedCompletionDate) {
+                    // Prompt for estimated completion date
+                    const dateInput = prompt('يرجى إدخال تاريخ ووقت الاستلام المتوقع (YYYY-MM-DD HH:MM):');
+                    if (!dateInput) {
+                        toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
+                        return;
+                    }
+                    
+                    // Validate and format the date
+                    const dateObj = new Date(dateInput);
+                    if (isNaN(dateObj.getTime())) {
+                        toast.error('تاريخ غير صحيح، يرجى إدخال التاريخ بصيغة YYYY-MM-DD HH:MM');
+                        return;
+                    }
+                    
+                    // Update the request with the date
+                    const updateResponse = await fetch(`/api/company-requests/${companyRequestId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            status: newStatus,
+                            estimatedCompletionDate: dateObj.toISOString()
+                        })
+                    });
+
+                    if (!updateResponse.ok) throw new Error('Failed to update company request status');
+
+                    toast.success('تم تحديث حالة الطلب بنجاح');
+                    await this.loadData();
+                    this.renderCompanyRequests();
+                    return;
+                }
+            }
+
             const updateResponse = await fetch(`/api/company-requests/${companyRequestId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -4614,6 +4656,51 @@ class AdminManager {
      */
     async updateRequestStatus(requestId, newStatus) {
         try {
+            // Check if changing to Delivered status
+            if (newStatus === 'Delivered') {
+                const request = this.requests.find(r => r.id === requestId);
+                if (!request || !request.estimatedCompletionDate) {
+                    // Prompt for estimated completion date
+                    const dateInput = prompt('يرجى إدخال تاريخ ووقت الاستلام المتوقع (YYYY-MM-DD HH:MM):');
+                    if (!dateInput) {
+                        toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
+                        return;
+                    }
+                    
+                    // Validate and format the date
+                    const dateObj = new Date(dateInput);
+                    if (isNaN(dateObj.getTime())) {
+                        toast.error('تاريخ غير صحيح، يرجى إدخال التاريخ بصيغة YYYY-MM-DD HH:MM');
+                        return;
+                    }
+                    
+                    // Update the request with the date
+                    const updateResponse = await fetch(`/api/requests/${requestId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            status: newStatus,
+                            estimatedCompletionDate: dateObj.toISOString()
+                        })
+                    });
+
+                    if (!updateResponse.ok) throw new Error('Failed to update request status');
+
+                    // Update local data
+                    const index = this.requests.findIndex(r => r.id === requestId);
+                    if (index !== -1) {
+                        this.requests[index].status = newStatus;
+                        this.requests[index].estimatedCompletionDate = dateObj.toISOString();
+                        this.renderRequests();
+                        this.renderStats();
+                        this.renderCharts();
+                    }
+
+                    toast.success('تم تحديث حالة الطلب بنجاح');
+                    return;
+                }
+            }
+
             const updateResponse = await fetch(`/api/requests/${requestId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -4644,6 +4731,54 @@ class AdminManager {
     async updateDeviceStatus(bulkRequestId, deviceId, newStatus) {
         try {
             console.log('Updating device status:', { bulkRequestId, deviceId, newStatus });
+
+            // Check if changing to Delivered status
+            if (newStatus === 'Delivered') {
+                // Get the bulk request to find the device
+                const bulkRequest = this.bulkRequests.find(r => r.id === bulkRequestId);
+                if (bulkRequest && bulkRequest.devices) {
+                    const device = bulkRequest.devices.find(d => d.id === deviceId);
+                    if (!device || !device.estimatedCompletionDate) {
+                        // Prompt for estimated completion date
+                        const dateInput = prompt('يرجى إدخال تاريخ ووقت الاستلام المتوقع (YYYY-MM-DD HH:MM):');
+                        if (!dateInput) {
+                            toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
+                            return;
+                        }
+                        
+                        // Validate and format the date
+                        const dateObj = new Date(dateInput);
+                        if (isNaN(dateObj.getTime())) {
+                            toast.error('تاريخ غير صحيح، يرجى إدخال التاريخ بصيغة YYYY-MM-DD HH:MM');
+                            return;
+                        }
+                        
+                        // Update device status with the date
+                        const updateResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                status: newStatus,
+                                estimatedCompletionDate: dateObj.toISOString()
+                            })
+                        });
+
+                        if (!updateResponse.ok) {
+                            const errorText = await updateResponse.text();
+                            console.error('Error response:', errorText);
+                            throw new Error('Failed to update device status');
+                        }
+
+                        const result = await updateResponse.json();
+                        console.log('Device status updated:', result);
+
+                        toast.success('تم تحديث حالة الجهاز بنجاح');
+                        await this.loadData();
+                        this.renderBulkRequests();
+                        return;
+                    }
+                }
+            }
             
             // Update device status using the device-specific endpoint
             const updateResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
@@ -6011,6 +6146,7 @@ class AdminManager {
                     'الرقم التسلسلي': result.serialNumber || '',
                     'الحالة': this.translateStatus(result.status),
                     'الأولوية': result.priority || 'متوسط',
+                    'تاريخ الاستلام المتوقع': result.estimatedCompletionDate ? new Date(result.estimatedCompletionDate).toLocaleDateString('ar-EG') : '',
                     'التاريخ': new Date(result.createdAt).toLocaleDateString('ar-EG'),
                     'التكلفة': result.cost || 0
                 };
@@ -6089,6 +6225,7 @@ class AdminManager {
                 'وصف المشكلة': device.problemDescription,
                 'الحالة': this.translateStatus(device.status),
                 'التكلفة': device.cost || 0,
+                'تاريخ الاستلام المتوقع': device.estimatedCompletionDate ? Utils.formatDate(device.estimatedCompletionDate) : '',
                 'الملاحظات': device.notes || ''
             }));
 
