@@ -2803,7 +2803,7 @@ class AdminManager {
                     </tbody>
                 </table>
             </div>
-            <div id="companyRequestsPagination"></div>
+            <div id="companyRequestsPagination" style="margin-top: 1.5rem;"></div>
         `;
 
         this.renderPagination('companyRequestsPagination', pages);
