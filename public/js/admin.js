@@ -2737,33 +2737,33 @@ class AdminManager {
                     </button>
                 </div>
             </div>
-            <div style="overflow-x: auto;">
-                <table class="table">
+            <div style="overflow-x: auto; max-height: 70vh;">
+                <table class="table" style="font-size: 0.85rem;">
                     <thead>
                         <tr>
-                            <th>رقم الطلب</th>
-                            <th>الاسم</th>
-                            <th>الهاتف</th>
-                            <th>الجهاز</th>
-                            <th>الرقم التسلسلي</th>
-                            <th>الحالة</th>
-                            <th>الأولوية</th>
-                            <th>رد الإدارة</th>
-                            <th>الفني</th>
-                            <th>التاريخ</th>
-                            <th>إجراءات</th>
+                            <th style="padding: 0.5rem;">رقم الطلب</th>
+                            <th style="padding: 0.5rem;">الاسم</th>
+                            <th style="padding: 0.5rem;">الهاتف</th>
+                            <th style="padding: 0.5rem;">الجهاز</th>
+                            <th style="padding: 0.5rem;">الرقم التسلسلي</th>
+                            <th style="padding: 0.5rem;">الحالة</th>
+                            <th style="padding: 0.5rem;">الأولوية</th>
+                            <th style="padding: 0.5rem;">رد الإدارة</th>
+                            <th style="padding: 0.5rem;">الفني</th>
+                            <th style="padding: 0.5rem;">التاريخ</th>
+                            <th style="padding: 0.5rem;">إجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${data.map(companyRequest => `
                             <tr style="transition: background-color 0.2s;">
-                                <td style="font-weight: 600; color: #3b82f6;">${companyRequest.request_number || companyRequest.requestNumber}</td>
-                                <td style="font-weight: 600;">${companyRequest.full_name || companyRequest.fullName}</td>
-                                <td dir="ltr">${companyRequest.phone}</td>
-                                <td>${companyRequest.laptop_brand || companyRequest.laptopBrand} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</td>
-                                <td dir="ltr" style="font-size: 0.875rem; color: #94a3b8;">${companyRequest.serial_number || companyRequest.serialNumber || '—'}</td>
-                                <td>
-                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateCompanyRequestStatus(${companyRequest.id}, this.value)">
+                                <td style="padding: 0.5rem; font-weight: 600; color: #3b82f6;">${companyRequest.request_number || companyRequest.requestNumber}</td>
+                                <td style="padding: 0.5rem; font-weight: 600;">${companyRequest.full_name || companyRequest.fullName}</td>
+                                <td style="padding: 0.5rem;" dir="ltr">${companyRequest.phone}</td>
+                                <td style="padding: 0.5rem;">${companyRequest.laptop_brand || companyRequest.laptopBrand} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</td>
+                                <td style="padding: 0.5rem; font-size: 0.8rem; color: #94a3b8;" dir="ltr">${companyRequest.serial_number || companyRequest.serialNumber || '—'}</td>
+                                <td style="padding: 0.5rem;">
+                                    <select class="form-select" style="padding: 0.2rem; font-size: 0.75rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1); min-width: 100px;" onchange="adminManager.updateCompanyRequestStatus(${companyRequest.id}, this.value)">
                                         <option value="Received" ${companyRequest.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
                                         <option value="Waiting Inspection" ${companyRequest.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
                                         <option value="Under Maintenance" ${companyRequest.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
@@ -2772,31 +2772,33 @@ class AdminManager {
                                         <option value="Delivered" ${companyRequest.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم للعميل</option>
                                     </select>
                                 </td>
-                                <td><span class="priority-badge ${this.getPriorityClass(companyRequest.priority)}">${this.translatePriority(companyRequest.priority)}</span></td>
-                                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${companyRequest.admin_reply || companyRequest.adminReply || '—'}</td>
-                                <td>${companyRequest.technician || '—'}</td>
-                                <td>${Utils.formatDate(companyRequest.created_at || companyRequest.createdAt)}</td>
-                                <td>
-                                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
-                                            onclick="adminManager.viewCompanyRequest(${companyRequest.id})">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.quickEditCompanyRequest(${companyRequest.id})" title="تعديل سريع">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.convertCompanyRequestToSingle(${companyRequest.id})" title="تحويل لطلب عادي">
-                                        <i class="fas fa-laptop"></i>
-                                    </button>
-                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.convertCompanyRequestToBulk(${companyRequest.id})" title="تحويل لطلب جملة">
-                                        <i class="fas fa-boxes"></i>
-                                    </button>
-                                    <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.deleteCompanyRequest(${companyRequest.id})">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                <td style="padding: 0.5rem;"><span class="priority-badge ${this.getPriorityClass(companyRequest.priority)}" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">${this.translatePriority(companyRequest.priority)}</span></td>
+                                <td style="padding: 0.5rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${companyRequest.admin_reply || companyRequest.adminReply || '—'}</td>
+                                <td style="padding: 0.5rem;">${companyRequest.technician || '—'}</td>
+                                <td style="padding: 0.5rem;">${Utils.formatDate(companyRequest.created_at || companyRequest.createdAt)}</td>
+                                <td style="padding: 0.5rem;">
+                                    <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                                        <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                                onclick="adminManager.viewCompanyRequest(${companyRequest.id})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                                onclick="adminManager.quickEditCompanyRequest(${companyRequest.id})" title="تعديل سريع">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                                onclick="adminManager.convertCompanyRequestToSingle(${companyRequest.id})" title="تحويل لطلب عادي">
+                                            <i class="fas fa-laptop"></i>
+                                        </button>
+                                        <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                                onclick="adminManager.convertCompanyRequestToBulk(${companyRequest.id})" title="تحويل لطلب جملة">
+                                            <i class="fas fa-boxes"></i>
+                                        </button>
+                                        <button class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                                onclick="adminManager.deleteCompanyRequest(${companyRequest.id})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         `).join('')}

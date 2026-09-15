@@ -1006,6 +1006,32 @@ body.light-mode .toast {
     transform: none;
 }
 
+/* Company Requests Table Optimization */
+#companyRequestsContainer .table {
+    font-size: 0.85rem;
+}
+
+#companyRequestsContainer .table th,
+#companyRequestsContainer .table td {
+    padding: 0.5rem;
+}
+
+#companyRequestsContainer .table select {
+    padding: 0.2rem;
+    font-size: 0.75rem;
+    min-width: 100px;
+}
+
+#companyRequestsContainer .table .priority-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+#companyRequestsContainer .table .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
