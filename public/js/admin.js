@@ -79,8 +79,8 @@ class AdminManager {
             console.log('📑 Switching to dashboard section...');
             await this.switchSection('dashboard');
             
-            console.log('🔄 Starting auto-refresh...');
-            this.startAutoRefresh();
+            console.log('🔄 Auto-refresh disabled');
+            // this.startAutoRefresh(); // Auto-refresh disabled as requested
             
             console.log('� Initializing notification badge...');
             this.updateNotificationBadge();
@@ -247,9 +247,15 @@ class AdminManager {
     }
 
     /**
-     * Start auto-refresh every 10 seconds
+     * Start auto-refresh every 10 seconds (DISABLED)
      */
     startAutoRefresh() {
+        // Auto-refresh disabled as requested by user
+        console.log('Auto-refresh is disabled');
+        return;
+        
+        // Original auto-refresh code (commented out):
+        /*
         if (this.autoRefreshInterval) {
             clearInterval(this.autoRefreshInterval);
         }
@@ -292,6 +298,7 @@ class AdminManager {
                 this.renderTrash();
             }
         }, 10000);
+        */
     }
 
     /**
