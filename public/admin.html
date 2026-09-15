@@ -137,12 +137,12 @@
                 <div style="flex: 1; max-width: 700px; margin-left: auto;">
                     <form id="globalSearchForm">
                         <div style="display: flex; gap: 0.5rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); padding: 0.75rem; border-radius: 12px; border: 2px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);">
-                            <input type="text" id="globalSearchInput" placeholder="🔍 بحث شامل - يمكنك البحث بأكثر من كلمة مفصولة بفاصلة (،) أو فاصلة منقوطة (;)..." autocomplete="off" style="flex: 1; padding: 0.75rem; border: none; background: rgba(255, 255, 255, 0.15); color: var(--white); font-size: 1rem; border-radius: 8px; outline: none;">
+                            <input type="text" id="globalSearchInput" placeholder="🔍 بحث شامل - يمكنك البحث بأكثر من كلمة مفصولة بفاصلة (،) أو فاصلة منقوطة (;)..." autocomplete="off" style="flex: 1; padding: 0.75rem; border: none; background: rgba(255, 255, 255, 0.9); color: var(--text-primary, #1e293b); font-size: 1rem; border-radius: 8px; outline: none;">
                             <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">
                                 <i class="fas fa-search"></i> بحث
                             </button>
                         </div>
-                        <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
+                        <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
                             <i class="fas fa-info-circle"></i> للبحث عن عدة أشياء في نفس الوقت، استخدم الفاصلة (،) أو الفاصلة المنقوطة (;) بين الكلمات
                         </div>
                         <div id="globalSearchSuggestions" class="search-suggestions" style="display: none;"></div>
@@ -152,14 +152,14 @@
 
             <!-- Global Search Results Modal -->
             <div id="globalSearchResultsModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); z-index: 1000; padding: 2rem; overflow-y: auto;">
-                <div class="glass-card" style="max-width: 900px; margin: 0 auto; padding: 2rem;">
+                <div class="glass-card" style="max-width: 900px; margin: 0 auto; padding: 2rem; background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.1);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h2>نتائج البحث الشامل</h2>
+                        <h2 style="color: #1e293b;">نتائج البحث الشامل</h2>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <button id="downloadExcelBtn" onclick="adminManager.downloadSearchResultsToExcel()" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; display: none;">
+                            <button id="downloadExcelBtn" onclick="adminManager.downloadSearchResultsToExcel()" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; display: none; color: white;">
                                 <i class="fas fa-file-excel"></i> تحميل Excel
                             </button>
-                            <button onclick="document.getElementById('globalSearchResultsModal').style.display = 'none'" style="background: none; border: none; color: var(--white); font-size: 1.5rem; cursor: pointer;">
+                            <button onclick="document.getElementById('globalSearchResultsModal').style.display = 'none'" style="background: none; border: none; color: #1e293b; font-size: 1.5rem; cursor: pointer;">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -320,16 +320,16 @@
                 <div class="dashboard-header" style="flex-wrap:wrap; gap:1rem;">
                     <h2><i class="fas fa-file-excel" style="color:#10b981;"></i> التقارير</h2>
                     <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
-                        <div style="display:flex; gap:1rem; align-items:center; background: rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 8px;">
-                            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; color: var(--white);">
+                        <div style="display:flex; gap:1rem; align-items:center; background: rgba(59, 130, 246, 0.1); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; color: var(--text-primary, #1e293b);">
                                 <input type="checkbox" id="reportTypeSingle" value="single" checked style="width:16px; height:16px; cursor:pointer;">
                                 <span>طلبات عادية</span>
                             </label>
-                            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; color: var(--white);">
+                            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; color: var(--text-primary, #1e293b);">
                                 <input type="checkbox" id="reportTypeBulk" value="bulk" style="width:16px; height:16px; cursor:pointer;">
                                 <span>طلبات جملة</span>
                             </label>
-                            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; color: var(--white);">
+                            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; color: var(--text-primary, #1e293b);">
                                 <input type="checkbox" id="reportTypeCompany" value="company" style="width:16px; height:16px; cursor:pointer;">
                                 <span>طلبات شركات</span>
                             </label>

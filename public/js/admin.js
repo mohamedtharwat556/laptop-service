@@ -4745,8 +4745,8 @@ class AdminManager {
         if (results.length === 0) {
             resultsContainer.innerHTML = `
                 <div style="text-align: center; padding: 2rem;">
-                    <i class="fas fa-search" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
-                    <p style="color: #94a3b8;">لا توجد نتائج للبحث</p>
+                    <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted, #94a3b8); margin-bottom: 1rem;"></i>
+                    <p style="color: var(--text-muted, #94a3b8);">لا توجد نتائج للبحث</p>
                 </div>
             `;
             downloadBtn.style.display = 'none';
@@ -4763,9 +4763,9 @@ class AdminManager {
             if (searchTermInfo && searchTermInfo.length > 1) {
                 searchTermsSummary = `
                     <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
-                        <p style="color: #3b82f6; margin: 0; font-size: 0.875rem;">
+                        <p style="color: var(--accent-blue, #3b82f6); margin: 0; font-size: 0.875rem;">
                             <i class="fas fa-layer-group"></i> البحث بأكثر من كلمة:
-                            ${searchTermInfo.map(info => `<span style="margin-right: 0.5rem; background: rgba(59, 130, 246, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px;">"${info.term}" (${info.count} نتيجة)</span>`).join('')}
+                            ${searchTermInfo.map(info => `<span style="margin-right: 0.5rem; background: rgba(59, 130, 246, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; color: var(--text-primary, #e2e8f0);">"${info.term}" (${info.count} نتيجة)</span>`).join('')}
                         </p>
                     </div>
                 `;
@@ -4775,24 +4775,24 @@ class AdminManager {
             
             const tableHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <p style="color: #94a3b8; margin: 0;">
+                    <p style="color: var(--text-muted, #94a3b8); margin: 0;">
                         <i class="fas fa-search"></i> تم العثور على ${results.length} نتيجة
-                        <span style="margin-right: 0.5rem;">(عادي: ${counts.normal} | جملة: ${counts.bulk} | شركة: ${counts.company})</span>
+                        <span style="margin-right: 0.5rem; color: var(--text-muted, #94a3b8);">(عادي: ${counts.normal} | جملة: ${counts.bulk} | شركة: ${counts.company})</span>
                     </p>
                 </div>
                 ${searchTermsSummary}
-                <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; background: var(--card-bg, rgba(255, 255, 255, 0.05)); color: var(--text-primary, #e2e8f0);">
                     <thead>
-                        <tr style="background: rgba(59, 130, 246, 0.1);">
-                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">نوع الطلب</th>
-                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">رقم الطلب</th>
-                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الاسم</th>
-                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الهاتف</th>
-                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الماركة</th>
-                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الرقم التسلسلي</th>
-                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الحالة</th>
-                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">التاريخ</th>
-                            ${hasMatchedTerm ? `<th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">كلمة البحث</th>` : ''}
+                        <tr style="background: var(--table-header-bg, rgba(59, 130, 246, 0.1));">
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: var(--text-primary, #e2e8f0);">نوع الطلب</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: var(--text-primary, #e2e8f0);">رقم الطلب</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: var(--text-primary, #e2e8f0);">الاسم</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: var(--text-primary, #e2e8f0);">الهاتف</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: var(--text-primary, #e2e8f0);">الماركة</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: var(--text-primary, #e2e8f0);">الرقم التسلسلي</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: var(--text-primary, #e2e8f0);">الحالة</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: var(--text-primary, #e2e8f0);">التاريخ</th>
+                            ${hasMatchedTerm ? `<th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1); color: var(--text-primary, #e2e8f0);">كلمة البحث</th>` : ''}
                         </tr>
                     </thead>
                     <tbody>
@@ -4801,7 +4801,7 @@ class AdminManager {
                                 `<td style="padding: 0.75rem;"><span style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${result.matchedTerm || '-'}</span></td>` : '';
                             
                             return `
-                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: var(--text-primary, #e2e8f0);">
                                 <td style="padding: 0.75rem;">
                                     <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; background: ${
                                         result.type === 'normal' ? 'rgba(16, 185, 129, 0.2); color: #10b981;' :
@@ -4811,13 +4811,13 @@ class AdminManager {
                                         ${result.type === 'normal' ? 'عادي' : result.type === 'bulk' ? 'جملة' : 'شركة'}
                                     </span>
                                 </td>
-                                <td style="padding: 0.75rem;">${result.requestNumber}</td>
-                                <td style="padding: 0.75rem;">${result.fullName}</td>
-                                <td style="padding: 0.75rem;">${result.phone}</td>
-                                <td style="padding: 0.75rem;">${result.laptopBrand}</td>
-                                <td style="padding: 0.75rem;">${result.serialNumber || '-'}</td>
-                                <td style="padding: 0.75rem;">${this.translateStatus(result.status)}</td>
-                                <td style="padding: 0.75rem;">${new Date(result.createdAt).toLocaleDateString('ar-EG')}</td>
+                                <td style="padding: 0.75rem; color: var(--text-primary, #e2e8f0);">${result.requestNumber}</td>
+                                <td style="padding: 0.75rem; color: var(--text-primary, #e2e8f0);">${result.fullName}</td>
+                                <td style="padding: 0.75rem; color: var(--text-primary, #e2e8f0);">${result.phone}</td>
+                                <td style="padding: 0.75rem; color: var(--text-primary, #e2e8f0);">${result.laptopBrand}</td>
+                                <td style="padding: 0.75rem; color: var(--text-primary, #e2e8f0);">${result.serialNumber || '-'}</td>
+                                <td style="padding: 0.75rem; color: var(--text-primary, #e2e8f0);">${this.translateStatus(result.status)}</td>
+                                <td style="padding: 0.75rem; color: var(--text-primary, #e2e8f0);">${new Date(result.createdAt).toLocaleDateString('ar-EG')}</td>
                                 ${matchedTermHtml}
                             </tr>
                         `}).join('')}
@@ -5989,29 +5989,29 @@ class AdminManager {
             container.innerHTML = `
                 <div class="glass-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
-                        <p style="color: #3b82f6; margin: 0;">
+                        <p style="color: var(--text-primary, #1e293b); margin: 0;">
                             <i class="fas fa-info-circle"></i> إجمالي الطلبات: ${deviceRows.length} (${typeSummary})
                         </p>
                     </div>
                     <div style="overflow-x: auto;">
-                        <table class="table">
+                        <table class="table" style="background: var(--card-bg, rgba(255, 255, 255, 0.05)); color: var(--text-primary, #e2e8f0);">
                             <thead>
-                                <tr>
-                                    <th>نوع الطلب</th>
-                                    <th>رقم الطلب</th>
-                                    <th>اسم العميل</th>
-                                    <th>الهاتف</th>
-                                    <th>الجهاز</th>
-                                    <th>المشكلة</th>
-                                    <th>الحالة</th>
-                                    <th>التكلفة</th>
-                                    <th>الفني</th>
-                                    <th>التاريخ</th>
+                                <tr style="background: var(--table-header-bg, rgba(30, 60, 255, 0.15));">
+                                    <th style="color: var(--text-primary, #e2e8f0);">نوع الطلب</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">رقم الطلب</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">اسم العميل</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">الهاتف</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">الجهاز</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">المشكلة</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">الحالة</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">التكلفة</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">الفني</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">التاريخ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${deviceRows.map(r => `
-                                    <tr>
+                                    <tr style="color: var(--text-primary, #e2e8f0);">
                                         <td>
                                             <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; background: ${
                                                 r.reportType === 'single' ? 'rgba(16, 185, 129, 0.2); color: #10b981;' :
@@ -6021,22 +6021,22 @@ class AdminManager {
                                                 ${r.reportType === 'single' ? 'عادي' : r.reportType === 'bulk' ? 'جملة' : 'شركة'}
                                             </span>
                                         </td>
-                                        <td style="font-weight: 600;">${r.requestNumber}</td>
-                                        <td>${r.customerName}</td>
-                                        <td dir="ltr">${r.customerPhone}</td>
-                                        <td>${r.laptopBrand} ${r.laptopModel || ''}</td>
-                                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription}</td>
+                                        <td style="font-weight: 600; color: var(--text-primary, #e2e8f0);">${r.requestNumber}</td>
+                                        <td style="color: var(--text-primary, #e2e8f0);">${r.customerName}</td>
+                                        <td dir="ltr" style="color: var(--text-primary, #e2e8f0);">${r.customerPhone}</td>
+                                        <td style="color: var(--text-primary, #e2e8f0);">${r.laptopBrand} ${r.laptopModel || ''}</td>
+                                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary, #e2e8f0);">${r.problemDescription}</td>
                                         <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
-                                        <td>${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
-                                        <td>${r.technician}</td>
-                                        <td>${Utils.formatDate(r.createdAt)}</td>
+                                        <td style="color: var(--text-primary, #e2e8f0);">${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
+                                        <td style="color: var(--text-primary, #e2e8f0);">${r.technician}</td>
+                                        <td style="color: var(--text-primary, #e2e8f0);">${Utils.formatDate(r.createdAt)}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     </div>
                     <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
-                        <strong>إجمالي الطلبات:</strong> ${deviceRows.length}
+                        <strong style="color: var(--text-primary, #1e293b);">إجمالي الطلبات:</strong> ${deviceRows.length}
                     </div>
                 </div>
             `;
@@ -6045,29 +6045,29 @@ class AdminManager {
             container.innerHTML = `
                 <div class="glass-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
-                        <p style="color: #3b82f6; margin: 0;">
+                        <p style="color: var(--text-primary, #1e293b); margin: 0;">
                             <i class="fas fa-info-circle"></i> إجمالي الطلبات: ${requests.length} (${typeSummary})
                         </p>
                     </div>
                     <div class="table-container" style="overflow-x: auto;">
-                        <table class="table" style="min-width: 1000px;">
+                        <table class="table" style="min-width: 1000px; background: var(--card-bg, rgba(255, 255, 255, 0.05)); color: var(--text-primary, #e2e8f0);">
                             <thead>
-                                <tr>
-                                    <th>نوع الطلب</th>
-                                    <th>رقم الطلب</th>
-                                    <th>اسم العميل</th>
-                                    <th>الهاتف</th>
-                                    <th>الجهاز</th>
-                                    <th>المشكلة</th>
-                                    <th>الحالة</th>
-                                    <th>التكلفة</th>
-                                    <th>الفني</th>
-                                    <th>التاريخ</th>
+                                <tr style="background: var(--table-header-bg, rgba(30, 60, 255, 0.15));">
+                                    <th style="color: var(--text-primary, #e2e8f0);">نوع الطلب</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">رقم الطلب</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">اسم العميل</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">الهاتف</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">الجهاز</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">المشكلة</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">الحالة</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">التكلفة</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">الفني</th>
+                                    <th style="color: var(--text-primary, #e2e8f0);">التاريخ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${requests.map(r => `
-                                    <tr style="transition: background-color 0.2s;">
+                                    <tr style="transition: background-color 0.2s; color: var(--text-primary, #e2e8f0);">
                                         <td>
                                             <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; background: ${
                                                 r.reportType === 'single' ? 'rgba(16, 185, 129, 0.2); color: #10b981;' :
@@ -6077,22 +6077,22 @@ class AdminManager {
                                                 ${r.reportType === 'single' ? 'عادي' : r.reportType === 'bulk' ? 'جملة' : 'شركة'}
                                             </span>
                                         </td>
-                                        <td style="font-weight: 600; color: #3b82f6;">${r.requestNumber}</td>
-                                        <td>${r.fullName || r.customerName}</td>
-                                        <td dir="ltr">${r.phone || r.customerPhone}</td>
-                                        <td>${r.laptopBrand} ${r.laptopModel || ''}</td>
-                                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.problemDescription}</td>
+                                        <td style="font-weight: 600; color: var(--accent-blue, #3b82f6);">${r.requestNumber}</td>
+                                        <td style="color: var(--text-primary, #e2e8f0);">${r.fullName || r.customerName}</td>
+                                        <td dir="ltr" style="color: var(--text-primary, #e2e8f0);">${r.phone || r.customerPhone}</td>
+                                        <td style="color: var(--text-primary, #e2e8f0);">${r.laptopBrand} ${r.laptopModel || ''}</td>
+                                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary, #e2e8f0);">${r.problemDescription}</td>
                                         <td><span class="status-badge ${this.getStatusClass(r.status)}">${this.translateStatus(r.status)}</span></td>
-                                        <td>${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
-                                        <td>${r.technician || '—'}</td>
-                                        <td>${Utils.formatDate(r.createdAt)}</td>
+                                        <td style="color: var(--text-primary, #e2e8f0);">${r.cost > 0 ? Utils.formatCurrency(r.cost) : '—'}</td>
+                                        <td style="color: var(--text-primary, #e2e8f0);">${r.technician || '—'}</td>
+                                        <td style="color: var(--text-primary, #e2e8f0);">${Utils.formatDate(r.createdAt)}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     </div>
                     <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
-                        <strong>إجمالي الطلبات:</strong> ${requests.length}
+                        <strong style="color: var(--text-primary, #1e293b);">إجمالي الطلبات:</strong> ${requests.length}
                     </div>
                 </div>
             `;

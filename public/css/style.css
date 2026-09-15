@@ -48,6 +48,10 @@
     --card-bg-subtle: rgba(255, 255, 255, 0.05);
     --border-dashed: rgba(255, 255, 255, 0.2);
     --message-bg-other: rgba(255, 255, 255, 0.1);
+    --text-primary: #e2e8f0;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --table-header-bg: rgba(30, 60, 255, 0.15);
+    --accent-blue: #3b82f6;
 }
 
 /* Video Background Styles */
@@ -109,6 +113,10 @@ body.light-mode {
     --border-dashed: rgba(30, 60, 255, 0.25);
     --message-bg-other: rgba(0, 0, 0, 0.05);
     --text-message-other: var(--gray-600);
+    --text-primary: #1e293b;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --table-header-bg: rgba(30, 60, 255, 0.1);
+    --accent-blue: #3b82f6;
 }
 
 body.light-mode .glass-card {
