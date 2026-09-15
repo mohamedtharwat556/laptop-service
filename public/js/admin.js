@@ -8116,6 +8116,9 @@ class AdminManager {
 // Create global instance
 const adminManager = new AdminManager();
 
+// Make it available globally
+window.adminManager = adminManager;
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
     if (document.getElementById('adminDashboard')) {
