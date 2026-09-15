@@ -946,6 +946,19 @@ class AdminManager {
 
         statsContainer.innerHTML = `
             <div class="stats-grid">
+                <!-- Today's Laptop Orders Counter - Separate from search -->
+                <div class="glass-card stat-card" style="position: relative; background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1)); border: 2px solid #3b82f6;">
+                    <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2);">
+                        <i class="fas fa-laptop" style="color: #3b82f6;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 style="color: #3b82f6; font-size: 2.5rem; font-weight: 700;">${stats.todayLaptopOrders}</h3>
+                        <p style="color: #1e293b; font-weight: 600;">طلبات اليوم لللابتوب</p>
+                    </div>
+                    <div style="position: absolute; top: 10px; left: 10px; font-size: 0.75rem; color: #64748b; background: rgba(255,255,255,0.9); padding: 0.25rem 0.5rem; border-radius: 4px;">
+                        <i class="fas fa-calendar-day"></i> ${new Date().toLocaleDateString('ar-EG')}
+                    </div>
+                </div>
                 <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','All')" style="position: relative;">
                     <div class="stat-icon">
                         <i class="fas fa-clipboard-list"></i>
@@ -1079,6 +1092,9 @@ class AdminManager {
         });
         const todayOrders = todayNormalOrders.length + todayBulkOrders.length + todayCompanyOrders.length;
 
+        // Today's laptop orders (normal requests only - for separate counter)
+        const todayLaptopOrders = todayNormalOrders.length;
+
         console.log('📊 Today normal orders:', todayNormalOrders.length);
         console.log('📊 Today bulk orders:', todayBulkOrders.length);
         console.log('📊 Today company orders:', todayCompanyOrders.length);
@@ -1203,6 +1219,7 @@ class AdminManager {
             totalRequests: this.requests.length,
             completedRequests: completedRequests.length,
             todayOrders: todayOrders,
+            todayLaptopOrders: todayLaptopOrders,
             totalRevenue: totalRevenue,
             normalStatusDistribution: normalStats,
             
@@ -5167,11 +5184,18 @@ class AdminManager {
         } else if (activeFilter === 'received') {
             filtered = filtered.filter(r => r.status === 'Received');
         } else if (activeFilter === 'today') {
-            const today = new Date().toISOString().slice(0, 10);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayEnd = new Date();
+            todayEnd.setHours(23, 59, 59, 999);
+            
             filtered = filtered.filter(r => {
-                const requestDate = new Date(r.createdAt).toISOString().slice(0, 10);
-                return requestDate === today;
+                const requestDate = new Date(r.createdAt);
+                requestDate.setHours(0, 0, 0, 0);
+                return requestDate.getTime() >= today.getTime() && requestDate.getTime() <= todayEnd.getTime();
             });
+            
+            console.log(`📅 Today filter applied: ${filtered.length} requests found for today ${today.toISOString().slice(0, 10)}`);
         } else if (activeFilter === 'yesterday') {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
