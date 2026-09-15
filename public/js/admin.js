@@ -1158,43 +1158,62 @@ class AdminManager {
 
         const totalLaptopsReceived = normalLaptopsReceived + companyLaptopsReceived + bulkLaptopsReceived;
 
-        // Calculate status distributions for better analytics
-        const calculateStatusDistribution = (requests) => {
+        // Calculate comprehensive status distributions with financial analytics
+        const calculateStatusDistribution = (requests, isDevices = false) => {
             const distribution = {
-                'Received': 0,
-                'Waiting Inspection': 0,
-                'Under Maintenance': 0,
-                'Waiting Parts': 0,
-                'Ready': 0,
-                'Delivered': 0
+                'Received': { count: 0, revenue: 0, avgCost: 0 },
+                'Waiting Inspection': { count: 0, revenue: 0, avgCost: 0 },
+                'Under Maintenance': { count: 0, revenue: 0, avgCost: 0 },
+                'Waiting Parts': { count: 0, revenue: 0, avgCost: 0 },
+                'Ready': { count: 0, revenue: 0, avgCost: 0 },
+                'Delivered': { count: 0, revenue: 0, avgCost: 0 }
             };
             
             requests.forEach(r => {
-                if (distribution.hasOwnProperty(r.status)) {
-                    distribution[r.status]++;
+                const status = r.status;
+                const cost = r.cost || 0;
+                
+                if (distribution.hasOwnProperty(status)) {
+                    distribution[status].count++;
+                    distribution[status].revenue += cost;
                 }
             });
             
-            const total = Object.values(distribution).reduce((sum, val) => sum + val, 0);
+            const total = Object.values(distribution).reduce((sum, val) => sum + val.count, 0);
+            const totalRevenue = Object.values(distribution).reduce((sum, val) => sum + val.revenue, 0);
             const percentages = {};
             
             Object.keys(distribution).forEach(status => {
-                percentages[status] = total > 0 ? ((distribution[status] / total) * 100).toFixed(1) : 0;
+                percentages[status] = total > 0 ? ((distribution[status].count / total) * 100).toFixed(1) : 0;
+                distribution[status].avgCost = distribution[status].count > 0 
+                    ? (distribution[status].revenue / distribution[status].count).toFixed(2) 
+                    : 0;
+                distribution[status].revenuePercentage = totalRevenue > 0 
+                    ? ((distribution[status].revenue / totalRevenue) * 100).toFixed(1) 
+                    : 0;
             });
             
-            return { distribution, percentages, total };
+            return { distribution, percentages, total, totalRevenue };
         };
 
         const normalStats = calculateStatusDistribution(this.requests);
         
-        // Calculate bulk devices distribution
+        // Calculate bulk devices distribution with financial data
         const bulkDevices = [];
         this.bulkRequests.forEach(bulk => {
             if (bulk.devices && bulk.devices.length > 0) {
-                bulk.devices.forEach(device => bulkDevices.push(device));
+                bulk.devices.forEach(device => {
+                    // Add cost from parent bulk request
+                    const deviceWithCost = {
+                        ...device,
+                        cost: bulk.cost || 0,
+                        status: device.status
+                    };
+                    bulkDevices.push(deviceWithCost);
+                });
             }
         });
-        const bulkStats = calculateStatusDistribution(bulkDevices);
+        const bulkStats = calculateStatusDistribution(bulkDevices, true);
         
         const companyStats = calculateStatusDistribution(this.companyRequests);
 
@@ -1245,10 +1264,224 @@ class AdminManager {
      */
     renderCharts() {
         this.destroyCharts();
+        this.renderFinancialAnalytics();
+        this.renderStatusAnalytics();
         this.renderRequestsChart();
         this.renderBulkRequestsChart();
         this.renderCompanyRequestsChart();
         this.renderAllRequestsOverviewChart();
+    }
+
+    /**
+     * Render financial analytics for business owner
+     */
+    renderFinancialAnalytics() {
+        const stats = this.getStats();
+        
+        // Calculate financial metrics from real data
+        let totalExpectedRevenue = 0;
+        let realizedRevenue = 0;
+        let maintenanceRevenue = 0;
+        let underMaintenanceCount = 0;
+
+        // Calculate from normal requests
+        this.requests.forEach(r => {
+            const cost = r.cost || 0;
+            totalExpectedRevenue += cost;
+            if (r.status === 'Delivered') {
+                realizedRevenue += cost;
+            } else if (r.status === 'Under Maintenance' || r.status === 'Waiting Parts') {
+                maintenanceRevenue += cost;
+                underMaintenanceCount++;
+            }
+        });
+
+        // Calculate from bulk requests (per device)
+        this.bulkRequests.forEach(bulk => {
+            const cost = bulk.cost || 0;
+            if (bulk.devices && bulk.devices.length > 0) {
+                const deviceCost = cost / bulk.devices.length;
+                bulk.devices.forEach(device => {
+                    totalExpectedRevenue += deviceCost;
+                    if (device.status === 'Delivered') {
+                        realizedRevenue += deviceCost;
+                    } else if (device.status === 'Under Maintenance' || device.status === 'Waiting Parts') {
+                        maintenanceRevenue += deviceCost;
+                        underMaintenanceCount++;
+                    }
+                });
+            }
+        });
+
+        // Calculate from company requests
+        this.companyRequests.forEach(r => {
+            const cost = r.cost || 0;
+            totalExpectedRevenue += cost;
+            if (r.status === 'Delivered') {
+                realizedRevenue += cost;
+            } else if (r.status === 'Under Maintenance' || r.status === 'Waiting Parts') {
+                maintenanceRevenue += cost;
+                underMaintenanceCount++;
+            }
+        });
+
+        const avgMaintenanceCost = underMaintenanceCount > 0 ? (maintenanceRevenue / underMaintenanceCount).toFixed(2) : 0;
+        
+        const totalRequests = this.requests.length + 
+                             this.bulkRequests.reduce((sum, bulk) => sum + (bulk.devices?.length || 0), 0) + 
+                             this.companyRequests.length;
+        
+        const completedCount = this.requests.filter(r => r.status === 'Delivered').length +
+                             this.bulkRequests.reduce((sum, bulk) => {
+                                 if (bulk.devices) {
+                                     return sum + bulk.devices.filter(d => d.status === 'Delivered').length;
+                                 }
+                                 return sum;
+                             }, 0) +
+                             this.companyRequests.filter(r => r.status === 'Delivered').length;
+        
+        const completionRate = totalRequests > 0 ? ((completedCount / totalRequests) * 100).toFixed(1) : 0;
+
+        // Update DOM elements
+        const totalExpectedEl = document.getElementById('totalExpectedRevenue');
+        const realizedEl = document.getElementById('realizedRevenue');
+        const avgCostEl = document.getElementById('avgMaintenanceCost');
+        const completionEl = document.getElementById('completionRate');
+
+        if (totalExpectedEl) {
+            totalExpectedEl.textContent = `${totalExpectedRevenue.toLocaleString()} ج.م`;
+        }
+        if (realizedEl) {
+            realizedEl.textContent = `${realizedRevenue.toLocaleString()} ج.م`;
+        }
+        if (avgCostEl) {
+            avgCostEl.textContent = `${avgMaintenanceCost} ج.م`;
+        }
+        if (completionEl) {
+            completionEl.textContent = `${completionRate}%`;
+        }
+    }
+
+    /**
+     * Render detailed status analytics
+     */
+    renderStatusAnalytics() {
+        const container = document.getElementById('statusAnalyticsContainer');
+        if (!container) return;
+
+        const stats = this.getStats();
+        
+        // Combine all status data
+        const combinedStatusData = {
+            'Received': { 
+                count: 0, 
+                description: 'طلبات جديدة وصلت للمراجعة',
+                icon: 'fa-inbox',
+                color: '#3b82f6',
+                nextStep: 'الفحص الأولي'
+            },
+            'Waiting Inspection': { 
+                count: 0, 
+                description: 'بانتظار الفحص الفني',
+                icon: 'fa-search',
+                color: '#f59e0b',
+                nextStep: 'بدء الصيانة'
+            },
+            'Under Maintenance': { 
+                count: 0, 
+                description: 'قيد العمل والصيانة',
+                icon: 'fa-tools',
+                color: '#8b5cf6',
+                nextStep: 'إكمال العمل'
+            },
+            'Waiting Parts': { 
+                count: 0, 
+                description: 'بانتظار وصول قطع الغيار',
+                icon: 'fa-clock',
+                color: '#ec4899',
+                nextStep: 'طلب القطع'
+            },
+            'Ready': { 
+                count: 0, 
+                description: 'جاهزة للتسليم للعميل',
+                icon: 'fa-check-circle',
+                color: '#10b981',
+                nextStep: 'التسليم'
+            },
+            'Delivered': { 
+                count: 0, 
+                description: 'تم التسليم للعميل',
+                icon: 'fa-handshake',
+                color: '#22c55e',
+                nextStep: 'مكتمل'
+            }
+        };
+
+        // Count from all request types
+        this.requests.forEach(r => {
+            if (combinedStatusData.hasOwnProperty(r.status)) {
+                combinedStatusData[r.status].count++;
+            }
+        });
+
+        this.bulkRequests.forEach(bulk => {
+            if (bulk.devices && bulk.devices.length > 0) {
+                bulk.devices.forEach(device => {
+                    if (combinedStatusData.hasOwnProperty(device.status)) {
+                        combinedStatusData[device.status].count++;
+                    }
+                });
+            }
+        });
+
+        this.companyRequests.forEach(r => {
+            if (combinedStatusData.hasOwnProperty(r.status)) {
+                combinedStatusData[r.status].count++;
+            }
+        });
+
+        const total = Object.values(combinedStatusData).reduce((sum, val) => sum + val.count, 0);
+
+        // Generate HTML
+        let html = '';
+        Object.entries(combinedStatusData).forEach(([status, data]) => {
+            const percentage = total > 0 ? ((data.count / total) * 100).toFixed(1) : 0;
+            const isHighPriority = ['Under Maintenance', 'Waiting Parts'].includes(status);
+            
+            html += `
+                <div class="status-analytics-card" style="background: rgba(${parseInt(data.color.slice(1,3), 16)}, ${parseInt(data.color.slice(3,5), 16)}, ${parseInt(data.color.slice(5,7), 16)}, 0.1); padding: 1.5rem; border-radius: 12px; border: 1px solid ${data.color}40; ${isHighPriority ? 'box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);' : ''}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <i class="fas ${data.icon}" style="color: ${data.color}; font-size: 1.5rem;"></i>
+                            <div>
+                                <div style="font-weight: 700; color: ${data.color};">${this.translateStatus(status)}</div>
+                                <div style="font-size: 0.75rem; color: #94a3b8;">${data.description}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: left;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: ${data.color};">${data.count}</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">عدد</div>
+                        </div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 8px; height: 8px; margin-bottom: 0.75rem; overflow: hidden;">
+                        <div style="background: ${data.color}; height: 100%; width: ${percentage}%; transition: width 0.5s ease;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem;">
+                        <span style="color: #94a3b8;">النسبة: ${percentage}%</span>
+                        <span style="color: #64748b;">الخطوة التالية: ${data.nextStep}</span>
+                    </div>
+                    ${isHighPriority ? `
+                        <div style="margin-top: 0.75rem; padding: 0.5rem; background: rgba(245, 158, 11, 0.2); border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.4);">
+                            <span style="color: #f59e0b; font-size: 0.75rem; font-weight: 600;">
+                                <i class="fas fa-exclamation-triangle"></i> يحتاج متابعة عاجلة
+                            </span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
     }
 
     /**
