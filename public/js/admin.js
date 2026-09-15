@@ -7027,6 +7027,12 @@ class AdminManager {
             }
 
             container.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin: 0;">سلة المحذوفات (${allDeleted.length} عنصر)</h3>
+                    <button class="btn btn-danger" onclick="adminManager.deleteAllTrash()" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-trash"></i> حذف الكل نهائياً
+                    </button>
+                </div>
                 <div class="table-container">
                     <table class="table">
                         <thead>
@@ -7113,6 +7119,74 @@ class AdminManager {
         } catch (error) {
             console.error('Error restoring item:', error);
             toast.error('فشل استعادة العنصر');
+        }
+    }
+
+    /**
+     * Delete all trash items permanently
+     */
+    async deleteAllTrash() {
+        if (!confirm('هل أنت متأكد من حذف جميع العناصر في سلة المحذوفات نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+            return;
+        }
+
+        try {
+            // Fetch all trash items
+            const [deletedRequestsRes, deletedBulkRequestsRes, deletedCompanyRequestsRes] = await Promise.all([
+                fetch('/api/requests/trash').then(async r => {
+                    if (!r.ok) return [];
+                    const data = await r.json();
+                    return Array.isArray(data) ? data : [];
+                }).catch(() => []),
+                fetch('/api/bulk-requests/trash').then(async r => {
+                    if (!r.ok) return [];
+                    const data = await r.json();
+                    return Array.isArray(data) ? data : [];
+                }).catch(() => []),
+                fetch('/api/company-requests/trash').then(async r => {
+                    if (!r.ok) return [];
+                    const data = await r.json();
+                    return Array.isArray(data) ? data : [];
+                }).catch(() => [])
+            ]);
+
+            const allDeleted = [
+                ...deletedRequestsRes.map(r => ({ ...r, type: 'request' })),
+                ...deletedBulkRequestsRes.map(r => ({ ...r, type: 'bulk' })),
+                ...deletedCompanyRequestsRes.map(r => ({ ...r, type: 'company' }))
+            ];
+
+            if (allDeleted.length === 0) {
+                toast.warning('سلة المحذوفات فارغة');
+                return;
+            }
+
+            // Delete all items
+            const deletePromises = allDeleted.map(item => {
+                let endpoint;
+                switch (item.type) {
+                    case 'request':
+                        endpoint = `/api/requests/${item.id}`;
+                        break;
+                    case 'bulk':
+                        endpoint = `/api/bulk-requests/${item.id}`;
+                        break;
+                    case 'company':
+                        endpoint = `/api/company-requests/${item.id}`;
+                        break;
+                }
+
+                return fetch(endpoint, { method: 'DELETE' });
+            });
+
+            await Promise.all(deletePromises);
+
+            toast.success(`تم حذف ${allDeleted.length} عنصر نهائياً`);
+            await this.loadData();
+            this.renderTrash();
+        } catch (error) {
+            console.error('Error deleting all trash:', error);
+            toast.error('فشل حذف جميع العناصر');
         }
     }
 
