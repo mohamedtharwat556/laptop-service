@@ -7911,71 +7911,101 @@ class AdminManager {
             }
         });
 
-        // Generate PDF using jsPDF with autoTable for better pagination
-        try {
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('l', 'mm', 'a4');
-            
-            // Add Arabic font support by using RTL layout
-            pdf.setLanguage('ar');
-            
-            // Add title
-            pdf.setFontSize(18);
-            pdf.setTextColor(30, 58, 138);
-            pdf.text('تقرير شامل - مركز خدمة لابتوب YAS', 148.5, 15, { align: 'center' });
-            
-            // Add date range info
-            pdf.setFontSize(12);
-            pdf.setTextColor(100, 100, 100);
-            const dateText = startDate && endDate ? `من ${startDate} إلى ${endDate}` : startDate ? `التاريخ: ${startDate}` : 'جميع التواريخ';
-            pdf.text(dateText, 148.5, 22, { align: 'center' });
-            
-            // Add type summary
-            pdf.text(typeSummary, 148.5, 28, { align: 'center' });
-            
-            // Add total records
-            pdf.text(`إجمالي السجلات: ${pdfData.length}`, 148.5, 34, { align: 'center' });
-            
-            // Prepare table data
-            const columns = Object.keys(pdfData[0]);
-            const rows = pdfData.map(row => Object.values(row));
-            
-            // Add table with auto pagination
-            pdf.autoTable({
-                head: [columns],
-                body: rows,
-                startY: 40,
-                styles: {
-                    font: 'helvetica',
-                    fontSize: 8,
-                    cellPadding: 2,
-                    overflow: 'linebreak'
-                },
-                headStyles: {
-                    fillColor: [59, 130, 246],
-                    textColor: 255,
-                    fontStyle: 'bold',
-                    halign: 'center'
-                },
-                alternateRowStyles: {
-                    fillColor: [245, 245, 245]
-                },
-                columnStyles: columns.reduce((acc, col, index) => {
-                    acc[index] = { halign: 'right' };
-                    return acc;
-                }, {}),
-                margin: { top: 40, right: 10, bottom: 10, left: 10 },
-                pageBreak: 'auto'
-            });
-            
-            // Save PDF
-            pdf.save(`${fileName}.pdf`);
-            
-            toast.success(`تم تحميل ${pdfData.length} سجل في ملف PDF بنجاح (${typeSummary})`);
-        } catch (error) {
-            console.error('Error generating PDF:', error);
-            toast.error('فشل تحميل ملف PDF');
-        }
+        // Generate HTML for print view
+        const printHTML = `
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <title>تقرير شامل - مركز خدمة لابتوب YAS</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 20px;
+                        direction: rtl;
+                    }
+                    h1 {
+                        text-align: center;
+                        color: #1e3a8a;
+                        margin-bottom: 10px;
+                    }
+                    .info {
+                        text-align: center;
+                        font-size: 14px;
+                        margin: 5px 0;
+                        color: #666;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 15px;
+                        font-size: 10px;
+                    }
+                    th {
+                        background-color: #3b82f6;
+                        color: white;
+                        border: 1px solid #ddd;
+                        padding: 8px;
+                        text-align: right;
+                        font-weight: bold;
+                    }
+                    td {
+                        border: 1px solid #ddd;
+                        padding: 6px;
+                        text-align: right;
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f9f9f9;
+                    }
+                    @media print {
+                        body {
+                            margin: 0;
+                        }
+                        table {
+                            page-break-inside: auto;
+                        }
+                        tr {
+                            page-break-inside: avoid;
+                            page-break-after: auto;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>تقرير شامل - مركز خدمة لابتوب YAS</h1>
+                <p class="info">${startDate && endDate ? `من ${startDate} إلى ${endDate}` : startDate ? `التاريخ: ${startDate}` : 'جميع التواريخ'}</p>
+                <p class="info">${typeSummary}</p>
+                <p class="info">إجمالي السجلات: ${pdfData.length}</p>
+                <table>
+                    <thead>
+                        <tr>
+                            ${Object.keys(pdfData[0]).map(key => `<th>${key}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pdfData.map(row => `
+                            <tr>
+                                ${Object.values(row).map(value => `<td>${value || ''}</td>`).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </body>
+            </html>
+        `;
+
+        // Create print window
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printHTML);
+        printWindow.document.close();
+        
+        // Wait for content to load then print
+        printWindow.onload = function() {
+            setTimeout(() => {
+                printWindow.print();
+                toast.success(`تم فتح نافذة الطباعة لـ ${pdfData.length} سجل (${typeSummary})`);
+            }, 500);
+        };
     }
 
     /**
