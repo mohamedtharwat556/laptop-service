@@ -2643,6 +2643,381 @@ class AdminManager {
     }
 
     /**
+     * Export filtered requests to Excel based on current filters
+     * This allows users to export specific filtered results (e.g., only "Delivered" status)
+     */
+    async exportFilteredRequests() {
+        try {
+            loading.show('جاري تصدير البيانات المفلترة...');
+
+            // Get current filter values
+            const statusFilter = document.getElementById('statusFilter')?.value || 'All';
+            const brandFilter = document.getElementById('brandFilter')?.value || 'All';
+            const priorityFilter = document.getElementById('priorityFilter')?.value || 'All';
+            const dateFrom = document.getElementById('dateFrom')?.value || '';
+            const dateTo = document.getElementById('dateTo')?.value || '';
+            const searchQuery = document.getElementById('requestSearch')?.value || '';
+
+            // Apply filters to requests
+            let filteredRequests = [...this.requests];
+
+            // Apply status filter
+            if (statusFilter !== 'All') {
+                if (statusFilter === 'today') {
+                    const today = new Date().toISOString().split('T')[0];
+                    filteredRequests = filteredRequests.filter(r => 
+                        r.createdAt && r.createdAt.startsWith(today)
+                    );
+                } else if (statusFilter === 'yesterday') {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toISOString().split('T')[0];
+                    filteredRequests = filteredRequests.filter(r => 
+                        r.createdAt && r.createdAt.startsWith(yesterdayStr)
+                    );
+                } else if (statusFilter === 'week') {
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    filteredRequests = filteredRequests.filter(r => 
+                        r.createdAt && new Date(r.createdAt) >= weekAgo
+                    );
+                } else if (statusFilter === 'month') {
+                    const monthAgo = new Date();
+                    monthAgo.setMonth(monthAgo.getMonth() - 1);
+                    filteredRequests = filteredRequests.filter(r => 
+                        r.createdAt && new Date(r.createdAt) >= monthAgo
+                    );
+                } else {
+                    // Specific status
+                    filteredRequests = filteredRequests.filter(r => r.status === statusFilter);
+                }
+            }
+
+            // Apply brand filter
+            if (brandFilter !== 'All') {
+                filteredRequests = filteredRequests.filter(r => r.laptopBrand === brandFilter);
+            }
+
+            // Apply priority filter
+            if (priorityFilter !== 'All') {
+                filteredRequests = filteredRequests.filter(r => r.priority === priorityFilter);
+            }
+
+            // Apply date range filter
+            if (dateFrom) {
+                filteredRequests = filteredRequests.filter(r => 
+                    r.createdAt && r.createdAt >= dateFrom
+                );
+            }
+            if (dateTo) {
+                filteredRequests = filteredRequests.filter(r => 
+                    r.createdAt && r.createdAt <= dateTo + 'T23:59:59'
+                );
+            }
+
+            // Apply search filter
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                filteredRequests = filteredRequests.filter(r => 
+                    (r.fullName && r.fullName.toLowerCase().includes(query)) ||
+                    (r.phone && r.phone.includes(query)) ||
+                    (r.laptopBrand && r.laptopBrand.toLowerCase().includes(query)) ||
+                    (r.requestNumber && r.requestNumber.toLowerCase().includes(query))
+                );
+            }
+
+            if (filteredRequests.length === 0) {
+                toast.error('لا توجد طلبات تطابق الفلاتر الحالية');
+                loading.hide();
+                return;
+            }
+
+            // Check if XLSX is available
+            if (typeof XLSX === 'undefined') {
+                toast.error('مكتبة Excel غير متاحة');
+                loading.hide();
+                return;
+            }
+
+            // Create descriptive filename based on filters
+            let filename = 'filtered_requests';
+            if (statusFilter !== 'All') {
+                filename += `_${statusFilter}`;
+            }
+            if (brandFilter !== 'All') {
+                filename += `_${brandFilter}`;
+            }
+            filename += `_${new Date().toISOString().split('T')[0]}`;
+
+            // Prepare data for Excel
+            const excelData = filteredRequests.map(request => ({
+                'رقم الطلب': request.requestNumber,
+                'اسم العميل': request.fullName,
+                'رقم الهاتف': request.phone,
+                'ماركة اللابتوب': request.laptopBrand || '',
+                'موديل اللابتوب': request.laptopModel || '',
+                'الرقم التسلسلي': request.serialNumber || '',
+                'وصف المشكلة': request.problemDescription || '',
+                'الحالة': request.status,
+                'الأولوية': request.priority,
+                'التكلفة': request.cost || 0,
+                'الفني': request.technician || '',
+                'تاريخ الاستلام': request.receivedDate || '',
+                'تاريخ الإنشاء': Utils.formatDate(request.createdAt),
+                'ملاحظات': request.notes || ''
+            }));
+
+            // Create worksheet
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            
+            // Create workbook
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'الطلبات المفلترة');
+            
+            // Generate Excel file
+            XLSX.writeFile(workbook, `${filename}.xlsx`);
+            
+            loading.hide();
+            toast.success(`تم تصدير ${filteredRequests.length} طلب بنجاح`);
+        } catch (error) {
+            loading.hide();
+            console.error('Error exporting filtered requests to Excel:', error);
+            toast.error('فشل تصدير البيانات المفلترة');
+        }
+    }
+
+    /**
+     * Export filtered bulk requests to Excel based on current filters
+     */
+    async exportFilteredBulkRequests() {
+        try {
+            loading.show('جاري تصدير طلبات الجملة المفلترة...');
+
+            // Get current filter values
+            const statusFilter = document.getElementById('bulkStatusFilter')?.value || '';
+            const searchQuery = document.getElementById('bulkSearchInput')?.value || '';
+
+            // Apply filters to bulk requests
+            let filteredRequests = [...this.bulkRequests];
+
+            // Apply status filter
+            if (statusFilter) {
+                if (statusFilter === 'today') {
+                    const today = new Date().toISOString().split('T')[0];
+                    filteredRequests = filteredRequests.filter(r => 
+                        r.createdAt && r.createdAt.startsWith(today)
+                    );
+                } else if (statusFilter === 'yesterday') {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toISOString().split('T')[0];
+                    filteredRequests = filteredRequests.filter(r => 
+                        r.createdAt && r.createdAt.startsWith(yesterdayStr)
+                    );
+                } else if (statusFilter === 'week') {
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    filteredRequests = filteredRequests.filter(r => 
+                        r.createdAt && new Date(r.createdAt) >= weekAgo
+                    );
+                } else if (statusFilter === 'month') {
+                    const monthAgo = new Date();
+                    monthAgo.setMonth(monthAgo.getMonth() - 1);
+                    filteredRequests = filteredRequests.filter(r => 
+                        r.createdAt && new Date(r.createdAt) >= monthAgo
+                    );
+                } else {
+                    // Specific status
+                    filteredRequests = filteredRequests.filter(r => r.status === statusFilter);
+                }
+            }
+
+            // Apply search filter
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                filteredRequests = filteredRequests.filter(r => 
+                    (r.customerName && r.customerName.toLowerCase().includes(query)) ||
+                    (r.requestNumber && r.requestNumber.toLowerCase().includes(query))
+                );
+            }
+
+            if (filteredRequests.length === 0) {
+                toast.error('لا توجد طلبات جملة تطابق الفلاتر الحالية');
+                loading.hide();
+                return;
+            }
+
+            // Check if XLSX is available
+            if (typeof XLSX === 'undefined') {
+                toast.error('مكتبة Excel غير متاحة');
+                loading.hide();
+                return;
+            }
+
+            // Create descriptive filename based on filters
+            let filename = 'filtered_bulk_requests';
+            if (statusFilter) {
+                filename += `_${statusFilter}`;
+            }
+            filename += `_${new Date().toISOString().split('T')[0]}`;
+
+            // Expand bulk requests to individual devices for Excel
+            const deviceRows = [];
+            filteredRequests.forEach(request => {
+                if (request.devices && request.devices.length > 0) {
+                    request.devices.forEach(device => {
+                        deviceRows.push({
+                            'رقم الطلب': request.requestNumber,
+                            'اسم العميل': request.customerName,
+                            'رقم الهاتف': request.customerPhone,
+                            'ماركة اللابتوب': device.laptopBrand,
+                            'موديل اللابتوب': device.laptopModel,
+                            'الرقم التسلسلي': device.serialNumber,
+                            'وصف المشكلة': device.problemDescription,
+                            'الحالة': device.status,
+                            'التكلفة': request.cost || 0,
+                            'الفني': request.technician || '',
+                            'تاريخ الإنشاء': Utils.formatDate(request.createdAt),
+                            'ملاحظات': request.notes || ''
+                        });
+                    });
+                }
+            });
+
+            // Create worksheet
+            const worksheet = XLSX.utils.json_to_sheet(deviceRows);
+            
+            // Create workbook
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'طلبات الجملة المفلترة');
+            
+            // Generate Excel file
+            XLSX.writeFile(workbook, `${filename}.xlsx`);
+            
+            loading.hide();
+            toast.success(`تم تصدير ${deviceRows.length} جهاز من ${filteredRequests.length} طلب جملة بنجاح`);
+        } catch (error) {
+            loading.hide();
+            console.error('Error exporting filtered bulk requests to Excel:', error);
+            toast.error('فشل تصدير طلبات الجملة المفلترة');
+        }
+    }
+
+    /**
+     * Export filtered company requests to Excel based on current filters
+     */
+    async exportFilteredCompanyRequests() {
+        try {
+            loading.show('جاري تصدير طلبات الشركات المفلترة...');
+
+            // Get current filter values
+            const statusFilter = document.getElementById('companyStatusFilter')?.value || '';
+            const searchQuery = document.getElementById('companySearchInput')?.value || '';
+
+            // Apply filters to company requests
+            let filteredRequests = [...this.companyRequests];
+
+            // Apply status filter
+            if (statusFilter) {
+                if (statusFilter === 'today') {
+                    const today = new Date().toISOString().split('T')[0];
+                    filteredRequests = filteredRequests.filter(r => 
+                        r.createdAt && r.createdAt.startsWith(today)
+                    );
+                } else if (statusFilter === 'yesterday') {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toISOString().split('T')[0];
+                    filteredRequests = filteredRequests.filter(r => 
+                        r.createdAt && r.createdAt.startsWith(yesterdayStr)
+                    );
+                } else if (statusFilter === 'week') {
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    filteredRequests = filteredRequests.filter(r => 
+                        r.createdAt && new Date(r.createdAt) >= weekAgo
+                    );
+                } else if (statusFilter === 'month') {
+                    const monthAgo = new Date();
+                    monthAgo.setMonth(monthAgo.getMonth() - 1);
+                    filteredRequests = filteredRequests.filter(r => 
+                        r.createdAt && new Date(r.createdAt) >= monthAgo
+                    );
+                } else {
+                    // Specific status
+                    filteredRequests = filteredRequests.filter(r => r.status === statusFilter);
+                }
+            }
+
+            // Apply search filter
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                filteredRequests = filteredRequests.filter(r => 
+                    (r.fullName && r.fullName.toLowerCase().includes(query)) ||
+                    (r.companyName && r.companyName.toLowerCase().includes(query)) ||
+                    (r.requestNumber && r.requestNumber.toLowerCase().includes(query))
+                );
+            }
+
+            if (filteredRequests.length === 0) {
+                toast.error('لا توجد طلبات شركات تطابق الفلاتر الحالية');
+                loading.hide();
+                return;
+            }
+
+            // Check if XLSX is available
+            if (typeof XLSX === 'undefined') {
+                toast.error('مكتبة Excel غير متاحة');
+                loading.hide();
+                return;
+            }
+
+            // Create descriptive filename based on filters
+            let filename = 'filtered_company_requests';
+            if (statusFilter) {
+                filename += `_${statusFilter}`;
+            }
+            filename += `_${new Date().toISOString().split('T')[0]}`;
+
+            // Prepare data for Excel
+            const excelData = filteredRequests.map(request => ({
+                'رقم الطلب': request.requestNumber || request.request_number,
+                'اسم الموظف': request.fullName || request.full_name || request.companyName || '',
+                'اسم الشركة': request.companyName || '',
+                'رقم الهاتف': request.phone || request.companyPhone || '',
+                'ماركة اللابتوب': request.laptopBrand || request.laptop_brand || '',
+                'موديل اللابتوب': request.laptopModel || request.laptop_model || '',
+                'الرقم التسلسلي': request.serialNumber || request.serial_number || '',
+                'وصف المشكلة': request.problemDescription || request.problem_description || '',
+                'الحالة': request.status,
+                'الأولوية': request.priority,
+                'التكلفة': request.cost || 0,
+                'الفني': request.technician || '',
+                'تاريخ الاستلام': request.receivedDate || '',
+                'تاريخ الإنشاء': Utils.formatDate(request.createdAt || request.created_at),
+                'ملاحظات': request.notes || ''
+            }));
+
+            // Create worksheet
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            
+            // Create workbook
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'طلبات الشركات المفلترة');
+            
+            // Generate Excel file
+            XLSX.writeFile(workbook, `${filename}.xlsx`);
+            
+            loading.hide();
+            toast.success(`تم تصدير ${filteredRequests.length} طلب شركة بنجاح`);
+        } catch (error) {
+            loading.hide();
+            console.error('Error exporting filtered company requests to Excel:', error);
+            toast.error('فشل تصدير طلبات الشركات المفلترة');
+        }
+    }
+
+    /**
      * Export company requests to Excel
      */
     async exportCompanyRequestsToExcel() {
