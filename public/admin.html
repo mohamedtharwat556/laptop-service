@@ -134,13 +134,16 @@
                 <h1 style="margin: 0; font-size: 1.75rem;">لوحة التحكم</h1>
                 
                 <!-- Global Search -->
-                <div style="flex: 1; max-width: 600px; margin-left: auto;">
+                <div style="flex: 1; max-width: 700px; margin-left: auto;">
                     <form id="globalSearchForm">
                         <div style="display: flex; gap: 0.5rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); padding: 0.75rem; border-radius: 12px; border: 2px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);">
-                            <input type="text" id="globalSearchInput" placeholder="🔍 بحث شامل (يمكن البحث عن عدة كلمات مفصولة بفاصلة)..." autocomplete="off" style="flex: 1; padding: 0.75rem; border: none; background: rgba(255, 255, 255, 0.15); color: var(--white); font-size: 1rem; border-radius: 8px; outline: none;">
+                            <input type="text" id="globalSearchInput" placeholder="🔍 بحث شامل - يمكنك البحث بأكثر من كلمة مفصولة بفاصلة (،) أو فاصلة منقوطة (;)..." autocomplete="off" style="flex: 1; padding: 0.75rem; border: none; background: rgba(255, 255, 255, 0.15); color: var(--white); font-size: 1rem; border-radius: 8px; outline: none;">
                             <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">
                                 <i class="fas fa-search"></i> بحث
                             </button>
+                        </div>
+                        <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
+                            <i class="fas fa-info-circle"></i> للبحث عن عدة أشياء في نفس الوقت، استخدم الفاصلة (،) أو الفاصلة المنقوطة (;) بين الكلمات
                         </div>
                         <div id="globalSearchSuggestions" class="search-suggestions" style="display: none;"></div>
                     </form>

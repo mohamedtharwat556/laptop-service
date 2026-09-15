@@ -4470,119 +4470,275 @@ class AdminManager {
     }
 
     /**
-     * Perform global search across all request types
+     * Perform global search across all request types with enhanced capabilities
+     * Supports multiple search terms separated by commas or semicolons
+     * Uses optimized server-side search API
      */
-    performGlobalSearch() {
-        const searchTerm = document.getElementById('globalSearchInput').value.toLowerCase().trim();
-        if (!searchTerm) {
+    async performGlobalSearch() {
+        const searchInput = document.getElementById('globalSearchInput').value.trim();
+        if (!searchInput) {
             toast.warning('الرجاء إدخال كلمة البحث');
             return;
         }
 
-        // Split search terms by comma or space to allow multiple searches
-        const searchTerms = searchTerm.split(/[,،\s]+/).filter(term => term.trim().length > 0);
+        // Parse multiple search terms (support Arabic comma, English comma, and semicolon)
+        const searchTerms = searchInput
+            .split(/[،;,]/) // Split by Arabic comma, English comma, or semicolon
+            .map(term => term.toLowerCase().trim())
+            .filter(term => term.length > 0);
 
         if (searchTerms.length === 0) {
-            toast.warning('الرجاء إدخال كلمة البحث');
+            toast.warning('الرجاء إدخال كلمة بحث صحيحة');
             return;
         }
 
-        const results = [];
+        console.log('🔍 Multi-term search:', searchTerms);
 
-        // Helper function to check if any search term matches
-        const matchesSearch = (text) => {
-            if (!text) return false;
-            const textLower = text.toLowerCase();
-            return searchTerms.some(term => textLower.includes(term));
-        };
+        try {
+            // Search for each term and combine results
+            const allResults = [];
+            const searchTermInfo = [];
 
-        // Search in normal requests
-        this.requests.forEach(req => {
-            if (
-                matchesSearch(req.requestNumber) ||
-                matchesSearch(req.fullName) ||
-                matchesSearch(req.phone) ||
-                matchesSearch(req.serialNumber) ||
-                matchesSearch(req.laptopBrand) ||
-                matchesSearch(req.laptopModel)
-            ) {
-                results.push({
-                    type: 'normal',
-                    requestNumber: req.requestNumber,
-                    fullName: req.fullName,
-                    phone: req.phone,
-                    laptopBrand: req.laptopBrand,
-                    laptopModel: req.laptopModel,
-                    serialNumber: req.serialNumber,
-                    status: req.status,
-                    createdAt: req.createdAt,
-                    cost: req.cost
+            for (const searchTerm of searchTerms) {
+                // Use the optimized search API endpoint
+                const response = await fetch(`/api/search?q=${encodeURIComponent(searchTerm)}`);
+                
+                if (!response.ok) {
+                    throw new Error('Search API request failed');
+                }
+
+                const apiResults = await response.json();
+                
+                // Convert API results to the format expected by display function
+                // Add search term to track which term matched this result
+                apiResults.requests.forEach(req => {
+                    allResults.push({
+                        type: 'normal',
+                        requestNumber: req.requestNumber,
+                        fullName: req.fullName,
+                        phone: req.phone,
+                        email: req.email || '',
+                        laptopBrand: req.laptopBrand,
+                        laptopModel: req.laptopModel,
+                        serialNumber: req.serialNumber,
+                        status: req.status,
+                        priority: req.priority,
+                        createdAt: req.createdAt,
+                        cost: req.cost,
+                        matchedTerm: searchTerm
+                    });
+                });
+
+                apiResults.bulkRequests.forEach(req => {
+                    const devices = req.devices || [];
+                    const hasMatchingDevice = devices.some(d =>
+                        d.serialNumber?.toLowerCase().includes(searchTerm) ||
+                        d.laptopBrand?.toLowerCase().includes(searchTerm) ||
+                        d.laptopModel?.toLowerCase().includes(searchTerm)
+                    );
+
+                    allResults.push({
+                        type: 'bulk',
+                        requestNumber: req.requestNumber,
+                        fullName: req.customerName,
+                        phone: req.customerPhone,
+                        email: req.customerEmail || '',
+                        laptopBrand: `طلب جملة (${req.deviceCount || devices.length || 0} لابتوب)`,
+                        laptopModel: devices.find(d => 
+                            d.serialNumber?.toLowerCase().includes(searchTerm) ||
+                            d.laptopBrand?.toLowerCase().includes(searchTerm) ||
+                            d.laptopModel?.toLowerCase().includes(searchTerm)
+                        )?.laptopModel || '',
+                        serialNumber: devices.find(d => d.serialNumber?.toLowerCase().includes(searchTerm))?.serialNumber || '',
+                        status: req.status,
+                        priority: req.priority,
+                        createdAt: req.createdAt,
+                        cost: req.totalCost || 0,
+                        matchedTerm: searchTerm
+                    });
+                });
+
+                apiResults.companyRequests.forEach(req => {
+                    allResults.push({
+                        type: 'company',
+                        requestNumber: req.requestNumber,
+                        fullName: req.fullName,
+                        phone: req.phone,
+                        email: '',
+                        laptopBrand: req.laptopBrand,
+                        laptopModel: req.laptopModel,
+                        serialNumber: req.serialNumber,
+                        status: req.status,
+                        priority: req.priority,
+                        createdAt: req.createdAt,
+                        cost: req.cost,
+                        matchedTerm: searchTerm
+                    });
+                });
+
+                searchTermInfo.push({
+                    term: searchTerm,
+                    count: apiResults.requests.length + apiResults.bulkRequests.length + apiResults.companyRequests.length
                 });
             }
-        });
 
-        // Search in bulk requests
-        this.bulkRequests.forEach(req => {
-            const matchesHeader =
-                matchesSearch(req.requestNumber) ||
-                matchesSearch(req.customerName) ||
-                matchesSearch(req.customerPhone);
+            // Remove duplicates based on request number and type
+            const uniqueResults = [];
+            const seen = new Set();
+            
+            allResults.forEach(result => {
+                const key = `${result.type}-${result.requestNumber}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueResults.push(result);
+                }
+            });
 
-            const matchesDevices = req.devices && req.devices.some(d =>
-                matchesSearch(d.serialNumber) ||
-                matchesSearch(d.laptopBrand) ||
-                matchesSearch(d.laptopModel)
-            );
+            this.currentSearchResults = uniqueResults;
+            this.currentSearchTermInfo = searchTermInfo;
+            this.displayGlobalSearchResults(uniqueResults, searchTermInfo);
+            
+        } catch (error) {
+            console.error('Error using search API, falling back to client-side search:', error);
+            
+            // Fallback to client-side search if API fails
+            const allResults = [];
+            const searchTermInfo = [];
 
-            if (matchesHeader || matchesDevices) {
-                results.push({
-                    type: 'bulk',
-                    requestNumber: req.requestNumber,
-                    fullName: req.customerName,
-                    phone: req.customerPhone,
-                    laptopBrand: `طلب جملة (${req.devices?.length || 0} لابتوب)`,
-                    laptopModel: '',
-                    serialNumber: '',
-                    status: req.status,
-                    createdAt: req.createdAt,
-                    cost: req.totalCost || 0
+            for (const searchTerm of searchTerms) {
+                const results = [];
+
+                // Search in normal requests - enhanced with more fields
+                this.requests.forEach(req => {
+                    if (
+                        (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
+                        (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
+                        (req.phone && req.phone.includes(searchTerm)) ||
+                        (req.email && req.email.toLowerCase().includes(searchTerm)) ||
+                        (req.serialNumber && req.serialNumber.toLowerCase().includes(searchTerm)) ||
+                        (req.laptopBrand && req.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                        (req.laptopModel && req.laptopModel.toLowerCase().includes(searchTerm)) ||
+                        (req.status && req.status.toLowerCase().includes(searchTerm)) ||
+                        (req.priority && req.priority.toLowerCase().includes(searchTerm))
+                    ) {
+                        results.push({
+                            type: 'normal',
+                            requestNumber: req.requestNumber,
+                            fullName: req.fullName,
+                            phone: req.phone,
+                            email: req.email || '',
+                            laptopBrand: req.laptopBrand,
+                            laptopModel: req.laptopModel,
+                            serialNumber: req.serialNumber,
+                            status: req.status,
+                            priority: req.priority,
+                            createdAt: req.createdAt,
+                            cost: req.cost,
+                            matchedTerm: searchTerm
+                        });
+                    }
+                });
+
+                // Search in bulk requests - enhanced with device-level search
+                this.bulkRequests.forEach(req => {
+                    const devices = req.devices || [];
+                    const hasMatchingDevice = devices.some(d =>
+                        (d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm)) ||
+                        (d.laptopBrand && d.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                        (d.laptopModel && d.laptopModel.toLowerCase().includes(searchTerm))
+                    );
+
+                    if (
+                        (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
+                        (req.customerName && req.customerName.toLowerCase().includes(searchTerm)) ||
+                        (req.customerPhone && req.customerPhone.includes(searchTerm)) ||
+                        (req.customerEmail && req.customerEmail.toLowerCase().includes(searchTerm)) ||
+                        hasMatchingDevice ||
+                        (req.status && req.status.toLowerCase().includes(searchTerm)) ||
+                        (req.priority && req.priority.toLowerCase().includes(searchTerm))
+                    ) {
+                        results.push({
+                            type: 'bulk',
+                            requestNumber: req.requestNumber,
+                            fullName: req.customerName,
+                            phone: req.customerPhone,
+                            email: req.customerEmail || '',
+                            laptopBrand: `طلب جملة (${req.devices?.length || 0} لابتوب)`,
+                            laptopModel: devices.find(d => 
+                                d.serialNumber?.toLowerCase().includes(searchTerm) ||
+                                d.laptopBrand?.toLowerCase().includes(searchTerm) ||
+                                d.laptopModel?.toLowerCase().includes(searchTerm)
+                            )?.laptopModel || '',
+                            serialNumber: devices.find(d => d.serialNumber?.toLowerCase().includes(searchTerm))?.serialNumber || '',
+                            status: req.status,
+                            priority: req.priority,
+                            createdAt: req.createdAt,
+                            cost: req.totalCost || 0,
+                            matchedTerm: searchTerm
+                        });
+                    }
+                });
+
+                // Search in company requests - enhanced with more fields
+                this.companyRequests.forEach(req => {
+                    if (
+                        (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
+                        (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
+                        (req.phone && req.phone.includes(searchTerm)) ||
+                        (req.serialNumber && req.serialNumber.toLowerCase().includes(searchTerm)) ||
+                        (req.laptopBrand && req.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                        (req.laptopModel && req.laptopModel.toLowerCase().includes(searchTerm)) ||
+                        (req.status && req.status.toLowerCase().includes(searchTerm)) ||
+                        (req.priority && req.priority.toLowerCase().includes(searchTerm))
+                    ) {
+                        results.push({
+                            type: 'company',
+                            requestNumber: req.requestNumber,
+                            fullName: req.fullName,
+                            phone: req.phone,
+                            email: '',
+                            laptopBrand: req.laptopBrand,
+                            laptopModel: req.laptopModel,
+                            serialNumber: req.serialNumber,
+                            status: req.status,
+                            priority: req.priority,
+                            createdAt: req.createdAt,
+                            cost: req.cost,
+                            matchedTerm: searchTerm
+                        });
+                    }
+                });
+
+                allResults.push(...results);
+                searchTermInfo.push({
+                    term: searchTerm,
+                    count: results.length
                 });
             }
-        });
 
-        // Search in company requests
-        this.companyRequests.forEach(req => {
-            if (
-                matchesSearch(req.requestNumber) ||
-                matchesSearch(req.fullName) ||
-                matchesSearch(req.phone) ||
-                matchesSearch(req.serialNumber) ||
-                matchesSearch(req.laptopBrand) ||
-                matchesSearch(req.laptopModel)
-            ) {
-                results.push({
-                    type: 'company',
-                    requestNumber: req.requestNumber,
-                    fullName: req.fullName,
-                    phone: req.phone,
-                    laptopBrand: req.laptopBrand,
-                    laptopModel: req.laptopModel,
-                    serialNumber: req.serialNumber,
-                    status: req.status,
-                    createdAt: req.createdAt,
-                    cost: req.cost
-                });
-            }
-        });
+            // Remove duplicates
+            const uniqueResults = [];
+            const seen = new Set();
+            
+            allResults.forEach(result => {
+                const key = `${result.type}-${result.requestNumber}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueResults.push(result);
+                }
+            });
 
-        this.currentSearchResults = results;
-        this.displayGlobalSearchResults(results, searchTerms);
+            this.currentSearchResults = uniqueResults;
+            this.currentSearchTermInfo = searchTermInfo;
+            this.displayGlobalSearchResults(uniqueResults, searchTermInfo);
+        }
     }
 
     /**
-     * Display global search results in modal
+     * Display global search results in modal with enhanced UI
+     * Supports displaying results from multiple search terms
      */
-    displayGlobalSearchResults(results, searchTerms = []) {
+    displayGlobalSearchResults(results, searchTermInfo = null) {
         const resultsContainer = document.getElementById('globalSearchResults');
         const downloadBtn = document.getElementById('downloadExcelBtn');
 
@@ -4591,20 +4747,40 @@ class AdminManager {
                 <div style="text-align: center; padding: 2rem;">
                     <i class="fas fa-search" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
                     <p style="color: #94a3b8;">لا توجد نتائج للبحث</p>
-                    ${searchTerms.length > 0 ? `<p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">تم البحث عن: ${searchTerms.join('، ')}</p>` : ''}
                 </div>
             `;
             downloadBtn.style.display = 'none';
         } else {
+            // Count results by type
+            const counts = {
+                normal: results.filter(r => r.type === 'normal').length,
+                bulk: results.filter(r => r.type === 'bulk').length,
+                company: results.filter(r => r.type === 'company').length
+            };
+
+            // Build search terms summary if multiple terms were used
+            let searchTermsSummary = '';
+            if (searchTermInfo && searchTermInfo.length > 1) {
+                searchTermsSummary = `
+                    <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <p style="color: #3b82f6; margin: 0; font-size: 0.875rem;">
+                            <i class="fas fa-layer-group"></i> البحث بأكثر من كلمة:
+                            ${searchTermInfo.map(info => `<span style="margin-right: 0.5rem; background: rgba(59, 130, 246, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px;">"${info.term}" (${info.count} نتيجة)</span>`).join('')}
+                        </p>
+                    </div>
+                `;
+            }
+
+            const hasMatchedTerm = results.some(r => r.matchedTerm);
+            
             const tableHTML = `
-                <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2);">
-                    <p style="margin: 0; color: #3b82f6; font-size: 0.875rem;">
-                        <i class="fas fa-search"></i> تم البحث عن: <strong>${searchTerms.join('، ')}</strong>
-                    </p>
-                    <p style="margin: 0.25rem 0 0 0; color: #94a3b8; font-size: 0.8rem;">
-                        يمكنك البحث عن عدة كلمات مفصولة بفاصلة أو مسافة
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <p style="color: #94a3b8; margin: 0;">
+                        <i class="fas fa-search"></i> تم العثور على ${results.length} نتيجة
+                        <span style="margin-right: 0.5rem;">(عادي: ${counts.normal} | جملة: ${counts.bulk} | شركة: ${counts.company})</span>
                     </p>
                 </div>
+                ${searchTermsSummary}
                 <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
                     <thead>
                         <tr style="background: rgba(59, 130, 246, 0.1);">
@@ -4613,12 +4789,18 @@ class AdminManager {
                             <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الاسم</th>
                             <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الهاتف</th>
                             <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الماركة</th>
+                            <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الرقم التسلسلي</th>
                             <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الحالة</th>
                             <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">التاريخ</th>
+                            ${hasMatchedTerm ? `<th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">كلمة البحث</th>` : ''}
                         </tr>
                     </thead>
                     <tbody>
-                        ${results.map(result => `
+                        ${results.map(result => {
+                            const matchedTermHtml = hasMatchedTerm ? 
+                                `<td style="padding: 0.75rem;"><span style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${result.matchedTerm || '-'}</span></td>` : '';
+                            
+                            return `
                             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
                                 <td style="padding: 0.75rem;">
                                     <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; background: ${
@@ -4633,13 +4815,14 @@ class AdminManager {
                                 <td style="padding: 0.75rem;">${result.fullName}</td>
                                 <td style="padding: 0.75rem;">${result.phone}</td>
                                 <td style="padding: 0.75rem;">${result.laptopBrand}</td>
+                                <td style="padding: 0.75rem;">${result.serialNumber || '-'}</td>
                                 <td style="padding: 0.75rem;">${this.translateStatus(result.status)}</td>
                                 <td style="padding: 0.75rem;">${new Date(result.createdAt).toLocaleDateString('ar-EG')}</td>
+                                ${matchedTermHtml}
                             </tr>
-                        `).join('')}
+                        `}).join('')}
                     </tbody>
                 </table>
-                <p style="text-align: center; margin-top: 1rem; color: #94a3b8;">تم العثور على ${results.length} نتيجة</p>
             `;
             resultsContainer.innerHTML = tableHTML;
             downloadBtn.style.display = 'block';
@@ -4649,7 +4832,8 @@ class AdminManager {
     }
 
     /**
-     * Download search results to Excel
+     * Download search results to Excel with enhanced formatting
+     * Supports multiple search terms results
      */
     downloadSearchResultsToExcel() {
         if (this.currentSearchResults.length === 0) {
@@ -4658,42 +4842,71 @@ class AdminManager {
         }
 
         try {
-            // Get search terms from input
-            const searchTerm = document.getElementById('globalSearchInput').value.toLowerCase().trim();
-            const searchTerms = searchTerm.split(/[,،\s]+/).filter(term => term.trim().length > 0);
-
-            // Prepare data for Excel
-            const excelData = this.currentSearchResults.map(result => ({
-                'نوع الطلب': result.type === 'normal' ? 'عادي' : result.type === 'bulk' ? 'جملة' : 'شركة',
-                'رقم الطلب': result.requestNumber,
-                'الاسم': result.fullName,
-                'الهاتف': result.phone,
-                'الماركة': result.laptopBrand,
-                'الموديل': result.laptopModel,
-                'الرقم التسلسلي': result.serialNumber,
-                'الحالة': this.translateStatus(result.status),
-                'التاريخ': new Date(result.createdAt).toLocaleDateString('ar-EG'),
-                'التكلفة': result.cost || 0
-            }));
+            // Check if we have matched terms (multi-term search)
+            const hasMatchedTerms = this.currentSearchResults.some(r => r.matchedTerm);
+            
+            // Prepare enhanced data for Excel
+            const excelData = this.currentSearchResults.map(result => {
+                const baseData = {
+                    'نوع الطلب': result.type === 'normal' ? 'عادي' : result.type === 'bulk' ? 'جملة' : 'شركة',
+                    'رقم الطلب': result.requestNumber,
+                    'الاسم': result.fullName,
+                    'الهاتف': result.phone,
+                    'البريد الإلكتروني': result.email || '',
+                    'الماركة': result.laptopBrand,
+                    'الموديل': result.laptopModel,
+                    'الرقم التسلسلي': result.serialNumber || '',
+                    'الحالة': this.translateStatus(result.status),
+                    'الأولوية': result.priority || 'متوسط',
+                    'التاريخ': new Date(result.createdAt).toLocaleDateString('ar-EG'),
+                    'التكلفة': result.cost || 0
+                };
+                
+                // Add matched term column if this is a multi-term search
+                if (hasMatchedTerms) {
+                    baseData['كلمة البحث'] = result.matchedTerm || '-';
+                }
+                
+                return baseData;
+            });
 
             // Create worksheet
             const ws = XLSX.utils.json_to_sheet(excelData);
 
+            // Set column widths for better readability
+            const columnWidths = [
+                { wch: 12 }, // نوع الطلب
+                { wch: 18 }, // رقم الطلب
+                { wch: 25 }, // الاسم
+                { wch: 15 }, // الهاتف
+                { wch: 25 }, // البريد الإلكتروني
+                { wch: 20 }, // الماركة
+                { wch: 20 }, // الموديل
+                { wch: 25 }, // الرقم التسلسلي
+                { wch: 15 }, // الحالة
+                { wch: 12 }, // الأولوية
+                { wch: 15 }, // التاريخ
+                { wch: 12 }  // التكلفة
+            ];
+            
+            if (hasMatchedTerms) {
+                columnWidths.push({ wch: 15 }); // كلمة البحث
+            }
+            
+            ws['!cols'] = columnWidths;
+
             // Create workbook
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'نتائج البحث');
+            XLSX.utils.book_append_sheet(wb, ws, 'نتائج البحث الشامل');
 
-            // Generate filename with search terms and timestamp
+            // Generate filename with timestamp
             const timestamp = new Date().toISOString().slice(0, 10);
-            const searchTermsForFilename = searchTerms.slice(0, 2).join('_'); // Limit to 2 terms for filename
-            const filename = searchTermsForFilename
-                ? `بحث_${searchTermsForFilename}_${timestamp}.xlsx`
-                : `بحث_${timestamp}.xlsx`;
+            const filename = `بحث_شامل_${timestamp}.xlsx`;
 
             // Download file
             XLSX.writeFile(wb, filename);
 
-            toast.success('تم تحميل ملف Excel بنجاح');
+            toast.success(`تم تحميل ${excelData.length} نتيجة في ملف Excel بنجاح`);
         } catch (error) {
             console.error('Error downloading Excel:', error);
             toast.error('فشل تحميل ملف Excel');

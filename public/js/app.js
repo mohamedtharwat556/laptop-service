@@ -613,15 +613,15 @@ function initGlobalSearch() {
     // Instant search with debounce
     globalSearchInput.addEventListener('input', (e) => {
         clearTimeout(debounceTimer);
-        const searchTerm = e.target.value.trim();
+        const searchInput = e.target.value.trim();
 
-        if (searchTerm.length < 2) {
+        if (searchInput.length < 2) {
             globalSearchSuggestions.style.display = 'none';
             return;
         }
 
         debounceTimer = setTimeout(() => {
-            showGlobalSearchSuggestions(searchTerm);
+            showGlobalSearchSuggestions(searchInput);
         }, 300);
     });
 
@@ -635,9 +635,9 @@ function initGlobalSearch() {
     // Form submission
     globalSearchForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const searchTerm = globalSearchInput.value.trim();
+        const searchInput = globalSearchInput.value.trim();
         
-        if (!searchTerm) {
+        if (!searchInput) {
             toast.error('يرجى إدخال كلمة البحث');
             return;
         }
@@ -645,7 +645,7 @@ function initGlobalSearch() {
         loading.show('جاري البحث...');
 
         try {
-            const results = await performGlobalSearch(searchTerm);
+            const results = await performGlobalSearch(searchInput);
             displayGlobalSearchResults(results);
             loading.hide();
         } catch (error) {
@@ -659,12 +659,19 @@ function initGlobalSearch() {
 /**
  * Show global search suggestions
  */
-async function showGlobalSearchSuggestions(searchTerm) {
+async function showGlobalSearchSuggestions(searchInput) {
     const globalSearchSuggestions = document.getElementById('globalSearchSuggestions');
     if (!globalSearchSuggestions) return;
 
+    // Don't show suggestions for multi-term searches
+    const searchTerms = searchInput.split(/[،;,]/).map(term => term.trim()).filter(term => term.length > 0);
+    if (searchTerms.length > 1) {
+        globalSearchSuggestions.style.display = 'none';
+        return;
+    }
+
     try {
-        const results = await performGlobalSearch(searchTerm);
+        const results = await performGlobalSearch(searchInput);
         const allResults = [
             ...results.requests.map(r => ({ ...r, type: 'طلب عادي', typeEn: 'single' })),
             ...results.bulkRequests.map(r => ({ ...r, type: 'طلب جملة', typeEn: 'bulk' })),
@@ -698,50 +705,154 @@ async function showGlobalSearchSuggestions(searchTerm) {
 }
 
 /**
- * Perform global search across all request types
+ * Perform global search across all request types with enhanced capabilities
+ * Supports multiple search terms separated by commas or semicolons
+ * Uses optimized server-side search API
  */
-async function performGlobalSearch(searchTerm) {
-    const [requestsRes, bulkRequestsRes, companyRequestsRes] = await Promise.all([
-        fetch('/api/requests').then(r => r.json()).catch(() => []),
-        fetch('/api/bulk-requests').then(r => r.json()).catch(() => []),
-        fetch('/api/company-requests').then(r => r.json()).catch(() => [])
-    ]);
+async function performGlobalSearch(searchInput) {
+    const searchTerms = searchInput
+        .split(/[،;,]/) // Split by Arabic comma, English comma, or semicolon
+        .map(term => term.toLowerCase().trim())
+        .filter(term => term.length > 0);
 
-    const searchTermLower = searchTerm.toLowerCase();
+    if (searchTerms.length === 0) {
+        return { requests: [], bulkRequests: [], companyRequests: [] };
+    }
 
-    // Search in regular requests
-    const requests = requestsRes.filter(r => {
-        return (r.serialNumber || r.serial_number || '').toLowerCase().includes(searchTermLower) ||
-               (r.fullName || r.full_name || '').toLowerCase().includes(searchTermLower) ||
-               (r.requestNumber || r.request_number || '').toLowerCase().includes(searchTermLower) ||
-               (r.phone || '').includes(searchTerm);
-    });
+    console.log('🔍 Multi-term search:', searchTerms);
 
-    // Search in bulk requests
-    const bulkRequests = bulkRequestsRes.filter(r => {
-        const devices = r.devices || [];
-        const hasMatchingSerial = devices.some(d => 
-            (d.serialNumber || d.serial_number || '').toLowerCase().includes(searchTermLower)
-        );
-        return hasMatchingSerial ||
-               (r.customerName || '').toLowerCase().includes(searchTermLower) ||
-               (r.requestNumber || '').toLowerCase().includes(searchTermLower) ||
-               (r.customerPhone || '').includes(searchTerm);
-    });
+    try {
+        // Search for each term and combine results
+        const allResults = {
+            requests: [],
+            bulkRequests: [],
+            companyRequests: []
+        };
 
-    // Search in company requests
-    const companyRequests = companyRequestsRes.filter(r => {
-        return (r.serialNumber || r.serial_number || '').toLowerCase().includes(searchTermLower) ||
-               (r.fullName || r.full_name || r.companyName || r.company_name || '').toLowerCase().includes(searchTermLower) ||
-               (r.requestNumber || r.request_number || '').toLowerCase().includes(searchTermLower) ||
-               (r.phone || r.companyPhone || r.company_phone || '').includes(searchTerm);
-    });
+        for (const searchTerm of searchTerms) {
+            // Use the optimized search API endpoint
+            const response = await fetch(`/api/search?q=${encodeURIComponent(searchTerm)}`);
+            
+            if (!response.ok) {
+                throw new Error('Search API request failed');
+            }
 
-    return { requests, bulkRequests, companyRequests };
+            const results = await response.json();
+            
+            // Add results with matched term tracking
+            allResults.requests.push(...results.requests.map(r => ({ ...r, matchedTerm: searchTerm })));
+            allResults.bulkRequests.push(...results.bulkRequests.map(r => ({ ...r, matchedTerm: searchTerm })));
+            allResults.companyRequests.push(...results.companyRequests.map(r => ({ ...r, matchedTerm: searchTerm })));
+        }
+
+        // Remove duplicates based on request number and type
+        const removeDuplicates = (arr) => {
+            const seen = new Set();
+            return arr.filter(item => {
+                const key = `${item.requestNumber || item.request_number}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    return true;
+                }
+                return false;
+            });
+        };
+
+        return {
+            requests: removeDuplicates(allResults.requests),
+            bulkRequests: removeDuplicates(allResults.bulkRequests),
+            companyRequests: removeDuplicates(allResults.companyRequests)
+        };
+    } catch (error) {
+        console.error('Error using search API, falling back to client-side search:', error);
+        
+        // Fallback to client-side search if API fails
+        const allResults = {
+            requests: [],
+            bulkRequests: [],
+            companyRequests: []
+        };
+
+        for (const searchTerm of searchTerms) {
+            const [requestsRes, bulkRequestsRes, companyRequestsRes] = await Promise.all([
+                fetch('/api/requests').then(r => r.json()).catch(() => []),
+                fetch('/api/bulk-requests').then(r => r.json()).catch(() => []),
+                fetch('/api/company-requests').then(r => r.json()).catch(() => [])
+            ]);
+
+            const searchTermLower = searchTerm.toLowerCase();
+
+            // Search in regular requests - enhanced with more fields
+            const requests = requestsRes.filter(r => {
+                return (r.serialNumber || r.serial_number || '').toLowerCase().includes(searchTermLower) ||
+                       (r.fullName || r.full_name || '').toLowerCase().includes(searchTermLower) ||
+                       (r.requestNumber || r.request_number || '').toLowerCase().includes(searchTermLower) ||
+                       (r.phone || '').includes(searchTerm) ||
+                       (r.email || '').toLowerCase().includes(searchTermLower) ||
+                       (r.laptopBrand || r.laptop_brand || '').toLowerCase().includes(searchTermLower) ||
+                       (r.laptopModel || r.laptop_model || '').toLowerCase().includes(searchTermLower) ||
+                       (r.status || '').toLowerCase().includes(searchTermLower) ||
+                       (r.priority || '').toLowerCase().includes(searchTermLower);
+            }).map(r => ({ ...r, matchedTerm: searchTerm }));
+
+            // Search in bulk requests - enhanced with device-level search
+            const bulkRequests = bulkRequestsRes.filter(r => {
+                const devices = r.devices || [];
+                const hasMatchingSerial = devices.some(d => 
+                    (d.serialNumber || d.serial_number || '').toLowerCase().includes(searchTermLower) ||
+                    (d.laptopBrand || d.laptop_brand || '').toLowerCase().includes(searchTermLower) ||
+                    (d.laptopModel || d.laptop_model || '').toLowerCase().includes(searchTermLower)
+                );
+                return hasMatchingSerial ||
+                       (r.customerName || '').toLowerCase().includes(searchTermLower) ||
+                       (r.requestNumber || '').toLowerCase().includes(searchTermLower) ||
+                       (r.customerPhone || '').includes(searchTerm) ||
+                       (r.customerEmail || '').toLowerCase().includes(searchTermLower) ||
+                       (r.status || '').toLowerCase().includes(searchTermLower) ||
+                       (r.priority || '').toLowerCase().includes(searchTermLower);
+            }).map(r => ({ ...r, matchedTerm: searchTerm }));
+
+            // Search in company requests - enhanced with more fields
+            const companyRequests = companyRequestsRes.filter(r => {
+                return (r.serialNumber || r.serial_number || '').toLowerCase().includes(searchTermLower) ||
+                       (r.fullName || r.full_name || r.companyName || r.company_name || '').toLowerCase().includes(searchTermLower) ||
+                       (r.requestNumber || r.request_number || '').toLowerCase().includes(searchTermLower) ||
+                       (r.phone || r.companyPhone || r.company_phone || '').includes(searchTerm) ||
+                       (r.laptopBrand || r.laptop_brand || '').toLowerCase().includes(searchTermLower) ||
+                       (r.laptopModel || r.laptop_model || '').toLowerCase().includes(searchTermLower) ||
+                       (r.status || '').toLowerCase().includes(searchTermLower) ||
+                       (r.priority || '').toLowerCase().includes(searchTermLower);
+            }).map(r => ({ ...r, matchedTerm: searchTerm }));
+
+            allResults.requests.push(...requests);
+            allResults.bulkRequests.push(...bulkRequests);
+            allResults.companyRequests.push(...companyRequests);
+        }
+
+        // Remove duplicates
+        const removeDuplicates = (arr) => {
+            const seen = new Set();
+            return arr.filter(item => {
+                const key = `${item.requestNumber || item.request_number}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    return true;
+                }
+                return false;
+            });
+        };
+
+        return {
+            requests: removeDuplicates(allResults.requests),
+            bulkRequests: removeDuplicates(allResults.bulkRequests),
+            companyRequests: removeDuplicates(allResults.companyRequests)
+        };
+    }
 }
 
 /**
- * Display global search results
+ * Display global search results with enhanced UI and download button
+ * Supports displaying results from multiple search terms
  */
 function displayGlobalSearchResults(results) {
     const globalSearchResults = document.getElementById('globalSearchResults');
@@ -762,14 +873,53 @@ function displayGlobalSearchResults(results) {
             </div>
         `;
     } else {
+        // Count results by type
+        const counts = {
+            single: results.requests.length,
+            bulk: results.bulkRequests.length,
+            company: results.companyRequests.length
+        };
+
+        // Check if we have matched terms (multi-term search)
+        const hasMatchedTerms = allResults.some(r => r.matchedTerm);
+        
+        // Get unique search terms
+        const searchTerms = [...new Set(allResults.map(r => r.matchedTerm).filter(Boolean))];
+        
+        // Build search terms summary if multiple terms were used
+        let searchTermsSummary = '';
+        if (searchTerms.length > 1) {
+            searchTermsSummary = `
+                <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                    <p style="color: #3b82f6; margin: 0; font-size: 0.875rem;">
+                        <i class="fas fa-layer-group"></i> البحث بأكثر من كلمة:
+                        ${searchTerms.map(term => `<span style="margin-right: 0.5rem; background: rgba(59, 130, 246, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px;">"${term}"</span>`).join('')}
+                    </p>
+                </div>
+            `;
+        }
+
         globalSearchResults.innerHTML = `
-            <p style="margin-bottom: 1rem; color: var(--text-muted);">تم العثور على ${allResults.length} نتيجة</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <p style="color: var(--text-muted); margin: 0;">
+                    <i class="fas fa-search"></i> تم العثور على ${allResults.length} نتيجة
+                    <span style="margin-right: 0.5rem;">(عادي: ${counts.single} | جملة: ${counts.bulk} | شركة: ${counts.company})</span>
+                </p>
+                <button onclick="downloadSearchResultsToExcel()" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                    <i class="fas fa-file-excel"></i> تحميل Excel
+                </button>
+            </div>
+            ${searchTermsSummary}
             <div class="search-results-grid">
                 ${allResults.map(r => `
-                    <div class="glass-card" style="padding: 1rem; margin-bottom: 1rem; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.1);" onclick="handleSearchResultClick('${r.typeEn}', '${r.requestNumber || r.request_number}')">
+                    <div class="glass-card" style="padding: 1rem; margin-bottom: 1rem; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease;" onclick="handleSearchResultClick('${r.typeEn}', '${r.requestNumber || r.request_number}')" onmouseover="this.style.borderColor='rgba(59, 130, 246, 0.5)'" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.1)'">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                             <span style="font-weight: 600; color: #3b82f6;">${r.requestNumber || r.request_number}</span>
-                            <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: rgba(59, 130, 246, 0.1); border-radius: 4px; color: #3b82f6;">${r.type}</span>
+                            <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: ${
+                                r.typeEn === 'single' ? 'rgba(16, 185, 129, 0.2); color: #10b981;' :
+                                r.typeEn === 'bulk' ? 'rgba(245, 158, 11, 0.2); color: #f59e0b;' :
+                                'rgba(139, 92, 246, 0.2); color: #8b5cf6;'
+                            }; border-radius: 4px;">${r.type}</span>
                         </div>
                         <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
                             <i class="fas fa-user"></i> ${r.fullName || r.full_name || r.customerName || r.companyName || ''}
@@ -778,13 +928,26 @@ function displayGlobalSearchResults(results) {
                             <i class="fas fa-phone"></i> ${r.phone || r.customerPhone || r.companyPhone || ''}
                         </p>
                         ${r.serialNumber || r.serial_number ? `
-                            <p style="color: var(--text-muted);">
+                            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
                                 <i class="fas fa-barcode"></i> ${r.serialNumber || r.serial_number}
                             </p>
                         ` : ''}
-                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        ${r.laptopBrand || r.laptop_brand ? `
+                            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
+                                <i class="fas fa-laptop"></i> ${r.laptopBrand || r.laptop_brand} ${r.laptopModel || r.laptop_model ? `- ${r.laptopModel || r.laptop_model}` : ''}
+                            </p>
+                        ` : ''}
+                        ${hasMatchedTerms && r.matchedTerm ? `
+                            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
+                                <i class="fas fa-tag"></i> <span style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${r.matchedTerm}</span>
+                            </p>
+                        ` : ''}
+                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: center;">
                             <span style="font-size: 0.875rem; color: var(--text-muted);">
                                 <i class="fas fa-clock"></i> ${Utils.formatDate(r.createdAt || r.created_at)}
+                            </span>
+                            <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: rgba(59, 130, 246, 0.1); border-radius: 4px; color: #3b82f6;">
+                                ${r.status || 'غير محدد'}
                             </span>
                         </div>
                     </div>
@@ -843,6 +1006,82 @@ function handleSearchResultClick(type, requestNumber) {
                 }
             }, 100);
         }
+    }
+}
+
+/**
+ * Download search results to Excel with enhanced formatting
+ */
+function downloadSearchResultsToExcel() {
+    // Get current search results from the displayed content
+    const resultsContainer = document.getElementById('globalSearchResults');
+    if (!resultsContainer) {
+        toast.error('لا توجد نتائج للتحميل');
+        return;
+    }
+
+    try {
+        // Collect all result cards from the UI
+        const resultCards = resultsContainer.querySelectorAll('.glass-card');
+        if (resultCards.length === 0) {
+            toast.warning('لا توجد نتائج للتحميل');
+            return;
+        }
+
+        // Extract data from each card
+        const excelData = [];
+        resultCards.forEach(card => {
+            const typeBadge = card.querySelector('span[style*="border-radius: 4px"]');
+            const requestNumber = card.querySelector('span[style*="font-weight: 600"]');
+            const name = card.querySelector('p i.fa-user')?.parentElement;
+            const phone = card.querySelector('p i.fa-phone')?.parentElement;
+            const serial = card.querySelector('p i.fa-barcode')?.parentElement;
+            const laptop = card.querySelector('p i.fa-laptop')?.parentElement;
+            const date = card.querySelector('p i.fa-clock')?.parentElement;
+            const status = card.querySelectorAll('span[style*="border-radius: 4px"]')[1];
+
+            excelData.push({
+                'نوع الطلب': typeBadge?.textContent?.trim() || 'غير محدد',
+                'رقم الطلب': requestNumber?.textContent?.trim() || '',
+                'الاسم': name?.textContent?.replace('👤', '').trim() || '',
+                'الهاتف': phone?.textContent?.replace('📱', '').trim() || '',
+                'الرقم التسلسلي': serial?.textContent?.replace('🔢', '').trim() || '',
+                'الماركة والموديل': laptop?.textContent?.replace('💻', '').trim() || '',
+                'الحالة': status?.textContent?.trim() || 'غير محدد',
+                'التاريخ': date?.textContent?.replace('🕐', '').trim() || ''
+            });
+        });
+
+        // Create worksheet
+        const ws = XLSX.utils.json_to_sheet(excelData);
+
+        // Set column widths
+        ws['!cols'] = [
+            { wch: 15 }, // نوع الطلب
+            { wch: 20 }, // رقم الطلب
+            { wch: 25 }, // الاسم
+            { wch: 15 }, // الهاتف
+            { wch: 20 }, // الرقم التسلسلي
+            { wch: 25 }, // الماركة والموديل
+            { wch: 15 }, // الحالة
+            { wch: 15 }  // التاريخ
+        ];
+
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'نتائج البحث الشامل');
+
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 10);
+        const filename = `بحث_شامل_${timestamp}.xlsx`;
+
+        // Download file
+        XLSX.writeFile(wb, filename);
+
+        toast.success(`تم تحميل ${excelData.length} نتيجة في ملف Excel بنجاح`);
+    } catch (error) {
+        console.error('Error downloading Excel:', error);
+        toast.error('فشل تحميل ملف Excel');
     }
 }
 

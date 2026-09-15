@@ -105,6 +105,129 @@ app.use('/api/products', productsRoutes);
 app.use('/api/bulk-requests', bulkRequestsRoutes);
 app.use('/api/company-requests', companyRequestsRoutes);
 
+// ============ GLOBAL SEARCH API ============
+// Enhanced global search endpoint with server-side filtering
+app.get('/api/search', async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.trim().length < 2) {
+            return res.json({ requests: [], bulkRequests: [], companyRequests: [] });
+        }
+
+        const searchTerm = q.toLowerCase().trim();
+        console.log('🔍 Global search for:', searchTerm);
+
+        // Parallel search across all tables
+        const [requestsData, bulkRequestsData, companyRequestsData] = await Promise.all([
+            supabase.from('requests').select('*').is('deleted_at', null),
+            supabase.from('bulk_requests').select('*').is('deleted_at', null),
+            supabase.from('company_requests').select('*').is('deleted_at', null)
+        ]);
+
+        // Filter normal requests
+        const requests = (requestsData.data || []).filter(r => {
+            return (r.serial_number || '').toLowerCase().includes(searchTerm) ||
+                   (r.full_name || '').toLowerCase().includes(searchTerm) ||
+                   (r.request_number || '').toLowerCase().includes(searchTerm) ||
+                   (r.phone || '').includes(searchTerm) ||
+                   (r.email || '').toLowerCase().includes(searchTerm) ||
+                   (r.laptop_brand || '').toLowerCase().includes(searchTerm) ||
+                   (r.laptop_model || '').toLowerCase().includes(searchTerm) ||
+                   (r.status || '').toLowerCase().includes(searchTerm) ||
+                   (r.priority || '').toLowerCase().includes(searchTerm);
+        }).map(r => ({
+            id: r.id,
+            requestNumber: r.request_number,
+            fullName: r.full_name,
+            phone: r.phone,
+            email: r.email || '',
+            laptopBrand: r.laptop_brand,
+            laptopModel: r.laptop_model,
+            serialNumber: r.serial_number,
+            status: r.status,
+            priority: r.priority,
+            createdAt: r.created_at,
+            cost: r.cost
+        }));
+
+        // Filter bulk requests with device search
+        const bulkRequestsWithDevices = await Promise.all(
+            (bulkRequestsData.data || []).map(async (bulkReq) => {
+                const { data: devices } = await supabase
+                    .from('bulk_request_devices')
+                    .select('*')
+                    .eq('bulk_request_id', bulkReq.id);
+
+                return { ...bulkReq, devices: devices || [] };
+            })
+        );
+
+        const bulkRequests = bulkRequestsWithDevices.filter(r => {
+            const devices = r.devices || [];
+            const hasMatchingDevice = devices.some(d =>
+                (d.serial_number || '').toLowerCase().includes(searchTerm) ||
+                (d.laptop_brand || '').toLowerCase().includes(searchTerm) ||
+                (d.laptop_model || '').toLowerCase().includes(searchTerm)
+            );
+
+            return hasMatchingDevice ||
+                   (r.customer_name || '').toLowerCase().includes(searchTerm) ||
+                   (r.request_number || '').toLowerCase().includes(searchTerm) ||
+                   (r.customer_phone || '').includes(searchTerm) ||
+                   (r.customer_email || '').toLowerCase().includes(searchTerm) ||
+                   (r.status || '').toLowerCase().includes(searchTerm) ||
+                   (r.priority || '').toLowerCase().includes(searchTerm);
+        }).map(r => ({
+            id: r.id,
+            requestNumber: r.request_number,
+            customerName: r.customer_name,
+            customerPhone: r.customer_phone,
+            customerEmail: r.customer_email || '',
+            deviceCount: r.device_count,
+            status: r.status,
+            priority: r.priority,
+            totalCost: r.cost,
+            createdAt: r.created_at,
+            devices: r.devices.map(d => ({
+                serialNumber: d.serial_number,
+                laptopBrand: d.laptop_brand,
+                laptopModel: d.laptop_model
+            }))
+        }));
+
+        // Filter company requests
+        const companyRequests = (companyRequestsData.data || []).filter(r => {
+            return (r.serial_number || '').toLowerCase().includes(searchTerm) ||
+                   (r.full_name || '').toLowerCase().includes(searchTerm) ||
+                   (r.request_number || '').toLowerCase().includes(searchTerm) ||
+                   (r.phone || '').includes(searchTerm) ||
+                   (r.laptop_brand || '').toLowerCase().includes(searchTerm) ||
+                   (r.laptop_model || '').toLowerCase().includes(searchTerm) ||
+                   (r.status || '').toLowerCase().includes(searchTerm) ||
+                   (r.priority || '').toLowerCase().includes(searchTerm);
+        }).map(r => ({
+            id: r.id,
+            requestNumber: r.request_number,
+            fullName: r.full_name,
+            phone: r.phone,
+            laptopBrand: r.laptop_brand,
+            laptopModel: r.laptop_model,
+            serialNumber: r.serial_number,
+            status: r.status,
+            priority: r.priority,
+            createdAt: r.created_at,
+            cost: r.cost
+        }));
+
+        console.log(`🔍 Search results: ${requests.length} normal, ${bulkRequests.length} bulk, ${companyRequests.length} company`);
+
+        res.json({ requests, bulkRequests, companyRequests });
+    } catch (error) {
+        console.error('Error in global search:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ============ ORDERS API ============
 app.get('/api/orders', async (req, res) => {
     try {
