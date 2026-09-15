@@ -5377,6 +5377,8 @@ class AdminManager {
      */
     async performGlobalSearch() {
         const searchInput = document.getElementById('globalSearchInput').value.trim();
+        const todayOnly = document.getElementById('todayOnlyFilter')?.checked || false;
+        
         if (!searchInput) {
             toast.warning('الرجاء إدخال كلمة البحث');
             return;
@@ -5393,7 +5395,7 @@ class AdminManager {
             return;
         }
 
-        console.log('🔍 Multi-term search:', searchTerms);
+        console.log('🔍 Multi-term search:', searchTerms, 'Today only:', todayOnly);
 
         try {
             // Search for each term and combine results
@@ -5410,71 +5412,91 @@ class AdminManager {
 
                 const apiResults = await response.json();
                 
+                // Helper function to check if date is today
+                const isToday = (dateString) => {
+                    if (!dateString) return false;
+                    const date = new Date(dateString);
+                    const today = new Date();
+                    return date.toDateString() === today.toDateString();
+                };
+
                 // Convert API results to the format expected by display function
                 // Add search term to track which term matched this result
                 apiResults.requests.forEach(req => {
-                    allResults.push({
-                        type: 'normal',
-                        requestNumber: req.requestNumber,
-                        fullName: req.fullName,
-                        phone: req.phone,
-                        email: req.email || '',
-                        laptopBrand: req.laptopBrand,
-                        laptopModel: req.laptopModel,
-                        serialNumber: req.serialNumber,
-                        status: req.status,
-                        priority: req.priority,
-                        createdAt: req.createdAt,
-                        cost: req.cost,
-                        matchedTerm: searchTerm
-                    });
+                    const isRequestToday = isToday(req.createdAt);
+                    if (!todayOnly || isRequestToday) {
+                        allResults.push({
+                            type: 'normal',
+                            requestNumber: req.requestNumber,
+                            fullName: req.fullName,
+                            phone: req.phone,
+                            email: req.email || '',
+                            laptopBrand: req.laptopBrand,
+                            laptopModel: req.laptopModel,
+                            serialNumber: req.serialNumber,
+                            status: req.status,
+                            priority: req.priority,
+                            createdAt: req.createdAt,
+                            cost: req.cost,
+                            matchedTerm: searchTerm,
+                            isToday: isRequestToday
+                        });
+                    }
                 });
 
                 apiResults.bulkRequests.forEach(req => {
                     const devices = req.devices || [];
-                    const hasMatchingDevice = devices.some(d =>
-                        d.serialNumber?.toLowerCase().includes(searchTerm) ||
-                        d.laptopBrand?.toLowerCase().includes(searchTerm) ||
-                        d.laptopModel?.toLowerCase().includes(searchTerm)
-                    );
-
-                    allResults.push({
-                        type: 'bulk',
-                        requestNumber: req.requestNumber,
-                        fullName: req.customerName,
-                        phone: req.customerPhone,
-                        email: req.customerEmail || '',
-                        laptopBrand: `طلب جملة (${req.deviceCount || devices.length || 0} لابتوب)`,
-                        laptopModel: devices.find(d => 
+                    const isRequestToday = isToday(req.createdAt);
+                    if (!todayOnly || isRequestToday) {
+                        const hasMatchingDevice = devices.some(d =>
                             d.serialNumber?.toLowerCase().includes(searchTerm) ||
                             d.laptopBrand?.toLowerCase().includes(searchTerm) ||
                             d.laptopModel?.toLowerCase().includes(searchTerm)
-                        )?.laptopModel || '',
-                        serialNumber: devices.find(d => d.serialNumber?.toLowerCase().includes(searchTerm))?.serialNumber || '',
-                        status: req.status,
-                        priority: req.priority,
-                        createdAt: req.createdAt,
-                        cost: req.totalCost || 0,
-                        matchedTerm: searchTerm
-                    });
+                        );
+
+                        allResults.push({
+                            type: 'bulk',
+                            requestNumber: req.requestNumber,
+                            fullName: req.customerName,
+                            phone: req.customerPhone,
+                            email: req.customerEmail || '',
+                            laptopBrand: `طلب جملة (${req.deviceCount || devices.length || 0} لابتوب)`,
+                            laptopModel: devices.find(d => 
+                                d.serialNumber?.toLowerCase().includes(searchTerm) ||
+                                d.laptopBrand?.toLowerCase().includes(searchTerm) ||
+                                d.laptopModel?.toLowerCase().includes(searchTerm)
+                            )?.laptopModel || '',
+                            serialNumber: devices.find(d => d.serialNumber?.toLowerCase().includes(searchTerm))?.serialNumber || '',
+                            status: req.status,
+                            priority: req.priority,
+                            createdAt: req.createdAt,
+                            cost: req.totalCost || 0,
+                            matchedTerm: searchTerm,
+                            isToday: isRequestToday
+                        });
+                    }
                 });
 
                 apiResults.companyRequests.forEach(req => {
-                    allResults.push({
-                        type: 'company',
-                        requestNumber: req.requestNumber,
-                        fullName: req.fullName,
-                        phone: req.phone,
-                        email: '',
-                        laptopBrand: req.laptopBrand,
-                        laptopModel: req.laptopModel,
-                        serialNumber: req.serialNumber,
-                        status: req.status,
-                        priority: req.priority,
-                        createdAt: req.createdAt,
-                        cost: req.cost,
-                        matchedTerm: searchTerm
-                    });
+                    const isRequestToday = isToday(req.createdAt);
+                    if (!todayOnly || isRequestToday) {
+                        allResults.push({
+                            type: 'company',
+                            requestNumber: req.requestNumber,
+                            fullName: req.fullName,
+                            phone: req.phone,
+                            email: '',
+                            laptopBrand: req.laptopBrand,
+                            laptopModel: req.laptopModel,
+                            serialNumber: req.serialNumber,
+                            status: req.status,
+                            priority: req.priority,
+                            createdAt: req.createdAt,
+                            cost: req.cost,
+                            matchedTerm: searchTerm,
+                            isToday: isRequestToday
+                        });
+                    }
                 });
 
                 searchTermInfo.push({
@@ -5497,7 +5519,7 @@ class AdminManager {
 
             this.currentSearchResults = uniqueResults;
             this.currentSearchTermInfo = searchTermInfo;
-            this.displayGlobalSearchResults(uniqueResults, searchTermInfo);
+            this.displayGlobalSearchResults(uniqueResults, searchTermInfo, todayOnly);
             
         } catch (error) {
             console.error('Error using search API, falling back to client-side search:', error);
@@ -5506,107 +5528,127 @@ class AdminManager {
             const allResults = [];
             const searchTermInfo = [];
 
+            // Helper function to check if date is today
+            const isToday = (dateString) => {
+                if (!dateString) return false;
+                const date = new Date(dateString);
+                const today = new Date();
+                return date.toDateString() === today.toDateString();
+            };
+
             for (const searchTerm of searchTerms) {
                 const results = [];
 
                 // Search in normal requests - enhanced with more fields
                 this.requests.forEach(req => {
-                    if (
-                        (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
-                        (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
-                        (req.phone && req.phone.includes(searchTerm)) ||
-                        (req.email && req.email.toLowerCase().includes(searchTerm)) ||
-                        (req.serialNumber && req.serialNumber.toLowerCase().includes(searchTerm)) ||
-                        (req.laptopBrand && req.laptopBrand.toLowerCase().includes(searchTerm)) ||
-                        (req.laptopModel && req.laptopModel.toLowerCase().includes(searchTerm)) ||
-                        (req.status && req.status.toLowerCase().includes(searchTerm)) ||
-                        (req.priority && req.priority.toLowerCase().includes(searchTerm))
-                    ) {
-                        results.push({
-                            type: 'normal',
-                            requestNumber: req.requestNumber,
-                            fullName: req.fullName,
-                            phone: req.phone,
-                            email: req.email || '',
-                            laptopBrand: req.laptopBrand,
-                            laptopModel: req.laptopModel,
-                            serialNumber: req.serialNumber,
-                            status: req.status,
-                            priority: req.priority,
-                            createdAt: req.createdAt,
-                            cost: req.cost,
-                            matchedTerm: searchTerm
-                        });
+                    const isRequestToday = isToday(req.createdAt);
+                    if (!todayOnly || isRequestToday) {
+                        if (
+                            (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
+                            (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
+                            (req.phone && req.phone.includes(searchTerm)) ||
+                            (req.email && req.email.toLowerCase().includes(searchTerm)) ||
+                            (req.serialNumber && req.serialNumber.toLowerCase().includes(searchTerm)) ||
+                            (req.laptopBrand && req.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                            (req.laptopModel && req.laptopModel.toLowerCase().includes(searchTerm)) ||
+                            (req.status && req.status.toLowerCase().includes(searchTerm)) ||
+                            (req.priority && req.priority.toLowerCase().includes(searchTerm))
+                        ) {
+                            results.push({
+                                type: 'normal',
+                                requestNumber: req.requestNumber,
+                                fullName: req.fullName,
+                                phone: req.phone,
+                                email: req.email || '',
+                                laptopBrand: req.laptopBrand,
+                                laptopModel: req.laptopModel,
+                                serialNumber: req.serialNumber,
+                                status: req.status,
+                                priority: req.priority,
+                                createdAt: req.createdAt,
+                                cost: req.cost,
+                                matchedTerm: searchTerm,
+                                isToday: isRequestToday
+                            });
+                        }
                     }
                 });
 
                 // Search in bulk requests - enhanced with device-level search
                 this.bulkRequests.forEach(req => {
-                    const devices = req.devices || [];
-                    const hasMatchingDevice = devices.some(d =>
-                        (d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm)) ||
-                        (d.laptopBrand && d.laptopBrand.toLowerCase().includes(searchTerm)) ||
-                        (d.laptopModel && d.laptopModel.toLowerCase().includes(searchTerm))
-                    );
+                    const isRequestToday = isToday(req.createdAt);
+                    if (!todayOnly || isRequestToday) {
+                        const devices = req.devices || [];
+                        const hasMatchingDevice = devices.some(d =>
+                            (d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm)) ||
+                            (d.laptopBrand && d.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                            (d.laptopModel && d.laptopModel.toLowerCase().includes(searchTerm))
+                        );
 
-                    if (
-                        (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
-                        (req.customerName && req.customerName.toLowerCase().includes(searchTerm)) ||
-                        (req.customerPhone && req.customerPhone.includes(searchTerm)) ||
-                        (req.customerEmail && req.customerEmail.toLowerCase().includes(searchTerm)) ||
-                        hasMatchingDevice ||
-                        (req.status && req.status.toLowerCase().includes(searchTerm)) ||
-                        (req.priority && req.priority.toLowerCase().includes(searchTerm))
-                    ) {
-                        results.push({
-                            type: 'bulk',
-                            requestNumber: req.requestNumber,
-                            fullName: req.customerName,
-                            phone: req.customerPhone,
-                            email: req.customerEmail || '',
-                            laptopBrand: `طلب جملة (${req.devices?.length || 0} لابتوب)`,
-                            laptopModel: devices.find(d => 
-                                d.serialNumber?.toLowerCase().includes(searchTerm) ||
-                                d.laptopBrand?.toLowerCase().includes(searchTerm) ||
-                                d.laptopModel?.toLowerCase().includes(searchTerm)
-                            )?.laptopModel || '',
-                            serialNumber: devices.find(d => d.serialNumber?.toLowerCase().includes(searchTerm))?.serialNumber || '',
-                            status: req.status,
-                            priority: req.priority,
-                            createdAt: req.createdAt,
-                            cost: req.totalCost || 0,
-                            matchedTerm: searchTerm
-                        });
+                        if (
+                            (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
+                            (req.customerName && req.customerName.toLowerCase().includes(searchTerm)) ||
+                            (req.customerPhone && req.customerPhone.includes(searchTerm)) ||
+                            (req.customerEmail && req.customerEmail.toLowerCase().includes(searchTerm)) ||
+                            hasMatchingDevice ||
+                            (req.status && req.status.toLowerCase().includes(searchTerm)) ||
+                            (req.priority && req.priority.toLowerCase().includes(searchTerm))
+                        ) {
+                            results.push({
+                                type: 'bulk',
+                                requestNumber: req.requestNumber,
+                                fullName: req.customerName,
+                                phone: req.customerPhone,
+                                email: req.customerEmail || '',
+                                laptopBrand: `طلب جملة (${req.devices?.length || 0} لابتوب)`,
+                                laptopModel: devices.find(d => 
+                                    d.serialNumber?.toLowerCase().includes(searchTerm) ||
+                                    d.laptopBrand?.toLowerCase().includes(searchTerm) ||
+                                    d.laptopModel?.toLowerCase().includes(searchTerm)
+                                )?.laptopModel || '',
+                                serialNumber: devices.find(d => d.serialNumber?.toLowerCase().includes(searchTerm))?.serialNumber || '',
+                                status: req.status,
+                                priority: req.priority,
+                                createdAt: req.createdAt,
+                                cost: req.totalCost || 0,
+                                matchedTerm: searchTerm,
+                                isToday: isRequestToday
+                            });
+                        }
                     }
                 });
 
                 // Search in company requests - enhanced with more fields
                 this.companyRequests.forEach(req => {
-                    if (
-                        (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
-                        (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
-                        (req.phone && req.phone.includes(searchTerm)) ||
-                        (req.serialNumber && req.serialNumber.toLowerCase().includes(searchTerm)) ||
-                        (req.laptopBrand && req.laptopBrand.toLowerCase().includes(searchTerm)) ||
-                        (req.laptopModel && req.laptopModel.toLowerCase().includes(searchTerm)) ||
-                        (req.status && req.status.toLowerCase().includes(searchTerm)) ||
-                        (req.priority && req.priority.toLowerCase().includes(searchTerm))
-                    ) {
-                        results.push({
-                            type: 'company',
-                            requestNumber: req.requestNumber,
-                            fullName: req.fullName,
-                            phone: req.phone,
-                            email: '',
-                            laptopBrand: req.laptopBrand,
-                            laptopModel: req.laptopModel,
-                            serialNumber: req.serialNumber,
-                            status: req.status,
-                            priority: req.priority,
-                            createdAt: req.createdAt,
-                            cost: req.cost,
-                            matchedTerm: searchTerm
-                        });
+                    const isRequestToday = isToday(req.createdAt);
+                    if (!todayOnly || isRequestToday) {
+                        if (
+                            (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
+                            (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
+                            (req.phone && req.phone.includes(searchTerm)) ||
+                            (req.serialNumber && req.serialNumber.toLowerCase().includes(searchTerm)) ||
+                            (req.laptopBrand && req.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                            (req.laptopModel && req.laptopModel.toLowerCase().includes(searchTerm)) ||
+                            (req.status && req.status.toLowerCase().includes(searchTerm)) ||
+                            (req.priority && req.priority.toLowerCase().includes(searchTerm))
+                        ) {
+                            results.push({
+                                type: 'company',
+                                requestNumber: req.requestNumber,
+                                fullName: req.fullName,
+                                phone: req.phone,
+                                email: '',
+                                laptopBrand: req.laptopBrand,
+                                laptopModel: req.laptopModel,
+                                serialNumber: req.serialNumber,
+                                status: req.status,
+                                priority: req.priority,
+                                createdAt: req.createdAt,
+                                cost: req.cost,
+                                matchedTerm: searchTerm,
+                                isToday: isRequestToday
+                            });
+                        }
                     }
                 });
 
@@ -5631,7 +5673,7 @@ class AdminManager {
 
             this.currentSearchResults = uniqueResults;
             this.currentSearchTermInfo = searchTermInfo;
-            this.displayGlobalSearchResults(uniqueResults, searchTermInfo);
+            this.displayGlobalSearchResults(uniqueResults, searchTermInfo, todayOnly);
         }
     }
 
@@ -5639,7 +5681,7 @@ class AdminManager {
      * Display global search results in modal with enhanced UI
      * Supports displaying results from multiple search terms
      */
-    displayGlobalSearchResults(results, searchTermInfo = null) {
+    displayGlobalSearchResults(results, searchTermInfo = null, todayOnly = false) {
         const resultsContainer = document.getElementById('globalSearchResults');
         const downloadBtn = document.getElementById('downloadExcelBtn');
 
@@ -5648,6 +5690,7 @@ class AdminManager {
                 <div style="text-align: center; padding: 2rem;">
                     <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted, #94a3b8); margin-bottom: 1rem;"></i>
                     <p style="color: var(--text-muted, #94a3b8);">لا توجد نتائج للبحث</p>
+                    ${todayOnly ? '<p style="color: var(--text-muted, #94a3b8); font-size: 0.875rem;">(تم تطبيق فلتر "طلبات اليوم فقط")</p>' : ''}
                 </div>
             `;
             downloadBtn.style.display = 'none';
@@ -5672,6 +5715,18 @@ class AdminManager {
                 `;
             }
 
+            // Add today filter indicator
+            let todayFilterIndicator = '';
+            if (todayOnly) {
+                todayFilterIndicator = `
+                    <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                        <p style="color: var(--accent-green, #10b981); margin: 0; font-size: 0.875rem;">
+                            <i class="fas fa-calendar-day"></i> يتم عرض طلبات اليوم فقط
+                        </p>
+                    </div>
+                `;
+            }
+
             const hasMatchedTerm = results.some(r => r.matchedTerm);
             
             const tableHTML = `
@@ -5679,9 +5734,11 @@ class AdminManager {
                     <p style="color: var(--text-muted, #94a3b8); margin: 0;">
                         <i class="fas fa-search"></i> تم العثور على ${results.length} نتيجة
                         <span style="margin-right: 0.5rem; color: var(--text-muted, #94a3b8);">(عادي: ${counts.normal} | جملة: ${counts.bulk} | شركة: ${counts.company})</span>
+                        ${todayOnly ? '<span style="margin-right: 0.5rem; color: #10b981;">| اليوم فقط</span>' : ''}
                     </p>
                 </div>
                 ${searchTermsSummary}
+                ${todayFilterIndicator}
                 <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; background: var(--card-bg, rgba(255, 255, 255, 0.05)); color: var(--text-primary, #e2e8f0);">
                     <thead>
                         <tr style="background: var(--table-header-bg, rgba(59, 130, 246, 0.1));">
@@ -5701,6 +5758,9 @@ class AdminManager {
                             const matchedTermHtml = hasMatchedTerm ? 
                                 `<td style="padding: 0.75rem;"><span style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${result.matchedTerm || '-'}</span></td>` : '';
                             
+                            const todayIndicator = result.isToday ? 
+                                '<span style="margin-right: 0.5rem; background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">📅 اليوم</span>' : '';
+                            
                             return `
                             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: var(--text-primary, #e2e8f0);">
                                 <td style="padding: 0.75rem;">
@@ -5718,7 +5778,7 @@ class AdminManager {
                                 <td style="padding: 0.75rem; color: var(--text-primary, #e2e8f0);">${result.laptopBrand}</td>
                                 <td style="padding: 0.75rem; color: var(--text-primary, #e2e8f0);">${result.serialNumber || '-'}</td>
                                 <td style="padding: 0.75rem; color: var(--text-primary, #e2e8f0);">${this.translateStatus(result.status)}</td>
-                                <td style="padding: 0.75rem; color: var(--text-primary, #e2e8f0);">${new Date(result.createdAt).toLocaleDateString('ar-EG')}</td>
+                                <td style="padding: 0.75rem; color: var(--text-primary, #e2e8f0);">${new Date(result.createdAt).toLocaleDateString('ar-EG')}${todayIndicator}</td>
                                 ${matchedTermHtml}
                             </tr>
                         `}).join('')}
