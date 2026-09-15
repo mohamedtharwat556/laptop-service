@@ -5785,6 +5785,7 @@ class AdminManager {
                     if (!todayOnly || isRequestToday) {
                         allResults.push({
                             type: 'normal',
+                            id: req.id,
                             requestNumber: req.requestNumber,
                             fullName: req.fullName,
                             phone: req.phone,
@@ -5815,12 +5816,13 @@ class AdminManager {
 
                         allResults.push({
                             type: 'bulk',
+                            id: req.id,
                             requestNumber: req.requestNumber,
                             fullName: req.customerName,
                             phone: req.customerPhone,
                             email: req.customerEmail || '',
                             laptopBrand: `طلب جملة (${req.deviceCount || devices.length || 0} لابتوب)`,
-                            laptopModel: devices.find(d => 
+                            laptopModel: devices.find(d =>
                                 d.serialNumber?.toLowerCase().includes(searchTerm) ||
                                 d.laptopBrand?.toLowerCase().includes(searchTerm) ||
                                 d.laptopModel?.toLowerCase().includes(searchTerm)
@@ -5842,6 +5844,7 @@ class AdminManager {
                     if (!todayOnly || isRequestToday) {
                         allResults.push({
                             type: 'company',
+                            id: req.id,
                             requestNumber: req.requestNumber,
                             fullName: req.fullName,
                             phone: req.phone,
