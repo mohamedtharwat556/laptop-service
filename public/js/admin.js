@@ -1272,9 +1272,6 @@ class AdminManager {
      */
     renderCharts() {
         this.destroyCharts();
-        this.renderRequestsChart();
-        this.renderBulkRequestsChart();
-        this.renderCompanyRequestsChart();
         // Get current calculation mode from dropdown or default to 'devices'
         const mode = document.getElementById('calculationMode')?.value || 'devices';
         this.renderAllRequestsOverviewChart(mode);
