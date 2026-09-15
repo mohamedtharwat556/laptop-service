@@ -83,10 +83,9 @@ class CompanyCustomerManager {
 
                 alert('تم الإرسال بنجاح!\nرقم الطلب: ' + result.requestNumber);
 
-                // Prepare WhatsApp message
-                const message = `طلب صيانة:\nالاسم: ${requestData.fullName}\nالهاتف: ${requestData.phone}\nماركة اللابتوب: ${requestData.laptopBrand}\nموديل اللابتوب: ${requestData.laptopModel}\nوصف المشكلة: ${requestData.problemDescription}`;
-                const waUrl = `https://wa.me/201069143785?text=${encodeURIComponent(message)}`;
-                window.location.href = waUrl;
+                // Redirect to WhatsApp group
+                const waUrl = 'https://chat.whatsapp.com/HGDzy1q5sCu3eDrqxvvzQO';
+                window.open(waUrl, '_blank');
 
                 form.reset();
             } catch (error) {

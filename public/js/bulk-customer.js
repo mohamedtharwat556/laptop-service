@@ -388,10 +388,9 @@ class BulkCustomerManager {
             // Show success message with request number
             alert(`تم إرسال طلب الجملة بنجاح!\n\nرقم الطلب: ${result.requestNumber}\nعدد اللابتوبات: ${result.deviceCount}\n\nسيتم التواصل معك قريباً لتأكيد الحجز.`);
 
-            // Redirect to WhatsApp
-            const message = `طلب صيانة جملة:\nالاسم: ${customerData.fullName}\nالهاتف: ${customerData.phone}\nعدد اللابتوبات: ${customerData.deviceCount}\nرقم الطلب: ${result.requestNumber}`;
-            const waUrl = `https://wa.me/201069143785?text=${encodeURIComponent(message)}`;
-            window.location.href = waUrl;
+            // Redirect to WhatsApp group
+            const waUrl = 'https://chat.whatsapp.com/HGDzy1q5sCu3eDrqxvvzQO';
+            window.open(waUrl, '_blank');
 
         } catch (error) {
             console.error('❌ Error submitting bulk request:', error);
