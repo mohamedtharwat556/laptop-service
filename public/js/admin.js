@@ -28,6 +28,7 @@ class AdminManager {
         this._companySpecialFilter = null;
         this.currentSearchResults = [];
         this.openBulkAccordions = new Set(); // Track which bulk accordions are open
+        this.currentTodayTab = 'all'; // Track current tab in today's requests
     }
 
     /**
@@ -235,6 +236,14 @@ class AdminManager {
                     e.preventDefault();
                     this.performGlobalSearch();
                 });
+            }
+
+            // Setup today's requests search
+            const todaySearchInput = document.getElementById('todaySearchInput');
+            if (todaySearchInput) {
+                todaySearchInput.addEventListener('input', Utils.debounce(() => {
+                    this.showTodayTab(this.currentTodayTab); // Refresh with current search
+                }, 300));
             }
 
             console.log('✅ Admin dashboard initialized successfully!');
@@ -947,7 +956,7 @@ class AdminManager {
         statsContainer.innerHTML = `
             <div class="stats-grid">
                 <!-- Today's Laptop Orders Counter - Separate from search -->
-                <div class="glass-card stat-card" style="position: relative; background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1)); border: 2px solid #3b82f6;">
+                <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.switchSection('today-requests')" style="position: relative; background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1)); border: 2px solid #3b82f6; cursor: pointer;">
                     <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2);">
                         <i class="fas fa-laptop" style="color: #3b82f6;"></i>
                     </div>
@@ -958,6 +967,7 @@ class AdminManager {
                     <div style="position: absolute; top: 10px; left: 10px; font-size: 0.75rem; color: #64748b; background: rgba(255,255,255,0.9); padding: 0.25rem 0.5rem; border-radius: 4px;">
                         <i class="fas fa-calendar-day"></i> ${new Date().toLocaleDateString('ar-EG')}
                     </div>
+                    <i class="fas fa-arrow-left stat-arrow" style="color: #3b82f6;"></i>
                 </div>
                 <div class="glass-card stat-card stat-card-clickable" onclick="adminManager.openStatFilter('requests','All')" style="position: relative;">
                     <div class="stat-icon">
@@ -2396,6 +2406,11 @@ class AdminManager {
             case 'dashboard':
                 this.renderStats();
                 this.renderCharts();
+                break;
+            case 'today-requests':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
+                this.renderTodayRequests();
                 break;
             case 'requests':
                 this._bulkTodayFilter = null;
@@ -7254,6 +7269,387 @@ class AdminManager {
         XLSX.writeFile(wb, `${fileName}.xlsx`);
 
         toast.success(`تم تحميل ${excelData.length} سجل في ملف Excel بنجاح (${typeSummary})`);
+    }
+
+    /**
+     * Render today's requests section
+     */
+    renderTodayRequests() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Filter today's requests from all types
+        const todayNormal = this.requests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+
+        const todayBulk = this.bulkRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+
+        const todayCompany = this.companyRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+
+        // Update counters
+        document.getElementById('todayNormalCount').textContent = todayNormal.length;
+        document.getElementById('todayBulkCount').textContent = todayBulk.length;
+        document.getElementById('todayCompanyCount').textContent = todayCompany.length;
+        document.getElementById('todayTotalCount').textContent = todayNormal.length + todayBulk.length + todayCompany.length;
+
+        // Default to showing all
+        this.showTodayTab('all');
+    }
+
+    /**
+     * Show today's requests tab
+     */
+    showTodayTab(tab) {
+        this.currentTodayTab = tab;
+
+        // Update tab buttons
+        document.querySelectorAll('[id^="todayTab"]').forEach(btn => {
+            btn.style.background = 'rgba(255,255,255,0.08)';
+            btn.style.border = '1px solid rgba(255,255,255,0.1)';
+        });
+
+        const activeBtn = document.getElementById(`todayTab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+        if (activeBtn) {
+            activeBtn.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+            activeBtn.style.border = 'none';
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        let filteredRequests = [];
+        let requestType = '';
+
+        switch (tab) {
+            case 'all':
+                // Combine all today's requests
+                const todayNormal = this.requests.filter(r => {
+                    const requestDate = new Date(r.createdAt);
+                    return requestDate >= today;
+                }).map(r => ({ ...r, requestType: 'normal' }));
+
+                const todayBulk = this.bulkRequests.filter(r => {
+                    const requestDate = new Date(r.createdAt);
+                    return requestDate >= today;
+                }).map(r => ({ ...r, requestType: 'bulk' }));
+
+                const todayCompany = this.companyRequests.filter(r => {
+                    const requestDate = new Date(r.createdAt);
+                    return requestDate >= today;
+                }).map(r => ({ ...r, requestType: 'company' }));
+
+                filteredRequests = [...todayNormal, ...todayBulk, ...todayCompany];
+                requestType = 'جميع الطلبات';
+                break;
+            case 'normal':
+                filteredRequests = this.requests.filter(r => {
+                    const requestDate = new Date(r.createdAt);
+                    return requestDate >= today;
+                }).map(r => ({ ...r, requestType: 'normal' }));
+                requestType = 'الطلبات العادية';
+                break;
+            case 'bulk':
+                filteredRequests = this.bulkRequests.filter(r => {
+                    const requestDate = new Date(r.createdAt);
+                    return requestDate >= today;
+                }).map(r => ({ ...r, requestType: 'bulk' }));
+                requestType = 'طلبات الجملة';
+                break;
+            case 'company':
+                filteredRequests = this.companyRequests.filter(r => {
+                    const requestDate = new Date(r.createdAt);
+                    return requestDate >= today;
+                }).map(r => ({ ...r, requestType: 'company' }));
+                requestType = 'موظفي الشركة';
+                break;
+        }
+
+        // Apply search filter
+        const searchTerm = document.getElementById('todaySearchInput')?.value?.toLowerCase() || '';
+        if (searchTerm) {
+            filteredRequests = filteredRequests.filter(r => {
+                if (r.requestType === 'normal' || r.requestType === 'company') {
+                    return (r.requestNumber && r.requestNumber.toLowerCase().includes(searchTerm)) ||
+                           (r.fullName && r.fullName.toLowerCase().includes(searchTerm)) ||
+                           (r.phone && r.phone.includes(searchTerm)) ||
+                           (r.laptopBrand && r.laptopBrand.toLowerCase().includes(searchTerm)) ||
+                           (r.laptopModel && r.laptopModel.toLowerCase().includes(searchTerm));
+                } else if (r.requestType === 'bulk') {
+                    return (r.requestNumber && r.requestNumber.toLowerCase().includes(searchTerm)) ||
+                           (r.customerName && r.customerName.toLowerCase().includes(searchTerm)) ||
+                           (r.customerPhone && r.customerPhone.includes(searchTerm));
+                }
+                return false;
+            });
+        }
+
+        // Sort by date (newest first)
+        filteredRequests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        // Render the filtered requests
+        this.renderTodayRequestsList(filteredRequests, requestType);
+    }
+
+    /**
+     * Render today's requests list
+     */
+    renderTodayRequestsList(requests, requestType) {
+        const container = document.getElementById('todayRequestsContainer');
+        if (!container) return;
+
+        if (requests.length === 0) {
+            container.innerHTML = `
+                <div class="glass-card" style="text-align: center; padding: 3rem;">
+                    <i class="fas fa-calendar-day" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+                    <h3 style="color: #64748b;">لا توجد طلبات ${requestType} اليوم</h3>
+                    <p style="color: #94a3b8;">لم يتم استلام أي طلبات ${requestType} في تاريخ اليوم</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div class="requests-grid">
+        `;
+
+        requests.forEach(request => {
+            if (request.requestType === 'normal') {
+                html += this.renderNormalRequestCard(request);
+            } else if (request.requestType === 'bulk') {
+                html += this.renderBulkRequestCard(request);
+            } else if (request.requestType === 'company') {
+                html += this.renderCompanyRequestCard(request);
+            }
+        });
+
+        html += `
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
+
+    /**
+     * Render normal request card for today's view
+     */
+    renderNormalRequestCard(request) {
+        const statusColors = {
+            'Received': '#10b981',
+            'Waiting Inspection': '#f59e0b',
+            'Under Maintenance': '#3b82f6',
+            'Waiting Parts': '#8b5cf6',
+            'Ready': '#06b6d4',
+            'Delivered': '#22c55e'
+        };
+
+        const statusColor = statusColors[request.status] || '#64748b';
+
+        return `
+            <div class="glass-card request-card" style="border-right: 4px solid ${statusColor};">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div>
+                        <span style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                            <i class="fas fa-laptop"></i> عادي
+                        </span>
+                        <h3 style="margin: 0.5rem 0; color: #1e293b;">${request.requestNumber}</h3>
+                    </div>
+                    <span style="background: ${statusColor}20; color: ${statusColor}; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 600;">
+                        ${this.translateStatus(request.status)}
+                    </span>
+                </div>
+                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-user"></i> ${request.fullName}
+                </div>
+                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-phone"></i> ${request.phone}
+                </div>
+                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-laptop"></i> ${request.laptopBrand} ${request.laptopModel}
+                </div>
+                <div style="color: #94a3b8; font-size: 0.75rem; margin-top: 0.5rem;">
+                    <i class="fas fa-clock"></i> ${Utils.formatDate(request.createdAt)}
+                </div>
+                <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                    <button onclick="adminManager.viewRequest(${request.id})" class="btn btn-primary" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 8px; font-weight: 600; font-size: 0.875rem;">
+                        <i class="fas fa-eye"></i> عرض
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Render bulk request card for today's view
+     */
+    renderBulkRequestCard(request) {
+        const statusColors = {
+            'Received': '#10b981',
+            'Waiting Inspection': '#f59e0b',
+            'Under Maintenance': '#3b82f6',
+            'Waiting Parts': '#8b5cf6',
+            'Ready': '#06b6d4',
+            'Delivered': '#22c55e'
+        };
+
+        const statusColor = statusColors[request.status] || '#64748b';
+
+        return `
+            <div class="glass-card request-card" style="border-right: 4px solid ${statusColor};">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div>
+                        <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                            <i class="fas fa-boxes"></i> جملة
+                        </span>
+                        <h3 style="margin: 0.5rem 0; color: #1e293b;">${request.requestNumber}</h3>
+                    </div>
+                    <span style="background: ${statusColor}20; color: ${statusColor}; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 600;">
+                        ${this.translateStatus(request.status)}
+                    </span>
+                </div>
+                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-user"></i> ${request.customerName}
+                </div>
+                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-phone"></i> ${request.customerPhone}
+                </div>
+                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-boxes"></i> ${request.deviceCount} لابتوب
+                </div>
+                <div style="color: #94a3b8; font-size: 0.75rem; margin-top: 0.5rem;">
+                    <i class="fas fa-clock"></i> ${Utils.formatDate(request.createdAt)}
+                </div>
+                <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                    <button onclick="adminManager.viewBulkRequest(${request.id})" class="btn btn-primary" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 8px; font-weight: 600; font-size: 0.875rem;">
+                        <i class="fas fa-eye"></i> عرض
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Render company request card for today's view
+     */
+    renderCompanyRequestCard(request) {
+        const statusColors = {
+            'Received': '#10b981',
+            'Waiting Inspection': '#f59e0b',
+            'Under Maintenance': '#3b82f6',
+            'Waiting Parts': '#8b5cf6',
+            'Ready': '#06b6d4',
+            'Delivered': '#22c55e'
+        };
+
+        const statusColor = statusColors[request.status] || '#64748b';
+
+        return `
+            <div class="glass-card request-card" style="border-right: 4px solid ${statusColor};">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div>
+                        <span style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                            <i class="fas fa-building"></i> شركة
+                        </span>
+                        <h3 style="margin: 0.5rem 0; color: #1e293b;">${request.requestNumber}</h3>
+                    </div>
+                    <span style="background: ${statusColor}20; color: ${statusColor}; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 600;">
+                        ${this.translateStatus(request.status)}
+                    </span>
+                </div>
+                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-user"></i> ${request.fullName}
+                </div>
+                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-phone"></i> ${request.phone}
+                </div>
+                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-laptop"></i> ${request.laptopBrand} ${request.laptopModel}
+                </div>
+                <div style="color: #94a3b8; font-size: 0.75rem; margin-top: 0.5rem;">
+                    <i class="fas fa-clock"></i> ${Utils.formatDate(request.createdAt)}
+                </div>
+                <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                    <button onclick="adminManager.viewCompanyRequest(${request.id})" class="btn btn-primary" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; border-radius: 8px; font-weight: 600; font-size: 0.875rem;">
+                        <i class="fas fa-eye"></i> عرض
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Export today's requests to Excel
+     */
+    exportTodayRequests() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const todayNormal = this.requests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        }).map(r => ({ ...r, requestType: 'normal' }));
+
+        const todayBulk = this.bulkRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        }).map(r => ({ ...r, requestType: 'bulk' }));
+
+        const todayCompany = this.companyRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        }).map(r => ({ ...r, requestType: 'company' }));
+
+        const allTodayRequests = [...todayNormal, ...todayBulk, ...todayCompany];
+
+        if (allTodayRequests.length === 0) {
+            toast.warning('لا توجد طلبات اليوم للتصدير');
+            return;
+        }
+
+        const excelData = allTodayRequests.map((r, index) => {
+            if (r.requestType === 'normal' || r.requestType === 'company') {
+                return {
+                    '#': index + 1,
+                    'نوع الطلب': r.requestType === 'normal' ? 'عادي' : 'شركة',
+                    'رقم الطلب': r.requestNumber,
+                    'اسم العميل': r.fullName,
+                    'الهاتف': r.phone,
+                    'الجهاز': `${r.laptopBrand}${r.laptopModel ? ' ' + r.laptopModel : ''}`,
+                    'المشكلة': r.problemDescription,
+                    'الحالة': this.translateStatus(r.status),
+                    'التكلفة': r.cost > 0 ? r.cost : 0,
+                    'تاريخ الطلب': Utils.formatDate(r.createdAt)
+                };
+            } else if (r.requestType === 'bulk') {
+                return {
+                    '#': index + 1,
+                    'نوع الطلب': 'جملة',
+                    'رقم الطلب': r.requestNumber,
+                    'اسم العميل': r.customerName,
+                    'الهاتف': r.customerPhone,
+                    'عدد الأجهزة': r.deviceCount,
+                    'الحالة': this.translateStatus(r.status),
+                    'التكلفة': r.cost > 0 ? r.cost : 0,
+                    'تاريخ الطلب': Utils.formatDate(r.createdAt)
+                };
+            }
+        });
+
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'طلبات اليوم');
+
+        const fileName = `طلبات_اليوم_${new Date().toISOString().slice(0, 10)}`;
+        XLSX.writeFile(wb, `${fileName}.xlsx`);
+
+        toast.success(`تم تحميل ${excelData.length} طلب من اليوم في ملف Excel بنجاح`);
     }
 
 }

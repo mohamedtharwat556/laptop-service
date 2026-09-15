@@ -84,6 +84,12 @@
                     </a>
                 </li>
                 <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" data-section="today-requests" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); border: 1px solid #3b82f6;">
+                        <i class="fas fa-calendar-day" style="color: #3b82f6;"></i>
+                        طلبات اليوم
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
                     <a href="#" class="sidebar-nav-link" data-section="requests">
                         <i class="fas fa-clipboard-list"></i>
                         الطلبات العادية
@@ -271,6 +277,69 @@
                     </div>
                 </div>
                 <div id="requestsContainer"></div>
+            </div>
+
+            <!-- Today's All Requests Section -->
+            <div id="today-requestsSection" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>📅 طلبات اليوم - جميع الأنواع</h2>
+                    <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); padding: 1rem; border-radius: 12px; border: 2px solid #3b82f6; margin-bottom: 1rem;">
+                        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-laptop" style="color: #3b82f6; font-size: 1.5rem;"></i>
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #64748b;">طلبات عادية</div>
+                                    <div id="todayNormalCount" style="font-size: 1.25rem; font-weight: 700; color: #3b82f6;">0</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-boxes" style="color: #f59e0b; font-size: 1.5rem;"></i>
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #64748b;">طلبات جملة</div>
+                                    <div id="todayBulkCount" style="font-size: 1.25rem; font-weight: 700; color: #f59e0b;">0</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-building" style="color: #8b5cf6; font-size: 1.5rem;"></i>
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #64748b;">موظفي الشركة</div>
+                                    <div id="todayCompanyCount" style="font-size: 1.25rem; font-weight: 700; color: #8b5cf6;">0</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
+                                <i class="fas fa-calendar-day" style="color: #10b981; font-size: 1.5rem;"></i>
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #64748b;">الإجمالي</div>
+                                    <div id="todayTotalCount" style="font-size: 1.5rem; font-weight: 700; color: #10b981;">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="search-container">
+                        <input type="text" id="todaySearchInput" class="form-input search-input" placeholder="بحث في طلبات اليوم..." style="width: 300px;">
+                        <button onclick="adminManager.exportTodayRequests()" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
+                            <i class="fas fa-file-excel"></i> تصدير Excel
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tabs for different request types -->
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <button onclick="adminManager.showTodayTab('all')" class="btn btn-primary" id="todayTabAll" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 8px; font-weight: 600;">
+                        <i class="fas fa-list"></i> الكل
+                    </button>
+                    <button onclick="adminManager.showTodayTab('normal')" class="btn" id="todayTabNormal" style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-weight: 600;">
+                        <i class="fas fa-laptop"></i> عادية
+                    </button>
+                    <button onclick="adminManager.showTodayTab('bulk')" class="btn" id="todayTabBulk" style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-weight: 600;">
+                        <i class="fas fa-boxes"></i> جملة
+                    </button>
+                    <button onclick="adminManager.showTodayTab('company')" class="btn" id="todayTabCompany" style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-weight: 600;">
+                        <i class="fas fa-building"></i> شركة
+                    </button>
+                </div>
+                
+                <div id="todayRequestsContainer"></div>
             </div>
 
             <!-- Bulk Requests Section -->
