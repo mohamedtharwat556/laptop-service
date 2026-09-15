@@ -7298,7 +7298,7 @@ class AdminManager {
     /**
      * Generate report based on selected period and multiple request types
      */
-    generateReport() {
+    async generateReport() {
         const reportTypeSingle = document.getElementById('reportTypeSingle');
         const reportTypeBulk = document.getElementById('reportTypeBulk');
         const reportTypeCompany = document.getElementById('reportTypeCompany');
@@ -7324,43 +7324,62 @@ class AdminManager {
         const startDate = reportStartDate ? reportStartDate.value : null;
         const endDate = reportEndDate ? reportEndDate.value : null;
 
-        // Process each selected type
-        selectedTypes.forEach(type => {
-            let requestsByType;
-            if (type === 'bulk') {
-                requestsByType = this.bulkRequests || [];
-            } else if (type === 'company') {
-                requestsByType = this.companyRequests || [];
-            } else {
-                requestsByType = this.requests;
-            }
+        // Fetch fresh data from API to ensure we get ALL records
+        try {
+            const apiUrl = '/api';
+            const [requestsRes, bulkRequestsRes, companyRequestsRes] = await Promise.all([
+                fetch(`${apiUrl}/requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/bulk-requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/company-requests`).then(r => r.json()).catch(() => [])
+            ]);
 
-            // Filter by date range
-            let filteredRequests;
-            if (startDate && endDate) {
-                filteredRequests = requestsByType.filter(r => {
-                    const d = new Date(r.createdAt);
-                    const requestDate = d.toISOString().slice(0, 10);
-                    return requestDate >= startDate && requestDate <= endDate;
-                });
-            } else if (startDate) {
-                filteredRequests = requestsByType.filter(r => {
-                    const d = new Date(r.createdAt);
-                    return d.toISOString().slice(0, 10) === startDate;
-                });
-            } else {
-                // If no date selected, show all
-                filteredRequests = requestsByType;
-            }
+            console.log('📊 Fresh data fetched:');
+            console.log('📊 Requests:', requestsRes.length);
+            console.log('📊 Bulk requests:', bulkRequestsRes.length);
+            console.log('📊 Company requests:', companyRequestsRes.length);
 
-            // Add type to each request for identification
-            filteredRequests = filteredRequests.map(r => ({
-                ...r,
-                reportType: type
-            }));
+            // Process each selected type
+            selectedTypes.forEach(type => {
+                let requestsByType;
+                if (type === 'bulk') {
+                    requestsByType = bulkRequestsRes || [];
+                } else if (type === 'company') {
+                    requestsByType = companyRequestsRes || [];
+                } else {
+                    requestsByType = requestsRes || [];
+                }
 
-            allFilteredRequests.push(...filteredRequests);
-        });
+                // Filter by date range
+                let filteredRequests;
+                if (startDate && endDate) {
+                    filteredRequests = requestsByType.filter(r => {
+                        const d = new Date(r.created_at || r.createdAt);
+                        const requestDate = d.toISOString().slice(0, 10);
+                        return requestDate >= startDate && requestDate <= endDate;
+                    });
+                } else if (startDate) {
+                    filteredRequests = requestsByType.filter(r => {
+                        const d = new Date(r.created_at || r.createdAt);
+                        return d.toISOString().slice(0, 10) === startDate;
+                    });
+                } else {
+                    // If no date selected, show all
+                    filteredRequests = requestsByType;
+                }
+
+                // Add type to each request for identification
+                filteredRequests = filteredRequests.map(r => ({
+                    ...r,
+                    reportType: type
+                }));
+
+                allFilteredRequests.push(...filteredRequests);
+            });
+        } catch (error) {
+            console.error('Error fetching fresh data:', error);
+            toast.error('فشل في جلب البيانات');
+            return;
+        }
 
         this.renderReportTable(allFilteredRequests, selectedTypes);
     }
@@ -7552,7 +7571,7 @@ class AdminManager {
     /**
      * Export daily report as Excel with support for multiple request types
      */
-    exportDailyReport() {
+    async exportDailyReport() {
         const reportTypeSingle = document.getElementById('reportTypeSingle');
         const reportTypeBulk = document.getElementById('reportTypeBulk');
         const reportTypeCompany = document.getElementById('reportTypeCompany');
@@ -7578,43 +7597,62 @@ class AdminManager {
         const startDate = reportStartDate ? reportStartDate.value : null;
         const endDate = reportEndDate ? reportEndDate.value : null;
 
-        // Process each selected type
-        selectedTypes.forEach(type => {
-            let requestsByType;
-            if (type === 'bulk') {
-                requestsByType = this.bulkRequests || [];
-            } else if (type === 'company') {
-                requestsByType = this.companyRequests || [];
-            } else {
-                requestsByType = this.requests;
-            }
+        // Fetch fresh data from API to ensure we get ALL records
+        try {
+            const apiUrl = '/api';
+            const [requestsRes, bulkRequestsRes, companyRequestsRes] = await Promise.all([
+                fetch(`${apiUrl}/requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/bulk-requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/company-requests`).then(r => r.json()).catch(() => [])
+            ]);
 
-            // Filter by date range
-            let filteredRequests;
-            if (startDate && endDate) {
-                filteredRequests = requestsByType.filter(r => {
-                    const d = new Date(r.createdAt);
-                    const requestDate = d.toISOString().slice(0, 10);
-                    return requestDate >= startDate && requestDate <= endDate;
-                });
-            } else if (startDate) {
-            filteredRequests = requestsByType.filter(r => {
-                const d = new Date(r.createdAt);
-                return d.toISOString().slice(0, 10) === startDate;
+            console.log('📊 Fresh data fetched for Excel:');
+            console.log('📊 Requests:', requestsRes.length);
+            console.log('📊 Bulk requests:', bulkRequestsRes.length);
+            console.log('📊 Company requests:', companyRequestsRes.length);
+
+            // Process each selected type
+            selectedTypes.forEach(type => {
+                let requestsByType;
+                if (type === 'bulk') {
+                    requestsByType = bulkRequestsRes || [];
+                } else if (type === 'company') {
+                    requestsByType = companyRequestsRes || [];
+                } else {
+                    requestsByType = requestsRes || [];
+                }
+
+                // Filter by date range
+                let filteredRequests;
+                if (startDate && endDate) {
+                    filteredRequests = requestsByType.filter(r => {
+                        const d = new Date(r.created_at || r.createdAt);
+                        const requestDate = d.toISOString().slice(0, 10);
+                        return requestDate >= startDate && requestDate <= endDate;
+                    });
+                } else if (startDate) {
+                    filteredRequests = requestsByType.filter(r => {
+                        const d = new Date(r.created_at || r.createdAt);
+                        return d.toISOString().slice(0, 10) === startDate;
+                    });
+                } else {
+                    // If no date selected, show all
+                    filteredRequests = requestsByType;
+                }
+
+                // Add type to each request for identification
+                filteredRequests = filteredRequests.map(r => ({
+                    ...r,
+                    reportType: type
+                }));
+
+                allFilteredRequests.push(...filteredRequests);
             });
-        } else {
-            // If no date selected, show all
-            filteredRequests = requestsByType;
+        } catch (error) {
+            console.error('Error fetching fresh data:', error);
+            toast.error('فشل في جلب البيانات');
+            return;
         }
-
-        // Add type to each request for identification
-        filteredRequests = filteredRequests.map(r => ({
-            ...r,
-            reportType: type
-        }));
-
-        allFilteredRequests.push(...filteredRequests);
-        });
 
         if (allFilteredRequests.length === 0) {
             toast.error('لا توجد طلبات في الفترة المحددة');
@@ -7716,7 +7754,7 @@ class AdminManager {
     /**
      * Export daily report as PDF with support for multiple request types
      */
-    exportDailyReportPDF() {
+    async exportDailyReportPDF() {
         const reportTypeSingle = document.getElementById('reportTypeSingle');
         const reportTypeBulk = document.getElementById('reportTypeBulk');
         const reportTypeCompany = document.getElementById('reportTypeCompany');
@@ -7742,43 +7780,62 @@ class AdminManager {
         const startDate = reportStartDate ? reportStartDate.value : null;
         const endDate = reportEndDate ? reportEndDate.value : null;
 
-        // Process each selected type
-        selectedTypes.forEach(type => {
-            let requestsByType;
-            if (type === 'bulk') {
-                requestsByType = this.bulkRequests || [];
-            } else if (type === 'company') {
-                requestsByType = this.companyRequests || [];
-            } else {
-                requestsByType = this.requests;
-            }
+        // Fetch fresh data from API to ensure we get ALL records
+        try {
+            const apiUrl = '/api';
+            const [requestsRes, bulkRequestsRes, companyRequestsRes] = await Promise.all([
+                fetch(`${apiUrl}/requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/bulk-requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/company-requests`).then(r => r.json()).catch(() => [])
+            ]);
 
-            // Filter by date range
-            let filteredRequests;
-            if (startDate && endDate) {
-                filteredRequests = requestsByType.filter(r => {
-                    const d = new Date(r.createdAt);
-                    const requestDate = d.toISOString().slice(0, 10);
-                    return requestDate >= startDate && requestDate <= endDate;
-                });
-            } else if (startDate) {
-                filteredRequests = requestsByType.filter(r => {
-                    const d = new Date(r.createdAt);
-                    return d.toISOString().slice(0, 10) === startDate;
-                });
-            } else {
-                // If no date selected, show all
-                filteredRequests = requestsByType;
-            }
+            console.log('📊 Fresh data fetched:');
+            console.log('📊 Requests:', requestsRes.length);
+            console.log('📊 Bulk requests:', bulkRequestsRes.length);
+            console.log('📊 Company requests:', companyRequestsRes.length);
 
-            // Add type to each request for identification
-            filteredRequests = filteredRequests.map(r => ({
-                ...r,
-                reportType: type
-            }));
+            // Process each selected type
+            selectedTypes.forEach(type => {
+                let requestsByType;
+                if (type === 'bulk') {
+                    requestsByType = bulkRequestsRes || [];
+                } else if (type === 'company') {
+                    requestsByType = companyRequestsRes || [];
+                } else {
+                    requestsByType = requestsRes || [];
+                }
 
-            allFilteredRequests.push(...filteredRequests);
-        });
+                // Filter by date range
+                let filteredRequests;
+                if (startDate && endDate) {
+                    filteredRequests = requestsByType.filter(r => {
+                        const d = new Date(r.created_at || r.createdAt);
+                        const requestDate = d.toISOString().slice(0, 10);
+                        return requestDate >= startDate && requestDate <= endDate;
+                    });
+                } else if (startDate) {
+                    filteredRequests = requestsByType.filter(r => {
+                        const d = new Date(r.created_at || r.createdAt);
+                        return d.toISOString().slice(0, 10) === startDate;
+                    });
+                } else {
+                    // If no date selected, show all
+                    filteredRequests = requestsByType;
+                }
+
+                // Add type to each request for identification
+                filteredRequests = filteredRequests.map(r => ({
+                    ...r,
+                    reportType: type
+                }));
+
+                allFilteredRequests.push(...filteredRequests);
+            });
+        } catch (error) {
+            console.error('Error fetching fresh data:', error);
+            toast.error('فشل في جلب البيانات');
+            return;
+        }
 
         if (allFilteredRequests.length === 0) {
             toast.error('لا توجد طلبات في الفترة المحددة');
