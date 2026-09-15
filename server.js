@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const compression = require('compression');
 const supabase = require('./config/db');
+// Laptop Service - Updated
 
 const app = express();
 const PORT = process.env.PORT || 3000;
