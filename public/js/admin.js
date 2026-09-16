@@ -86,6 +86,7 @@ class AdminManager {
             
             console.log('🔔 Initializing notification badge...');
             this.updateNotificationBadge();
+            this.updateTodayTotalBadge();
             
             // Close notification dropdown when clicking outside
             document.addEventListener('click', (e) => {
@@ -636,6 +637,11 @@ class AdminManager {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        console.log('🔢 Updating total badge for today...');
+        console.log('📊 Total requests:', this.requests.length);
+        console.log('📦 Total bulk requests:', this.bulkRequests.length);
+        console.log('🏢 Total company requests:', this.companyRequests.length);
+
         // Count today's requests from all types
         const todayNormal = this.requests.filter(r => {
             const requestDate = new Date(r.createdAt);
@@ -652,7 +658,12 @@ class AdminManager {
             return requestDate >= today;
         });
 
+        console.log('📅 Today normal requests:', todayNormal.length);
+        console.log('📅 Today bulk requests:', todayBulk.length);
+        console.log('📅 Today company requests:', todayCompany.length);
+
         const totalToday = todayNormal.length + todayBulk.length + todayCompany.length;
+        console.log('🔢 Total today requests:', totalToday);
 
         const totalBadge = document.getElementById('totalNotificationBadge');
         if (totalBadge) {
@@ -1073,8 +1084,10 @@ class AdminManager {
 
             console.log(`✅ Data loaded: ${this.requests.length} requests, ${this.products.length} products, ${this.bulkRequests.length} bulk requests`);
 
-            // Update total badge with today's requests
-            this.updateTodayTotalBadge();
+            // Wait a moment then update total badge with today's requests
+            setTimeout(() => {
+                this.updateTodayTotalBadge();
+            }, 500);
         } catch (error) {
             console.error('Failed to load data from API:', error);
             // Fallback to localStorage
