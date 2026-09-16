@@ -20,8 +20,10 @@ class AdminManager {
         this.lastSeenRequestId = parseInt(localStorage.getItem('lastSeenRequestId') || '0');
         this.lastSeenBulkRequestId = parseInt(localStorage.getItem('lastSeenBulkRequestId') || '0');
         this.lastSeenCompanyRequestId = parseInt(localStorage.getItem('lastSeenCompanyRequestId') || '0');
+        this.lastSeenTodayRequestId = parseInt(localStorage.getItem('lastSeenTodayRequestId') || '0');
         this.newRequestNotifications = [];
         this.unreadNotifications = JSON.parse(localStorage.getItem('unreadNotifications') || '[]');
+        this.todayNotifications = JSON.parse(localStorage.getItem('todayNotifications') || '[]');
         this._bulkTodayFilter = null;
         this._companyTodayFilter = null;
         this._bulkSpecialFilter = null;
@@ -317,13 +319,13 @@ class AdminManager {
      */
     checkForNewRequests(oldRequests) {
         const newRequests = this.requests.filter(r => r.id > this.lastSeenRequestId);
-        
+
         if (newRequests.length > 0) {
             // Update last seen request ID
             const maxId = Math.max(...this.requests.map(r => r.id));
             this.lastSeenRequestId = maxId;
             localStorage.setItem('lastSeenRequestId', maxId.toString());
-            
+
             // Add to unread notifications
             newRequests.forEach(request => {
                 const notification = {
@@ -338,15 +340,59 @@ class AdminManager {
                 };
                 this.unreadNotifications.push(notification);
             });
-            
+
             // Save to localStorage
             localStorage.setItem('unreadNotifications', JSON.stringify(this.unreadNotifications));
-            
+
             // Update notification badge
             this.updateNotificationBadge();
-            
+
             // Show toast notification
             this.showNewRequestToast(newRequests.length);
+
+            // Check for today's new requests
+            this.checkForTodayNewRequests(newRequests);
+        }
+    }
+
+    /**
+     * Check for new today's requests and add to today notifications
+     */
+    checkForTodayNewRequests(newRequests) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const todayNewRequests = newRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+
+        if (todayNewRequests.length > 0) {
+            todayNewRequests.forEach(request => {
+                const todayNotification = {
+                    id: request.id,
+                    type: 'today_request',
+                    requestNumber: request.requestNumber,
+                    fullName: request.fullName,
+                    laptopBrand: request.laptopBrand,
+                    laptopModel: request.laptopModel,
+                    createdAt: new Date().toISOString(),
+                    read: false
+                };
+                this.todayNotifications.push(todayNotification);
+            });
+
+            // Save to localStorage
+            localStorage.setItem('todayNotifications', JSON.stringify(this.todayNotifications));
+
+            // Update today badge
+            this.updateTodayBadge();
+
+            // Play notification sound
+            this.playNotificationSound();
+
+            // Show today notification toast
+            this.showTodayNotificationToast(todayNewRequests.length);
         }
     }
 
@@ -355,36 +401,78 @@ class AdminManager {
      */
     checkForNewBulkRequests(oldBulkRequests) {
         const newBulkRequests = this.bulkRequests.filter(r => r.id > this.lastSeenBulkRequestId);
-        
+
         if (newBulkRequests.length > 0) {
             // Update last seen bulk request ID
             const maxId = Math.max(...this.bulkRequests.map(r => r.id));
             this.lastSeenBulkRequestId = maxId;
             localStorage.setItem('lastSeenBulkRequestId', maxId.toString());
-            
+
             // Add to unread notifications
             newBulkRequests.forEach(request => {
                 const notification = {
                     id: request.id,
                     type: 'bulk_request',
                     requestNumber: request.requestNumber,
-                    fullName: request.customerName,
-                    laptopBrand: `طلب جملة (${request.deviceCount} لابتوب)`,
-                    laptopModel: '',
+                    customerName: request.customerName,
+                    deviceCount: request.deviceCount,
                     createdAt: new Date().toISOString(),
                     read: false
                 };
                 this.unreadNotifications.push(notification);
             });
-            
+
             // Save to localStorage
             localStorage.setItem('unreadNotifications', JSON.stringify(this.unreadNotifications));
-            
+
             // Update notification badge
             this.updateNotificationBadge();
-            
+
             // Show toast notification
             this.showBulkRequestToast(newBulkRequests.length);
+
+            // Check for today's new bulk requests
+            this.checkForTodayNewBulkRequests(newBulkRequests);
+        }
+    }
+
+    /**
+     * Check for new today's bulk requests
+     */
+    checkForTodayNewBulkRequests(newBulkRequests) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const todayNewBulkRequests = newBulkRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+
+        if (todayNewBulkRequests.length > 0) {
+            todayNewBulkRequests.forEach(request => {
+                const todayNotification = {
+                    id: request.id,
+                    type: 'today_bulk_request',
+                    requestNumber: request.requestNumber,
+                    customerName: request.customerName,
+                    deviceCount: request.deviceCount,
+                    createdAt: new Date().toISOString(),
+                    read: false
+                };
+                this.todayNotifications.push(todayNotification);
+            });
+
+            // Save to localStorage
+            localStorage.setItem('todayNotifications', JSON.stringify(this.todayNotifications));
+
+            // Update today badge
+            this.updateTodayBadge();
+
+            // Play notification sound
+            this.playNotificationSound();
+
+            // Show today notification toast
+            this.showTodayNotificationToast(todayNewBulkRequests.length);
         }
     }
 
@@ -393,13 +481,13 @@ class AdminManager {
      */
     checkForNewCompanyRequests(oldCompanyRequests) {
         const newCompanyRequests = this.companyRequests.filter(r => r.id > this.lastSeenCompanyRequestId);
-        
+
         if (newCompanyRequests.length > 0) {
             // Update last seen company request ID
             const maxId = Math.max(...this.companyRequests.map(r => r.id));
             this.lastSeenCompanyRequestId = maxId;
             localStorage.setItem('lastSeenCompanyRequestId', maxId.toString());
-            
+
             // Add to unread notifications
             newCompanyRequests.forEach(request => {
                 const notification = {
@@ -423,7 +511,139 @@ class AdminManager {
             
             // Show toast notification
             this.showCompanyRequestToast(newCompanyRequests.length);
+
+            // Check for today's new company requests
+            this.checkForTodayNewCompanyRequests(newCompanyRequests);
         }
+    }
+
+    /**
+     * Check for new today's company requests
+     */
+    checkForTodayNewCompanyRequests(newCompanyRequests) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const todayNewCompanyRequests = newCompanyRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+
+        if (todayNewCompanyRequests.length > 0) {
+            todayNewCompanyRequests.forEach(request => {
+                const todayNotification = {
+                    id: request.id,
+                    type: 'today_company_request',
+                    requestNumber: request.requestNumber,
+                    fullName: request.fullName,
+                    laptopBrand: request.laptopBrand,
+                    laptopModel: request.laptopModel,
+                    createdAt: new Date().toISOString(),
+                    read: false
+                };
+                this.todayNotifications.push(todayNotification);
+            });
+
+            // Save to localStorage
+            localStorage.setItem('todayNotifications', JSON.stringify(this.todayNotifications));
+
+            // Update today badge
+            this.updateTodayBadge();
+
+            // Play notification sound
+            this.playNotificationSound();
+
+            // Show today notification toast
+            this.showTodayNotificationToast(todayNewCompanyRequests.length);
+        }
+    }
+
+    /**
+     * Update today notification badge
+     */
+    updateTodayBadge() {
+        const unreadTodayCount = this.todayNotifications.filter(n => !n.read).length;
+        const totalBadge = document.getElementById('totalNotificationBadge');
+        if (totalBadge) {
+            totalBadge.textContent = unreadTodayCount;
+            if (unreadTodayCount > 0) {
+                totalBadge.style.display = 'flex';
+                // Add animation when badge changes
+                totalBadge.style.animation = 'none';
+                setTimeout(() => {
+                    totalBadge.style.animation = 'pulse 0.5s ease-out';
+                }, 10);
+            } else {
+                totalBadge.style.display = 'none';
+            }
+        }
+
+        // Update sidebar badge
+        const sidebarBadge = document.getElementById('sidebarTodayBadge');
+        if (sidebarBadge) {
+            sidebarBadge.textContent = unreadTodayCount;
+            if (unreadTodayCount > 0) {
+                sidebarBadge.style.display = 'flex';
+                // Add animation when badge changes
+                sidebarBadge.style.animation = 'none';
+                setTimeout(() => {
+                    sidebarBadge.style.animation = 'pulse 0.5s ease-out';
+                }, 10);
+            } else {
+                sidebarBadge.style.display = 'none';
+            }
+        }
+    }
+
+    /**
+     * Show toast notification for today's new requests
+     */
+    showTodayNotificationToast(count) {
+        const toast = document.createElement('div');
+        toast.className = 'notification-toast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4);
+            z-index: 10000;
+            max-width: 420px;
+            animation: slideIn 0.5s ease-out;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        `;
+
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1)); border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);">
+                    <i class="fas fa-bell" style="font-size: 1.75rem;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">🔔 ${count} طلب${count > 1 ? 'ات' : ''} جديد${count > 1 ? 'ة' : ''} اليوم!</div>
+                    <div style="font-size: 0.875rem; opacity: 0.95;">اضغط لعرض طلبات اليوم</div>
+                </div>
+                <button onclick="event.stopPropagation(); this.closest('.notification-toast').remove();" style="background: rgba(255, 255, 255, 0.2); border: none; color: white; font-size: 1.25rem; cursor: pointer; opacity: 0.8; padding: 0.5rem; border-radius: 8px; transition: all 0.2s ease; hover:background: rgba(255, 255, 255, 0.3);">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+
+        toast.onclick = () => {
+            this.showTodayRequestsSection();
+            toast.remove();
+        };
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.5s ease-out';
+            setTimeout(() => toast.remove(), 500);
+        }, 5000);
     }
 
     /**
@@ -438,26 +658,27 @@ class AdminManager {
             right: 20px;
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4);
             z-index: 10000;
-            max-width: 400px;
+            max-width: 420px;
             animation: slideIn 0.5s ease-out;
             cursor: pointer;
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
         `;
         
         toast.innerHTML = `
             <div style="display: flex; align-items: center; gap: 1rem;">
-                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-laptop" style="font-size: 1.5rem;"></i>
+                <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1)); border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);">
+                    <i class="fas fa-laptop" style="font-size: 1.75rem;"></i>
                 </div>
                 <div style="flex: 1;">
-                    <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">🔔 ${count} لاب${count > 1 ? 'ات' : ''} جديد${count > 1 ? 'ة' : ''} واصل${count > 1 ? 'ة' : ''}!</div>
-                    <div style="font-size: 0.875rem; opacity: 0.9;">اضغط لعرض الإشعارات</div>
+                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">🔔 ${count} لاب${count > 1 ? 'ات' : ''} جديد${count > 1 ? 'ة' : ''} واصل${count > 1 ? 'ة' : ''}!</div>
+                    <div style="font-size: 0.875rem; opacity: 0.95;">اضغط لعرض الإشعارات</div>
                 </div>
-                <button onclick="event.stopPropagation(); this.closest('.notification-toast').remove();" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer; opacity: 0.7; padding: 0.25rem;">
+                <button onclick="event.stopPropagation(); this.closest('.notification-toast').remove();" style="background: rgba(255, 255, 255, 0.2); border: none; color: white; font-size: 1.25rem; cursor: pointer; opacity: 0.8; padding: 0.5rem; border-radius: 8px; transition: all 0.2s ease; hover:background: rgba(255, 255, 255, 0.3);">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -490,27 +711,30 @@ class AdminManager {
             right: 20px;
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(245, 158, 11, 0.4);
             z-index: 10000;
-            cursor: pointer;
+            max-width: 420px;
             animation: slideIn 0.5s ease-out;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            min-width: 300px;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
         `;
         
         toast.innerHTML = `
-            <div style="font-size: 2rem;">📦</div>
-            <div style="flex: 1;">
-                <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">🔔 ${count} طلب جملة جديد${count > 1 ? 'ة' : ''}!</div>
-                <div style="font-size: 0.875rem; opacity: 0.9;">اضغط لعرض الإشعارات</div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1)); border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);">
+                    <i class="fas fa-boxes" style="font-size: 1.75rem;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">🔔 ${count} طلب جملة جديد${count > 1 ? 'ة' : ''}!</div>
+                    <div style="font-size: 0.875rem; opacity: 0.95;">اضغط لعرض الإشعارات</div>
+                </div>
+                <button onclick="event.stopPropagation(); this.closest('.notification-toast').remove();" style="background: rgba(255, 255, 255, 0.2); border: none; color: white; font-size: 1.25rem; cursor: pointer; opacity: 0.8; padding: 0.5rem; border-radius: 8px; transition: all 0.2s ease; hover:background: rgba(255, 255, 255, 0.3);">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <button onclick="event.stopPropagation(); this.closest('.notification-toast').remove();" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer; opacity: 0.7; padding: 0.25rem;">
-                <i class="fas fa-times"></i>
-            </button>
         `;
         
         toast.onclick = () => {
@@ -540,27 +764,30 @@ class AdminManager {
             right: 20px;
             background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
             color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.4);
             z-index: 10000;
-            cursor: pointer;
+            max-width: 420px;
             animation: slideIn 0.5s ease-out;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            min-width: 300px;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
         `;
         
         toast.innerHTML = `
-            <div style="font-size: 2rem;">🏢</div>
-            <div style="flex: 1;">
-                <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem;">🔔 ${count} طلب موظف جديد${count > 1 ? 'ة' : ''}!</div>
-                <div style="font-size: 0.875rem; opacity: 0.9;">اضغط لعرض الإشعارات</div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1)); border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);">
+                    <i class="fas fa-building" style="font-size: 1.75rem;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">🔔 ${count} طلب موظف جديد${count > 1 ? 'ة' : ''}!</div>
+                    <div style="font-size: 0.875rem; opacity: 0.95;">اضغط لعرض الإشعارات</div>
+                </div>
+                <button onclick="event.stopPropagation(); this.closest('.notification-toast').remove();" style="background: rgba(255, 255, 255, 0.2); border: none; color: white; font-size: 1.25rem; cursor: pointer; opacity: 0.8; padding: 0.5rem; border-radius: 8px; transition: all 0.2s ease; hover:background: rgba(255, 255, 255, 0.3);">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <button onclick="event.stopPropagation(); this.closest('.notification-toast').remove();" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer; opacity: 0.7; padding: 0.25rem;">
-                <i class="fas fa-times"></i>
-            </button>
         `;
         
         toast.onclick = () => {
@@ -579,24 +806,37 @@ class AdminManager {
     }
 
     /**
-     * Play notification sound
+     * Play notification sound - Facebook-style notification sound
      */
     playNotificationSound() {
         try {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
             
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+            // Create a pleasant notification sound (similar to Facebook)
+            const createBeep = (startTime, frequency, duration, volume) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + duration);
+            };
             
-            oscillator.frequency.value = 800;
-            oscillator.type = 'sine';
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            const now = audioContext.currentTime;
             
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.5);
+            // Create a pleasant notification pattern (ding-ding)
+            createBeep(now, 880, 0.15, 0.3);  // First ding (A5)
+            createBeep(now + 0.1, 1108, 0.15, 0.25);  // Second ding (C#6)
+            createBeep(now + 0.2, 1318, 0.2, 0.2);  // Third ding (E6)
         } catch (e) {
             console.log('Could not play notification sound:', e);
         }
@@ -665,9 +905,12 @@ class AdminManager {
         const totalToday = todayNormal.length + todayBulk.length + todayCompany.length;
         console.log('🔢 Total today requests:', totalToday);
 
+        // Use the today notifications system
+        const unreadTodayCount = this.todayNotifications.filter(n => !n.read).length;
+
         const totalBadge = document.getElementById('totalNotificationBadge');
         if (totalBadge) {
-            totalBadge.textContent = totalToday;
+            totalBadge.textContent = unreadTodayCount > 0 ? unreadTodayCount : totalToday;
             if (totalToday > 0) {
                 totalBadge.style.display = 'flex';
             } else {
@@ -678,7 +921,7 @@ class AdminManager {
         // Update sidebar badge
         const sidebarBadge = document.getElementById('sidebarTodayBadge');
         if (sidebarBadge) {
-            sidebarBadge.textContent = totalToday;
+            sidebarBadge.textContent = unreadTodayCount > 0 ? unreadTodayCount : totalToday;
             if (totalToday > 0) {
                 sidebarBadge.style.display = 'flex';
             } else {
@@ -769,43 +1012,46 @@ class AdminManager {
         dropdown.innerHTML = `
             <div style="max-height: 400px; overflow-y: auto;">
                 ${unreadNotifications.reverse().map(notification => {
-                    let icon, iconColor, bgColor;
+                    let icon, iconColor, bgColor, borderColor;
                     if (notification.type === 'bulk_request') {
                         icon = 'fa-boxes';
                         iconColor = '#f59e0b';
-                        bgColor = 'rgba(245, 158, 11, 0.2)';
+                        bgColor = 'rgba(245, 158, 11, 0.15)';
+                        borderColor = 'rgba(245, 158, 11, 0.3)';
                     } else if (notification.type === 'company_request') {
                         icon = 'fa-building';
                         iconColor = '#8b5cf6';
-                        bgColor = 'rgba(139, 92, 246, 0.2)';
+                        bgColor = 'rgba(139, 92, 246, 0.15)';
+                        borderColor = 'rgba(139, 92, 246, 0.3)';
                     } else {
                         icon = 'fa-laptop';
                         iconColor = '#10b981';
-                        bgColor = 'rgba(16, 185, 129, 0.2)';
+                        bgColor = 'rgba(16, 185, 129, 0.15)';
+                        borderColor = 'rgba(16, 185, 129, 0.3)';
                     }
                     return `
-                    <div class="notification-item" style="padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: background 0.2s;"
+                    <div class="notification-item" style="padding: 1.25rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: all 0.3s ease; animation: slideInUp 0.3s ease-out;"
                          onclick="adminManager.openNotification(${notification.id})">
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <div style="background: ${bgColor}; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas ${icon}" style="color: ${iconColor}; font-size: 1rem;"></i>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="background: linear-gradient(135deg, ${bgColor}, ${bgColor.replace('0.15', '0.05')}); border: 2px solid ${borderColor}; border-radius: 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px ${iconColor}30;">
+                                <i class="fas ${icon}" style="color: ${iconColor}; font-size: 1.25rem;"></i>
                             </div>
                             <div style="flex: 1;">
-                                <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">${notification.fullName}</div>
-                                <div style="font-size: 0.75rem; color: #94a3b8;">${notification.laptopBrand} ${notification.laptopModel || ''}</div>
-                                <div style="font-size: 0.7rem; color: #64748b; margin-top: 0.25rem;">رقم الطلب: ${notification.requestNumber}</div>
+                                <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem; color: #e2e8f0;">${notification.fullName}</div>
+                                <div style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">${notification.laptopBrand} ${notification.laptopModel || ''}</div>
+                                <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem; font-weight: 600;">رقم الطلب: ${notification.requestNumber}</div>
                             </div>
-                            <div style="width: 8px; height: 8px; background: ${iconColor}; border-radius: 50%;"></div>
+                            <div style="width: 10px; height: 10px; background: ${iconColor}; border-radius: 50%; box-shadow: 0 0 10px ${iconColor}; animation: pulse 2s infinite;"></div>
                         </div>
                     </div>
                 `}).join('')}
             </div>
-            <div style="padding: 0.75rem; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                <button onclick="adminManager.markAllAsRead('${type}')" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.875rem; margin-right: 1rem;">
-                    تعليم الكل كمقروء
+            <div style="padding: 1rem; text-align: center; border-top: 2px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.02);">
+                <button onclick="adminManager.markAllAsRead('${type}')" style="background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; color: white; cursor: pointer; font-size: 0.875rem; margin-right: 0.5rem; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; transition: all 0.3s ease; hover:transform: translateY(-2px); hover:box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">
+                    <i class="fas fa-check-double"></i> تعليم الكل كمقروء
                 </button>
-                <button onclick="adminManager.clearAllNotifications('${type}')" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.875rem;">
-                    مسح جميع الإشعارات
+                <button onclick="adminManager.clearAllNotifications('${type}')" style="background: linear-gradient(135deg, #ef4444, #dc2626); border: none; color: white; cursor: pointer; font-size: 0.875rem; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; transition: all 0.3s ease; hover:transform: translateY(-2px); hover:box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
+                    <i class="fas fa-trash"></i> مسح جميع الإشعارات
                 </button>
             </div>
         `;
@@ -901,44 +1147,68 @@ class AdminManager {
         });
 
         const totalToday = todayNormal.length + todayBulk.length + todayCompany.length;
-        console.log(`🔔 Total today: ${totalToday}, Normal: ${todayNormal.length}, Bulk: ${todayBulk.length}, Company: ${todayCompany.length}`);
+        const unreadTodayCount = this.todayNotifications.filter(n => !n.read).length;
+        console.log(`🔔 Total today: ${totalToday}, Unread: ${unreadTodayCount}, Normal: ${todayNormal.length}, Bulk: ${todayBulk.length}, Company: ${todayCompany.length}`);
 
         const htmlContent = `
-            <div style="padding: 1.5rem;">
-                <div style="text-align: center; margin-bottom: 1.5rem;">
-                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">📊</div>
-                    <h3 style="color: #e2e8f0; margin-bottom: 0.5rem;">إجمالي طلبات اليوم</h3>
-                    <div style="font-size: 2.5rem; font-weight: 700; color: #3b82f6;">${totalToday}</div>
+            <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1));">
+                <!-- Header with animated icon -->
+                <div style="text-align: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid rgba(59, 130, 246, 0.3);">
+                    <div style="font-size: 3rem; margin-bottom: 0.5rem; animation: pulse 2s infinite;">🔔</div>
+                    <h3 style="color: #e2e8f0; margin-bottom: 0.5rem; font-size: 1.5rem; font-weight: 700;">طلبات اليوم</h3>
+                    <div style="font-size: 3rem; font-weight: 800; color: #3b82f6; text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); animation: countUp 0.5s ease-out;">${totalToday}</div>
+                    ${unreadTodayCount > 0 ? `
+                        <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.875rem; font-weight: 600; margin-top: 0.75rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); animation: slideInUp 0.3s ease-out;">
+                            <i class="fas fa-sparkles"></i> ${unreadTodayCount} جديد${unreadTodayCount > 1 ? 'ة' : ''}
+                        </div>
+                    ` : ''}
                 </div>
 
+                <!-- Request Type Cards -->
                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
-                        <i class="fas fa-laptop" style="color: #10b981; font-size: 1.5rem;"></i>
-                        <div style="flex: 1;">
-                            <div style="font-size: 0.875rem; color: #94a3b8;">طلبات عادية</div>
-                            <div style="font-size: 1.25rem; font-weight: 700; color: #10b981;">${todayNormal.length}</div>
+                    <!-- Normal Requests -->
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1.25rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05)); border-radius: 12px; border: 2px solid rgba(16, 185, 129, 0.3); transition: all 0.3s ease; cursor: pointer; hover:transform: translateY(-2px); hover:box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);"
+                         onclick="adminManager.showTodayRequestsSection()">
+                        <div style="background: linear-gradient(135deg, #10b981, #059669); border-radius: 12px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+                            <i class="fas fa-laptop" style="color: white; font-size: 1.5rem;"></i>
                         </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.875rem; color: #94a3b8; font-weight: 500;">طلبات عادية</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: #10b981;">${todayNormal.length}</div>
+                        </div>
+                        <i class="fas fa-chevron-left" style="color: #10b981; opacity: 0.5;"></i>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(245, 158, 11, 0.1); border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
-                        <i class="fas fa-boxes" style="color: #f59e0b; font-size: 1.5rem;"></i>
-                        <div style="flex: 1;">
-                            <div style="font-size: 0.875rem; color: #94a3b8;">طلبات جملة</div>
-                            <div style="font-size: 1.25rem; font-weight: 700; color: #f59e0b;">${todayBulk.length}</div>
+                    <!-- Bulk Requests -->
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1.25rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05)); border-radius: 12px; border: 2px solid rgba(245, 158, 11, 0.3); transition: all 0.3s ease; cursor: pointer; hover:transform: translateY(-2px); hover:box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);"
+                         onclick="adminManager.showTodayRequestsSection()">
+                        <div style="background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);">
+                            <i class="fas fa-boxes" style="color: white; font-size: 1.5rem;"></i>
                         </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.875rem; color: #94a3b8; font-weight: 500;">طلبات جملة</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: #f59e0b;">${todayBulk.length}</div>
+                        </div>
+                        <i class="fas fa-chevron-left" style="color: #f59e0b; opacity: 0.5;"></i>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.2);">
-                        <i class="fas fa-building" style="color: #8b5cf6; font-size: 1.5rem;"></i>
-                        <div style="flex: 1;">
-                            <div style="font-size: 0.875rem; color: #94a3b8;">موظفي الشركة</div>
-                            <div style="font-size: 1.25rem; font-weight: 700; color: #8b5cf6;">${todayCompany.length}</div>
+                    <!-- Company Requests -->
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1.25rem; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05)); border-radius: 12px; border: 2px solid rgba(139, 92, 246, 0.3); transition: all 0.3s ease; cursor: pointer; hover:transform: translateY(-2px); hover:box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);"
+                         onclick="adminManager.showTodayRequestsSection()">
+                        <div style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-radius: 12px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);">
+                            <i class="fas fa-building" style="color: white; font-size: 1.5rem;"></i>
                         </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.875rem; color: #94a3b8; font-weight: 500;">موظفي الشركة</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: #8b5cf6;">${todayCompany.length}</div>
+                        </div>
+                        <i class="fas fa-chevron-left" style="color: #8b5cf6; opacity: 0.5;"></i>
                     </div>
                 </div>
 
+                <!-- Action Button -->
                 <div style="margin-top: 1.5rem; text-align: center;">
-                    <button onclick="adminManager.showTodayRequestsSection()" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                    <button onclick="adminManager.showTodayRequestsSection()" style="padding: 1rem 2rem; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 12px; color: white; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); width: 100%; font-size: 1rem;">
                         <i class="fas fa-calendar-day"></i> عرض طلبات اليوم
                     </button>
                 </div>
@@ -954,6 +1224,12 @@ class AdminManager {
      */
     showTodayRequestsSection() {
         this.closeAllDropdowns();
+
+        // Mark all today notifications as read
+        this.todayNotifications.forEach(n => n.read = true);
+        localStorage.setItem('todayNotifications', JSON.stringify(this.todayNotifications));
+        this.updateTodayBadge();
+
         // Switch to today requests section
         document.querySelectorAll('.sidebar-nav-link').forEach(link => {
             link.classList.remove('active');

@@ -7,6 +7,99 @@
     padding-top: 80px;
 }
 
+/* Notification Animations */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse-border {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 25px rgba(59, 130, 246, 0.6);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+/* Notification Item Animations */
+.notification-item {
+    transition: all 0.3s ease;
+}
+
+.notification-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+    transform: translateX(-5px);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+}
+
+/* Notification Badge Animation */
+#totalNotificationBadge,
+#sidebarTodayBadge {
+    transition: all 0.3s ease;
+    animation: pulse 0.5s ease-out;
+}
+
+/* Toast Notification Animations */
+.notification-toast {
+    animation: slideIn 0.5s ease-out;
+}
+
+.notification-toast.closing {
+    animation: slideOut 0.5s ease-out;
+}
+
 /* Sidebar */
 .sidebar {
     width: 280px;

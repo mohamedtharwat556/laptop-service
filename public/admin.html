@@ -36,11 +36,11 @@
                 </a>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                     <div style="position: relative;">
-                        <button id="totalNotificationBtn" onclick="adminManager.toggleNotificationDropdown('all')" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.5rem 1rem; color: #94a3b8; cursor: pointer; position: relative;" title="طلبات اليوم">
-                            <i class="fas fa-bell" style="font-size: 1.1rem;"></i>
-                            <span id="totalNotificationBadge" style="display: none; position: absolute; top: -5px; right: -5px; background: #3b82f6; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.7rem; font-weight: 700; align-items: center; justify-content: center;">0</span>
+                        <button id="totalNotificationBtn" onclick="adminManager.toggleNotificationDropdown('all')" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); border: 2px solid #3b82f6; border-radius: 12px; padding: 0.6rem 1.2rem; color: #94a3b8; cursor: pointer; position: relative; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);" title="طلبات اليوم" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(59, 130, 246, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.2)';">
+                            <i class="fas fa-bell" style="font-size: 1.2rem; color: #3b82f6;"></i>
+                            <span id="totalNotificationBadge" style="display: none; position: absolute; top: -8px; right: -8px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 0.75rem; font-weight: 700; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(59, 130, 246, 0.6); animation: pulse 2s infinite;">0</span>
                         </button>
-                        <div id="totalNotificationDropdown" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; width: 320px; max-height: 450px; overflow: hidden; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); z-index: 10000;"></div>
+                        <div id="totalNotificationDropdown" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: rgba(30, 41, 59, 0.98); backdrop-filter: blur(20px); border: 2px solid rgba(59, 130, 246, 0.3); border-radius: 16px; width: 380px; max-height: 500px; overflow: hidden; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); z-index: 10000;"></div>
                     </div>
                 </div>
                 <button class="dark-mode-toggle" id="darkModeToggle" title="تبديل الوضع الليل">
@@ -72,10 +72,10 @@
                     </a>
                 </li>
                 <li class="sidebar-nav-item">
-                    <a href="#" class="sidebar-nav-link" data-section="today-requests" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); border: 1px solid #3b82f6;">
-                        <i class="fas fa-calendar-day" style="color: #3b82f6;"></i>
-                        طلبات اليوم
-                        <span id="sidebarTodayBadge" style="background: #3b82f6; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; font-weight: 700; align-items: center; justify-content: center; margin-left: auto; display: none;">0</span>
+                    <a href="#" class="sidebar-nav-link" data-section="today-requests" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.15)); border: 2px solid #3b82f6; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); animation: pulse-border 2s infinite;">
+                        <i class="fas fa-calendar-day" style="color: #3b82f6; font-size: 1.1rem;"></i>
+                        <span style="font-weight: 700; color: #3b82f6;">طلبات اليوم</span>
+                        <span id="sidebarTodayBadge" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-radius: 50%; width: 24px; height: 24px; font-size: 0.75rem; font-weight: 700; align-items: center; justify-content: center; margin-left: auto; display: none; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);">0</span>
                     </a>
                 </li>
                 <li class="sidebar-nav-item">
