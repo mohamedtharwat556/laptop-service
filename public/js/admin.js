@@ -674,6 +674,17 @@ class AdminManager {
                 totalBadge.style.display = 'none';
             }
         }
+
+        // Update sidebar badge
+        const sidebarBadge = document.getElementById('sidebarTodayBadge');
+        if (sidebarBadge) {
+            sidebarBadge.textContent = totalToday;
+            if (totalToday > 0) {
+                sidebarBadge.style.display = 'flex';
+            } else {
+                sidebarBadge.style.display = 'none';
+            }
+        }
     }
 
     /**
@@ -1120,7 +1131,7 @@ class AdminManager {
                     </div>
                     <div class="stat-info">
                         <h3 style="color: #3b82f6; font-size: 2.5rem; font-weight: 700;">${stats.todayLaptopOrders}</h3>
-                        <p style="color: #1e293b; font-weight: 600;">طلبات اليوم لللابتوب</p>
+                        <p style="color: #1e293b; font-weight: 600;">طلبات اليوم</p>
                     </div>
                     <div style="position: absolute; top: 10px; left: 10px; font-size: 0.75rem; color: #64748b; background: rgba(255,255,255,0.9); padding: 0.25rem 0.5rem; border-radius: 4px;">
                         <i class="fas fa-calendar-day"></i> ${new Date().toLocaleDateString('ar-EG')}
@@ -1260,8 +1271,8 @@ class AdminManager {
         });
         const todayOrders = todayNormalOrders.length + todayBulkOrders.length + todayCompanyOrders.length;
 
-        // Today's laptop orders (normal requests only - for separate counter)
-        const todayLaptopOrders = todayNormalOrders.length;
+        // Today's laptop orders (all types combined)
+        const todayLaptopOrders = todayNormalOrders.length + todayBulkOrders.length + todayCompanyOrders.length;
 
         console.log('📊 Today normal orders:', todayNormalOrders.length);
         console.log('📊 Today bulk orders:', todayBulkOrders.length);
