@@ -729,9 +729,11 @@ class AdminManager {
      * Render notification dropdown
      */
     renderNotificationDropdown(type) {
-        const dropdownId = `${type}NotificationDropdown`;
+        // Map 'all' to 'total' for dropdown ID
+        const dropdownType = type === 'all' ? 'total' : type;
+        const dropdownId = `${dropdownType}NotificationDropdown`;
         const dropdown = document.getElementById(dropdownId);
-        console.log(`🔔 Rendering dropdown: type=${type}, dropdownId=${dropdownId}, dropdown=${dropdown !== null}`);
+        console.log(`🔔 Rendering dropdown: type=${type}, dropdownType=${dropdownType}, dropdownId=${dropdownId}, dropdown=${dropdown !== null}`);
 
         if (!dropdown) {
             console.error(`Dropdown element not found for rendering: ${dropdownId}`);
