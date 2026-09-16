@@ -701,8 +701,12 @@ class AdminManager {
      * Toggle notification dropdown
      */
     toggleNotificationDropdown(type) {
-        const dropdownId = `${type}NotificationDropdown`;
+        // Map 'all' to 'total' for dropdown ID
+        const dropdownType = type === 'all' ? 'total' : type;
+        const dropdownId = `${dropdownType}NotificationDropdown`;
         const dropdown = document.getElementById(dropdownId);
+
+        console.log(`🔔 Toggling dropdown: type=${type}, dropdownType=${dropdownType}, dropdownId=${dropdownId}`);
 
         // Close all dropdowns first
         ['request', 'bulk', 'company', 'total'].forEach(t => {
@@ -713,6 +717,8 @@ class AdminManager {
         if (dropdown) {
             dropdown.style.display = 'block';
             this.renderNotificationDropdown(type);
+        } else {
+            console.error(`Dropdown element not found: ${dropdownId}`);
         }
     }
 
