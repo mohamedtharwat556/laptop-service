@@ -611,6 +611,7 @@ class AdminManager {
             'company': 'company_request'
         };
 
+        // Update individual badges
         ['request', 'bulk', 'company'].forEach(type => {
             const badge = document.getElementById(`${type}NotificationBadge`);
             if (badge) {
@@ -623,13 +624,52 @@ class AdminManager {
                 }
             }
         });
+
+        // Update total badge for today's requests
+        this.updateTodayTotalBadge();
+    }
+
+    /**
+     * Update total badge with today's requests count
+     */
+    updateTodayTotalBadge() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Count today's requests from all types
+        const todayNormal = this.requests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+
+        const todayBulk = this.bulkRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+
+        const todayCompany = this.companyRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+
+        const totalToday = todayNormal.length + todayBulk.length + todayCompany.length;
+
+        const totalBadge = document.getElementById('totalNotificationBadge');
+        if (totalBadge) {
+            totalBadge.textContent = totalToday;
+            if (totalToday > 0) {
+                totalBadge.style.display = 'flex';
+            } else {
+                totalBadge.style.display = 'none';
+            }
+        }
     }
 
     /**
      * Close all notification dropdowns
      */
     closeAllDropdowns() {
-        ['request', 'bulk', 'company'].forEach(t => {
+        ['request', 'bulk', 'company', 'total'].forEach(t => {
             const d = document.getElementById(`${t}NotificationDropdown`);
             if (d) d.style.display = 'none';
         });
@@ -641,13 +681,13 @@ class AdminManager {
     toggleNotificationDropdown(type) {
         const dropdownId = `${type}NotificationDropdown`;
         const dropdown = document.getElementById(dropdownId);
-        
+
         // Close all dropdowns first
-        ['request', 'bulk', 'company'].forEach(t => {
+        ['request', 'bulk', 'company', 'total'].forEach(t => {
             const d = document.getElementById(`${t}NotificationDropdown`);
             if (d) d.style.display = 'none';
         });
-        
+
         if (dropdown) {
             dropdown.style.display = 'block';
             this.renderNotificationDropdown(type);
@@ -662,6 +702,12 @@ class AdminManager {
         const dropdown = document.getElementById(dropdownId);
         if (!dropdown) return;
 
+        // Handle 'all' type for total notifications
+        if (type === 'all') {
+            this.renderTotalNotificationDropdown(dropdown);
+            return;
+        }
+
         const typeMap = {
             'request': 'new_request',
             'bulk': 'bulk_request',
@@ -670,7 +716,7 @@ class AdminManager {
 
         const unreadNotifications = this.unreadNotifications.filter(n => !n.read && n.type === typeMap[type]);
         console.log(`🔔 ${type} notifications:`, unreadNotifications);
-        
+
         if (unreadNotifications.length === 0) {
             dropdown.innerHTML = `
                 <div style="padding: 2rem; text-align: center; color: #94a3b8; cursor: pointer;" onclick="adminManager.closeAllDropdowns()">
@@ -788,6 +834,98 @@ class AdminManager {
                     }
                 }, 100);
             }
+        }
+    }
+
+    /**
+     * Render total notification dropdown (shows today's requests summary)
+     */
+    renderTotalNotificationDropdown(dropdown) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Count today's requests from all types
+        const todayNormal = this.requests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+
+        const todayBulk = this.bulkRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+
+        const todayCompany = this.companyRequests.filter(r => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate >= today;
+        });
+
+        const totalToday = todayNormal.length + todayBulk.length + todayCompany.length;
+
+        dropdown.innerHTML = `
+            <div style="padding: 1.5rem;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">📊</div>
+                    <h3 style="color: #e2e8f0; margin-bottom: 0.5rem;">إجمالي طلبات اليوم</h3>
+                    <div style="font-size: 2.5rem; font-weight: 700; color: #3b82f6;">${totalToday}</div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                        <i class="fas fa-laptop" style="color: #10b981; font-size: 1.5rem;"></i>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.875rem; color: #94a3b8;">طلبات عادية</div>
+                            <div style="font-size: 1.25rem; font-weight: 700; color: #10b981;">${todayNormal.length}</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(245, 158, 11, 0.1); border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                        <i class="fas fa-boxes" style="color: #f59e0b; font-size: 1.5rem;"></i>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.875rem; color: #94a3b8;">طلبات جملة</div>
+                            <div style="font-size: 1.25rem; font-weight: 700; color: #f59e0b;">${todayBulk.length}</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.2);">
+                        <i class="fas fa-building" style="color: #8b5cf6; font-size: 1.5rem;"></i>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.875rem; color: #94a3b8;">موظفي الشركة</div>
+                            <div style="font-size: 1.25rem; font-weight: 700; color: #8b5cf6;">${todayCompany.length}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <button onclick="adminManager.showTodayRequestsSection()" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                        <i class="fas fa-calendar-day"></i> عرض طلبات اليوم
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Show today requests section
+     */
+    showTodayRequestsSection() {
+        this.closeAllDropdowns();
+        // Switch to today requests section
+        document.querySelectorAll('.sidebar-nav-link').forEach(link => {
+            link.classList.remove('active');
+        });
+        const todayLink = document.querySelector('[data-section="today-requests"]');
+        if (todayLink) {
+            todayLink.classList.add('active');
+        }
+
+        // Show today requests section
+        document.querySelectorAll('.dashboard-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        const todaySection = document.getElementById('today-requestsSection');
+        if (todaySection) {
+            todaySection.classList.add('active');
         }
     }
 
@@ -934,6 +1072,9 @@ class AdminManager {
             }
 
             console.log(`✅ Data loaded: ${this.requests.length} requests, ${this.products.length} products, ${this.bulkRequests.length} bulk requests`);
+
+            // Update total badge with today's requests
+            this.updateTodayTotalBadge();
         } catch (error) {
             console.error('Failed to load data from API:', error);
             // Fallback to localStorage
@@ -942,6 +1083,9 @@ class AdminManager {
             this.orders = storage.getOrders();
             this.products = storage.getProducts();
             this.bulkRequests = [];
+
+            // Update total badge with today's requests
+            this.updateTodayTotalBadge();
         }
     }
 
