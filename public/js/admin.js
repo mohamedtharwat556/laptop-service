@@ -707,6 +707,8 @@ class AdminManager {
         const dropdown = document.getElementById(dropdownId);
 
         console.log(`🔔 Toggling dropdown: type=${type}, dropdownType=${dropdownType}, dropdownId=${dropdownId}`);
+        console.log(`🔔 Dropdown element found: ${dropdown !== null}`);
+        console.log(`🔔 Current display style: ${dropdown ? dropdown.style.display : 'N/A'}`);
 
         // Close all dropdowns first
         ['request', 'bulk', 'company', 'total'].forEach(t => {
@@ -716,6 +718,7 @@ class AdminManager {
 
         if (dropdown) {
             dropdown.style.display = 'block';
+            console.log(`🔔 Set display to block, current display: ${dropdown.style.display}`);
             this.renderNotificationDropdown(type);
         } else {
             console.error(`Dropdown element not found: ${dropdownId}`);
@@ -728,10 +731,16 @@ class AdminManager {
     renderNotificationDropdown(type) {
         const dropdownId = `${type}NotificationDropdown`;
         const dropdown = document.getElementById(dropdownId);
-        if (!dropdown) return;
+        console.log(`🔔 Rendering dropdown: type=${type}, dropdownId=${dropdownId}, dropdown=${dropdown !== null}`);
+
+        if (!dropdown) {
+            console.error(`Dropdown element not found for rendering: ${dropdownId}`);
+            return;
+        }
 
         // Handle 'all' type for total notifications
         if (type === 'all') {
+            console.log(`🔔 Rendering total notification dropdown`);
             this.renderTotalNotificationDropdown(dropdown);
             return;
         }
@@ -869,6 +878,7 @@ class AdminManager {
      * Render total notification dropdown (shows today's requests summary)
      */
     renderTotalNotificationDropdown(dropdown) {
+        console.log(`🔔 renderTotalNotificationDropdown called`);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -889,8 +899,9 @@ class AdminManager {
         });
 
         const totalToday = todayNormal.length + todayBulk.length + todayCompany.length;
+        console.log(`🔔 Total today: ${totalToday}, Normal: ${todayNormal.length}, Bulk: ${todayBulk.length}, Company: ${todayCompany.length}`);
 
-        dropdown.innerHTML = `
+        const htmlContent = `
             <div style="padding: 1.5rem;">
                 <div style="text-align: center; margin-bottom: 1.5rem;">
                     <div style="font-size: 3rem; margin-bottom: 0.5rem;">📊</div>
@@ -931,6 +942,9 @@ class AdminManager {
                 </div>
             </div>
         `;
+
+        dropdown.innerHTML = htmlContent;
+        console.log(`🔔 Dropdown innerHTML set, length: ${htmlContent.length}`);
     }
 
     /**
