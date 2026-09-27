@@ -49,6 +49,7 @@ class HikvisionCustomerManager {
             phone: formData.phone,
             email: formData.email || '',
             recordedBy: hikvisionName,
+            requestType: 'hikvision',
             laptopBrand: formData.laptopBrand,
             laptopModel: formData.laptopModel,
             serialNumber: formData.serialNumber,

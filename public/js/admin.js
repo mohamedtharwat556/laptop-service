@@ -9233,9 +9233,9 @@ class AdminManager {
         const container = document.getElementById('hikvisionRequestsContainer');
         if (!container) return;
 
-        // Filter requests where recordedBy is فاروق
+        // Filter requests where requestType is hikvision
         const hikvisionRequests = this.requests.filter(r => 
-            (r.recordedBy === 'فاروق' || r.recorded_by === 'فاروق')
+            (r.requestType === 'hikvision' || r.request_type === 'hikvision')
         );
 
         if (hikvisionRequests.length === 0) {
@@ -9321,9 +9321,9 @@ class AdminManager {
         try {
             loading.show('جاري تصدير البيانات...');
 
-            // Filter requests where recordedBy is فاروق
+            // Filter requests where requestType is hikvision
             const hikvisionRequests = this.requests.filter(r => 
-                (r.recordedBy === 'فاروق' || r.recorded_by === 'فاروق')
+                (r.requestType === 'hikvision' || r.request_type === 'hikvision')
             );
 
             if (hikvisionRequests.length === 0) {
