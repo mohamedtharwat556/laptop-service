@@ -8961,7 +8961,10 @@ class AdminManager {
      */
     renderStatistics() {
         const container = document.getElementById('mainContent');
-        if (!container) return;
+        if (!container) {
+            console.error('mainContent container not found');
+            return;
+        }
 
         // Calculate total laptops
         const totalNormalRequests = this.requests.length;
