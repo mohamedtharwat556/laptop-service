@@ -319,15 +319,20 @@ class AdminManager {
      */
     checkForNewRequests(oldRequests) {
         const newRequests = this.requests.filter(r => r.id > this.lastSeenRequestId);
+        
+        // Exclude Hikvision requests from notifications
+        const nonHikvisionNewRequests = newRequests.filter(r => 
+            (r.requestType !== 'hikvision' && r.request_type !== 'hikvision')
+        );
 
-        if (newRequests.length > 0) {
+        if (nonHikvisionNewRequests.length > 0) {
             // Update last seen request ID
             const maxId = Math.max(...this.requests.map(r => r.id));
             this.lastSeenRequestId = maxId;
             localStorage.setItem('lastSeenRequestId', maxId.toString());
 
             // Add to unread notifications
-            newRequests.forEach(request => {
+            nonHikvisionNewRequests.forEach(request => {
                 const notification = {
                     id: request.id,
                     type: 'new_request',
@@ -348,10 +353,10 @@ class AdminManager {
             this.updateNotificationBadge();
 
             // Show toast notification
-            this.showNewRequestToast(newRequests.length);
+            this.showNewRequestToast(nonHikvisionNewRequests.length);
 
             // Check for today's new requests
-            this.checkForTodayNewRequests(newRequests);
+            this.checkForTodayNewRequests(nonHikvisionNewRequests);
         }
     }
 
@@ -6287,6 +6292,11 @@ class AdminManager {
                 // Convert API results to the format expected by display function
                 // Add search term to track which term matched this result
                 apiResults.requests.forEach(req => {
+                    // Exclude Hikvision requests from global search
+                    if (req.requestType === 'hikvision' || req.request_type === 'hikvision') {
+                        return;
+                    }
+                    
                     const isRequestToday = isToday(req.createdAt);
                     if (!todayOnly || isRequestToday) {
                         allResults.push({
@@ -7491,7 +7501,10 @@ class AdminManager {
                         return [];
                     }
                     const data = await r.json();
-                    return Array.isArray(data) ? data : [];
+                    const filtered = (Array.isArray(data) ? data : []).filter(r => 
+                        (r.requestType !== 'hikvision' && r.request_type !== 'hikvision')
+                    );
+                    return filtered;
                 }).catch(() => []),
                 fetch('/api/bulk-requests/trash').then(async r => {
                     if (!r.ok) {
@@ -7926,6 +7939,10 @@ class AdminManager {
                     requestsByType = companyRequestsRes || [];
                 } else {
                     requestsByType = requestsRes || [];
+                    // Exclude Hikvision requests from reports
+                    requestsByType = requestsByType.filter(r => 
+                        (r.requestType !== 'hikvision' && r.request_type !== 'hikvision')
+                    );
                 }
 
                 // Filter by date range
@@ -8199,6 +8216,10 @@ class AdminManager {
                     requestsByType = companyRequestsRes || [];
                 } else {
                     requestsByType = requestsRes || [];
+                    // Exclude Hikvision requests from reports
+                    requestsByType = requestsByType.filter(r => 
+                        (r.requestType !== 'hikvision' && r.request_type !== 'hikvision')
+                    );
                 }
 
                 // Filter by date range
@@ -8382,6 +8403,10 @@ class AdminManager {
                     requestsByType = companyRequestsRes || [];
                 } else {
                     requestsByType = requestsRes || [];
+                    // Exclude Hikvision requests from reports
+                    requestsByType = requestsByType.filter(r => 
+                        (r.requestType !== 'hikvision' && r.request_type !== 'hikvision')
+                    );
                 }
 
                 // Filter by date range
