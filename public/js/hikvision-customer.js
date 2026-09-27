@@ -37,7 +37,7 @@ class HikvisionCustomerManager {
             requestType: 'hikvision',
             laptopBrand: 'Hikvision',
             laptopModel: formData.laptopModel,
-            serialNumber: '',
+            serialNumber: formData.serialNumber,
             receivedDate: formData.receivedDate,
             problemDescription: formData.problemDescription,
             priority: 'Medium',
@@ -91,6 +91,7 @@ class HikvisionCustomerManager {
             fullName: form.querySelector('[name="fullName"]').value,
             phone: form.querySelector('[name="phone"]').value,
             laptopModel: form.querySelector('[name="laptopModel"]').value,
+            serialNumber: form.querySelector('[name="serialNumber"]').value,
             receivedDate: form.querySelector('[name="receivedDate"]').value,
             problemDescription: form.querySelector('[name="problemDescription"]').value
         };
