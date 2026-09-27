@@ -48,3 +48,6 @@ temp/
 
 # Cache
 .cache/
+
+# Local backups folder (not in git)
+backups/
