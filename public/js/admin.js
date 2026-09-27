@@ -9011,7 +9011,7 @@ class AdminManager {
         const totalCompanyRequests = this.companyRequests.length;
         const totalLaptops = totalNormalRequests + totalBulkDevices + totalCompanyRequests;
 
-        // Count most repeated names in normal requests
+        // Count most repeated names in normal requests (sum total)
         const normalNameCounts = {};
         this.requests.forEach(req => {
             const name = req.fullName || '';
@@ -9035,17 +9035,27 @@ class AdminManager {
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10);
 
-        // Count most repeated names in bulk requests
+        // Count most repeated names in bulk requests (sum total devices per customer)
         const bulkNameCounts = {};
         this.bulkRequests.forEach(req => {
             const name = req.customerName || '';
+            const deviceCount = req.devices?.length || 1;
             if (name) {
-                bulkNameCounts[name] = (bulkNameCounts[name] || 0) + 1;
+                if (!bulkNameCounts[name]) {
+                    bulkNameCounts[name] = 0;
+                }
+                bulkNameCounts[name] += deviceCount;
             }
         });
+        
+        console.log('📊 Bulk requests:', this.bulkRequests);
+        console.log('📊 Bulk name counts:', bulkNameCounts);
+        
         const sortedBulkNames = Object.entries(bulkNameCounts)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10);
+        
+        console.log('📊 Sorted bulk names:', sortedBulkNames);
 
         // Count most repeated employee names in company requests
         const employeeNameCounts = {};
@@ -9180,7 +9190,7 @@ class AdminManager {
                                 <thead>
                                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                                         <th style="padding: 0.5rem; text-align: right;">الاسم</th>
-                                        <th style="padding: 0.5rem; text-align: center;">العدد</th>
+                                        <th style="padding: 0.5rem; text-align: center;">إجمالي اللابتوبات</th>
                                     </tr>
                                 </thead>
                                 <tbody>
