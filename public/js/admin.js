@@ -3047,6 +3047,9 @@ class AdminManager {
                 this._companyTodayFilter = null;
                 this.renderCompanyRequests();
                 break;
+            case 'statistics':
+                this.renderStatistics();
+                break;
             case 'users':
                 this._bulkTodayFilter = null;
                 this._companyTodayFilter = null;
@@ -8951,6 +8954,270 @@ class AdminManager {
         XLSX.writeFile(wb, `${fileName}.xlsx`);
 
         toast.success(`تم تحميل ${excelData.length} طلب من اليوم في ملف Excel بنجاح`);
+    }
+
+    /**
+     * Render advanced statistics page
+     */
+    renderStatistics() {
+        const container = document.getElementById('mainContent');
+        if (!container) return;
+
+        // Calculate total laptops
+        const totalNormalRequests = this.requests.length;
+        const totalBulkDevices = this.bulkRequests.reduce((sum, req) => sum + (req.devices?.length || 0), 0);
+        const totalCompanyRequests = this.companyRequests.length;
+        const totalLaptops = totalNormalRequests + totalBulkDevices + totalCompanyRequests;
+
+        // Count most repeated names in normal requests
+        const normalNameCounts = {};
+        this.requests.forEach(req => {
+            const name = req.fullName || '';
+            if (name) {
+                normalNameCounts[name] = (normalNameCounts[name] || 0) + 1;
+            }
+        });
+        const sortedNormalNames = Object.entries(normalNameCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+
+        // Count most repeated names in company requests
+        const companyNameCounts = {};
+        this.companyRequests.forEach(req => {
+            const name = req.fullName || req.full_name || '';
+            if (name) {
+                companyNameCounts[name] = (companyNameCounts[name] || 0) + 1;
+            }
+        });
+        const sortedCompanyNames = Object.entries(companyNameCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+
+        // Count most repeated names in bulk requests
+        const bulkNameCounts = {};
+        this.bulkRequests.forEach(req => {
+            const name = req.customerName || '';
+            if (name) {
+                bulkNameCounts[name] = (bulkNameCounts[name] || 0) + 1;
+            }
+        });
+        const sortedBulkNames = Object.entries(bulkNameCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+
+        // Count most repeated employee names in company requests
+        const employeeNameCounts = {};
+        this.companyRequests.forEach(req => {
+            const empName = req.employeeName || req.employee_name || '';
+            if (empName) {
+                employeeNameCounts[empName] = (employeeNameCounts[empName] || 0) + 1;
+            }
+        });
+        const sortedEmployeeNames = Object.entries(employeeNameCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+
+        // Count recorded by (محمود vs شروق)
+        const recordedByCounts = { 'محمود': 0, 'شروق': 0 };
+        this.requests.forEach(req => {
+            const rec = req.recordedBy || req.recorded_by || '';
+            if (rec === 'محمود') recordedByCounts['محمود']++;
+            else if (rec === 'شروق') recordedByCounts['شروق']++;
+        });
+        this.bulkRequests.forEach(req => {
+            const rec = req.recordedBy || req.recorded_by || '';
+            if (rec === 'محمود') recordedByCounts['محمود']++;
+            else if (rec === 'شروق') recordedByCounts['شروق']++;
+        });
+        this.companyRequests.forEach(req => {
+            const rec = req.recordedBy || req.recorded_by || '';
+            if (rec === 'محمود') recordedByCounts['محمود']++;
+            else if (rec === 'شروق') recordedByCounts['شروق']++;
+        });
+
+        container.innerHTML = `
+            <div style="padding: 2rem;">
+                <h2 style="margin-bottom: 2rem; color: #3b82f6; display: flex; align-items: center; gap: 1rem;">
+                    <i class="fas fa-chart-pie"></i>
+                    الإحصائيات المتقدمة
+                </h2>
+
+                <!-- Total Laptops Counter -->
+                <div class="glass-card" style="padding: 2rem; margin-bottom: 2rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); border: 2px solid #3b82f6; text-align: center;">
+                    <h3 style="color: #94a3b8; margin-bottom: 0.5rem;">إجمالي عدد اللابتوبات</h3>
+                    <div style="font-size: 4rem; font-weight: 700; color: #3b82f6; text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);">
+                        ${totalLaptops}
+                    </div>
+                    <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; flex-wrap: wrap;">
+                        <div style="background: rgba(59, 130, 246, 0.2); padding: 0.5rem 1rem; border-radius: 8px;">
+                            <span style="color: #94a3b8;">عادي:</span>
+                            <span style="color: #3b82f6; font-weight: 700;">${totalNormalRequests}</span>
+                        </div>
+                        <div style="background: rgba(16, 185, 129, 0.2); padding: 0.5rem 1rem; border-radius: 8px;">
+                            <span style="color: #94a3b8;">جملة:</span>
+                            <span style="color: #10b981; font-weight: 700;">${totalBulkDevices}</span>
+                        </div>
+                        <div style="background: rgba(139, 92, 246, 0.2); padding: 0.5rem 1rem; border-radius: 8px;">
+                            <span style="color: #94a3b8;">شركات:</span>
+                            <span style="color: #8b5cf6; font-weight: 700;">${totalCompanyRequests}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <!-- Most Repeated Names in Normal Requests -->
+                    <div class="glass-card" style="padding: 1.5rem;">
+                        <h3 style="color: #3b82f6; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-users"></i>
+                            أكثر الأسماء تكراراً (الطلبات العادية)
+                        </h3>
+                        ${sortedNormalNames.length > 0 ? `
+                            <table style="width: 100%;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                        <th style="padding: 0.5rem; text-align: right;">الاسم</th>
+                                        <th style="padding: 0.5rem; text-align: center;">العدد</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${sortedNormalNames.map(([name, count], index) => `
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                            <td style="padding: 0.5rem;">
+                                                <span style="color: #3b82f6; font-weight: 600;">#${index + 1}</span>
+                                                ${name}
+                                            </td>
+                                            <td style="padding: 0.5rem; text-align: center;">
+                                                <span style="background: rgba(59, 130, 246, 0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; color: #3b82f6;">${count}</span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : '<p style="color: #94a3b8; text-align: center;">لا توجد بيانات</p>'}
+                    </div>
+
+                    <!-- Most Repeated Names in Company Requests -->
+                    <div class="glass-card" style="padding: 1.5rem;">
+                        <h3 style="color: #8b5cf6; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-building"></i>
+                            أكثر الأسماء تكراراً (موظفي الشركات)
+                        </h3>
+                        ${sortedCompanyNames.length > 0 ? `
+                            <table style="width: 100%;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                        <th style="padding: 0.5rem; text-align: right;">الاسم</th>
+                                        <th style="padding: 0.5rem; text-align: center;">العدد</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${sortedCompanyNames.map(([name, count], index) => `
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                            <td style="padding: 0.5rem;">
+                                                <span style="color: #8b5cf6; font-weight: 600;">#${index + 1}</span>
+                                                ${name}
+                                            </td>
+                                            <td style="padding: 0.5rem; text-align: center;">
+                                                <span style="background: rgba(139, 92, 246, 0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; color: #8b5cf6;">${count}</span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : '<p style="color: #94a3b8; text-align: center;">لا توجد بيانات</p>'}
+                    </div>
+
+                    <!-- Most Repeated Names in Bulk Requests -->
+                    <div class="glass-card" style="padding: 1.5rem;">
+                        <h3 style="color: #10b981; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-boxes"></i>
+                            أكثر الأسماء تكراراً (طلبات الجملة)
+                        </h3>
+                        ${sortedBulkNames.length > 0 ? `
+                            <table style="width: 100%;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                        <th style="padding: 0.5rem; text-align: right;">الاسم</th>
+                                        <th style="padding: 0.5rem; text-align: center;">العدد</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${sortedBulkNames.map(([name, count], index) => `
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                            <td style="padding: 0.5rem;">
+                                                <span style="color: #10b981; font-weight: 600;">#${index + 1}</span>
+                                                ${name}
+                                            </td>
+                                            <td style="padding: 0.5rem; text-align: center;">
+                                                <span style="background: rgba(16, 185, 129, 0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; color: #10b981;">${count}</span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : '<p style="color: #94a3b8; text-align: center;">لا توجد بيانات</p>'}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+                    <!-- Most Repeated Employee Names -->
+                    <div class="glass-card" style="padding: 1.5rem;">
+                        <h3 style="color: #f59e0b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-user-tie"></i>
+                            أكثر موظفي الشركات تكراراً
+                        </h3>
+                        ${sortedEmployeeNames.length > 0 ? `
+                            <table style="width: 100%;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                        <th style="padding: 0.5rem; text-align: right;">اسم الموظف</th>
+                                        <th style="padding: 0.5rem; text-align: center;">العدد</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${sortedEmployeeNames.map(([name, count], index) => `
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                            <td style="padding: 0.5rem;">
+                                                <span style="color: #f59e0b; font-weight: 600;">#${index + 1}</span>
+                                                ${name}
+                                            </td>
+                                            <td style="padding: 0.5rem; text-align: center;">
+                                                <span style="background: rgba(245, 158, 11, 0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; color: #f59e0b;">${count}</span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : '<p style="color: #94a3b8; text-align: center;">لا توجد بيانات</p>'}
+                    </div>
+
+                    <!-- Recorded By Statistics (محمود vs شروق) -->
+                    <div class="glass-card" style="padding: 1.5rem;">
+                        <h3 style="color: #ec4899; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-edit"></i>
+                            من سجل البيانات
+                        </h3>
+                        <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 2rem;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 3rem; font-weight: 700; color: #3b82f6;">${recordedByCounts['محمود']}</div>
+                                <div style="color: #94a3b8; margin-top: 0.5rem;">محمود</div>
+                            </div>
+                            <div style="font-size: 2rem; color: #94a3b8;">vs</div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 3rem; font-weight: 700; color: #10b981;">${recordedByCounts['شروق']}</div>
+                                <div style="color: #94a3b8; margin-top: 0.5rem;">شروق</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1.5rem; text-align: center;">
+                            <span style="color: #94a3b8;">الإجمالي:</span>
+                            <span style="background: rgba(236, 72, 153, 0.2); padding: 0.5rem 1rem; border-radius: 20px; font-weight: 700; color: #ec4899; margin-right: 0.5rem;">
+                                ${recordedByCounts['محمود'] + recordedByCounts['شروق']}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     // Static wrapper methods for global access
