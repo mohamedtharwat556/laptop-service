@@ -9051,8 +9051,10 @@ class AdminManager {
         console.log('📊 Bulk requests:', this.bulkRequests);
         console.log('📊 Bulk name counts:', bulkNameCounts);
         
+        // Convert to array and sort
         const sortedBulkNames = Object.entries(bulkNameCounts)
-            .sort((a, b) => b[1] - a[1])
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count)
             .slice(0, 10);
         
         console.log('📊 Sorted bulk names:', sortedBulkNames);
@@ -9194,14 +9196,14 @@ class AdminManager {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${sortedBulkNames.map(([name, count], index) => `
+                                    ${sortedBulkNames.map((item, index) => `
                                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                             <td style="padding: 0.5rem;">
                                                 <span style="color: #10b981; font-weight: 600;">#${index + 1}</span>
-                                                ${name}
+                                                ${item.name}
                                             </td>
                                             <td style="padding: 0.5rem; text-align: center;">
-                                                <span style="background: rgba(16, 185, 129, 0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; color: #10b981;">${count}</span>
+                                                <span style="background: rgba(16, 185, 129, 0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; color: #10b981;">${item.count}</span>
                                             </td>
                                         </tr>
                                     `).join('')}
