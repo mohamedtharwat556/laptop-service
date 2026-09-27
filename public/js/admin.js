@@ -9050,8 +9050,10 @@ class AdminManager {
         
         console.log('📊 Bulk requests:', this.bulkRequests);
         console.log('📊 Bulk name counts:', bulkNameCounts);
+        console.log('📊 Bulk name counts keys:', Object.keys(bulkNameCounts));
+        console.log('📊 Bulk name counts values:', Object.values(bulkNameCounts));
         
-        // Convert to array and sort
+        // Convert to array, sort, and take top 10
         const sortedBulkNames = Object.entries(bulkNameCounts)
             .map(([name, count]) => ({ name, count }))
             .sort((a, b) => b.count - a.count)
