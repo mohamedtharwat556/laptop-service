@@ -35,7 +35,7 @@ class HikvisionCustomerManager {
             email: '',
             recordedBy: hikvisionName,
             requestType: 'hikvision',
-            laptopBrand: 'Hikvision',
+            laptopBrand: formData.laptopBrand,
             laptopModel: formData.laptopModel,
             serialNumber: formData.serialNumber,
             receivedDate: formData.receivedDate,
@@ -87,10 +87,16 @@ class HikvisionCustomerManager {
         const form = document.getElementById('requestForm');
         if (!form) return;
 
+        const laptopBrandSelect = form.querySelector('[name="laptopBrand"]');
+        const laptopBrandOther = form.querySelector('[name="laptopBrandOther"]');
+        const laptopModelSelect = form.querySelector('[name="laptopModel"]');
+        const laptopModelOther = form.querySelector('[name="laptopModelOther"]');
+
         const formData = {
             fullName: form.querySelector('[name="fullName"]').value,
             phone: form.querySelector('[name="phone"]').value,
-            laptopModel: form.querySelector('[name="laptopModel"]').value,
+            laptopBrand: laptopBrandSelect.value === 'Other' ? laptopBrandOther.value : laptopBrandSelect.value,
+            laptopModel: laptopModelSelect.value === 'Other' ? laptopModelOther.value : laptopModelSelect.value,
             serialNumber: form.querySelector('[name="serialNumber"]').value,
             receivedDate: form.querySelector('[name="receivedDate"]').value,
             problemDescription: form.querySelector('[name="problemDescription"]').value
