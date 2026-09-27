@@ -9317,6 +9317,9 @@ class AdminManager {
             (r.requestType === 'hikvision' || r.request_type === 'hikvision')
         );
 
+        // Calculate statistics
+        const stats = this.calculateHikvisionStatistics(hikvisionRequests);
+
         if (hikvisionRequests.length === 0) {
             container.innerHTML = `
                 <div class="glass-card" style="text-align: center; padding: 3rem;">
@@ -9328,77 +9331,440 @@ class AdminManager {
         }
 
         container.innerHTML = `
+            <!-- Statistics Section -->
+            <div class="hikvision-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                    <div style="font-size: 2.5rem; font-weight: bold;">${stats.total}</div>
+                    <div style="font-size: 0.875rem; opacity: 0.9;">إجمالي طلبات Hikvision</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                    <div style="font-size: 2.5rem; font-weight: bold;">${stats.pending}</div>
+                    <div style="font-size: 0.875rem; opacity: 0.9;">قيد الانتظار</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                    <div style="font-size: 2.5rem; font-weight: bold;">${stats.completed}</div>
+                    <div style="font-size: 0.875rem; opacity: 0.9;">مكتملة</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                    <div style="font-size: 2.5rem; font-weight: bold;">${stats.completionRate}%</div>
+                    <div style="font-size: 0.875rem; opacity: 0.9;">نسبة الإنجاز</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="hikvision-charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem; color: #f59e0b;">📊 توزيع الموديلات</h3>
+                    <canvas id="hikvisionModelChart" height="200"></canvas>
+                </div>
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem; color: #f59e0b;">📈 الحالات</h3>
+                    <canvas id="hikvisionStatusChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Most Requested Models -->
+            <div class="glass-card" style="padding: 1.5rem; margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: #f59e0b;">🔥 أكثر الموديلات طلباً</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    ${stats.topModels.map((model, index) => `
+                        <div style="background: rgba(245, 158, 11, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <div style="font-size: 0.875rem; color: #94a3b8;">#${index + 1}</div>
+                            <div style="font-weight: 600; color: #f59e0b;">${model.name}</div>
+                            <div style="font-size: 1.5rem; font-weight: bold; color: white;">${model.count}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="glass-card" style="padding: 1.5rem; margin-bottom: 2rem;">
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <input type="text" class="form-input" placeholder="🔍 بحث في طلبات Hikvision..." id="hikvisionSearchInput" style="width: 100%;">
+                    </div>
+                    <div style="min-width: 150px;">
+                        <select class="form-input" id="hikvisionModelFilter">
+                            <option value="">كل الموديلات</option>
+                            ${stats.uniqueModels.map(model => `<option value="${model}">${model}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div style="min-width: 150px;">
+                        <select class="form-input" id="hikvisionStatusFilter">
+                            <option value="">كل الحالات</option>
+                            <option value="Received">تم الاستلام</option>
+                            <option value="Waiting Inspection">بانتظار الفحص</option>
+                            <option value="Under Maintenance">قيد الصيانة</option>
+                            <option value="Waiting Parts">بانتظار قطع الغيار</option>
+                            <option value="Ready">جاهز للتسليم</option>
+                            <option value="Delivered">تم التسليم</option>
+                        </select>
+                    </div>
+                    <div style="min-width: 150px;">
+                        <input type="date" class="form-input" id="hikvisionDateFilter">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Header -->
             <div class="dashboard-header">
                 <h2>طلبات Hikvision (${hikvisionRequests.length})</h2>
-                <div style="display: flex; gap: 0.5rem;">
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     <button class="btn btn-success" onclick="adminManager.exportHikvisionRequestsToExcel()" style="padding: 0.5rem 1rem;">
                         <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
+                    <button class="btn btn-primary" onclick="adminManager.exportHikvisionMonthlyReport()" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-file-pdf"></i> تقرير شهري
                     </button>
                     <button class="btn btn-danger" onclick="adminManager.logoutHikvision()" style="padding: 0.5rem 1rem;">
                         <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
                     </button>
                 </div>
             </div>
+
+            <!-- Requests Table -->
             <div class="table-container" style="overflow-x: auto;">
-                <table class="table" style="min-width: 1000px;">
+                <table class="table" style="min-width: 1200px;">
                     <thead>
                         <tr>
                             <th class="table-hide-mobile">Request #</th>
                             <th>Customer</th>
                             <th class="table-hide-mobile">Phone</th>
                             <th>Device</th>
+                            <th>Problem</th>
                             <th>Status</th>
-                            <th class="table-hide-mobile">Priority</th>
-                            <th class="table-hide-mobile">Cost</th>
-                            <th>Technician</th>
-                            <th class="table-hide-mobile">Received</th>
+                            <th class="table-hide-mobile">Expected Date</th>
+                            <th>Severity</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${hikvisionRequests.map(request => `
-                            <tr>
-                                <td class="table-hide-mobile"><strong>${request.requestNumber}</strong></td>
-                                <td>${request.fullName}</td>
-                                <td class="table-hide-mobile" dir="ltr">${request.phone}</td>
-                                <td>
-                                    <div>${request.laptopBrand} ${request.laptopModel || ''}</div>
-                                    ${request.serialNumber && request.serialNumber !== 'N/A' ? `<div style="font-size: 0.875rem; color: #94a3b8;" dir="ltr">SN: ${request.serialNumber}</div>` : ''}
-                                </td>
-                                <td>
-                                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateRequestStatus(${request.id}, this.value)">
-                                        <option value="Received" ${request.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
-                                        <option value="Waiting Inspection" ${request.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
-                                        <option value="Under Maintenance" ${request.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
-                                        <option value="Waiting Parts" ${request.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: rgba(239, 68, 68, 0.9); color: white;">بانتظار قطع الغيار</option>
-                                        <option value="Ready" ${request.status === 'Ready' ? 'selected' : ''} style="background-color: rgba(16, 185, 129, 0.9); color: white;">جاهز للتسليم</option>
-                                        <option value="Delivered" ${request.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم للعميل</option>
-                                    </select>
-                                </td>
-                                <td class="table-hide-mobile">${this.translatePriority(request.priority)}</td>
-                                <td class="table-hide-mobile">${request.cost > 0 ? Utils.formatCurrency(request.cost) : '—'}</td>
-                                <td>${request.technician || '—'}</td>
-                                <td class="table-hide-mobile">${request.receivedDate || '—'}</td>
-                                <td>
-                                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
-                                            onclick="adminManager.viewRequest(${request.id})">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.quickEditRequest(${request.id})" title="تعديل سريع">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;"
-                                            onclick="adminManager.deleteRequest(${request.id})">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        `).join('')}
+                    <tbody id="hikvisionRequestsTableBody">
+                        ${this.renderHikvisionTableRows(hikvisionRequests)}
                     </tbody>
                 </table>
             </div>
         `;
+
+        // Initialize charts
+        this.initializeHikvisionCharts(hikvisionRequests, stats);
+
+        // Setup search and filters
+        this.setupHikvisionFilters(hikvisionRequests);
+    }
+
+    calculateHikvisionStatistics(requests) {
+        const total = requests.length;
+        const pending = requests.filter(r => r.status === 'Received' || r.status === 'Waiting Inspection' || r.status === 'Under Maintenance').length;
+        const completed = requests.filter(r => r.status === 'Delivered').length;
+        const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+        // Model statistics
+        const modelCounts = {};
+        requests.forEach(r => {
+            const model = r.laptopModel || 'غير محدد';
+            modelCounts[model] = (modelCounts[model] || 0) + 1;
+        });
+
+        const topModels = Object.entries(modelCounts)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5);
+
+        const uniqueModels = Object.keys(modelCounts);
+
+        return {
+            total,
+            pending,
+            completed,
+            completionRate,
+            topModels,
+            uniqueModels
+        };
+    }
+
+    initializeHikvisionCharts(requests, stats) {
+        // Model Distribution Chart
+        const modelCtx = document.getElementById('hikvisionModelChart');
+        if (modelCtx && typeof Chart !== 'undefined') {
+            new Chart(modelCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: stats.topModels.map(m => m.name),
+                    datasets: [{
+                        data: stats.topModels.map(m => m.count),
+                        backgroundColor: [
+                            '#f59e0b',
+                            '#3b82f6',
+                            '#10b981',
+                            '#8b5cf6',
+                            '#ef4444'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#94a3b8'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Status Chart
+        const statusCtx = document.getElementById('hikvisionStatusChart');
+        if (statusCtx && typeof Chart !== 'undefined') {
+            const statusCounts = {
+                'Received': requests.filter(r => r.status === 'Received').length,
+                'Waiting Inspection': requests.filter(r => r.status === 'Waiting Inspection').length,
+                'Under Maintenance': requests.filter(r => r.status === 'Under Maintenance').length,
+                'Waiting Parts': requests.filter(r => r.status === 'Waiting Parts').length,
+                'Ready': requests.filter(r => r.status === 'Ready').length,
+                'Delivered': requests.filter(r => r.status === 'Delivered').length
+            };
+
+            new Chart(statusCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        label: 'عدد الطلبات',
+                        data: Object.values(statusCounts),
+                        backgroundColor: '#f59e0b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    setupHikvisionFilters(requests) {
+        const searchInput = document.getElementById('hikvisionSearchInput');
+        const modelFilter = document.getElementById('hikvisionModelFilter');
+        const statusFilter = document.getElementById('hikvisionStatusFilter');
+        const dateFilter = document.getElementById('hikvisionDateFilter');
+
+        const filterRequests = () => {
+            const searchTerm = searchInput?.value.toLowerCase() || '';
+            const selectedModel = modelFilter?.value || '';
+            const selectedStatus = statusFilter?.value || '';
+            const selectedDate = dateFilter?.value || '';
+
+            const filtered = requests.filter(r => {
+                const matchesSearch = 
+                    r.fullName?.toLowerCase().includes(searchTerm) ||
+                    r.phone?.includes(searchTerm) ||
+                    r.laptopModel?.toLowerCase().includes(searchTerm) ||
+                    r.requestNumber?.toLowerCase().includes(searchTerm);
+
+                const matchesModel = !selectedModel || r.laptopModel === selectedModel;
+                const matchesStatus = !selectedStatus || r.status === selectedStatus;
+                const matchesDate = !selectedDate || r.receivedDate === selectedDate;
+
+                return matchesSearch && matchesModel && matchesStatus && matchesDate;
+            });
+
+            const tbody = document.getElementById('hikvisionRequestsTableBody');
+            if (tbody) {
+                tbody.innerHTML = this.renderHikvisionTableRows(filtered);
+            }
+        };
+
+        if (searchInput) searchInput.addEventListener('input', filterRequests);
+        if (modelFilter) modelFilter.addEventListener('change', filterRequests);
+        if (statusFilter) statusFilter.addEventListener('change', filterRequests);
+        if (dateFilter) dateFilter.addEventListener('change', filterRequests);
+    }
+
+    renderHikvisionTableRows(requests) {
+        if (requests.length === 0) {
+            return '<tr><td colspan="9" style="text-align: center; padding: 2rem;">لا توجد طلبات مطابقة</td></tr>';
+        }
+
+        return requests.map(request => `
+            <tr>
+                <td class="table-hide-mobile"><strong>${request.requestNumber}</strong></td>
+                <td>${request.fullName}</td>
+                <td class="table-hide-mobile" dir="ltr">${request.phone}</td>
+                <td>
+                    <div style="font-weight: 600;">${request.laptopBrand || ''}</div>
+                    <div style="font-size: 0.875rem; color: #94a3b8;">${request.laptopModel || ''}</div>
+                    ${request.serialNumber ? `<div style="font-size: 0.75rem; color: #f59e0b;" dir="ltr">SN: ${request.serialNumber}</div>` : ''}
+                </td>
+                <td>
+                    <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${request.problemDescription}">
+                        ${request.problemDescription || '-'}
+                    </div>
+                </td>
+                <td>
+                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateRequestStatus(${request.id}, this.value)">
+                        <option value="Received" ${request.status === 'Received' ? 'selected' : ''} style="background-color: rgba(59, 130, 246, 0.9); color: white;">تم الاستلام</option>
+                        <option value="Waiting Inspection" ${request.status === 'Waiting Inspection' ? 'selected' : ''} style="background-color: rgba(245, 158, 11, 0.9); color: white;">بانتظار الفحص</option>
+                        <option value="Under Maintenance" ${request.status === 'Under Maintenance' ? 'selected' : ''} style="background-color: rgba(139, 92, 246, 0.9); color: white;">قيد الصيانة</option>
+                        <option value="Waiting Parts" ${request.status === 'Waiting Parts' ? 'selected' : ''} style="background-color: rgba(239, 68, 68, 0.9); color: white;">بانتظار قطع الغيار</option>
+                        <option value="Ready" ${request.status === 'Ready' ? 'selected' : ''} style="background-color: rgba(16, 185, 129, 0.9); color: white;">جاهز للتسليم</option>
+                        <option value="Delivered" ${request.status === 'Delivered' ? 'selected' : ''} style="background-color: rgba(107, 114, 128, 0.9); color: white;">تم التسليم للعميل</option>
+                    </select>
+                </td>
+                <td class="table-hide-mobile">
+                    <input type="date" class="form-input" style="padding: 0.25rem; font-size: 0.8rem;" value="${request.estimatedCompletionDate || request.estimated_completion_date || ''}" onchange="adminManager.updateEstimatedDate(${request.id}, this.value)">
+                </td>
+                <td>
+                    <select class="form-select" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.1);" onchange="adminManager.updateSeverity(${request.id}, this.value)">
+                        <option value="Low" ${request.severity === 'Low' ? 'selected' : ''}>منخفضة</option>
+                        <option value="Medium" ${request.severity === 'Medium' ? 'selected' : ''}>متوسطة</option>
+                        <option value="High" ${request.severity === 'High' ? 'selected' : ''}>عالية</option>
+                        <option value="Critical" ${request.severity === 'Critical' ? 'selected' : ''}>حرجة</option>
+                    </select>
+                </td>
+                <td>
+                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;" onclick="adminManager.viewHikvisionRequest(${request.id})" title="عرض التفاصيل">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;" onclick="adminManager.addHikvisionNote(${request.id})" title="إضافة ملاحظة">
+                        <i class="fas fa-sticky-note"></i>
+                    </button>
+                    <button class="btn btn-success" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;" onclick="adminManager.sendWhatsAppNotification(${request.id})" title="إرسال واتساب">
+                        <i class="fab fa-whatsapp"></i>
+                    </button>
+                    <button class="btn btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; margin-right: 0.5rem;" onclick="adminManager.deleteRequest(${request.id})" title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    viewHikvisionRequest(id) {
+        const request = this.requests.find(r => r.id === id);
+        if (!request) return;
+
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 10000;';
+        modal.innerHTML = `
+            <div class="glass-card" style="max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; padding: 2rem;">
+                <h2 style="color: #f59e0b; margin-bottom: 1.5rem;">تفاصيل طلب Hikvision #${request.requestNumber}</h2>
+                <div style="display: grid; gap: 1rem;">
+                    <div><strong>الاسم:</strong> ${request.fullName}</div>
+                    <div><strong>رقم الهاتف:</strong> ${request.phone}</div>
+                    <div><strong>الماركة:</strong> ${request.laptopBrand || '-'}</div>
+                    <div><strong>الموديل:</strong> ${request.laptopModel || '-'}</div>
+                    <div><strong>الرقم التسلسلي:</strong> ${request.serialNumber || '-'}</div>
+                    <div><strong>تاريخ الاستلام:</strong> ${request.receivedDate || '-'}</div>
+                    <div><strong>تاريخ الاستكمال المتوقع:</strong> ${request.estimatedCompletionDate || request.estimated_completion_date || '-'}</div>
+                    <div><strong>الحالة:</strong> ${request.status || '-'}</div>
+                    <div><strong>الشدة:</strong> ${request.severity || '-'}</div>
+                    <div><strong>وصف المشكلة:</strong> ${request.problemDescription || '-'}</div>
+                    <div><strong>من سجل البيانات:</strong> ${request.recordedBy || request.recorded_by || '-'}</div>
+                    <div><strong>الملاحظات:</strong> ${request.notes || '-'}</div>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;" onclick="this.closest('div[style*=fixed]').remove()">إغلاق</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    addHikvisionNote(id) {
+        const request = this.requests.find(r => r.id === id);
+        if (!request) return;
+
+        const note = prompt('أدخل الملاحظة:');
+        if (!note) return;
+
+        fetch(`/api/requests/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notes: (request.notes || '') + '\n' + note })
+        }).then(() => {
+            alert('تم إضافة الملاحظة بنجاح');
+            this.loadRequests();
+            this.renderHikvisionRequestsTable();
+        });
+    }
+
+    updateEstimatedDate(id, date) {
+        fetch(`/api/requests/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estimatedCompletionDate: date })
+        }).then(() => {
+            this.loadRequests();
+        });
+    }
+
+    updateSeverity(id, severity) {
+        fetch(`/api/requests/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ severity })
+        }).then(() => {
+            this.loadRequests();
+        });
+    }
+
+    sendWhatsAppNotification(id) {
+        const request = this.requests.find(r => r.id === id);
+        if (!request) return;
+
+        const message = `مرحباً ${request.fullName}، نود إعلامك بأن طلب Hikvision #${request.requestNumber} بحالة: ${request.status}`;
+        const whatsappUrl = `https://wa.me/${request.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+    }
+
+    exportHikvisionMonthlyReport() {
+        const hikvisionRequests = this.requests.filter(r => 
+            (r.requestType === 'hikvision' || r.request_type === 'hikvision')
+        );
+
+        if (hikvisionRequests.length === 0) {
+            alert('لا توجد طلبات Hikvision للتصدير');
+            return;
+        }
+
+        const currentMonth = new Date().toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' });
+        const report = `
+تقرير Hikvision الشهري - ${currentMonth}
+═══════════════════════════════════
+
+إجمالي الطلبات: ${hikvisionRequests.length}
+المكتملة: ${hikvisionRequests.filter(r => r.status === 'Delivered').length}
+قيد الانتظار: ${hikvisionRequests.filter(r => r.status !== 'Delivered').length}
+
+أكثر الموديلات طلباً:
+${this.calculateHikvisionStatistics(hikvisionRequests).topModels.map((m, i) => `${i + 1}. ${m.name}: ${m.count}`).join('\n')}
+        `;
+
+        const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hikvision_monthly_report_${new Date().toISOString().slice(0, 10)}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
     }
 
     logoutHikvision() {

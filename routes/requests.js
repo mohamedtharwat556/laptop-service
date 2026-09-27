@@ -27,6 +27,7 @@ router.get('/', async (req, res) => {
             problemDescription: item.problem_description,
             priority: item.priority,
             status: item.status,
+            severity: item.severity,
             cost: item.cost,
             estimatedCompletionDate: item.estimated_completion_date,
             deviceImage: item.device_image,
@@ -203,6 +204,8 @@ router.post('/', async (req, res) => {
         // Add optional fields if provided
         if (req.body.adminReply !== undefined) newRequest.admin_reply = req.body.adminReply;
         if (req.body.estimatedCompletionDate !== undefined) newRequest.estimated_completion_date = req.body.estimatedCompletionDate;
+        if (req.body.severity !== undefined) newRequest.severity = req.body.severity;
+        if (req.body.notes !== undefined) newRequest.notes = req.body.notes;
 
         console.log('📝 Inserting request to Supabase:', newRequest);
         const { data, error } = await supabase.from('requests').insert([newRequest]).select();
@@ -230,6 +233,7 @@ router.post('/', async (req, res) => {
             problemDescription: responseData.problem_description,
             priority: responseData.priority,
             status: responseData.status,
+            severity: responseData.severity,
             cost: responseData.cost,
             estimatedCompletionDate: responseData.estimated_completion_date,
             deviceImage: responseData.device_image,
@@ -287,6 +291,8 @@ router.put('/:id', async (req, res) => {
             else if (key === 'technician') snakeCaseData.technician = req.body[key];
             else if (key === 'requestType') snakeCaseData.request_type = req.body[key];
             else if (key === 'recordedBy') snakeCaseData.recorded_by = req.body[key];
+            else if (key === 'severity') snakeCaseData.severity = req.body[key];
+            else if (key === 'notes') snakeCaseData.notes = req.body[key];
             else snakeCaseData[key] = req.body[key];
         });
         
