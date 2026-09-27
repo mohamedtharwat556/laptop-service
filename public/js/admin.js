@@ -9339,6 +9339,22 @@ class AdminManager {
         }
 
         container.innerHTML = `
+            <!-- Dashboard Header -->
+            <div class="dashboard-header" style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%); border-radius: 12px; border: 2px solid rgba(245, 158, 11, 0.3);">
+                <h2 style="color: #f59e0b; font-size: 2rem; margin: 0;">📹 طلبات Hikvision (${hikvisionRequests.length})</h2>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
+                    <button class="btn btn-success" onclick="adminManager.exportHikvisionRequestsToExcel()" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
+                    <button class="btn btn-primary" onclick="adminManager.exportHikvisionMonthlyReport()" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-file-pdf"></i> تقرير شهري
+                    </button>
+                    <button class="btn btn-danger" onclick="adminManager.logoutHikvision()" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                    </button>
+                </div>
+            </div>
+
             <!-- Statistics Section -->
             <div class="hikvision-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
                 <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 1.5rem; border-radius: 12px; color: white;">
@@ -9411,22 +9427,6 @@ class AdminManager {
                     <div style="min-width: 150px;">
                         <input type="date" class="form-input" id="hikvisionDateFilter">
                     </div>
-                </div>
-            </div>
-
-            <!-- Dashboard Header -->
-            <div class="dashboard-header">
-                <h2>طلبات Hikvision (${hikvisionRequests.length})</h2>
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <button class="btn btn-success" onclick="adminManager.exportHikvisionRequestsToExcel()" style="padding: 0.5rem 1rem;">
-                        <i class="fas fa-file-excel"></i> تصدير Excel
-                    </button>
-                    <button class="btn btn-primary" onclick="adminManager.exportHikvisionMonthlyReport()" style="padding: 0.5rem 1rem;">
-                        <i class="fas fa-file-pdf"></i> تقرير شهري
-                    </button>
-                    <button class="btn btn-danger" onclick="adminManager.logoutHikvision()" style="padding: 0.5rem 1rem;">
-                        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-                    </button>
                 </div>
             </div>
 
