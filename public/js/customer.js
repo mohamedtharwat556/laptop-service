@@ -29,6 +29,14 @@ class CustomerManager {
         console.log('📝 Submitting request with data:', formData);
         console.log('🌐 API Base:', this.apiBase);
 
+        // Get logged-in staff from localStorage
+        const loggedInStaff = localStorage.getItem('loggedInStaff');
+        let staffName = null;
+        if (loggedInStaff) {
+            const staff = JSON.parse(loggedInStaff);
+            staffName = staff.name;
+        }
+
         // Handle image upload - convert to base64
         let deviceImage = '';
         if (formData.deviceImage && formData.deviceImage instanceof File) {
@@ -40,7 +48,7 @@ class CustomerManager {
             fullName: formData.fullName,
             phone: formData.phone,
             email: formData.email || '',
-            recordedBy: formData.recordedBy,
+            recordedBy: staffName || formData.recordedBy,
             laptopBrand: formData.laptopBrand,
             laptopModel: formData.laptopModel,
             serialNumber: formData.serialNumber,

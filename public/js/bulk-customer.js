@@ -305,10 +305,18 @@ class BulkCustomerManager {
 
     async handleSubmit(e) {
         e.preventDefault();
-        
+
         const form = e.target;
         const formData = new FormData(form);
-        
+
+        // Get logged-in staff from localStorage
+        const loggedInStaff = localStorage.getItem('loggedInStaff');
+        let staffName = null;
+        if (loggedInStaff) {
+            const staff = JSON.parse(loggedInStaff);
+            staffName = staff.name;
+        }
+
         // Collect customer info
         const estimatedCompletionDateValue = formData.get('estimatedCompletionDate');
         let estimatedCompletionDate = null;
@@ -322,7 +330,7 @@ class BulkCustomerManager {
         const customerData = {
             fullName: formData.get('fullName'),
             phone: formData.get('phone'),
-            recordedBy: formData.get('recordedBy'),
+            recordedBy: staffName || formData.get('recordedBy'),
             deviceCount: parseInt(formData.get('deviceCount')),
             estimatedCompletionDate: estimatedCompletionDate
         };

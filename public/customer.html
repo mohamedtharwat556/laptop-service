@@ -37,6 +37,9 @@
                 <li><a href="index.html" class="nav-link">الرئيسية</a></li>
                 <li><a href="customer.html" class="nav-link active">تقديم طلب</a></li>
                 <li><a href="track.html" class="nav-link">متابعة الطلب</a></li>
+                <li><button class="btn btn-danger" onclick="staffLogout()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </button></li>
                 <li><button class="dark-mode-toggle" id="darkModeToggle" title="تبديل الوضع الليلي">
                     <i class="fas fa-moon"></i>
                 </button></li>
@@ -47,7 +50,7 @@
     <!-- Main Content -->
     <section class="section animate__animated animate__fadeInUp" style="padding-top: 120px;">
         <h2 class="section-title">تقديم طلب صيانة</h2>
-        <div class="form-container glass-card">
+        <div class="form-container glass-card" id="requestFormContainer">
             <form id="requestForm">
                 <div class="form-group">
                     <label class="form-label">نوع الطلب *</label>
@@ -174,6 +177,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script src="js/storage-api.js"></script>
     <script src="js/app.js"></script>
+    <script>
+        // Check if staff is logged in
+        const loggedInStaff = localStorage.getItem('loggedInStaff');
+        if (!loggedInStaff) {
+            window.location.href = 'staff-login.html?redirect=customer.html';
+        }
+
+        // Logout function
+        function staffLogout() {
+            localStorage.removeItem('loggedInStaff');
+            window.location.href = 'staff-login.html?redirect=customer.html';
+        }
+    </script>
     <script src="js/customer.js"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/darkmode.js"></script>

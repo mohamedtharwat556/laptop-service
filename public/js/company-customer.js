@@ -35,6 +35,14 @@ class CompanyCustomerManager {
             const laptopBrandOther = formData.get('laptopBrandOther');
             const finalLaptopBrand = laptopBrand === 'Other' ? laptopBrandOther : laptopBrand;
 
+            // Get logged-in staff from localStorage
+            const loggedInStaff = localStorage.getItem('loggedInStaff');
+            let staffName = null;
+            if (loggedInStaff) {
+                const staff = JSON.parse(loggedInStaff);
+                staffName = staff.name;
+            }
+
             // Handle estimated completion date
             const estimatedCompletionDateValue = formData.get('estimatedCompletionDate');
             let estimatedCompletionDate = null;
@@ -49,7 +57,7 @@ class CompanyCustomerManager {
                 fullName: formData.get('fullName'),
                 phone: formData.get('phone'),
                 employeeName: formData.get('employeeName'),
-                recordedBy: formData.get('recordedBy'),
+                recordedBy: staffName || formData.get('recordedBy'),
                 laptopBrand: finalLaptopBrand,
                 laptopModel: formData.get('laptopModel'),
                 serialNumber: formData.get('serialNumber'),
