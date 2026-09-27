@@ -51,3 +51,6 @@ temp/
 
 # Local backups folder (not in git)
 backups/
+
+# Git hooks (local configuration, not in git)
+.git/hooks/

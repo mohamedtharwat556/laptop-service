@@ -1,6 +1,10 @@
 # سكريبت النسخ الاحتياطي التلقائي - YAS Laptop Service
 # PowerShell Script for Windows
 
+# الحصول على المسار الحالي (مشروع)
+$ScriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+Set-Location $ScriptPath
+
 # الحصول على التاريخ الحالي
 $Date = Get-Date -Format "yyyy-MM-dd"
 $Time = Get-Date -Format "HH-mm-ss"
