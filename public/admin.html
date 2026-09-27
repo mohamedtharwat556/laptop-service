@@ -496,7 +496,12 @@
                             </div>
                             <div style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; color: #333;">كلمة المرور:</label>
-                                <input type="password" id="password" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" placeholder="admin123">
+                                <div style="position: relative;">
+                                    <input type="password" id="password" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; padding-left: 40px;" placeholder="admin123">
+                                    <button type="button" onclick="toggleAdminPassword()" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666; padding: 0;">
+                                        <i class="fas fa-eye" id="adminEyeIcon"></i>
+                                    </button>
+                                </div>
                             </div>
                             <button onclick="login()" style="width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">دخول</button>
                             <div id="loginError" style="color: #dc3545; text-align: center; margin-top: 10px; display: none;"></div>
@@ -519,6 +524,21 @@
             } else {
                 loginError.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
                 loginError.style.display = 'block';
+            }
+        }
+
+        function toggleAdminPassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('adminEyeIcon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
             }
         }
 
