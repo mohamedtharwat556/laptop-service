@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم Hikvision - مركز خدمة لابتوب YAS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/ai-animations.css">
+    <link rel="stylesheet" href="css/advanced-animations.css">
+</head>
+<body>
+    <!-- Video Background -->
+    <div class="video-background">
+        <video autoplay muted loop playsinline>
+            <source src="assets/videos/Technician_repairing_laptop_in_workshop_202608191242.mp4" type="video/mp4">
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
+    <div class="glow-orb-1"></div>
+    <div class="glow-orb-2"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="assets/images/yas-logo.svg" alt="YAS Logo" class="logo-img">
+                <span class="logo-text">
+                    <span class="logo-name">YAS</span>
+                    <span class="logo-sub">HIKVISION</span>
+                </span>
+            </a>
+            <button class="mobile-menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">الرئيسية</a></li>
+                <li><a href="hikvision-customer.html" class="nav-link">تقديم طلب</a></li>
+                <li><button class="btn btn-danger" onclick="hikvisionAdminLogout()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </button></li>
+                <li><button class="dark-mode-toggle" id="darkModeToggle" title="تبديل الوضع الليلي">
+                    <i class="fas fa-moon"></i>
+                </button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="section animate__animated animate__fadeInUp" style="padding-top: 120px;">
+        <h2 class="section-title">لوحة تحكم Hikvision</h2>
+        <div class="form-container glass-card" id="hikvisionDashboard">
+            <!-- Dashboard Content -->
+            <div id="hikvisionContent"></div>
+        </div>
+    </section>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+    <script>
+        // Check if Hikvision admin is logged in
+        const loggedInHikvisionAdmin = localStorage.getItem('loggedInHikvisionAdmin');
+        if (!loggedInHikvisionAdmin) {
+            window.location.href = 'hikvision-admin-login.html';
+        }
+
+        // Logout function
+        function hikvisionAdminLogout() {
+            localStorage.removeItem('loggedInHikvisionAdmin');
+            window.location.href = 'hikvision-admin-login.html';
+        }
+    </script>
+    <script src="js/hikvision-admin.js"></script>
+    <script src="js/darkmode.js"></script>
+    <script src="js/mobile-menu.js"></script>
+</body>
+</html>
