@@ -4188,9 +4188,9 @@ class AdminManager {
             // Prepare data for Excel
             const excelData = filteredRequests.map(request => ({
                 'رقم الطلب': request.requestNumber || request.request_number,
-                'اسم الموظف': request.fullName || request.full_name || request.companyName || '',
-                'اسم الشركة': request.companyName || '',
-                'رقم الهاتف': request.phone || request.companyPhone || '',
+                'الاسم': request.fullName || request.full_name || '',
+                'رقم الهاتف': request.phone || '',
+                'اسم الموظف': request.employeeName || request.employee_name || '',
                 'ماركة اللابتوب': request.laptopBrand || request.laptop_brand || '',
                 'موديل اللابتوب': request.laptopModel || request.laptop_model || '',
                 'الرقم التسلسلي': request.serialNumber || request.serial_number || '',
@@ -4250,9 +4250,9 @@ class AdminManager {
             // Prepare data for Excel
             const excelData = filteredRequests.map(request => ({
                 'رقم الطلب': request.requestNumber || request.request_number,
-                'اسم الموظف': request.fullName || request.full_name || request.companyName || '',
-                'اسم الشركة': request.companyName || '',
-                'رقم الهاتف': request.phone || request.companyPhone || '',
+                'الاسم': request.fullName || request.full_name || '',
+                'رقم الهاتف': request.phone || '',
+                'اسم الموظف': request.employeeName || request.employee_name || '',
                 'ماركة اللابتوب': request.laptopBrand || request.laptop_brand || '',
                 'موديل اللابتوب': request.laptopModel || request.laptop_model || '',
                 'الرقم التسلسلي': request.serialNumber || request.serial_number || '',
@@ -4326,6 +4326,7 @@ class AdminManager {
                             <th style="padding: 0.5rem;">رقم الطلب</th>
                             <th style="padding: 0.5rem;">الاسم</th>
                             <th style="padding: 0.5rem;">الهاتف</th>
+                            <th style="padding: 0.5rem;">اسم الموظف</th>
                             <th style="padding: 0.5rem;">الجهاز</th>
                             <th style="padding: 0.5rem;">الرقم التسلسلي</th>
                             <th style="padding: 0.5rem;">الحالة</th>
@@ -4342,6 +4343,7 @@ class AdminManager {
                                 <td style="padding: 0.5rem; font-weight: 600; color: #3b82f6;">${companyRequest.request_number || companyRequest.requestNumber}</td>
                                 <td style="padding: 0.5rem; font-weight: 600;">${companyRequest.full_name || companyRequest.fullName}</td>
                                 <td style="padding: 0.5rem;" dir="ltr">${companyRequest.phone}</td>
+                                <td style="padding: 0.5rem; font-weight: 600; color: #8b5cf6;">${companyRequest.employee_name || companyRequest.employeeName || '—'}</td>
                                 <td style="padding: 0.5rem;">${companyRequest.laptop_brand || companyRequest.laptopBrand} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</td>
                                 <td style="padding: 0.5rem; font-size: 0.8rem; color: #94a3b8;" dir="ltr">${companyRequest.serial_number || companyRequest.serialNumber || '—'}</td>
                                 <td style="padding: 0.5rem;">
@@ -4407,6 +4409,7 @@ class AdminManager {
             filtered = filtered.filter(r =>
                 ((r.full_name || r.fullName) && (r.full_name || r.fullName).toLowerCase().includes(searchTerm)) ||
                 (r.phone && r.phone.includes(searchTerm)) ||
+                ((r.employee_name || r.employeeName) && (r.employee_name || r.employeeName).toLowerCase().includes(searchTerm)) ||
                 ((r.request_number || r.requestNumber) && (r.request_number || r.requestNumber).toLowerCase().includes(searchTerm)) ||
                 ((r.serial_number || r.serialNumber) && (r.serial_number || r.serialNumber).toLowerCase().includes(searchTerm)) ||
                 ((r.laptop_brand || r.laptopBrand) && (r.laptop_brand || r.laptopBrand).toLowerCase().includes(searchTerm))
@@ -4506,6 +4509,7 @@ class AdminManager {
                                 </button>
                             </div>
                         </div>
+                        <div class="request-detail-item"><span class="request-detail-label">اسم الموظف</span><span class="request-detail-value">${companyRequest.employee_name || companyRequest.employeeName || '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptop_brand || companyRequest.laptopBrand || ''} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${companyRequest.serial_number || companyRequest.serialNumber || '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام المتوقع</span><span class="request-detail-value">${companyRequest.estimatedCompletionDate ? Utils.formatDate(companyRequest.estimatedCompletionDate) : (companyRequest.estimated_completion_date ? Utils.formatDate(companyRequest.estimated_completion_date) : '—')}</span></div>

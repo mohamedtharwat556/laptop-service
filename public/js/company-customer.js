@@ -48,6 +48,7 @@ class CompanyCustomerManager {
             const requestData = {
                 fullName: formData.get('fullName'),
                 phone: formData.get('phone'),
+                employeeName: formData.get('employeeName'),
                 laptopBrand: finalLaptopBrand,
                 laptopModel: formData.get('laptopModel'),
                 serialNumber: formData.get('serialNumber'),

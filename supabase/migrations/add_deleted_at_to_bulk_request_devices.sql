@@ -1,4 +1,9 @@
--- Add deleted_at column to bulk_request_devices table for soft delete functionality
+دلوقتي دا مشروعي معمول ومرفوع ع supabase ومرفوع ع جيت هاب ومربوط الباك والفرونت علي vercal 
+https://vercel.com/projs-projects-5ba5cc35/laptop-service
+
+https://github.com/mohamedtharwat556/laptop-service
+
+انا عايز تقرا كل الملفات ونكمل تعديلات واوع اوع اوع تضيغ اللي ع البرنامج-- Add deleted_at column to bulk_request_devices table for soft delete functionality
 DO $$
 BEGIN
     IF NOT EXISTS (
