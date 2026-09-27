@@ -9353,7 +9353,10 @@ class AdminManager {
                     <button class="btn btn-primary" onclick="adminManager.exportHikvisionMonthlyReport()" style="padding: 0.5rem 1rem;">
                         <i class="fas fa-file-pdf"></i> تقرير شهري
                     </button>
-                    <button class="btn btn-danger" onclick="adminManager.logoutHikvision()" style="padding: 0.5rem 1rem;">
+                    <button class="btn btn-danger" onclick="adminManager.deleteAllHikvisionRequests()" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-trash-alt"></i> حذف الكل
+                    </button>
+                    <button class="btn btn-secondary" onclick="adminManager.logoutHikvision()" style="padding: 0.5rem 1rem;">
                         <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
                     </button>
                 </div>
@@ -9809,6 +9812,40 @@ ${this.calculateHikvisionStatistics(hikvisionRequests).topModels.map((m, i) => `
     logoutHikvision() {
         sessionStorage.removeItem('hikvisionAuthenticated');
         this.renderHikvisionRequests();
+    }
+
+    async deleteAllHikvisionRequests() {
+        const hikvisionRequests = this.requests.filter(r => 
+            (r.requestType === 'hikvision' || r.request_type === 'hikvision')
+        );
+
+        if (hikvisionRequests.length === 0) {
+            alert('لا توجد طلبات Hikvision للحذف');
+            return;
+        }
+
+        if (!confirm(`هل أنت متأكد من حذف جميع طلبات Hikvision (${hikvisionRequests.length} طلب)؟\n\nهذا الإجراء لا يمكن التراجع عنه!`)) {
+            return;
+        }
+
+        try {
+            let deletedCount = 0;
+            for (const request of hikvisionRequests) {
+                const response = await fetch(`/api/requests/${request.id}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    deletedCount++;
+                }
+            }
+
+            alert(`تم حذف ${deletedCount} طلب Hikvision بنجاح`);
+            await this.loadRequests();
+            this.renderHikvisionRequestsTable();
+        } catch (error) {
+            console.error('Error deleting all Hikvision requests:', error);
+            alert('فشل حذف الطلبات');
+        }
     }
 
     /**
