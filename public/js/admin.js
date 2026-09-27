@@ -9355,6 +9355,57 @@ class AdminManager {
                 </div>
             </div>
 
+            <!-- Search and Filters -->
+            <div class="glass-card" style="padding: 1.5rem; margin-bottom: 2rem;">
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <input type="text" class="form-input" placeholder="🔍 بحث في طلبات Hikvision..." id="hikvisionSearchInput" style="width: 100%;">
+                    </div>
+                    <div style="min-width: 150px;">
+                        <select class="form-input" id="hikvisionModelFilter">
+                            <option value="">كل الموديلات</option>
+                            ${stats.uniqueModels.map(model => `<option value="${model}">${model}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div style="min-width: 150px;">
+                        <select class="form-input" id="hikvisionStatusFilter">
+                            <option value="">كل الحالات</option>
+                            <option value="Received">تم الاستلام</option>
+                            <option value="Waiting Inspection">بانتظار الفحص</option>
+                            <option value="Under Maintenance">قيد الصيانة</option>
+                            <option value="Waiting Parts">بانتظار قطع الغيار</option>
+                            <option value="Ready">جاهز للتسليم</option>
+                            <option value="Delivered">تم التسليم</option>
+                        </select>
+                    </div>
+                    <div style="min-width: 150px;">
+                        <input type="date" class="form-input" id="hikvisionDateFilter">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requests Table -->
+            <div class="table-container" style="overflow-x: auto; margin-bottom: 2rem;">
+                <table class="table" style="min-width: 1200px;">
+                    <thead>
+                        <tr>
+                            <th class="table-hide-mobile">Request #</th>
+                            <th>Customer</th>
+                            <th class="table-hide-mobile">Phone</th>
+                            <th>Device</th>
+                            <th>Problem</th>
+                            <th>Status</th>
+                            <th class="table-hide-mobile">Expected Date</th>
+                            <th>Severity</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hikvisionRequestsTableBody">
+                        ${this.renderHikvisionTableRows(hikvisionRequests)}
+                    </tbody>
+                </table>
+            </div>
+
             <!-- Statistics Section -->
             <div class="hikvision-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
                 <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 1.5rem; border-radius: 12px; color: white;">
@@ -9399,57 +9450,6 @@ class AdminManager {
                         </div>
                     `).join('')}
                 </div>
-            </div>
-
-            <!-- Search and Filters -->
-            <div class="glass-card" style="padding: 1.5rem; margin-bottom: 2rem;">
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
-                    <div style="flex: 1; min-width: 200px;">
-                        <input type="text" class="form-input" placeholder="🔍 بحث في طلبات Hikvision..." id="hikvisionSearchInput" style="width: 100%;">
-                    </div>
-                    <div style="min-width: 150px;">
-                        <select class="form-input" id="hikvisionModelFilter">
-                            <option value="">كل الموديلات</option>
-                            ${stats.uniqueModels.map(model => `<option value="${model}">${model}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div style="min-width: 150px;">
-                        <select class="form-input" id="hikvisionStatusFilter">
-                            <option value="">كل الحالات</option>
-                            <option value="Received">تم الاستلام</option>
-                            <option value="Waiting Inspection">بانتظار الفحص</option>
-                            <option value="Under Maintenance">قيد الصيانة</option>
-                            <option value="Waiting Parts">بانتظار قطع الغيار</option>
-                            <option value="Ready">جاهز للتسليم</option>
-                            <option value="Delivered">تم التسليم</option>
-                        </select>
-                    </div>
-                    <div style="min-width: 150px;">
-                        <input type="date" class="form-input" id="hikvisionDateFilter">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Requests Table -->
-            <div class="table-container" style="overflow-x: auto;">
-                <table class="table" style="min-width: 1200px;">
-                    <thead>
-                        <tr>
-                            <th class="table-hide-mobile">Request #</th>
-                            <th>Customer</th>
-                            <th class="table-hide-mobile">Phone</th>
-                            <th>Device</th>
-                            <th>Problem</th>
-                            <th>Status</th>
-                            <th class="table-hide-mobile">Expected Date</th>
-                            <th>Severity</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="hikvisionRequestsTableBody">
-                        ${this.renderHikvisionTableRows(hikvisionRequests)}
-                    </tbody>
-                </table>
             </div>
         `;
 
