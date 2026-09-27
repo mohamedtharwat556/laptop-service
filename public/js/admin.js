@@ -9289,16 +9289,18 @@ class AdminManager {
         if (authForm) {
             authForm.onsubmit = (e) => {
                 e.preventDefault();
-                const username = authForm.querySelector('[name="hikvisionUsername"]').value;
-                const password = authForm.querySelector('[name="hikvisionPassword"]').value;
+                const username = authForm.querySelector('[name="hikvisionUsername"]').value.trim();
+                const password = authForm.querySelector('[name="hikvisionPassword"]').value.trim();
                 const errorDiv = document.getElementById('hikvisionAuthError');
                 const errorMessage = document.getElementById('hikvisionAuthErrorMessage');
 
                 console.log('🔐 Hikvision Login Attempt:');
-                console.log('Username:', username);
-                console.log('Password:', password);
-                console.log('Expected Username: hikvision');
-                console.log('Expected Password: hikvision123');
+                console.log('Username:', `"${username}"`);
+                console.log('Password:', `"${password}"`);
+                console.log('Username Length:', username.length);
+                console.log('Password Length:', password.length);
+                console.log('Expected Username: "hikvision"');
+                console.log('Expected Password: "hikvision123"');
 
                 // Simple authentication
                 if (username === 'hikvision' && password === 'hikvision123') {
@@ -9309,6 +9311,8 @@ class AdminManager {
                     this.renderHikvisionRequestsTable();
                 } else {
                     console.log('❌ Authentication failed');
+                    console.log('Username match:', username === 'hikvision');
+                    console.log('Password match:', password === 'hikvision123');
                     errorDiv.style.display = 'block';
                     errorMessage.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
                 }
