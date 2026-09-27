@@ -1552,8 +1552,9 @@ class AdminManager {
         const todayNormalOrders = this.requests.filter(r => {
             const requestDate = new Date(r.createdAt);
             const isToday = requestDate >= today;
-            console.log('📊 Normal request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday);
-            return isToday;
+            const isNotHikvision = (r.requestType !== 'hikvision' && r.request_type !== 'hikvision');
+            console.log('📊 Normal request:', r.requestNumber, 'Date:', r.createdAt, 'Is today:', isToday, 'Not Hikvision:', isNotHikvision);
+            return isToday && isNotHikvision;
         });
         const todayBulkOrders = this.bulkRequests.filter(r => {
             const requestDate = new Date(r.createdAt);
@@ -1569,7 +1570,7 @@ class AdminManager {
         });
         const todayOrders = todayNormalOrders.length + todayBulkOrders.length + todayCompanyOrders.length;
 
-        // Today's laptop orders (all types combined)
+        // Today's laptop orders (all types combined, excluding Hikvision)
         const todayLaptopOrders = todayNormalOrders.length + todayBulkOrders.length + todayCompanyOrders.length;
 
         console.log('📊 Today normal orders:', todayNormalOrders.length);
@@ -1577,7 +1578,7 @@ class AdminManager {
         console.log('📊 Today company orders:', todayCompanyOrders.length);
         console.log('📊 Total today orders:', todayOrders);
 
-        const totalRevenue = this.requests
+        const totalRevenue = normalRequests
             .filter(r => r.cost && r.cost > 0)
             .reduce((sum, r) => sum + (r.cost || 0), 0);
 
@@ -1602,16 +1603,19 @@ class AdminManager {
         const bulkCompletedRequests = this.bulkRequests.filter(r => r.status === 'Delivered');
 
         // Normal requests stats (separate)
-        const openRequests = this.requests.filter(r =>
+        const normalRequests = this.requests.filter(r => 
+            (r.requestType !== 'hikvision' && r.request_type !== 'hikvision')
+        );
+        const openRequests = normalRequests.filter(r =>
             ['Received', 'Waiting Inspection', 'Under Maintenance', 'Waiting Parts'].includes(r.status)
         );
-        const completedRequests = this.requests.filter(r => r.status === 'Delivered');
+        const completedRequests = normalRequests.filter(r => r.status === 'Delivered');
 
         // Laptops under maintenance (all types)
         const maintenanceStatuses = ['Under Maintenance', 'Waiting Inspection', 'Waiting Parts'];
         
         // Normal requests: each request = 1 laptop
-        const normalLaptopsUnderMaintenance = this.requests.filter(r =>
+        const normalLaptopsUnderMaintenance = normalRequests.filter(r =>
             maintenanceStatuses.includes(r.status)
         ).length;
 
@@ -1635,7 +1639,7 @@ class AdminManager {
         const receivedStatus = 'Received';
         
         // Normal requests: each request = 1 laptop
-        const normalLaptopsReceived = this.requests.filter(r => r.status === receivedStatus).length;
+        const normalLaptopsReceived = normalRequests.filter(r => r.status === receivedStatus).length;
 
         // Company requests: each request = 1 laptop
         const companyLaptopsReceived = this.companyRequests.filter(r => r.status === receivedStatus).length;
@@ -1678,7 +1682,7 @@ class AdminManager {
             return { distribution, percentages, total };
         };
 
-        const normalStats = calculateStatusDistribution(this.requests);
+        const normalStats = calculateStatusDistribution(normalRequests);
         
         // Calculate bulk devices distribution
         const bulkDevices = [];
@@ -1693,7 +1697,7 @@ class AdminManager {
 
         return {
             // Normal requests stats
-            totalRequests: this.requests.length,
+            totalRequests: normalRequests.length,
             completedRequests: completedRequests.length,
             todayOrders: todayOrders,
             todayLaptopOrders: todayLaptopOrders,
@@ -5991,6 +5995,11 @@ class AdminManager {
         const dateFrom = document.getElementById('dateFrom')?.value || '';
         const dateTo = document.getElementById('dateTo')?.value || '';
 
+        // Exclude Hikvision requests from normal requests section
+        filtered = filtered.filter(r => 
+            (r.requestType !== 'hikvision' && r.request_type !== 'hikvision')
+        );
+
         if (searchTerm) {
             // reset special filter on manual search
             this._specialFilter = null;
@@ -8588,7 +8597,7 @@ class AdminManager {
         // Filter today's requests from all types
         const todayNormal = this.requests.filter(r => {
             const requestDate = new Date(r.createdAt);
-            return requestDate >= today;
+            return requestDate >= today && (r.requestType !== 'hikvision' && r.request_type !== 'hikvision');
         });
 
         const todayBulk = this.bulkRequests.filter(r => {
