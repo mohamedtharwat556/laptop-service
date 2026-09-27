@@ -887,10 +887,10 @@ class AdminManager {
         console.log('📦 Total bulk requests:', this.bulkRequests.length);
         console.log('🏢 Total company requests:', this.companyRequests.length);
 
-        // Count today's requests from all types
+        // Count today's requests from all types (excluding Hikvision)
         const todayNormal = this.requests.filter(r => {
             const requestDate = new Date(r.createdAt);
-            return requestDate >= today;
+            return requestDate >= today && (r.requestType !== 'hikvision' && r.request_type !== 'hikvision');
         });
 
         const todayBulk = this.bulkRequests.filter(r => {
@@ -1135,10 +1135,10 @@ class AdminManager {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Count today's requests from all types
+        // Count today's requests from all types (excluding Hikvision)
         const todayNormal = this.requests.filter(r => {
             const requestDate = new Date(r.createdAt);
-            return requestDate >= today;
+            return requestDate >= today && (r.requestType !== 'hikvision' && r.request_type !== 'hikvision');
         });
 
         const todayBulk = this.bulkRequests.filter(r => {
@@ -8673,10 +8673,10 @@ class AdminManager {
 
         switch (tab) {
             case 'all':
-                // Combine all today's requests
+                // Combine all today's requests (excluding Hikvision)
                 const todayNormal = this.requests.filter(r => {
                     const requestDate = new Date(r.createdAt);
-                    return requestDate >= today;
+                    return requestDate >= today && (r.requestType !== 'hikvision' && r.request_type !== 'hikvision');
                 }).map(r => ({ ...r, requestType: 'normal' }));
 
                 const todayBulk = this.bulkRequests.filter(r => {
@@ -8695,7 +8695,7 @@ class AdminManager {
             case 'normal':
                 filteredRequests = this.requests.filter(r => {
                     const requestDate = new Date(r.createdAt);
-                    return requestDate >= today;
+                    return requestDate >= today && (r.requestType !== 'hikvision' && r.request_type !== 'hikvision');
                 }).map(r => ({ ...r, requestType: 'normal' }));
                 requestType = 'الطلبات العادية';
                 break;
@@ -9287,6 +9287,9 @@ class AdminManager {
         container.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h3 style="margin: 0;">طلبات Hikvision (${hikvisionRequests.length})</h3>
+                <button class="btn btn-success" onclick="adminManager.exportHikvisionRequestsToExcel()" style="padding: 0.5rem 1rem;">
+                    <i class="fas fa-file-excel"></i> تصدير Excel
+                </button>
             </div>
             <div class="table-container" style="overflow-x: auto;">
                 <table class="table" style="min-width: 1000px;">
