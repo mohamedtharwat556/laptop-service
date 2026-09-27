@@ -3078,6 +3078,8 @@ class AdminManager {
                 r.requestNumber.toLowerCase().includes(searchTerm) ||
                 r.customerName.toLowerCase().includes(searchTerm) ||
                 r.customerPhone.includes(searchTerm) ||
+                (r.recordedBy && r.recordedBy.toLowerCase().includes(searchTerm)) ||
+                (r.recorded_by && r.recorded_by.toLowerCase().includes(searchTerm)) ||
                 (r.devices && r.devices.some(d =>
                     (d.laptopBrand && d.laptopBrand.toLowerCase().includes(searchTerm)) ||
                     (d.laptopModel && d.laptopModel.toLowerCase().includes(searchTerm)) ||
@@ -3224,6 +3226,7 @@ class AdminManager {
                                         <div style="display: flex; align-items: center; gap: 1rem;">
                                             <span style="font-weight: 600; font-size: 1rem;">${bulkRequest.customerName}</span>
                                             <span style="color: #94a3b8; font-size: 0.875rem;" dir="ltr">${bulkRequest.customerPhone}</span>
+                                            <span style="font-weight: 600; color: #10b981; font-size: 0.875rem;">سجل: ${bulkRequest.recordedBy || bulkRequest.recorded_by || '—'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -3685,6 +3688,7 @@ class AdminManager {
                         'رقم الطلب': bulkRequest.requestNumber,
                         'اسم العميل': bulkRequest.customerName,
                         'رقم الهاتف': bulkRequest.customerPhone,
+                        'من سجل البيانات': bulkRequest.recordedBy || bulkRequest.recorded_by || '',
                         'رقم الجهاز': index + 1,
                         'ماركة اللابتوب': device.laptopBrand || '',
                         'موديل اللابتوب': device.laptopModel || '',
@@ -3750,6 +3754,7 @@ class AdminManager {
                     'رقم الطلب': bulkRequest.requestNumber,
                     'اسم العميل': bulkRequest.customerName,
                     'رقم الهاتف': bulkRequest.customerPhone,
+                    'من سجل البيانات': bulkRequest.recordedBy || bulkRequest.recorded_by || '',
                     'رقم الجهاز': index + 1,
                     'ماركة اللابتوب': device.laptopBrand || '',
                     'موديل اللابتوب': device.laptopModel || '',
@@ -3811,6 +3816,7 @@ class AdminManager {
                 'رقم الطلب': request.requestNumber,
                 'اسم العميل': request.fullName,
                 'رقم الهاتف': request.phone,
+                'من سجل البيانات': request.recordedBy || request.recorded_by || '',
                 'ماركة اللابتوب': request.laptopBrand || '',
                 'موديل اللابتوب': request.laptopModel || '',
                 'الرقم التسلسلي': request.serialNumber || '',
@@ -3957,6 +3963,7 @@ class AdminManager {
                 'رقم الطلب': request.requestNumber,
                 'اسم العميل': request.fullName,
                 'رقم الهاتف': request.phone,
+                'من سجل البيانات': request.recordedBy || request.recorded_by || '',
                 'ماركة اللابتوب': request.laptopBrand || '',
                 'موديل اللابتوب': request.laptopModel || '',
                 'الرقم التسلسلي': request.serialNumber || '',
@@ -4075,6 +4082,7 @@ class AdminManager {
                             'رقم الطلب': request.requestNumber,
                             'اسم العميل': request.customerName,
                             'رقم الهاتف': request.customerPhone,
+                            'من سجل البيانات': request.recordedBy || request.recorded_by || '',
                             'ماركة اللابتوب': device.laptopBrand,
                             'موديل اللابتوب': device.laptopModel,
                             'الرقم التسلسلي': device.serialNumber,
@@ -4190,6 +4198,7 @@ class AdminManager {
                 'رقم الطلب': request.requestNumber || request.request_number,
                 'الاسم': request.fullName || request.full_name || '',
                 'رقم الهاتف': request.phone || '',
+                'من سجل البيانات': request.recordedBy || request.recorded_by || '',
                 'اسم الموظف': request.employeeName || request.employee_name || '',
                 'ماركة اللابتوب': request.laptopBrand || request.laptop_brand || '',
                 'موديل اللابتوب': request.laptopModel || request.laptop_model || '',
@@ -4252,6 +4261,7 @@ class AdminManager {
                 'رقم الطلب': request.requestNumber || request.request_number,
                 'الاسم': request.fullName || request.full_name || '',
                 'رقم الهاتف': request.phone || '',
+                'من سجل البيانات': request.recordedBy || request.recorded_by || '',
                 'اسم الموظف': request.employeeName || request.employee_name || '',
                 'ماركة اللابتوب': request.laptopBrand || request.laptop_brand || '',
                 'موديل اللابتوب': request.laptopModel || request.laptop_model || '',
@@ -4326,6 +4336,7 @@ class AdminManager {
                             <th style="padding: 0.5rem;">رقم الطلب</th>
                             <th style="padding: 0.5rem;">الاسم</th>
                             <th style="padding: 0.5rem;">الهاتف</th>
+                            <th style="padding: 0.5rem;">من سجل البيانات</th>
                             <th style="padding: 0.5rem;">اسم الموظف</th>
                             <th style="padding: 0.5rem;">الجهاز</th>
                             <th style="padding: 0.5rem;">الرقم التسلسلي</th>
@@ -4343,6 +4354,7 @@ class AdminManager {
                                 <td style="padding: 0.5rem; font-weight: 600; color: #3b82f6;">${companyRequest.request_number || companyRequest.requestNumber}</td>
                                 <td style="padding: 0.5rem; font-weight: 600;">${companyRequest.full_name || companyRequest.fullName}</td>
                                 <td style="padding: 0.5rem;" dir="ltr">${companyRequest.phone}</td>
+                                <td style="padding: 0.5rem; font-weight: 600; color: #10b981;">${companyRequest.recorded_by || companyRequest.recordedBy || '—'}</td>
                                 <td style="padding: 0.5rem; font-weight: 600; color: #8b5cf6;">${companyRequest.employee_name || companyRequest.employeeName || '—'}</td>
                                 <td style="padding: 0.5rem;">${companyRequest.laptop_brand || companyRequest.laptopBrand} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</td>
                                 <td style="padding: 0.5rem; font-size: 0.8rem; color: #94a3b8;" dir="ltr">${companyRequest.serial_number || companyRequest.serialNumber || '—'}</td>
@@ -4409,6 +4421,7 @@ class AdminManager {
             filtered = filtered.filter(r =>
                 ((r.full_name || r.fullName) && (r.full_name || r.fullName).toLowerCase().includes(searchTerm)) ||
                 (r.phone && r.phone.includes(searchTerm)) ||
+                ((r.recorded_by || r.recordedBy) && (r.recorded_by || r.recordedBy).toLowerCase().includes(searchTerm)) ||
                 ((r.employee_name || r.employeeName) && (r.employee_name || r.employeeName).toLowerCase().includes(searchTerm)) ||
                 ((r.request_number || r.requestNumber) && (r.request_number || r.requestNumber).toLowerCase().includes(searchTerm)) ||
                 ((r.serial_number || r.serialNumber) && (r.serial_number || r.serialNumber).toLowerCase().includes(searchTerm)) ||
@@ -4509,6 +4522,7 @@ class AdminManager {
                                 </button>
                             </div>
                         </div>
+                        <div class="request-detail-item"><span class="request-detail-label">من سجل البيانات</span><span class="request-detail-value" style="font-weight: 600; color: #10b981;">${companyRequest.recorded_by || companyRequest.recordedBy || '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">اسم الموظف</span><span class="request-detail-value">${companyRequest.employee_name || companyRequest.employeeName || '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${companyRequest.laptop_brand || companyRequest.laptopBrand || ''} ${companyRequest.laptop_model || companyRequest.laptopModel || ''}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${companyRequest.serial_number || companyRequest.serialNumber || '—'}</span></div>
@@ -4960,6 +4974,7 @@ class AdminManager {
                                 </button>
                             </div>
                         </div>
+                        <div class="request-detail-item"><span class="request-detail-label">من سجل البيانات</span><span class="request-detail-value" style="font-weight: 600; color: #10b981;">${bulkRequest.recordedBy || bulkRequest.recorded_by || '—'}</span></div>
                         <div class="request-detail-item"><span class="request-detail-label">عدد الأجهزة</span><span class="request-detail-value">${bulkRequest.deviceCount}</span></div>
                     </div>
 
@@ -5891,6 +5906,7 @@ class AdminManager {
                             <th class="table-hide-mobile">Request #</th>
                             <th>Customer</th>
                             <th class="table-hide-mobile">Phone</th>
+                            <th>من سجل البيانات</th>
                             <th>Device</th>
                             <th>Status</th>
                             <th class="table-hide-mobile">Priority</th>
@@ -5906,6 +5922,7 @@ class AdminManager {
                                 <td class="table-hide-mobile"><strong>${request.requestNumber}</strong></td>
                                 <td>${request.fullName}</td>
                                 <td class="table-hide-mobile" dir="ltr">${request.phone}</td>
+                                <td style="font-weight: 600; color: #10b981;">${request.recordedBy || request.recorded_by || '—'}</td>
                                 <td>
                                     <div>${request.laptopBrand} ${request.laptopModel || ''}</div>
                                     ${request.serialNumber && request.serialNumber !== 'N/A' ? `<div style="font-size: 0.875rem; color: #94a3b8;" dir="ltr">SN: ${request.serialNumber}</div>` : ''}
@@ -5975,6 +5992,8 @@ class AdminManager {
                 r.requestNumber.toLowerCase().includes(searchTerm) ||
                 r.fullName.toLowerCase().includes(searchTerm) ||
                 r.phone.includes(searchTerm) ||
+                (r.recordedBy && r.recordedBy.toLowerCase().includes(searchTerm)) ||
+                (r.recorded_by && r.recorded_by.toLowerCase().includes(searchTerm)) ||
                 (r.laptopBrand && r.laptopBrand.toLowerCase().includes(searchTerm)) ||
                 (r.laptopModel && r.laptopModel.toLowerCase().includes(searchTerm)) ||
                 (r.serialNumber && r.serialNumber.toLowerCase().includes(searchTerm)) ||
@@ -6897,6 +6916,7 @@ class AdminManager {
                             </button>
                         </div>
                     </div>
+                    <div class="request-detail-item"><span class="request-detail-label">من سجل البيانات</span><span class="request-detail-value" style="font-weight: 600; color: #10b981;">${request.recordedBy || request.recorded_by || '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">الجهاز</span><span class="request-detail-value">${request.laptopBrand} ${request.laptopModel || ''}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">الرقم التسلسلي</span><span class="request-detail-value" dir="ltr">${request.serialNumber || '—'}</span></div>
                     <div class="request-detail-item"><span class="request-detail-label">تاريخ الاستلام</span><span class="request-detail-value">${request.receivedDate || '—'}</span></div>

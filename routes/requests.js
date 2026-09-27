@@ -19,6 +19,7 @@ router.get('/', async (req, res) => {
             email: item.email,
             referralCode: item.referral_code || '',
             deviceType: item.device_type,
+            recordedBy: item.recorded_by,
             laptopBrand: item.laptop_brand,
             laptopModel: item.laptop_model,
             serialNumber: item.serial_number,
@@ -95,6 +96,7 @@ router.get('/trash', async (req, res) => {
             email: item.email,
             referralCode: item.referral_code || '',
             deviceType: item.device_type,
+            recordedBy: item.recorded_by,
             laptopBrand: item.laptop_brand,
             laptopModel: item.laptop_model,
             serialNumber: item.serial_number,
@@ -156,6 +158,7 @@ router.post('/', async (req, res) => {
             phone: req.body.phone,
             email: req.body.email || '',
             referral_code: req.body.referralCode || req.body.referral_code || '',
+            recorded_by: req.body.recordedBy || req.body.recorded_by || null,
             laptop_brand: req.body.laptopBrand || req.body.laptop_brand,
             laptop_model: req.body.laptopModel || req.body.laptop_model,
             serial_number: req.body.serialNumber || req.body.serial_number,
@@ -196,6 +199,7 @@ router.post('/', async (req, res) => {
             email: responseData.email || '',
             referralCode: responseData.referral_code || '',
             deviceType: responseData.device_type,
+            recordedBy: responseData.recorded_by,
             laptopBrand: responseData.laptop_brand,
             laptopModel: responseData.laptop_model,
             serialNumber: responseData.serial_number,
@@ -259,6 +263,7 @@ router.put('/:id', async (req, res) => {
             else if (key === 'technicianNotes') snakeCaseData.technician_notes = req.body[key];
             else if (key === 'technician') snakeCaseData.technician = req.body[key];
             else if (key === 'requestType') snakeCaseData.request_type = req.body[key];
+            else if (key === 'recordedBy') snakeCaseData.recorded_by = req.body[key];
             else snakeCaseData[key] = req.body[key];
         });
         

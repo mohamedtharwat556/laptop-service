@@ -322,6 +322,7 @@ class BulkCustomerManager {
         const customerData = {
             fullName: formData.get('fullName'),
             phone: formData.get('phone'),
+            recordedBy: formData.get('recordedBy'),
             deviceCount: parseInt(formData.get('deviceCount')),
             estimatedCompletionDate: estimatedCompletionDate
         };
@@ -357,6 +358,7 @@ class BulkCustomerManager {
             const requestData = {
                 customerName: customerData.fullName,
                 customerPhone: customerData.phone,
+                recordedBy: customerData.recordedBy,
                 deviceCount: customerData.deviceCount,
                 devices: devicesData,
                 status: 'Received',
