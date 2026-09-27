@@ -9294,13 +9294,21 @@ class AdminManager {
                 const errorDiv = document.getElementById('hikvisionAuthError');
                 const errorMessage = document.getElementById('hikvisionAuthErrorMessage');
 
+                console.log('🔐 Hikvision Login Attempt:');
+                console.log('Username:', username);
+                console.log('Password:', password);
+                console.log('Expected Username: hikvision');
+                console.log('Expected Password: hikvision123');
+
                 // Simple authentication
                 if (username === 'hikvision' && password === 'hikvision123') {
+                    console.log('✅ Authentication successful');
                     sessionStorage.setItem('hikvisionAuthenticated', 'true');
                     authContainer.style.display = 'none';
                     requestsContainer.style.display = 'block';
                     this.renderHikvisionRequestsTable();
                 } else {
+                    console.log('❌ Authentication failed');
                     errorDiv.style.display = 'block';
                     errorMessage.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
                 }
