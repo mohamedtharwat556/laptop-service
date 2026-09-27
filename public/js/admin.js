@@ -9023,28 +9023,40 @@ class AdminManager {
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10);
 
-        // Count most repeated names in company requests
+        // Count most repeated names in company requests (normalize similar names)
         const companyNameCounts = {};
         this.companyRequests.forEach(req => {
             const name = req.fullName || req.full_name || '';
             if (name) {
-                companyNameCounts[name] = (companyNameCounts[name] || 0) + 1;
+                // Normalize name (lowercase, remove extra spaces)
+                const normalizedName = name.toLowerCase().trim();
+                // Use the original name from the first occurrence, but count for normalized versions
+                if (!companyNameCounts[normalizedName]) {
+                    companyNameCounts[normalizedName] = { name: name, count: 0 };
+                }
+                companyNameCounts[normalizedName].count++;
             }
         });
-        const sortedCompanyNames = Object.entries(companyNameCounts)
-            .sort((a, b) => b[1] - a[1])
+        
+        const sortedCompanyNames = Object.values(companyNameCounts)
+            .sort((a, b) => b.count - a.count)
             .slice(0, 10);
 
-        // Count most repeated names in bulk requests (sum total devices per customer)
+        // Count most repeated names in bulk requests (normalize similar names)
         const bulkNameCounts = {};
         this.bulkRequests.forEach(req => {
             const name = req.customerName || '';
             const deviceCount = req.devices?.length || 1;
             if (name) {
-                if (!bulkNameCounts[name]) {
-                    bulkNameCounts[name] = 0;
+                // Normalize name (lowercase, remove extra spaces, special chars)
+                let normalizedName = name.toLowerCase();
+                normalizedName = normalizedName.replace(/\s+/g, ' ').trim(); // Remove extra spaces
+                normalizedName = normalizedName.replace(/[^\w\s\u0600-\u06FF]/g, ''); // Remove special chars except Arabic letters and spaces
+                
+                if (!bulkNameCounts[normalizedName]) {
+                    bulkNameCounts[normalizedName] = { name: name, count: 0 };
                 }
-                bulkNameCounts[name] += deviceCount;
+                bulkNameCounts[normalizedName].count += deviceCount;
             }
         });
         
@@ -9054,8 +9066,7 @@ class AdminManager {
         console.log('📊 Bulk name counts values:', Object.values(bulkNameCounts));
         
         // Convert to array, sort, and take top 10
-        const sortedBulkNames = Object.entries(bulkNameCounts)
-            .map(([name, count]) => ({ name, count }))
+        const sortedBulkNames = Object.values(bulkNameCounts)
             .sort((a, b) => b.count - a.count)
             .slice(0, 10);
         
@@ -9167,14 +9178,14 @@ class AdminManager {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${sortedCompanyNames.map(([name, count], index) => `
+                                    ${sortedCompanyNames.map((item, index) => `
                                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                             <td style="padding: 0.5rem;">
                                                 <span style="color: #8b5cf6; font-weight: 600;">#${index + 1}</span>
-                                                ${name}
+                                                ${item.name}
                                             </td>
                                             <td style="padding: 0.5rem; text-align: center;">
-                                                <span style="background: rgba(139, 92, 246, 0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; color: #8b5cf6;">${count}</span>
+                                                <span style="background: rgba(139, 92, 246, 0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; color: #8b5cf6;">${item.count}</span>
                                             </td>
                                         </tr>
                                     `).join('')}
