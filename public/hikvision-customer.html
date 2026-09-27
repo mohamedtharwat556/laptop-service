@@ -107,6 +107,14 @@
                     <label class="form-label">وصف المشكلة *</label>
                     <textarea class="form-textarea" name="problemDescription" required placeholder="يرجى وصف المشكلة التي تواجهها مع جهازك..."></textarea>
                 </div>
+                <div class="form-group">
+                    <label class="form-label">صورة الجهاز (اختياري)</label>
+                    <input type="file" class="form-input" name="deviceImage" accept="image/*" id="hikvisionDeviceImage">
+                    <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">يمكنك إرفاق صورة للجهاز لتسهيل التشخيص</p>
+                    <div id="imagePreview" style="margin-top: 1rem; display: none;">
+                        <img id="previewImg" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #f59e0b;">
+                    </div>
+                </div>
                 <button type="button" onclick="hikvisionCustomerManager.submitForm()" class="btn btn-primary" style="width: 100%;">
                     <i class="fas fa-paper-plane"></i>
                      إرسال الطلب
@@ -179,6 +187,26 @@
                     laptopModelOther.style.display = 'none';
                     laptopModelOther.required = false;
                     laptopModelOther.value = '';
+                }
+            });
+        }
+
+        // Handle image preview
+        const deviceImageInput = document.getElementById('hikvisionDeviceImage');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        if (deviceImageInput && imagePreview && previewImg) {
+            deviceImageInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        previewImg.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    imagePreview.style.display = 'none';
                 }
             });
         }

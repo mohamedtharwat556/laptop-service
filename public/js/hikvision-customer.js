@@ -15,6 +15,18 @@ class HikvisionCustomerManager {
     }
 
     /**
+     * Convert file to base64
+     */
+    fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    /**
      * Submit a Hikvision maintenance request
      */
     async submitRequest(formData) {
@@ -41,7 +53,7 @@ class HikvisionCustomerManager {
             receivedDate: formData.receivedDate,
             problemDescription: formData.problemDescription,
             priority: 'Medium',
-            deviceImage: ''
+            deviceImage: formData.deviceImage || ''
         };
 
         console.log('📤 Request data to send:', requestData);
@@ -91,6 +103,16 @@ class HikvisionCustomerManager {
         const laptopBrandOther = form.querySelector('[name="laptopBrandOther"]');
         const laptopModelSelect = form.querySelector('[name="laptopModel"]');
         const laptopModelOther = form.querySelector('[name="laptopModelOther"]');
+        const deviceImageInput = form.querySelector('[name="deviceImage"]');
+
+        let deviceImage = '';
+        if (deviceImageInput && deviceImageInput.files[0]) {
+            try {
+                deviceImage = await this.fileToBase64(deviceImageInput.files[0]);
+            } catch (error) {
+                console.error('Error converting image to base64:', error);
+            }
+        }
 
         const formData = {
             fullName: form.querySelector('[name="fullName"]').value,
@@ -99,7 +121,8 @@ class HikvisionCustomerManager {
             laptopModel: laptopModelSelect.value === 'Other' ? laptopModelOther.value : laptopModelSelect.value,
             serialNumber: form.querySelector('[name="serialNumber"]').value,
             receivedDate: form.querySelector('[name="receivedDate"]').value,
-            problemDescription: form.querySelector('[name="problemDescription"]').value
+            problemDescription: form.querySelector('[name="problemDescription"]').value,
+            deviceImage: deviceImage
         };
 
         try {
@@ -115,6 +138,12 @@ class HikvisionCustomerManager {
             const receivedDate = document.getElementById('receivedDate');
             if (receivedDate) {
                 receivedDate.value = new Date().toISOString().slice(0, 10);
+            }
+
+            // Reset image preview
+            const imagePreview = document.getElementById('imagePreview');
+            if (imagePreview) {
+                imagePreview.style.display = 'none';
             }
 
         } catch (error) {

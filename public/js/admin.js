@@ -9390,7 +9390,7 @@ class AdminManager {
 
             <!-- Requests Table -->
             <div class="table-container" style="overflow-x: auto; margin-bottom: 2rem;">
-                <table class="table" style="min-width: 1200px;">
+                <table class="table" style="min-width: 1300px;">
                     <thead>
                         <tr>
                             <th class="table-hide-mobile">Request #</th>
@@ -9401,6 +9401,7 @@ class AdminManager {
                             <th>Status</th>
                             <th class="table-hide-mobile">Expected Date</th>
                             <th>Severity</th>
+                            <th>Image</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -9614,7 +9615,7 @@ class AdminManager {
 
     renderHikvisionTableRows(requests) {
         if (requests.length === 0) {
-            return '<tr><td colspan="9" style="text-align: center; padding: 2rem;">لا توجد طلبات مطابقة</td></tr>';
+            return '<tr><td colspan="10" style="text-align: center; padding: 2rem;">لا توجد طلبات مطابقة</td></tr>';
         }
 
         return requests.map(request => `
@@ -9652,6 +9653,9 @@ class AdminManager {
                         <option value="High" ${request.severity === 'High' ? 'selected' : ''}>عالية</option>
                         <option value="Critical" ${request.severity === 'Critical' ? 'selected' : ''}>حرجة</option>
                     </select>
+                </td>
+                <td>
+                    ${request.deviceImage ? `<img src="${request.deviceImage}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="adminManager.viewHikvisionImage('${request.deviceImage}')" title="عرض الصورة">` : '<span style="color: #94a3b8;">-</span>'}
                 </td>
                 <td>
                     <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;" onclick="adminManager.viewHikvisionRequest(${request.id})" title="عرض التفاصيل">
@@ -9693,11 +9697,34 @@ class AdminManager {
                     <div><strong>وصف المشكلة:</strong> ${request.problemDescription || '-'}</div>
                     <div><strong>من سجل البيانات:</strong> ${request.recordedBy || request.recorded_by || '-'}</div>
                     <div><strong>الملاحظات:</strong> ${request.notes || '-'}</div>
+                    ${request.deviceImage ? `
+                        <div>
+                            <strong>صورة الجهاز:</strong>
+                            <div style="margin-top: 0.5rem;">
+                                <img src="${request.deviceImage}" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 2px solid #f59e0b;">
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
                 <button class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;" onclick="this.closest('div[style*=fixed]').remove()">إغلاق</button>
             </div>
         `;
         document.body.appendChild(modal);
+    }
+
+    viewHikvisionImage(imageSrc) {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; justify-content: center; align-items: center; z-index: 10000;';
+        modal.innerHTML = `
+            <div style="max-width: 90%; max-height: 90%;">
+                <img src="${imageSrc}" style="max-width: 100%; max-height: 90vh; border-radius: 8px; border: 2px solid #f59e0b;">
+                <button class="btn btn-danger" style="position: absolute; top: 20px; right: 20px; padding: 0.5rem 1rem;" onclick="this.closest('div[style*=fixed]').remove()">إغلاق</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.remove();
+        };
     }
 
     addHikvisionNote(id) {
