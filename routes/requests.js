@@ -130,30 +130,58 @@ router.post('/', async (req, res) => {
     try {
         console.log('📝 POST /api/requests - Request body:', req.body);
 
-        // Generate YAS request number - use MAX to get highest number
-        const { data: existingRequests } = await supabase
-            .from('requests')
-            .select('request_number')
-            .order('created_at', { ascending: false })
-            .limit(50); // Get more to find the highest number
+        // Generate request number based on request type
+        const requestType = req.body.requestType || 'single';
+        let requestNumber;
 
-        let nextNumber = 1;
-        if (existingRequests && existingRequests.length > 0) {
-            // Find the highest number from all existing requests
-            let maxNumber = 0;
-            existingRequests.forEach(req => {
-                const match = req.request_number?.match(/(\d+)/);
+        if (requestType === 'hikvision') {
+            // Generate Hikvision request number (Hik1, Hik2, etc.)
+            const { data: existingHikvisionRequests } = await supabase
+                .from('requests')
+                .select('request_number')
+                .eq('request_type', 'hikvision')
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            let nextNumber = 1;
+            if (existingHikvisionRequests && existingHikvisionRequests.length > 0) {
+                const lastRequestNumber = existingHikvisionRequests[0].request_number;
+                const match = lastRequestNumber.match(/Hik(\d+)/);
                 if (match) {
-                    const num = parseInt(match[1]);
-                    if (num > maxNumber) maxNumber = num;
+                    nextNumber = parseInt(match[1]) + 1;
                 }
-            });
-            nextNumber = maxNumber + 1;
+            }
+            requestNumber = `Hik${nextNumber}`;
+        } else {
+            // Generate normal YAS request number
+            const { data: existingRequests } = await supabase
+                .from('requests')
+                .select('request_number')
+                .order('created_at', { ascending: false })
+                .limit(50); // Get more to find the highest number
+
+            let nextNumber = 1;
+            if (existingRequests && existingRequests.length > 0) {
+                // Find the highest number from all existing requests (excluding Hikvision)
+                let maxNumber = 0;
+                existingRequests.forEach(req => {
+                    // Skip Hikvision requests
+                    if (req.request_type === 'hikvision') return;
+                    
+                    const match = req.request_number?.match(/(\d+)/);
+                    if (match) {
+                        const num = parseInt(match[1]);
+                        if (num > maxNumber) maxNumber = num;
+                    }
+                });
+                nextNumber = maxNumber + 1;
+            }
+            requestNumber = `YAS ${nextNumber}`;
         }
-        const requestNumber = `YAS ${nextNumber}`;
 
         const newRequest = {
-            request_number: req.body.requestNumber || requestNumber,
+            request_number: requestNumber,
+            request_type: requestType,
             full_name: req.body.fullName || req.body.full_name,
             phone: req.body.phone,
             email: req.body.email || '',
@@ -171,11 +199,6 @@ router.post('/', async (req, res) => {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
-
-        // Only add request_type if provided (for backward compatibility)
-        if (req.body.requestType) {
-            newRequest.request_type = req.body.requestType;
-        }
 
         // Add optional fields if provided
         if (req.body.adminReply !== undefined) newRequest.admin_reply = req.body.adminReply;
