@@ -61,43 +61,30 @@
                     <input type="tel" class="form-input" name="phone" required placeholder="أدخل رقم هاتفك" id="phoneInput">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">البريد الإلكتروني</label>
-                    <input type="email" class="form-input" name="email" placeholder="أدخل بريدك الإلكتروني (اختياري)">
+                    <label class="form-label">موديل الجهاز *</label>
+                    <select class="form-input" name="laptopModel" required id="hikvisionModelSelect">
+                        <option value="">اختر موديل الجهاز</option>
+                        <option value="DS-D5B65RD/C 8-128">Hikvision DS-D5B65RD/C 8-128</option>
+                        <option value="DS-D5B65RB/EP 8-128">Hikvision DS-D5B65RB/EP 8-128</option>
+                        <option value="DS-D5B65RD/D 8-128">Hikvision DS-D5B65RD/D 8-128</option>
+                        <option value="DS-D5B65RB/FL 8-128">Hikvision DS-D5B65RB/FL 8-128</option>
+                        <option value="DS-D5A65RB/A2 8-128">Hikvision DS-D5A65RB/A2 8-128</option>
+                        <option value="DS-D5A75RB/A2 8-128">Hikvision DS-D5A75RB/A2 8-128</option>
+                        <option value="DS-D5B86RB/EL 8-128">Hikvision DS-D5B86RB/EL 8-128</option>
+                        <option value="DS-D5B65RB/EL 8-64">Hikvision DS-D5B65RB/EL 8-64</option>
+                        <option value="DS-D5A65RB/A3 8-128">Hikvision DS-D5A65RB/A3 8-128</option>
+                        <option value="DS-D5A75RB/A3 8-128">Hikvision DS-D5A75RB/A3 8-128</option>
+                        <option value="DS-D5A75RB/B3 8-128">Hikvision DS-D5A75RB/B3 8-128</option>
+                        <option value="DS-D6055UT-D/S 4-32">Hikvision DS-D6055UT-D/S 4-32</option>
+                        <option value="DS-D6055UN-D/S 4-32">Hikvision DS-D6055UN-D/S 4-32</option>
+                        <option value="DS-D5B75RB/B2L 8-128">Hikvision DS-D5B75RB/B2L 8-128</option>
+                        <option value="DS-D5C65RB/B2L 8-128">Hikvision DS-D5C65RB/B2L 8-128</option>
+                        <option value="DS-D5B86RB/B2L 8-128">Hikvision DS-D5B86RB/B2L 8-128</option>
+                        <option value="DS-D5B65RB/EL 8-128">Hikvision DS-D5B65RB/EL 8-128</option>
+                        <option value="DS-D5B86RB/EL 8-64">Hikvision DS-D5B86RB/EL 8-64</option>
+                        <option value="DS-D5B65RB/FP 8-128">Hikvision DS-D5B65RB/FP 8-128</option>
+                    </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">ماركة اللابتوب *</label>
-                    <select class="form-input" name="laptopBrand" required id="laptopBrandSelect">
-                        <option value="">اختر ماركة اللابتوب</option>
-                        <option value="Acer">Acer</option>
-                        <option value="Apple">Apple (MacBook)</option>
-                        <option value="Asus">Asus</option>
-                        <option value="Dell">Dell</option>
-                        <option value="HP">HP</option>
-                        <option value="Lenovo">Lenovo</option>
-                        <option value="MSI">MSI</option>
-                        <option value="Microsoft">Microsoft Surface</option>
-                        <option value="Samsung">Samsung</option>
-                        <option value="Sony">Sony Vaio</option>
-                        <option value="Toshiba">Toshiba</option>
-                        <option value="LG">LG</option>
-                        <option value="Razer">Razer</option>
-                        <option value="Gigabyte">Gigabyte</option>
-                        <option value="Huawei">Huawei</option>
-                        <option value="Xiaomi">Xiaomi</option>
-                        <option value="Fujitsu">Fujitsu</option>
-                        <option value="Panasonic">Panasonic</option>
-                        <option value="Medion">Medion</option>
-                        <option value="Packard Bell">Packard Bell</option>
-                        <option value="Gateway">Gateway</option>
-                        <option value="eMachines">eMachines</option>
-                        <option value="Compaq">Compaq</option>
-                        <option value="IBM">IBM (Lenovo)</option>
-                        <option value="NEC">NEC</option>
-                        <option value="Sharp">Sharp</option>
-                        <option value="BenQ">BenQ</option>
-                        <option value="Sager">Sager</option>
-                        <option value="Clevo">Clevo</option>
-                        <option value="Origin PC">Origin PC</option>
                         <option value="Alienware">Alienware (Dell)</option>
                         <option value="Other">أخرى</option>
                     </select>
@@ -117,22 +104,8 @@
                     <input type="date" class="form-input" name="receivedDate" required id="receivedDate">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">الأولوية *</label>
-                    <select class="form-input" name="priority" required>
-                        <option value="Low">منخفضة</option>
-                        <option value="Medium" selected>متوسطة</option>
-                        <option value="High">عالية</option>
-                        <option value="Urgent">عاجلة</option>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label class="form-label">وصف المشكلة *</label>
                     <textarea class="form-textarea" name="problemDescription" required placeholder="يرجى وصف المشكلة التي تواجهها مع جهازك..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">صورة الجهاز (اختياري)</label>
-                    <input type="file" class="form-input" name="deviceImage" accept="image/*">
-                    <p style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem;">قم برفع صورة للجهاز أو للمشكلة</p>
                 </div>
                 <button type="button" onclick="hikvisionCustomerManager.submitForm()" class="btn btn-primary" style="width: 100%;">
                     <i class="fas fa-paper-plane"></i>

@@ -15,18 +15,6 @@ class HikvisionCustomerManager {
     }
 
     /**
-     * Convert file to base64
-     */
-    fileToBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
-    }
-
-    /**
      * Submit a Hikvision maintenance request
      */
     async submitRequest(formData) {
@@ -40,26 +28,20 @@ class HikvisionCustomerManager {
             hikvisionName = hikvision.name;
         }
 
-        // Handle image upload - convert to base64
-        let deviceImage = '';
-        if (formData.deviceImage && formData.deviceImage instanceof File) {
-            deviceImage = await this.fileToBase64(formData.deviceImage);
-        }
-
         const requestData = {
             requestNumber: formData.requestNumber,
             fullName: formData.fullName,
             phone: formData.phone,
-            email: formData.email || '',
+            email: '',
             recordedBy: hikvisionName,
             requestType: 'hikvision',
-            laptopBrand: formData.laptopBrand,
+            laptopBrand: 'Hikvision',
             laptopModel: formData.laptopModel,
-            serialNumber: formData.serialNumber,
+            serialNumber: '',
             receivedDate: formData.receivedDate,
             problemDescription: formData.problemDescription,
-            priority: formData.priority || 'Medium',
-            deviceImage: deviceImage
+            priority: 'Medium',
+            deviceImage: ''
         };
 
         console.log('📤 Request data to send:', requestData);
@@ -108,14 +90,9 @@ class HikvisionCustomerManager {
         const formData = {
             fullName: form.querySelector('[name="fullName"]').value,
             phone: form.querySelector('[name="phone"]').value,
-            email: form.querySelector('[name="email"]') ? form.querySelector('[name="email"]').value : '',
-            laptopBrand: form.querySelector('[name="laptopBrand"]').value,
             laptopModel: form.querySelector('[name="laptopModel"]').value,
-            serialNumber: form.querySelector('[name="serialNumber"]').value,
             receivedDate: form.querySelector('[name="receivedDate"]').value,
-            problemDescription: form.querySelector('[name="problemDescription"]').value,
-            priority: form.querySelector('[name="priority"]') ? form.querySelector('[name="priority"]').value : 'Medium',
-            deviceImage: form.querySelector('[name="deviceImage"]').files[0]
+            problemDescription: form.querySelector('[name="problemDescription"]').value
         };
 
         try {
