@@ -1548,13 +1548,18 @@ class AdminManager {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        // Filter out Hikvision requests from normal requests
+        const normalRequests = this.requests.filter(r => 
+            (r.requestType !== 'hikvision' && r.request_type !== 'hikvision')
+        );
+
         console.log('📊 Today:', today);
-        console.log('📊 Total normal requests:', this.requests.length);
+        console.log('📊 Total normal requests:', normalRequests.length);
         console.log('📊 Total bulk requests:', this.bulkRequests.length);
         console.log('📊 Total company requests:', this.companyRequests.length);
 
         // Today's orders from all request types
-        const todayNormalOrders = this.requests.filter(r => {
+        const todayNormalOrders = normalRequests.filter(r => {
             const requestDate = new Date(r.createdAt);
             const isToday = requestDate >= today;
             const isNotHikvision = (r.requestType !== 'hikvision' && r.request_type !== 'hikvision');
@@ -1608,9 +1613,6 @@ class AdminManager {
         const bulkCompletedRequests = this.bulkRequests.filter(r => r.status === 'Delivered');
 
         // Normal requests stats (separate)
-        const normalRequests = this.requests.filter(r => 
-            (r.requestType !== 'hikvision' && r.request_type !== 'hikvision')
-        );
         const openRequests = normalRequests.filter(r =>
             ['Received', 'Waiting Inspection', 'Under Maintenance', 'Waiting Parts'].includes(r.status)
         );
