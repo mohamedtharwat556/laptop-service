@@ -8365,6 +8365,87 @@ class AdminManager {
     }
 
     /**
+     * Export weekly report as Excel (last 7 days only)
+     */
+    async exportWeeklyReport() {
+        const reportTypeSingle = document.getElementById('reportTypeSingle');
+        const reportTypeBulk = document.getElementById('reportTypeBulk');
+        const reportTypeCompany = document.getElementById('reportTypeCompany');
+
+        // Get selected report types
+        const selectedTypes = [];
+        if (reportTypeSingle && reportTypeSingle.checked) selectedTypes.push('single');
+        if (reportTypeBulk && reportTypeBulk.checked) selectedTypes.push('bulk');
+        if (reportTypeCompany && reportTypeCompany.checked) selectedTypes.push('company');
+
+        if (selectedTypes.length === 0) {
+            toast.warning('الرجاء اختيار نوع واحد على الأقل للتقرير');
+            return;
+        }
+
+        console.log('📊 Exporting weekly report for types:', selectedTypes);
+
+        // Automatically calculate last 7 days
+        const today = new Date();
+        const lastWeek = new Date(today);
+        lastWeek.setDate(today.getDate() - 6); // Last 7 days (including today)
+
+        const startDate = lastWeek.toISOString().slice(0, 10);
+        const endDate = today.toISOString().slice(0, 10);
+
+        console.log('📊 Weekly Excel report date range:', startDate, 'to', endDate);
+
+        let allFilteredRequests = [];
+
+        // Fetch fresh data from API
+        try {
+            const apiUrl = '/api';
+            const [requestsRes, bulkRequestsRes, companyRequestsRes] = await Promise.all([
+                fetch(`${apiUrl}/requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/bulk-requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/company-requests`).then(r => r.json()).catch(() => [])
+            ]);
+
+            // Process each selected type
+            selectedTypes.forEach(type => {
+                let requestsByType;
+                if (type === 'bulk') {
+                    requestsByType = bulkRequestsRes || [];
+                } else if (type === 'company') {
+                    requestsByType = companyRequestsRes || [];
+                } else {
+                    requestsByType = requestsRes || [];
+                    // Exclude Hikvision requests
+                    requestsByType = requestsByType.filter(r =>
+                        (r.requestType !== 'hikvision' && r.request_type !== 'hikvision')
+                    );
+                }
+
+                // Filter by last 7 days only
+                let filteredRequests = requestsByType.filter(r => {
+                    const d = new Date(r.created_at || r.createdAt);
+                    const requestDate = d.toISOString().slice(0, 10);
+                    return requestDate >= startDate && requestDate <= endDate;
+                });
+
+                // Add type to each request for identification
+                filteredRequests = filteredRequests.map(r => ({
+                    ...r,
+                    reportType: type
+                }));
+
+                allFilteredRequests.push(...filteredRequests);
+            });
+
+            // Export to Excel using the reusable function
+            this.exportToExcel(allFilteredRequests, selectedTypes, startDate, endDate, true);
+        } catch (error) {
+            console.error('Error exporting weekly report:', error);
+            toast.error('فشل في تصدير التقرير الأسبوعي');
+        }
+    }
+
+    /**
      * Render daily report table (legacy - for backward compatibility)
      */
     renderDailyReport() {
@@ -8461,27 +8542,40 @@ class AdminManager {
             return;
         }
 
-        if (allFilteredRequests.length === 0) {
+        // Export to Excel using the reusable function
+        this.exportToExcel(allFilteredRequests, selectedTypes, startDate, endDate, false);
+    }
+
+    /**
+     * Export data to Excel (reusable function)
+     * @param {Array} requests - Array of requests to export
+     * @param {Array} types - Array of selected types
+     * @param {String} startDate - Start date
+     * @param {String} endDate - End date
+     * @param {Boolean} isWeekly - Whether this is a weekly report
+     */
+    exportToExcel(requests, types, startDate, endDate, isWeekly = false) {
+        if (requests.length === 0) {
             toast.error('لا توجد طلبات في الفترة المحددة');
             return;
         }
 
-        // Build unified data for Excel export
-        const typeSummary = selectedTypes.map(type => {
-            const count = allFilteredRequests.filter(r => r.reportType === type).length;
+        // Build type summary
+        const typeSummary = types.map(type => {
+            const count = requests.filter(r => r.reportType === type).length;
             const typeName = type === 'single' ? 'عادي' : type === 'bulk' ? 'جملة' : 'شركة';
             return `${typeName}: ${count}`;
         }).join(' | ');
 
-        console.log('📊 Total requests for export:', allFilteredRequests.length);
+        console.log('📊 Total requests for export:', requests.length);
         console.log('📊 Type summary:', typeSummary);
 
-        let fileName = 'تقرير_شامل';
+        let fileName = isWeekly ? `تقرير_أسبوعي_${startDate}_${endDate}` : 'تقرير_شامل';
 
         // Build filename based on date range
-        if (startDate && endDate) {
+        if (!isWeekly && startDate && endDate) {
             fileName = `تقرير_شامل_${startDate}_${endDate}`;
-        } else if (startDate) {
+        } else if (!isWeekly && startDate) {
             fileName = `تقرير_شامل_${startDate}`;
         }
 
@@ -8489,9 +8583,9 @@ class AdminManager {
         let excelData = [];
         let rowIndex = 1;
 
-        allFilteredRequests.forEach(r => {
+        requests.forEach(r => {
             const typeName = r.reportType === 'single' ? 'عادي' : r.reportType === 'bulk' ? 'جملة' : 'شركة';
-            
+
             if (r.reportType === 'bulk' && r.devices && r.devices.length > 0) {
                 // For bulk requests, export each device separately
                 r.devices.forEach(device => {
@@ -8550,7 +8644,7 @@ class AdminManager {
 
         // Create workbook
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'التقرير الشامل');
+        XLSX.utils.book_append_sheet(wb, ws, isWeekly ? 'التقرير الأسبوعي' : 'التقرير الشامل');
 
         // Download file
         XLSX.writeFile(wb, `${fileName}.xlsx`);
