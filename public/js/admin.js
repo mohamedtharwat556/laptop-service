@@ -8653,6 +8653,436 @@ class AdminManager {
     }
 
     /**
+     * Check for duplicate serial numbers across all request types
+     */
+    async checkDuplicateSerials() {
+        try {
+            const container = document.getElementById('duplicateSerialsContainer');
+            if (!container) return;
+
+            container.innerHTML = '<div style="text-align:center; padding:2rem;"><i class="fas fa-spinner fa-spin" style="font-size:2rem; color:#3b82f6;"></i><p style="margin-top:1rem;">جاري فحص الأرقام التسلسلية...</p></div>';
+
+            // Fetch all requests
+            const apiUrl = '/api';
+            const [requestsRes, bulkRequestsRes, companyRequestsRes] = await Promise.all([
+                fetch(`${apiUrl}/requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/bulk-requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/company-requests`).then(r => r.json()).catch(() => [])
+            ]);
+
+            // Collect all serial numbers with their info
+            const serialMap = new Map();
+
+            // Process normal requests
+            requestsRes.forEach(req => {
+                const serial = req.serialNumber || req.serial_number;
+                if (serial && serial.trim()) {
+                    const key = serial.trim().toLowerCase();
+                    if (!serialMap.has(key)) {
+                        serialMap.set(key, []);
+                    }
+                    serialMap.get(key).push({
+                        type: 'عادي',
+                        requestId: req.id,
+                        requestNumber: req.requestNumber || req.request_number,
+                        customerName: req.fullName || req.customerName,
+                        phone: req.phone,
+                        laptopBrand: req.laptopBrand || req.laptop_brand,
+                        laptopModel: req.laptopModel || req.laptop_model,
+                        serial: serial.trim(),
+                        status: req.status,
+                        createdAt: req.created_at || req.createdAt
+                    });
+                }
+            });
+
+            // Process bulk requests (each device)
+            bulkRequestsRes.forEach(req => {
+                if (req.devices && req.devices.length > 0) {
+                    req.devices.forEach((device, index) => {
+                        const serial = device.serialNumber || device.serial_number;
+                        if (serial && serial.trim()) {
+                            const key = serial.trim().toLowerCase();
+                            if (!serialMap.has(key)) {
+                                serialMap.set(key, []);
+                            }
+                            serialMap.get(key).push({
+                                type: 'جملة',
+                                requestId: req.id,
+                                requestNumber: req.requestNumber,
+                                customerName: req.customerName,
+                                phone: req.customerPhone,
+                                laptopBrand: device.laptopBrand,
+                                laptopModel: device.laptopModel,
+                                serial: serial.trim(),
+                                status: device.status,
+                                deviceIndex: index,
+                                createdAt: req.created_at || req.createdAt
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Process company requests
+            companyRequestsRes.forEach(req => {
+                const serial = req.serialNumber || req.serial_number;
+                if (serial && serial.trim()) {
+                    const key = serial.trim().toLowerCase();
+                    if (!serialMap.has(key)) {
+                        serialMap.set(key, []);
+                    }
+                    serialMap.get(key).push({
+                        type: 'شركة',
+                        requestId: req.id,
+                        requestNumber: req.requestNumber || req.request_number,
+                        customerName: req.companyName || req.company_name,
+                        phone: req.phone,
+                        laptopBrand: req.laptopBrand || req.laptop_brand,
+                        laptopModel: req.laptopModel || req.laptop_model,
+                        serial: serial.trim(),
+                        status: req.status,
+                        createdAt: req.created_at || req.createdAt
+                    });
+                }
+            });
+
+            // Find duplicates
+            const duplicates = [];
+            serialMap.forEach((items, serial) => {
+                if (items.length > 1) {
+                    duplicates.push({ serial, items });
+                }
+            });
+
+            // Sort by serial
+            duplicates.sort((a, b) => a.serial.localeCompare(b.serial));
+
+            // Display results
+            if (duplicates.length === 0) {
+                container.innerHTML = `
+                    <div class="glass-card" style="text-align:center; padding:3rem;">
+                        <i class="fas fa-check-circle" style="font-size:3rem; color:#10b981; margin-bottom:1rem;"></i>
+                        <h3 style="color:#10b981; margin-bottom:0.5rem;">لا توجد أرقام متكررة</h3>
+                        <p style="color:#94a3b8;">جميع الأرقام التسلسلية فريدة</p>
+                    </div>
+                `;
+                toast.success('لا توجد أرقام متكررة');
+                return;
+            }
+
+            // Render duplicates table
+            let html = `
+                <div class="glass-card">
+                    <div style="padding:1.5rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.1)); border-bottom: 2px solid #ef4444; border-radius: 8px 8px 0 0;">
+                        <h3 style="color:#ef4444; margin:0;">
+                            <i class="fas fa-exclamation-triangle"></i> تم العثور على ${duplicates.length} رقم متكرر
+                        </h3>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:rgba(239, 68, 68, 0.1);">
+                                    <th style="padding:1rem; text-align:right; color:#ef4444;">الرقم التسلسلي</th>
+                                    <th style="padding:1rem; text-align:right; color:#ef4444;">عدد التكرارات</th>
+                                    <th style="padding:1rem; text-align:right; color:#ef4444;">التفاصيل</th>
+                                    <th style="padding:1rem; text-align:right; color:#ef4444;">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+
+            duplicates.forEach(dup => {
+                html += `
+                    <tr style="border-bottom:1px solid rgba(239, 68, 68, 0.2);">
+                        <td style="padding:1rem; color:#e2e8f0; font-weight:600; font-family:monospace;">${dup.serial}</td>
+                        <td style="padding:1rem; color:#ef4444; font-weight:600;">${dup.items.length}</td>
+                        <td style="padding:1rem;">
+                            <div style="max-height:200px; overflow-y:auto;">
+                                ${dup.items.map(item => `
+                                    <div style="padding:0.5rem; background:rgba(59, 130, 246, 0.1); border-radius:4px; margin-bottom:0.5rem; font-size:0.875rem;">
+                                        <div><strong>النوع:</strong> ${item.type}</div>
+                                        <div><strong>رقم الطلب:</strong> ${item.requestNumber}</div>
+                                        <div><strong>العميل:</strong> ${item.customerName}</div>
+                                        <div><strong>الماركة:</strong> ${item.laptopBrand} ${item.laptopModel}</div>
+                                        <div><strong>الحالة:</strong> ${this.translateStatus(item.status)}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </td>
+                        <td style="padding:1rem;">
+                            <button class="btn btn-danger" onclick="adminManager.showDuplicateDetails('${dup.serial}')" style="padding:0.5rem 1rem; font-size:0.875rem;">
+                                <i class="fas fa-edit"></i> تعديل/حذف
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            toast.warning(`تم العثور على ${duplicates.length} رقم متكرر`);
+        } catch (error) {
+            console.error('Error checking duplicate serials:', error);
+            toast.error('فشل في فحص الأرقام المتكررة');
+        }
+    }
+
+    /**
+     * Show details for a duplicate serial and allow editing/deleting
+     */
+    async showDuplicateDetails(serial) {
+        try {
+            // Fetch all requests again to get fresh data
+            const apiUrl = '/api';
+            const [requestsRes, bulkRequestsRes, companyRequestsRes] = await Promise.all([
+                fetch(`${apiUrl}/requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/bulk-requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/company-requests`).then(r => r.json()).catch(() => [])
+            ]);
+
+            // Find all items with this serial
+            const items = [];
+
+            // Process normal requests
+            requestsRes.forEach(req => {
+                const reqSerial = req.serialNumber || req.serial_number;
+                if (reqSerial && reqSerial.trim().toLowerCase() === serial.toLowerCase()) {
+                    items.push({
+                        type: 'عادي',
+                        requestId: req.id,
+                        requestNumber: req.requestNumber || req.request_number,
+                        customerName: req.fullName || req.customerName,
+                        phone: req.phone,
+                        laptopBrand: req.laptopBrand || req.laptop_brand,
+                        laptopModel: req.laptopModel || req.laptop_model,
+                        serial: reqSerial.trim(),
+                        status: req.status,
+                        createdAt: req.created_at || req.createdAt,
+                        endpoint: 'requests'
+                    });
+                }
+            });
+
+            // Process bulk requests
+            bulkRequestsRes.forEach(req => {
+                if (req.devices && req.devices.length > 0) {
+                    req.devices.forEach((device, index) => {
+                        const devSerial = device.serialNumber || device.serial_number;
+                        if (devSerial && devSerial.trim().toLowerCase() === serial.toLowerCase()) {
+                            items.push({
+                                type: 'جملة',
+                                requestId: req.id,
+                                requestNumber: req.requestNumber,
+                                customerName: req.customerName,
+                                phone: req.customerPhone,
+                                laptopBrand: device.laptopBrand,
+                                laptopModel: device.laptopModel,
+                                serial: devSerial.trim(),
+                                status: device.status,
+                                deviceIndex: index,
+                                createdAt: req.created_at || req.createdAt,
+                                endpoint: 'bulk-requests'
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Process company requests
+            companyRequestsRes.forEach(req => {
+                const reqSerial = req.serialNumber || req.serial_number;
+                if (reqSerial && reqSerial.trim().toLowerCase() === serial.toLowerCase()) {
+                    items.push({
+                        type: 'شركة',
+                        requestId: req.id,
+                        requestNumber: req.requestNumber || req.request_number,
+                        customerName: req.companyName || req.company_name,
+                        phone: req.phone,
+                        laptopBrand: req.laptopBrand || req.laptop_brand,
+                        laptopModel: req.laptopModel || req.laptop_model,
+                        serial: reqSerial.trim(),
+                        status: req.status,
+                        createdAt: req.created_at || req.createdAt,
+                        endpoint: 'company-requests'
+                    });
+                }
+            });
+
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: rgba(30, 41, 59, 0.98);
+                backdrop-filter: blur(20px);
+                border: 2px solid #ef4444;
+                border-radius: 12px;
+                padding: 2rem;
+                max-width: 800px;
+                max-height: 80vh;
+                overflow-y: auto;
+                width: 90%;
+            `;
+
+            let itemsHTML = items.map((item, index) => `
+                <div class="glass-card" style="margin-bottom:1rem; border:1px solid rgba(239, 68, 68, 0.3);">
+                    <div style="padding:1rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                            <h4 style="margin:0; color:#ef4444;">${item.type} - ${item.requestNumber}</h4>
+                            <span style="font-size:0.875rem; color:#94a3b8;">${Utils.formatDate(item.createdAt)}</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; margin-bottom:1rem;">
+                            <div><strong>العميل:</strong> ${item.customerName}</div>
+                            <div><strong>الهاتف:</strong> ${item.phone}</div>
+                            <div><strong>الماركة:</strong> ${item.laptopBrand}</div>
+                            <div><strong>الموديل:</strong> ${item.laptopModel}</div>
+                            <div><strong>الحالة:</strong> ${this.translateStatus(item.status)}</div>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1rem;">
+                            <label style="color:#e2e8f0;"><strong>الرقم التسلسلي:</strong></label>
+                            <input type="text" id="edit-serial-${index}" value="${item.serial}" style="flex:1; padding:0.5rem; border:1px solid #ef4444; border-radius:4px; background:rgba(255,255,255,0.1); color:#e2e8f0; font-family:monospace;">
+                        </div>
+                        <div style="display:flex; gap:0.5rem;">
+                            <button class="btn btn-success" onclick="adminManager.updateSerialNumber('${item.endpoint}', ${item.requestId}, ${item.deviceIndex || 'null'}, document.getElementById('edit-serial-${index}').value, '${serial}')" style="padding:0.5rem 1rem; font-size:0.875rem;">
+                                <i class="fas fa-save"></i> حفظ التغيير
+                            </button>
+                            <button class="btn btn-danger" onclick="adminManager.clearSerialNumber('${item.endpoint}', ${item.requestId}, ${item.deviceIndex || 'null'}, '${serial}')" style="padding:0.5rem 1rem; font-size:0.875rem;">
+                                <i class="fas fa-eraser"></i> مسح الرقم
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            modalContent.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                    <h3 style="margin:0; color:#ef4444;">
+                        <i class="fas fa-exclamation-triangle"></i> تعديل الرقم التسلسلي: ${serial}
+                    </h3>
+                    <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none; border:none; color:#e2e8f0; font-size:1.5rem; cursor:pointer;">&times;</button>
+                </div>
+                <p style="color:#94a3b8; margin-bottom:1rem;">عدد التكرارات: ${items.length}</p>
+                ${itemsHTML}
+            `;
+
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+
+            // Close on click outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        } catch (error) {
+            console.error('Error showing duplicate details:', error);
+            toast.error('فشل في عرض التفاصيل');
+        }
+    }
+
+    /**
+     * Update serial number for a specific request/device
+     */
+    async updateSerialNumber(endpoint, requestId, deviceIndex, newSerial, oldSerial) {
+        try {
+            if (!newSerial || !newSerial.trim()) {
+                toast.warning('الرجاء إدخال رقم تسلسلي صحيح');
+                return;
+            }
+
+            let url = `/api/${endpoint}/${requestId}`;
+            let payload = {};
+
+            if (endpoint === 'bulk-requests' && deviceIndex !== null) {
+                // For bulk requests, update specific device
+                const response = await fetch(url);
+                const bulkRequest = await response.json();
+                bulkRequest.devices[deviceIndex].serialNumber = newSerial.trim();
+                payload = { devices: bulkRequest.devices };
+            } else {
+                // For normal and company requests
+                payload = { serialNumber: newSerial.trim() };
+            }
+
+            const updateResponse = await fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!updateResponse.ok) throw new Error('Failed to update serial');
+
+            toast.success('تم تحديث الرقم التسلسلي بنجاح');
+
+            // Close modal and refresh
+            document.querySelector('div[style*="fixed"]')?.remove();
+            this.checkDuplicateSerials();
+        } catch (error) {
+            console.error('Error updating serial:', error);
+            toast.error('فشل في تحديث الرقم التسلسلي');
+        }
+    }
+
+    /**
+     * Clear serial number for a specific request/device
+     */
+    async clearSerialNumber(endpoint, requestId, deviceIndex, oldSerial) {
+        if (!confirm('هل أنت متأكد من مسح هذا الرقم التسلسلي؟')) return;
+
+        try {
+            let url = `/api/${endpoint}/${requestId}`;
+            let payload = {};
+
+            if (endpoint === 'bulk-requests' && deviceIndex !== null) {
+                // For bulk requests, clear specific device serial
+                const response = await fetch(url);
+                const bulkRequest = await response.json();
+                bulkRequest.devices[deviceIndex].serialNumber = '';
+                payload = { devices: bulkRequest.devices };
+            } else {
+                // For normal and company requests
+                payload = { serialNumber: '' };
+            }
+
+            const updateResponse = await fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!updateResponse.ok) throw new Error('Failed to clear serial');
+
+            toast.success('تم مسح الرقم التسلسلي بنجاح');
+
+            // Close modal and refresh
+            document.querySelector('div[style*="fixed"]')?.remove();
+            this.checkDuplicateSerials();
+        } catch (error) {
+            console.error('Error clearing serial:', error);
+            toast.error('فشل في مسح الرقم التسلسلي');
+        }
+    }
+
+    /**
      * Export daily report as PDF with support for multiple request types
      */
     async exportDailyReportPDF() {

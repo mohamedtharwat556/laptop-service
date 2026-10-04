@@ -127,6 +127,12 @@
                     </a>
                 </li>
                 <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" data-section="duplicate-serials" style="color: #ef4444; font-weight: 600;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        الأرقام المتكررة
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
                     <a href="#" class="sidebar-nav-link" data-section="trash">
                         <i class="fas fa-trash"></i>
                         سلة المحذوفات
@@ -494,6 +500,17 @@
                     </div>
                 </div>
                 <div id="reportContainer"></div>
+            </div>
+
+            <!-- Duplicate Serial Numbers Section -->
+            <div id="duplicate-serialsSection" class="dashboard-section">
+                <div class="dashboard-header" style="flex-wrap:wrap; gap:1rem;">
+                    <h2><i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i> الأرقام التسلسلية المتكررة</h2>
+                    <button class="btn btn-danger" onclick="adminManager.checkDuplicateSerials()" style="display:flex;align-items:center;gap:0.5rem;">
+                        <i class="fas fa-search"></i> فحص الأرقام المتكررة
+                    </button>
+                </div>
+                <div id="duplicateSerialsContainer"></div>
             </div>
 
             <!-- Trash Section -->
