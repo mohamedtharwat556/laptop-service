@@ -553,6 +553,23 @@
         </div>
     </div>
 
+    <script>
+        // Setup admin login form event listener
+        document.addEventListener('DOMContentLoaded', () => {
+            const adminLoginForm = document.getElementById('adminLoginForm');
+            if (adminLoginForm) {
+                adminLoginForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    if (typeof adminManager !== 'undefined') {
+                        adminManager.handleAdminLogin(e);
+                    } else {
+                        console.error('❌ AdminManager not loaded yet');
+                    }
+                });
+            }
+        });
+    </script>
+
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>

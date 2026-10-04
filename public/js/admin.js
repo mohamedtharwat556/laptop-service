@@ -124,12 +124,6 @@ class AdminManager {
                 logoutBtn.addEventListener('click', () => this.logout());
             }
 
-            // Setup admin login form
-            const adminLoginForm = document.getElementById('adminLoginForm');
-            if (adminLoginForm) {
-                adminLoginForm.addEventListener('submit', (e) => this.handleAdminLogin(e));
-            }
-
             console.log('🔍 Setting up search and filters...');
             // Setup search and filters
             const searchInput = document.getElementById('requestSearch');
