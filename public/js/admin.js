@@ -10234,7 +10234,15 @@ class AdminManager {
 
         if (!authContainer || !requestsContainer) return;
 
-        // Check if already authenticated
+        // Admin and hikvision users can access directly without additional auth
+        if (this.userRole === 'admin' || this.userRole === 'hikvision') {
+            authContainer.style.display = 'none';
+            requestsContainer.style.display = 'block';
+            this.renderHikvisionRequestsTable();
+            return;
+        }
+
+        // Check if already authenticated for other users
         const hikvisionAuth = sessionStorage.getItem('hikvisionAuthenticated');
         if (hikvisionAuth === 'true') {
             authContainer.style.display = 'none';
@@ -10243,7 +10251,7 @@ class AdminManager {
             return;
         }
 
-        // Show auth form
+        // Show auth form for other users (should not reach here due to canAccessSection)
         authContainer.style.display = 'block';
         requestsContainer.style.display = 'none';
 
