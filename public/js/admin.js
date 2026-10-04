@@ -8182,9 +8182,15 @@ class AdminManager {
 
         console.log('📊 Generating weekly report for types:', selectedTypes);
 
-        // Filter by date range
-        const startDate = reportStartDate ? reportStartDate.value : null;
-        const endDate = reportEndDate ? reportEndDate.value : null;
+        // Automatically calculate last 7 days
+        const today = new Date();
+        const lastWeek = new Date(today);
+        lastWeek.setDate(today.getDate() - 6); // Last 7 days (including today)
+
+        const startDate = lastWeek.toISOString().slice(0, 10);
+        const endDate = today.toISOString().slice(0, 10);
+
+        console.log('📊 Weekly report date range:', startDate, 'to', endDate);
 
         // Fetch fresh data from API
         try {
@@ -8253,22 +8259,12 @@ class AdminManager {
                     `;
                 }
 
-                // Filter by date range
-                let filteredRequests;
-                if (startDate && endDate) {
-                    filteredRequests = requestsByType.filter(r => {
-                        const d = new Date(r.created_at || r.createdAt);
-                        const requestDate = d.toISOString().slice(0, 10);
-                        return requestDate >= startDate && requestDate <= endDate;
-                    });
-                } else if (startDate) {
-                    filteredRequests = requestsByType.filter(r => {
-                        const d = new Date(r.created_at || r.createdAt);
-                        return d.toISOString().slice(0, 10) === startDate;
-                    });
-                } else {
-                    filteredRequests = requestsByType;
-                }
+                // Filter by date range (always use last 7 days for weekly report)
+                let filteredRequests = requestsByType.filter(r => {
+                    const d = new Date(r.created_at || r.createdAt);
+                    const requestDate = d.toISOString().slice(0, 10);
+                    return requestDate >= startDate && requestDate <= endDate;
+                });
 
                 // Sort by date descending
                 filteredRequests.sort((a, b) => {
@@ -8335,8 +8331,9 @@ class AdminManager {
                                 <span style="color: var(--text-primary, #1e293b); font-size: 0.875rem;">
                                     <strong>إجمالي الطلبات:</strong> ${filteredRequests.length}
                                 </span>
-                                ${startDate ? `<span style="color: var(--text-primary, #1e293b); font-size: 0.875rem;"><strong>من:</strong> ${startDate}</span>` : ''}
-                                ${endDate ? `<span style="color: var(--text-primary, #1e293b); font-size: 0.875rem;"><strong>إلى:</strong> ${endDate}</span>` : ''}
+                                <span style="color: var(--text-primary, #1e293b); font-size: 0.875rem;">
+                                    <strong>المدة:</strong> آخر 7 أيام (${startDate} إلى ${endDate})
+                                </span>
                             </div>
                         </div>
                         <div style="overflow-x: auto;">
