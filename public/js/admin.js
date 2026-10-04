@@ -6,6 +6,7 @@
 class AdminManager {
     constructor() {
         this.currentUser = null;
+        this.userRole = null; // 'admin', 'company', 'hikvision'
         this.currentSection = 'dashboard';
         this.users = [];
         this.requests = [];
@@ -40,41 +41,29 @@ class AdminManager {
     async init() {
         try {
             console.log('🔄 AdminManager.init() called');
-            
-            // Always check if user is already set in sessionStorage
+
+            // Check if user is already authenticated
             let user = sessionStorage.getItem('YAS_currentUser');
-            if (user) {
+            let role = sessionStorage.getItem('YAS_userRole');
+
+            if (user && role) {
                 try {
                     this.currentUser = JSON.parse(user);
-                    console.log('✅ User loaded from sessionStorage:', this.currentUser.name);
+                    this.userRole = role;
+                    console.log('✅ User loaded from sessionStorage:', this.currentUser.name, 'Role:', this.userRole);
                 } catch (e) {
                     console.error('Failed to parse user:', e);
                 }
             }
-            
-            // If still no user, try isAuthenticated
-            if (!this.currentUser) {
-                if (this.isAuthenticated()) {
-                    console.log('✅ User authenticated via isAuthenticated()');
-                } else {
-                    console.warn('⚠️  User not authenticated, but continuing in development mode');
-                    // In development, create a default user
-                    this.currentUser = {
-                        id: 1,
-                        username: 'admin',
-                        password: 'admin123',
-                        role: 'admin',
-                        name: 'System Administrator',
-                        email: 'admin@yas.com'
-                    };
-                }
-            }
-            
-            if (!this.currentUser || this.currentUser.role !== 'admin') {
-                console.error('❌ User not authenticated as admin');
-                window.location.href = 'index.html';
+
+            // If no user, show login modal
+            if (!this.currentUser || !this.userRole) {
+                this.showAdminLoginModal();
                 return;
             }
+
+            // Update UI with user info
+            this.updateUserUI();
 
             console.log('📊 Loading data...');
             await this.loadData();
@@ -82,7 +71,7 @@ class AdminManager {
 
             console.log('📑 Switching to dashboard section...');
             await this.switchSection('dashboard');
-            
+
             console.log('🔄 Auto-refresh disabled');
             // this.startAutoRefresh(); // Auto-refresh disabled as requested
             
@@ -100,11 +89,18 @@ class AdminManager {
             });
             
             console.log('🔗 Setting up sidebar navigation...');
-            // Setup sidebar navigation
+            // Setup sidebar navigation with role-based access
             document.querySelectorAll('.sidebar-nav-link').forEach(link => {
                 link.addEventListener('click', async (e) => {
                     e.preventDefault();
                     const section = link.dataset.section;
+
+                    // Check if user has access to this section
+                    if (!this.canAccessSection(section)) {
+                        toast.error('ليس لديك صلاحية للوصول إلى هذا القسم');
+                        return;
+                    }
+
                     await this.switchSection(section);
                     if (section === 'daily-report') {
                         // Set today's date by default
@@ -126,6 +122,12 @@ class AdminManager {
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', () => this.logout());
+            }
+
+            // Setup admin login form
+            const adminLoginForm = document.getElementById('adminLoginForm');
+            if (adminLoginForm) {
+                adminLoginForm.addEventListener('submit', (e) => this.handleAdminLogin(e));
             }
 
             console.log('🔍 Setting up search and filters...');
@@ -258,6 +260,187 @@ class AdminManager {
             toast.error('فشل تحميل لوحة التحكم: ' + error.message);
         }
     }
+
+    /**
+     * Show admin login modal
+     */
+    showAdminLoginModal() {
+        const modal = document.getElementById('adminLoginModal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    /**
+     * Handle admin login
+     */
+    handleAdminLogin(e) {
+        e.preventDefault();
+        const form = e.target;
+        const username = form.adminUsername.value.trim();
+        const password = form.adminPassword.value.trim();
+        const errorMessage = document.getElementById('adminLoginErrorMessage');
+
+        // Define users
+        const users = {
+            'admin': { password: 'admin123', role: 'admin', name: 'المسؤول الرئيسي' },
+            'company': { password: 'company123', role: 'company', name: 'مسؤول الشركات' },
+            'hikvision': { password: 'hikvision123', role: 'hikvision', name: 'مسؤول Hikvision' }
+        };
+
+        if (users[username] && users[username].password === password) {
+            // Login successful
+            this.currentUser = {
+                username: username,
+                name: users[username].name
+            };
+            this.userRole = users[username].role;
+
+            // Save to sessionStorage
+            sessionStorage.setItem('YAS_currentUser', JSON.stringify(this.currentUser));
+            sessionStorage.setItem('YAS_userRole', this.userRole);
+
+            // Hide modal
+            const modal = document.getElementById('adminLoginModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+
+            // Update UI
+            this.updateUserUI();
+
+            // Load data and switch to appropriate section
+            this.loadData().then(() => {
+                if (this.userRole === 'hikvision') {
+                    this.switchSection('hikvision-requests');
+                } else {
+                    this.switchSection('dashboard');
+                }
+            });
+
+            toast.success(`مرحباً ${this.currentUser.name}`);
+        } else {
+            // Login failed
+            if (errorMessage) {
+                errorMessage.style.display = 'block';
+            }
+            toast.error('اسم المستخدم أو كلمة المرور غير صحيحة');
+        }
+    }
+
+    /**
+     * Check if user can access a section
+     */
+    canAccessSection(section) {
+        if (!this.userRole) return false;
+
+        if (this.userRole === 'admin') {
+            // Admin can access everything
+            return true;
+        }
+
+        if (this.userRole === 'company') {
+            // Company can access everything except Hikvision
+            return section !== 'hikvision-requests';
+        }
+
+        if (this.userRole === 'hikvision') {
+            // Hikvision can only access Hikvision section
+            return section === 'hikvision-requests';
+        }
+
+        return false;
+    }
+
+    /**
+     * Update user UI
+     */
+    updateUserUI() {
+        const welcomeUser = document.getElementById('welcomeUser');
+        const userRole = document.getElementById('userRole');
+
+        if (welcomeUser && this.currentUser) {
+            welcomeUser.textContent = this.currentUser.name;
+        }
+
+        if (userRole && this.userRole) {
+            const roleNames = {
+                'admin': 'مسؤول رئيسي',
+                'company': 'مسؤول شركات',
+                'hikvision': 'مسؤول Hikvision'
+            };
+            userRole.textContent = `(${roleNames[this.userRole] || this.userRole})`;
+        }
+
+        // Hide/show sidebar items based on role
+        this.updateSidebarBasedOnRole();
+    }
+
+    /**
+     * Update sidebar based on user role
+     */
+    updateSidebarBasedOnRole() {
+        const sidebarItems = document.querySelectorAll('.sidebar-nav-item');
+
+        sidebarItems.forEach(item => {
+            const link = item.querySelector('.sidebar-nav-link');
+            if (!link) return;
+
+            const section = link.dataset.section;
+
+            if (this.userRole === 'hikvision') {
+                // Hikvision: only show Hikvision section
+                if (section === 'hikvision-requests') {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            } else if (this.userRole === 'company') {
+                // Company: hide Hikvision section
+                if (section === 'hikvision-requests') {
+                    item.style.display = 'none';
+                } else {
+                    item.style.display = 'block';
+                }
+            } else {
+                // Admin: show everything
+                item.style.display = 'block';
+            }
+        });
+    }
+
+    /**
+     * Logout
+     */
+    logout() {
+        sessionStorage.removeItem('YAS_currentUser');
+        sessionStorage.removeItem('YAS_userRole');
+        sessionStorage.removeItem('hikvisionAuthenticated');
+        this.currentUser = null;
+        this.userRole = null;
+        window.location.href = 'index.html';
+    }
+
+    /**
+     * Toggle admin login password visibility
+     */
+    toggleAdminLoginPassword() {
+        const passwordInput = document.getElementById('adminLoginPassword');
+        const eyeIcon = document.getElementById('adminLoginEyeIcon');
+
+        if (passwordInput && eyeIcon) {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        }
+    }
+
 
     /**
      * Start auto-refresh every 10 seconds (DISABLED)

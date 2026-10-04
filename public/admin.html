@@ -47,6 +47,7 @@
                     <i class="fas fa-moon"></i>
                 </button>
                 <span id="welcomeUser" style="color: #94a3b8;"></span>
+                <span id="userRole" style="color: #94a3b8; font-size: 0.875rem; margin-left: 0.5rem;"></span>
                 <button id="logoutBtn" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
                     <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
                 </button>
@@ -524,12 +525,58 @@
 
 </div>
 
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 10000; display: flex; justify-content: center; align-items: center;">
+        <div class="glass-card" style="max-width: 500px; width: 90%; padding: 2rem;">
+            <h3 style="text-align: center; margin-bottom: 1.5rem; color: #3b82f6;">🔐 تسجيل دخول لوحة التحكم</h3>
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label class="form-label">اسم المستخدم</label>
+                    <input type="text" class="form-input" name="adminUsername" required placeholder="أدخل اسم المستخدم">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">كلمة المرور</label>
+                    <div style="position: relative;">
+                        <input type="password" class="form-input" name="adminPassword" required placeholder="أدخل كلمة المرور" id="adminLoginPassword" style="padding-left: 3rem;">
+                        <button type="button" onclick="toggleAdminLoginPassword()" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #94a3b8; padding: 0;">
+                            <i class="fas fa-eye" id="adminLoginEyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="adminLoginErrorMessage" style="color: #ef4444; text-align: center; margin-bottom: 1rem; display: none;">
+                    اسم المستخدم أو كلمة المرور غير صحيحة
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">
+                    تسجيل الدخول
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
     <script src="js/storage-api.js" defer></script>
     <script src="js/app.js" defer></script>
+    <script>
+        function toggleAdminLoginPassword() {
+            const passwordInput = document.getElementById('adminLoginPassword');
+            const eyeIcon = document.getElementById('adminLoginEyeIcon');
+
+            if (passwordInput && eyeIcon) {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    eyeIcon.classList.remove('fa-eye');
+                    eyeIcon.classList.add('fa-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    eyeIcon.classList.remove('fa-eye-slash');
+                    eyeIcon.classList.add('fa-eye');
+                }
+            }
+        }
+    </script>
     <script>
         // Toggle Hikvision auth password visibility
         function toggleHikvisionAuthPassword() {
