@@ -8160,6 +8160,214 @@ class AdminManager {
     }
 
     /**
+     * Generate weekly report - separate sections for each request type
+     */
+    async generateWeeklyReport() {
+        const reportTypeSingle = document.getElementById('reportTypeSingle');
+        const reportTypeBulk = document.getElementById('reportTypeBulk');
+        const reportTypeCompany = document.getElementById('reportTypeCompany');
+        const reportStartDate = document.getElementById('reportStartDate');
+        const reportEndDate = document.getElementById('reportEndDate');
+
+        // Get selected report types
+        const selectedTypes = [];
+        if (reportTypeSingle && reportTypeSingle.checked) selectedTypes.push('single');
+        if (reportTypeBulk && reportTypeBulk.checked) selectedTypes.push('bulk');
+        if (reportTypeCompany && reportTypeCompany.checked) selectedTypes.push('company');
+
+        if (selectedTypes.length === 0) {
+            toast.warning('الرجاء اختيار نوع واحد على الأقل للتقرير');
+            return;
+        }
+
+        console.log('📊 Generating weekly report for types:', selectedTypes);
+
+        // Filter by date range
+        const startDate = reportStartDate ? reportStartDate.value : null;
+        const endDate = reportEndDate ? reportEndDate.value : null;
+
+        // Fetch fresh data from API
+        try {
+            const apiUrl = '/api';
+            const [requestsRes, bulkRequestsRes, companyRequestsRes] = await Promise.all([
+                fetch(`${apiUrl}/requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/bulk-requests`).then(r => r.json()).catch(() => []),
+                fetch(`${apiUrl}/company-requests`).then(r => r.json()).catch(() => [])
+            ]);
+
+            console.log('📊 Fresh data fetched for weekly report:');
+            console.log('📊 Requests:', requestsRes.length);
+            console.log('📊 Bulk requests:', bulkRequestsRes.length);
+            console.log('📊 Company requests:', companyRequestsRes.length);
+
+            // Generate separate report for each type
+            let reportHTML = '';
+
+            for (const type of selectedTypes) {
+                let requestsByType;
+                let typeName;
+                let tableHeaders;
+
+                if (type === 'bulk') {
+                    requestsByType = bulkRequestsRes || [];
+                    typeName = 'طلبات الجملة';
+                    tableHeaders = `
+                        <th>رقم الطلب</th>
+                        <th>اسم العميل</th>
+                        <th>رقم الهاتف</th>
+                        <th>عدد الأجهزة</th>
+                        <th>الحالة</th>
+                        <th>المسجل</th>
+                        <th>التاريخ</th>
+                    `;
+                } else if (type === 'company') {
+                    requestsByType = companyRequestsRes || [];
+                    typeName = 'طلبات موظفي الشركات';
+                    tableHeaders = `
+                        <th>رقم الطلب</th>
+                        <th>اسم الشركة</th>
+                        <th>اسم الموظف</th>
+                        <th>رقم الهاتف</th>
+                        <th>الماركة</th>
+                        <th>الحالة</th>
+                        <th>المسجل</th>
+                        <th>التاريخ</th>
+                    `;
+                } else {
+                    requestsByType = requestsRes || [];
+                    // Exclude Hikvision requests
+                    requestsByType = requestsByType.filter(r => 
+                        (r.requestType !== 'hikvision' && r.request_type !== 'hikvision')
+                    );
+                    typeName = 'الطلبات العادية';
+                    tableHeaders = `
+                        <th>رقم الطلب</th>
+                        <th>اسم العميل</th>
+                        <th>رقم الهاتف</th>
+                        <th>الماركة</th>
+                        <th>الموديل</th>
+                        <th>المشكلة</th>
+                        <th>الحالة</th>
+                        <th>المسجل</th>
+                        <th>التاريخ</th>
+                    `;
+                }
+
+                // Filter by date range
+                let filteredRequests;
+                if (startDate && endDate) {
+                    filteredRequests = requestsByType.filter(r => {
+                        const d = new Date(r.created_at || r.createdAt);
+                        const requestDate = d.toISOString().slice(0, 10);
+                        return requestDate >= startDate && requestDate <= endDate;
+                    });
+                } else if (startDate) {
+                    filteredRequests = requestsByType.filter(r => {
+                        const d = new Date(r.created_at || r.createdAt);
+                        return d.toISOString().slice(0, 10) === startDate;
+                    });
+                } else {
+                    filteredRequests = requestsByType;
+                }
+
+                // Sort by date descending
+                filteredRequests.sort((a, b) => {
+                    const dateA = new Date(a.created_at || a.createdAt);
+                    const dateB = new Date(b.created_at || b.createdAt);
+                    return dateB - dateA;
+                });
+
+                // Generate table rows
+                let tableRows = '';
+                if (filteredRequests.length === 0) {
+                    tableRows = `<tr><td colspan="${tableHeaders.split('</th>').length}" style="text-align:center; padding:2rem;">لا توجد بيانات</td></tr>`;
+                } else {
+                    if (type === 'bulk') {
+                        tableRows = filteredRequests.map(r => `
+                            <tr>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.requestNumber || r.request_number || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.customerName || r.customer_name || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.phone || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.devices ? r.devices.length : 0}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${this.getStatusBadge(r.status)}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.recordedBy || r.recorded_by || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${Utils.formatDate(r.created_at || r.createdAt)}</td>
+                            </tr>
+                        `).join('');
+                    } else if (type === 'company') {
+                        tableRows = filteredRequests.map(r => `
+                            <tr>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.requestNumber || r.request_number || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.companyName || r.company_name || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.employeeName || r.employee_name || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.phone || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.laptopBrand || r.laptop_brand || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${this.getStatusBadge(r.status)}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.recordedBy || r.recorded_by || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${Utils.formatDate(r.created_at || r.createdAt)}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tableRows = filteredRequests.map(r => `
+                            <tr>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.requestNumber || r.request_number || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.customerName || r.customer_name || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.phone || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.laptopBrand || r.laptop_brand || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.laptopModel || r.laptop_model || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${(r.problemDescription || r.problem_description || '—').substring(0, 50)}${(r.problemDescription || r.problem_description || '').length > 50 ? '...' : ''}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${this.getStatusBadge(r.status)}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${r.recordedBy || r.recorded_by || '—'}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${Utils.formatDate(r.created_at || r.createdAt)}</td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+
+                // Add section for this type
+                reportHTML += `
+                    <div class="glass-card" style="margin-bottom: 2rem;">
+                        <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); border-bottom: 2px solid #3b82f6; border-radius: 8px 8px 0 0;">
+                            <h3 style="color: #3b82f6; margin: 0; font-size: 1.25rem;">
+                                <i class="fas fa-file-alt"></i> ${typeName}
+                            </h3>
+                            <div style="margin-top: 0.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                                <span style="color: var(--text-primary, #1e293b); font-size: 0.875rem;">
+                                    <strong>إجمالي الطلبات:</strong> ${filteredRequests.length}
+                                </span>
+                                ${startDate ? `<span style="color: var(--text-primary, #1e293b); font-size: 0.875rem;"><strong>من:</strong> ${startDate}</span>` : ''}
+                                ${endDate ? `<span style="color: var(--text-primary, #1e293b); font-size: 0.875rem;"><strong>إلى:</strong> ${endDate}</span>` : ''}
+                            </div>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: rgba(59, 130, 246, 0.1);">
+                                        ${tableHeaders}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tableRows}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const container = document.getElementById('reportContainer');
+            if (container) {
+                container.innerHTML = reportHTML;
+            }
+
+            toast.success('تم إنشاء التقارير الأسبوعية بنجاح');
+        } catch (error) {
+            console.error('Error generating weekly report:', error);
+            toast.error('فشل في إنشاء التقارير الأسبوعية');
+        }
+    }
+
+    /**
      * Render daily report table (legacy - for backward compatibility)
      */
     renderDailyReport() {
