@@ -8773,9 +8773,9 @@ class AdminManager {
 
             // Render duplicates table
             let html = `
-                <div class="glass-card">
+                <div class="glass-card" style="background:rgba(255,255,255,0.95);">
                     <div style="padding:1.5rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.1)); border-bottom: 2px solid #ef4444; border-radius: 8px 8px 0 0;">
-                        <h3 style="color:#ef4444; margin:0;">
+                        <h3 style="color:#000000; margin:0;">
                             <i class="fas fa-exclamation-triangle"></i> تم العثور على ${duplicates.length} رقم متكرر
                         </h3>
                     </div>
@@ -8783,10 +8783,10 @@ class AdminManager {
                         <table style="width:100%; border-collapse:collapse;">
                             <thead>
                                 <tr style="background:rgba(239, 68, 68, 0.1);">
-                                    <th style="padding:1rem; text-align:right; color:#ef4444;">الرقم التسلسلي</th>
-                                    <th style="padding:1rem; text-align:right; color:#ef4444;">عدد التكرارات</th>
-                                    <th style="padding:1rem; text-align:right; color:#ef4444;">التفاصيل</th>
-                                    <th style="padding:1rem; text-align:right; color:#ef4444;">الإجراءات</th>
+                                    <th style="padding:1rem; text-align:right; color:#000000;">الرقم التسلسلي</th>
+                                    <th style="padding:1rem; text-align:right; color:#000000;">عدد التكرارات</th>
+                                    <th style="padding:1rem; text-align:right; color:#000000;">التفاصيل</th>
+                                    <th style="padding:1rem; text-align:right; color:#000000;">الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -8796,17 +8796,17 @@ class AdminManager {
                 html += `
                     <tr style="border-bottom:1px solid rgba(239, 68, 68, 0.2);">
                         <td style="padding:1rem; color:#ef4444; font-weight:600; font-family:monospace; font-size:1.1rem;">${dup.serial}</td>
-                        <td style="padding:1rem; color:#ef4444; font-weight:600;">${dup.items.length}</td>
+                        <td style="padding:1rem; color:#000000; font-weight:600;">${dup.items.length}</td>
                         <td style="padding:1rem;">
                             <div style="max-height:200px; overflow-y:auto;">
                                 ${dup.items.map(item => `
-                                    <div style="padding:0.5rem; background:rgba(59, 130, 246, 0.1); border-radius:4px; margin-bottom:0.5rem; font-size:0.875rem;">
-                                        <div style="color:#e2e8f0;"><strong>النوع:</strong> ${item.type}</div>
-                                        <div style="color:#e2e8f0;"><strong>رقم الطلب:</strong> ${item.requestNumber}</div>
-                                        <div style="color:#e2e8f0;"><strong>العميل:</strong> ${item.customerName}</div>
-                                        <div style="color:#e2e8f0;"><strong>الماركة:</strong> ${item.laptopBrand} ${item.laptopModel}</div>
-                                        <div style="color:#e2e8f0;"><strong>الرقم التسلسلي:</strong> <span style="color:#ef4444; font-weight:600; font-family:monospace;">${item.serial}</span></div>
-                                        <div style="color:#e2e8f0;"><strong>الحالة:</strong> ${this.translateStatus(item.status)}</div>
+                                    <div style="padding:0.5rem; background:rgba(255,255,255,0.9); border:1px solid rgba(0,0,0,0.1); border-radius:4px; margin-bottom:0.5rem; font-size:0.875rem;">
+                                        <div style="color:#000000;"><strong>النوع:</strong> ${item.type}</div>
+                                        <div style="color:#000000;"><strong>رقم الطلب:</strong> ${item.requestNumber}</div>
+                                        <div style="color:#000000;"><strong>العميل:</strong> ${item.customerName}</div>
+                                        <div style="color:#000000;"><strong>الماركة:</strong> ${item.laptopBrand} ${item.laptopModel}</div>
+                                        <div style="color:#000000;"><strong>الرقم التسلسلي:</strong> <span style="color:#ef4444; font-weight:600; font-family:monospace;">${item.serial}</span></div>
+                                        <div style="color:#000000;"><strong>الحالة:</strong> ${this.translateStatus(item.status)}</div>
                                     </div>
                                 `).join('')}
                             </div>
@@ -8933,7 +8933,7 @@ class AdminManager {
 
             const modalContent = document.createElement('div');
             modalContent.style.cssText = `
-                background: rgba(30, 41, 59, 0.98);
+                background: rgba(255, 255, 255, 0.98);
                 backdrop-filter: blur(20px);
                 border: 2px solid #ef4444;
                 border-radius: 12px;
@@ -8945,21 +8945,21 @@ class AdminManager {
             `;
 
             let itemsHTML = items.map((item, index) => `
-                <div class="glass-card" style="margin-bottom:1rem; border:1px solid rgba(239, 68, 68, 0.3);">
+                <div class="glass-card" style="margin-bottom:1rem; border:1px solid rgba(239, 68, 68, 0.3); background:rgba(255,255,255,0.9);">
                     <div style="padding:1rem;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                            <h4 style="margin:0; color:#ef4444;">${item.type} - ${item.requestNumber}</h4>
-                            <span style="font-size:0.875rem; color:#94a3b8;">${Utils.formatDate(item.createdAt)}</span>
+                            <h4 style="margin:0; color:#000000;">${item.type} - ${item.requestNumber}</h4>
+                            <span style="font-size:0.875rem; color:#000000;">${Utils.formatDate(item.createdAt)}</span>
                         </div>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; margin-bottom:1rem;">
-                            <div style="color:#e2e8f0;"><strong>العميل:</strong> ${item.customerName}</div>
-                            <div style="color:#e2e8f0;"><strong>الهاتف:</strong> ${item.phone}</div>
-                            <div style="color:#e2e8f0;"><strong>الماركة:</strong> ${item.laptopBrand}</div>
-                            <div style="color:#e2e8f0;"><strong>الموديل:</strong> ${item.laptopModel}</div>
-                            <div style="color:#e2e8f0;"><strong>الحالة:</strong> ${this.translateStatus(item.status)}</div>
+                            <div style="color:#000000;"><strong>العميل:</strong> ${item.customerName}</div>
+                            <div style="color:#000000;"><strong>الهاتف:</strong> ${item.phone}</div>
+                            <div style="color:#000000;"><strong>الماركة:</strong> ${item.laptopBrand}</div>
+                            <div style="color:#000000;"><strong>الموديل:</strong> ${item.laptopModel}</div>
+                            <div style="color:#000000;"><strong>الحالة:</strong> ${this.translateStatus(item.status)}</div>
                         </div>
                         <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1rem;">
-                            <label style="color:#ef4444; font-weight:600;"><strong>الرقم التسلسلي:</strong></label>
+                            <label style="color:#000000; font-weight:600;"><strong>الرقم التسلسلي:</strong></label>
                             <input type="text" id="edit-serial-${index}" value="${item.serial}" style="flex:1; padding:0.5rem; border:1px solid #ef4444; border-radius:4px; background:rgba(255,255,255,0.95); color:#ef4444; font-weight:600; font-family:monospace; font-size:1.1rem;">
                         </div>
                         <div style="display:flex; gap:0.5rem;">
@@ -8976,12 +8976,12 @@ class AdminManager {
 
             modalContent.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                    <h3 style="margin:0; color:#ef4444;">
+                    <h3 style="margin:0; color:#000000;">
                         <i class="fas fa-exclamation-triangle"></i> تعديل الرقم التسلسلي: <span style="color:#ef4444; font-weight:600; font-family:monospace;">${serial}</span>
                     </h3>
-                    <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none; border:none; color:#e2e8f0; font-size:1.5rem; cursor:pointer;">&times;</button>
+                    <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none; border:none; color:#000000; font-size:1.5rem; cursor:pointer;">&times;</button>
                 </div>
-                <p style="color:#e2e8f0; margin-bottom:1rem;">عدد التكرارات: <span style="color:#ef4444; font-weight:600;">${items.length}</span></p>
+                <p style="color:#000000; margin-bottom:1rem;">عدد التكرارات: <span style="color:#ef4444; font-weight:600;">${items.length}</span></p>
                 ${itemsHTML}
             `;
 
