@@ -8289,7 +8289,7 @@ class AdminManager {
                                 <td style="color: var(--text-primary, #e2e8f0);">${r.customerName || r.customer_name || '—'}</td>
                                 <td style="color: var(--text-primary, #e2e8f0);">${r.phone || '—'}</td>
                                 <td style="color: var(--text-primary, #e2e8f0);">${r.devices ? r.devices.length : 0}</td>
-                                <td style="color: var(--text-primary, #e2e8f0);">${this.getStatusBadge(r.status)}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${this.translateStatus(r.status)}</td>
                                 <td style="color: var(--text-primary, #e2e8f0);">${r.recordedBy || r.recorded_by || '—'}</td>
                                 <td style="color: var(--text-primary, #e2e8f0);">${Utils.formatDate(r.created_at || r.createdAt)}</td>
                             </tr>
@@ -8302,7 +8302,7 @@ class AdminManager {
                                 <td style="color: var(--text-primary, #e2e8f0);">${r.employeeName || r.employee_name || '—'}</td>
                                 <td style="color: var(--text-primary, #e2e8f0);">${r.phone || '—'}</td>
                                 <td style="color: var(--text-primary, #e2e8f0);">${r.laptopBrand || r.laptop_brand || '—'}</td>
-                                <td style="color: var(--text-primary, #e2e8f0);">${this.getStatusBadge(r.status)}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${this.translateStatus(r.status)}</td>
                                 <td style="color: var(--text-primary, #e2e8f0);">${r.recordedBy || r.recorded_by || '—'}</td>
                                 <td style="color: var(--text-primary, #e2e8f0);">${Utils.formatDate(r.created_at || r.createdAt)}</td>
                             </tr>
@@ -8316,7 +8316,7 @@ class AdminManager {
                                 <td style="color: var(--text-primary, #e2e8f0);">${r.laptopBrand || r.laptop_brand || '—'}</td>
                                 <td style="color: var(--text-primary, #e2e8f0);">${r.laptopModel || r.laptop_model || '—'}</td>
                                 <td style="color: var(--text-primary, #e2e8f0);">${(r.problemDescription || r.problem_description || '—').substring(0, 50)}${(r.problemDescription || r.problem_description || '').length > 50 ? '...' : ''}</td>
-                                <td style="color: var(--text-primary, #e2e8f0);">${this.getStatusBadge(r.status)}</td>
+                                <td style="color: var(--text-primary, #e2e8f0);">${this.translateStatus(r.status)}</td>
                                 <td style="color: var(--text-primary, #e2e8f0);">${r.recordedBy || r.recorded_by || '—'}</td>
                                 <td style="color: var(--text-primary, #e2e8f0);">${Utils.formatDate(r.created_at || r.createdAt)}</td>
                             </tr>
