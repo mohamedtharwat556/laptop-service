@@ -300,7 +300,7 @@ class AdminManager {
 
         // Define users
         const users = {
-            'admin': { password: 'admin123', role: 'admin', name: 'المسؤول الرئيسي' },
+            'Admin2026': { password: 'Admin123', role: 'admin', name: 'المسؤول الرئيسي' },
             'company': { password: 'company123', role: 'company', name: 'مسؤول الشركات' },
             'hikvision': { password: 'hikvision123', role: 'hikvision', name: 'مسؤول Hikvision' }
         };
