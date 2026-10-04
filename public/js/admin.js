@@ -51,6 +51,20 @@ class AdminManager {
                     this.currentUser = JSON.parse(user);
                     this.userRole = role;
                     console.log('✅ User loaded from sessionStorage:', this.currentUser.name, 'Role:', this.userRole);
+                    
+                    // User already authenticated, skip login modal
+                    // Update UI and load data
+                    this.updateUserUI();
+                    console.log('📊 Loading data...');
+                    await this.loadData();
+                    console.log('✅ Data loaded successfully');
+                    console.log('📑 Switching to dashboard section...');
+                    await this.switchSection('dashboard');
+                    console.log('🔄 Auto-refresh disabled');
+                    console.log('🔔 Initializing notification badge...');
+                    this.updateNotificationBadge();
+                    this.updateTodayTotalBadge();
+                    return; // Skip the rest of initialization
                 } catch (e) {
                     console.error('Failed to parse user:', e);
                 }
@@ -59,11 +73,13 @@ class AdminManager {
             // If no user, show login modal
             if (!this.currentUser || !this.userRole) {
                 this.showAdminLoginModal();
-                return;
+                // Don't return - let the rest of the initialization continue for sidebar, etc.
             }
 
-            // Update UI with user info
-            this.updateUserUI();
+            // Update UI with user info if user exists
+            if (this.currentUser && this.userRole) {
+                this.updateUserUI();
+            }
 
             console.log('📊 Loading data...');
             await this.loadData();
@@ -74,6 +90,10 @@ class AdminManager {
 
             console.log('🔄 Auto-refresh disabled');
             // this.startAutoRefresh(); // Auto-refresh disabled as requested
+
+            console.log('🔔 Initializing notification badge...');
+            this.updateNotificationBadge();
+            this.updateTodayTotalBadge();
             
             console.log('🔔 Initializing notification badge...');
             this.updateNotificationBadge();

@@ -553,23 +553,6 @@
         </div>
     </div>
 
-    <script>
-        // Setup admin login form event listener
-        document.addEventListener('DOMContentLoaded', () => {
-            const adminLoginForm = document.getElementById('adminLoginForm');
-            if (adminLoginForm) {
-                adminLoginForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    if (typeof adminManager !== 'undefined') {
-                        adminManager.handleAdminLogin(e);
-                    } else {
-                        console.error('❌ AdminManager not loaded yet');
-                    }
-                });
-            }
-        });
-    </script>
-
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -618,67 +601,26 @@
     <script src="js/darkmode.js" defer></script>
     <script src="js/mobile-menu.js" defer></script>
     <script src="js/products.js" defer></script>
+    <script>
+        // Setup admin login form event listener - wait for adminManager to load
+        window.addEventListener('load', () => {
+            const adminLoginForm = document.getElementById('adminLoginForm');
+            if (adminLoginForm) {
+                adminLoginForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔐 Login form submitted');
+                    if (typeof adminManager !== 'undefined') {
+                        adminManager.handleAdminLogin(e);
+                    } else {
+                        console.error('❌ AdminManager not loaded yet');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
-
-    <script>
-        function toggleAdminPassword() {
-            const passwordInput = document.getElementById('password');
-            const eyeIcon = document.getElementById('adminEyeIcon');
-
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                eyeIcon.classList.remove('fa-eye');
-                eyeIcon.classList.add('fa-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                eyeIcon.classList.remove('fa-eye-slash');
-                eyeIcon.classList.add('fa-eye');
-            }
-        }
-
-        // Auto-login for admin demo - Force set user before init
-        let adminInitialized = false;
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (adminInitialized) return;
-            adminInitialized = true;
-
-            try {
-                console.log('📄 Admin page DOMContentLoaded - starting initialization...');
-
-                // Give storage time to initialize
-                await new Promise(resolve => setTimeout(resolve, 200));
-
-                // Get user from sessionStorage
-                const userStr = sessionStorage.getItem('YAS_currentUser');
-                const roleStr = sessionStorage.getItem('YAS_userRole');
-                let user = userStr ? JSON.parse(userStr) : null;
-                let role = roleStr || null;
-
-                console.log('👤 User from sessionStorage:', user ? `${user.name} (${role})` : 'Not found');
-
-                // If user not found, AdminManager will show login modal
-                if (!user || !role) {
-                    console.log('⚠️  No user found, AdminManager will show login modal');
-                    return;
-                }
-
-                // Update welcome text
-                const welcomeEl = document.getElementById('welcomeUser');
-                const roleEl = document.getElementById('userRole');
-                if (welcomeEl) {
-                    welcomeEl.textContent = user.name;
-                    console.log('💬 Welcome text updated');
-                }
-                if (roleEl) {
-                    const roleNames = {
-                        'admin': 'مسؤول رئيسي',
-                        'company': 'مسؤول شركات',
-                        'hikvision': 'مسؤول Hikvision'
-                    };
-                    roleEl.textContent = `(${roleNames[role] || role})`;
-                }
 
                 // Wait for adminManager to be ready
                 console.log('⏳ Waiting for AdminManager to load...');
