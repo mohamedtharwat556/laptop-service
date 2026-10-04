@@ -605,52 +605,6 @@
 </html>
 
     <script>
-        // Check if user is logged in
-        function checkLogin() {
-            const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
-            if (isLoggedIn !== 'true') {
-                // Show login form
-                const loginHtml = `
-                    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; z-index: 9999;">
-                        <div style="background: white; padding: 40px; border-radius: 10px; width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-                            <h2 style="text-align: center; color: #333; margin-bottom: 20px;">تسجيل دخول الأدمن</h2>
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; color: #333;">اسم المستخدم:</label>
-                                <input type="text" id="username" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" placeholder="admin">
-                            </div>
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; color: #333;">كلمة المرور:</label>
-                                <div style="position: relative;">
-                                    <input type="password" id="password" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; padding-left: 40px;" placeholder="admin123">
-                                    <button type="button" onclick="toggleAdminPassword()" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666; padding: 0;">
-                                        <i class="fas fa-eye" id="adminEyeIcon"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <button onclick="login()" style="width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">دخول</button>
-                            <div id="loginError" style="color: #dc3545; text-align: center; margin-top: 10px; display: none;"></div>
-                        </div>
-                    </div>
-                `;
-                document.body.insertAdjacentHTML('beforeend', loginHtml);
-                document.getElementById('adminDashboard').style.display = 'none';
-            }
-        }
-
-        function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const loginError = document.getElementById('loginError');
-
-            if (username === 'admin' && password === 'admin123') {
-                sessionStorage.setItem('adminLoggedIn', 'true');
-                location.reload();
-            } else {
-                loginError.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
-                loginError.style.display = 'block';
-            }
-        }
-
         function toggleAdminPassword() {
             const passwordInput = document.getElementById('password');
             const eyeIcon = document.getElementById('adminEyeIcon');
@@ -669,66 +623,46 @@
         // Auto-login for admin demo - Force set user before init
         let adminInitialized = false;
 
-        // Set admin user immediately before everything
-        (function() {
-            console.log('🔧 Pre-initialization: Setting admin user in session...');
-            const adminUser = {
-                id: 1,
-                username: 'admin',
-                password: 'admin123',
-                role: 'admin',
-                name: 'System Administrator',
-                email: 'admin@yas.com',
-                createdAt: new Date().toISOString()
-            };
-            sessionStorage.setItem('YAS_currentUser', JSON.stringify(adminUser));
-            sessionStorage.setItem('YAS_userRole', 'admin');
-            console.log('✅ Admin user set in sessionStorage:', adminUser.name);
-        })();
-        
-        // Check login status on page load
-        checkLogin();
-
         document.addEventListener('DOMContentLoaded', async () => {
             if (adminInitialized) return;
             adminInitialized = true;
-            
+
             try {
                 console.log('📄 Admin page DOMContentLoaded - starting initialization...');
-                
+
                 // Give storage time to initialize
                 await new Promise(resolve => setTimeout(resolve, 200));
-                
-                // Get user from sessionStorage (should already be set)
+
+                // Get user from sessionStorage
                 const userStr = sessionStorage.getItem('YAS_currentUser');
+                const roleStr = sessionStorage.getItem('YAS_userRole');
                 let user = userStr ? JSON.parse(userStr) : null;
-                
-                console.log('👤 User from sessionStorage:', user ? `${user.name} (${user.role})` : 'Not found');
-                
-                // If user not found, create default admin
-                if (!user) {
-                    console.log('⚙️  Creating default admin user...');
-                    user = {
-                        id: 1,
-                        username: 'admin',
-                        password: 'admin123',
-                        role: 'admin',
-                        name: 'System Administrator',
-                        email: 'admin@yas.com',
-                        createdAt: new Date().toISOString()
-                    };
-                    sessionStorage.setItem('YAS_currentUser', JSON.stringify(user));
-                    sessionStorage.setItem('YAS_userRole', 'admin');
-                    console.log('✅ Admin user created and set');
+                let role = roleStr || null;
+
+                console.log('👤 User from sessionStorage:', user ? `${user.name} (${role})` : 'Not found');
+
+                // If user not found, AdminManager will show login modal
+                if (!user || !role) {
+                    console.log('⚠️  No user found, AdminManager will show login modal');
+                    return;
                 }
-                
+
                 // Update welcome text
                 const welcomeEl = document.getElementById('welcomeUser');
+                const roleEl = document.getElementById('userRole');
                 if (welcomeEl) {
-                    welcomeEl.textContent = `مرحباً، ${user.name}`;
+                    welcomeEl.textContent = user.name;
                     console.log('💬 Welcome text updated');
                 }
-                
+                if (roleEl) {
+                    const roleNames = {
+                        'admin': 'مسؤول رئيسي',
+                        'company': 'مسؤول شركات',
+                        'hikvision': 'مسؤول Hikvision'
+                    };
+                    roleEl.textContent = `(${roleNames[role] || role})`;
+                }
+
                 // Wait for adminManager to be ready
                 console.log('⏳ Waiting for AdminManager to load...');
                 let attempts = 0;
@@ -736,7 +670,7 @@
                     await new Promise(resolve => setTimeout(resolve, 50));
                     attempts++;
                 }
-                
+
                 if (typeof adminManager !== 'undefined') {
                     console.log('🚀 AdminManager found, initializing dashboard...');
                     await adminManager.init();
