@@ -268,6 +268,7 @@ class AdminManager {
         const modal = document.getElementById('adminLoginModal');
         if (modal) {
             modal.style.display = 'flex';
+            console.log('🔐 Admin login modal shown');
         }
     }
 
@@ -281,12 +282,18 @@ class AdminManager {
         const password = form.adminPassword.value.trim();
         const errorMessage = document.getElementById('adminLoginErrorMessage');
 
+        console.log('🔐 Login attempt:', { username, password });
+
         // Define users
         const users = {
             'admin': { password: 'admin123', role: 'admin', name: 'المسؤول الرئيسي' },
             'company': { password: 'company123', role: 'company', name: 'مسؤول الشركات' },
             'hikvision': { password: 'hikvision123', role: 'hikvision', name: 'مسؤول Hikvision' }
         };
+
+        console.log('🔐 Users object:', users);
+        console.log('🔐 User found:', users[username]);
+        console.log('🔐 Password match:', users[username] && users[username].password === password);
 
         if (users[username] && users[username].password === password) {
             // Login successful
@@ -295,6 +302,8 @@ class AdminManager {
                 name: users[username].name
             };
             this.userRole = users[username].role;
+
+            console.log('✅ Login successful:', this.currentUser, this.userRole);
 
             // Save to sessionStorage
             sessionStorage.setItem('YAS_currentUser', JSON.stringify(this.currentUser));
@@ -321,6 +330,7 @@ class AdminManager {
             toast.success(`مرحباً ${this.currentUser.name}`);
         } else {
             // Login failed
+            console.log('❌ Login failed');
             if (errorMessage) {
                 errorMessage.style.display = 'block';
             }
