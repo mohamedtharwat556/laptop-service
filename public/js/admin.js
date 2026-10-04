@@ -8795,17 +8795,18 @@ class AdminManager {
             duplicates.forEach(dup => {
                 html += `
                     <tr style="border-bottom:1px solid rgba(239, 68, 68, 0.2);">
-                        <td style="padding:1rem; color:#e2e8f0; font-weight:600; font-family:monospace;">${dup.serial}</td>
+                        <td style="padding:1rem; color:#ef4444; font-weight:600; font-family:monospace; font-size:1.1rem;">${dup.serial}</td>
                         <td style="padding:1rem; color:#ef4444; font-weight:600;">${dup.items.length}</td>
                         <td style="padding:1rem;">
                             <div style="max-height:200px; overflow-y:auto;">
                                 ${dup.items.map(item => `
                                     <div style="padding:0.5rem; background:rgba(59, 130, 246, 0.1); border-radius:4px; margin-bottom:0.5rem; font-size:0.875rem;">
-                                        <div><strong>النوع:</strong> ${item.type}</div>
-                                        <div><strong>رقم الطلب:</strong> ${item.requestNumber}</div>
-                                        <div><strong>العميل:</strong> ${item.customerName}</div>
-                                        <div><strong>الماركة:</strong> ${item.laptopBrand} ${item.laptopModel}</div>
-                                        <div><strong>الحالة:</strong> ${this.translateStatus(item.status)}</div>
+                                        <div style="color:#e2e8f0;"><strong>النوع:</strong> ${item.type}</div>
+                                        <div style="color:#e2e8f0;"><strong>رقم الطلب:</strong> ${item.requestNumber}</div>
+                                        <div style="color:#e2e8f0;"><strong>العميل:</strong> ${item.customerName}</div>
+                                        <div style="color:#e2e8f0;"><strong>الماركة:</strong> ${item.laptopBrand} ${item.laptopModel}</div>
+                                        <div style="color:#e2e8f0;"><strong>الرقم التسلسلي:</strong> <span style="color:#ef4444; font-weight:600; font-family:monospace;">${item.serial}</span></div>
+                                        <div style="color:#e2e8f0;"><strong>الحالة:</strong> ${this.translateStatus(item.status)}</div>
                                     </div>
                                 `).join('')}
                             </div>
@@ -8951,15 +8952,15 @@ class AdminManager {
                             <span style="font-size:0.875rem; color:#94a3b8;">${Utils.formatDate(item.createdAt)}</span>
                         </div>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; margin-bottom:1rem;">
-                            <div><strong>العميل:</strong> ${item.customerName}</div>
-                            <div><strong>الهاتف:</strong> ${item.phone}</div>
-                            <div><strong>الماركة:</strong> ${item.laptopBrand}</div>
-                            <div><strong>الموديل:</strong> ${item.laptopModel}</div>
-                            <div><strong>الحالة:</strong> ${this.translateStatus(item.status)}</div>
+                            <div style="color:#e2e8f0;"><strong>العميل:</strong> ${item.customerName}</div>
+                            <div style="color:#e2e8f0;"><strong>الهاتف:</strong> ${item.phone}</div>
+                            <div style="color:#e2e8f0;"><strong>الماركة:</strong> ${item.laptopBrand}</div>
+                            <div style="color:#e2e8f0;"><strong>الموديل:</strong> ${item.laptopModel}</div>
+                            <div style="color:#e2e8f0;"><strong>الحالة:</strong> ${this.translateStatus(item.status)}</div>
                         </div>
                         <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1rem;">
-                            <label style="color:#e2e8f0;"><strong>الرقم التسلسلي:</strong></label>
-                            <input type="text" id="edit-serial-${index}" value="${item.serial}" style="flex:1; padding:0.5rem; border:1px solid #ef4444; border-radius:4px; background:rgba(255,255,255,0.1); color:#e2e8f0; font-family:monospace;">
+                            <label style="color:#ef4444; font-weight:600;"><strong>الرقم التسلسلي:</strong></label>
+                            <input type="text" id="edit-serial-${index}" value="${item.serial}" style="flex:1; padding:0.5rem; border:1px solid #ef4444; border-radius:4px; background:rgba(255,255,255,0.95); color:#ef4444; font-weight:600; font-family:monospace; font-size:1.1rem;">
                         </div>
                         <div style="display:flex; gap:0.5rem;">
                             <button class="btn btn-success" onclick="adminManager.updateSerialNumber('${item.endpoint}', ${item.requestId}, ${item.deviceIndex || 'null'}, document.getElementById('edit-serial-${index}').value, '${serial}')" style="padding:0.5rem 1rem; font-size:0.875rem;">
@@ -8976,11 +8977,11 @@ class AdminManager {
             modalContent.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                     <h3 style="margin:0; color:#ef4444;">
-                        <i class="fas fa-exclamation-triangle"></i> تعديل الرقم التسلسلي: ${serial}
+                        <i class="fas fa-exclamation-triangle"></i> تعديل الرقم التسلسلي: <span style="color:#ef4444; font-weight:600; font-family:monospace;">${serial}</span>
                     </h3>
                     <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none; border:none; color:#e2e8f0; font-size:1.5rem; cursor:pointer;">&times;</button>
                 </div>
-                <p style="color:#94a3b8; margin-bottom:1rem;">عدد التكرارات: ${items.length}</p>
+                <p style="color:#e2e8f0; margin-bottom:1rem;">عدد التكرارات: <span style="color:#ef4444; font-weight:600;">${items.length}</span></p>
                 ${itemsHTML}
             `;
 
