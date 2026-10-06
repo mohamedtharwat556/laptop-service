@@ -226,6 +226,15 @@ class AdminManager {
                 }, 300));
             }
 
+            // Critical search input
+            const criticalSearchInput = document.getElementById('criticalSearchInput');
+            if (criticalSearchInput) {
+                criticalSearchInput.addEventListener('input', Utils.debounce(() => {
+                    this.currentPage = 1;
+                    this.renderCriticalRequests();
+                }, 300));
+            }
+
             if (companyStatusFilter) {
                 companyStatusFilter.addEventListener('change', () => {
                     this.currentPage = 1;
@@ -420,7 +429,7 @@ class AdminManager {
                     item.style.display = 'none';
                 }
             } else if (this.userRole === 'company') {
-                // Company: hide Hikvision section
+                // Company: hide Hikvision section, show everything else including critical
                 if (section === 'hikvision-requests') {
                     item.style.display = 'none';
                 } else {
@@ -510,6 +519,8 @@ class AdminManager {
                 }, 100);
             } else if (this.currentSection === 'company-requests') {
                 this.renderCompanyRequests();
+            } else if (this.currentSection === 'critical-requests') {
+                this.renderCriticalRequests();
             } else if (this.currentSection === 'users') {
                 this.renderUsers();
             } else if (this.currentSection === 'products') {
@@ -3265,6 +3276,11 @@ class AdminManager {
                 this._companyTodayFilter = null;
                 this.renderCompanyRequests();
                 break;
+            case 'critical-requests':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
+                this.renderCriticalRequests();
+                break;
             case 'hikvision-requests':
                 this.renderHikvisionRequests();
                 break;
@@ -4518,6 +4534,202 @@ class AdminManager {
             console.error('Error exporting to Excel:', error);
             toast.error('فشل تصدير البيانات');
         }
+    }
+
+    /**
+     * Render critical requests (older than 7 days)
+     */
+    renderCriticalRequests() {
+        const container = document.getElementById('criticalRequestsContainer');
+        if (!container) return;
+
+        const today = new Date();
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(today.getDate() - 7);
+
+        // Collect all requests from all types
+        const allRequests = [];
+
+        // Normal requests
+        (this.requests || []).forEach(r => {
+            const requestDate = new Date(r.created_at || r.createdAt);
+            if (requestDate < sevenDaysAgo) {
+                allRequests.push({ ...r, type: 'عادي' });
+            }
+        });
+
+        // Bulk requests
+        (this.bulkRequests || []).forEach(r => {
+            const requestDate = new Date(r.created_at || r.createdAt);
+            if (requestDate < sevenDaysAgo) {
+                allRequests.push({ ...r, type: 'جملة' });
+            }
+        });
+
+        // Company requests
+        (this.companyRequests || []).forEach(r => {
+            const requestDate = new Date(r.created_at || r.createdAt);
+            if (requestDate < sevenDaysAgo) {
+                allRequests.push({ ...r, type: 'شركات' });
+            }
+        });
+
+        // Sort by date (oldest first)
+        allRequests.sort((a, b) => {
+            const dateA = new Date(a.created_at || a.createdAt);
+            const dateB = new Date(b.created_at || b.createdAt);
+            return dateA - dateB;
+        });
+
+        if (allRequests.length === 0) {
+            container.innerHTML = `
+                <div class="glass-card" style="text-align: center; padding: 3rem;">
+                    <i class="fas fa-check-circle" style="font-size: 3rem; color: #10b981; margin-bottom: 1rem;"></i>
+                    <p style="color: #94a3b8;">لا توجد طلبات حرجة حالياً (لا توجد طلبات مر عليها أكثر من 7 أيام)</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0; color: #ef4444;">⚠️ الطلبات الحرجة (${allRequests.length})</h3>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-success" onclick="adminManager.exportCriticalRequestsToExcel()" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
+                </div>
+            </div>
+            <div style="overflow-x: auto; max-height: 70vh;">
+                <table class="table" style="font-size: 0.85rem;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 0.5rem;">النوع</th>
+                            <th style="padding: 0.5rem;">رقم الطلب</th>
+                            <th style="padding: 0.5rem;">الاسم</th>
+                            <th style="padding: 0.5rem;">الهاتف</th>
+                            <th style="padding: 0.5rem;">الجهاز</th>
+                            <th style="padding: 0.5rem;">الرقم التسلسلي</th>
+                            <th style="padding: 0.5rem;">الحالة</th>
+                            <th style="padding: 0.5rem;">التاريخ</th>
+                            <th style="padding: 0.5rem;">الأيام</th>
+                            <th style="padding: 0.5rem;">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${allRequests.map(req => {
+                            const requestDate = new Date(req.created_at || req.createdAt);
+                            const daysDiff = Math.floor((today - requestDate) / (1000 * 60 * 60 * 24));
+                            const requestNumber = req.request_number || req.requestNumber || `#${req.id}`;
+                            const fullName = req.full_name || req.fullName || req.customer_name || req.customerName || '—';
+                            const phone = req.phone || '—';
+                            const laptopBrand = req.laptop_brand || req.laptopBrand || '—';
+                            const laptopModel = req.laptop_model || req.laptopModel || '';
+                            const serialNumber = req.serial_number || req.serialNumber || '—';
+                            const status = this.translateStatus(req.status);
+
+                            return `
+                                <tr style="transition: background-color 0.2s; background: ${daysDiff > 14 ? 'rgba(239, 68, 68, 0.1)' : daysDiff > 10 ? 'rgba(245, 158, 11, 0.1)' : 'transparent'};">
+                                    <td style="padding: 0.5rem; font-weight: 600; color: ${req.type === 'عادي' ? '#3b82f6' : req.type === 'جملة' ? '#8b5cf6' : '#10b981'};">${req.type}</td>
+                                    <td style="padding: 0.5rem; font-weight: 600; color: #3b82f6;">${requestNumber}</td>
+                                    <td style="padding: 0.5rem; font-weight: 600;">${fullName}</td>
+                                    <td style="padding: 0.5rem;" dir="ltr">${phone}</td>
+                                    <td style="padding: 0.5rem;">${laptopBrand} ${laptopModel}</td>
+                                    <td style="padding: 0.5rem; font-size: 0.8rem; color: #94a3b8;" dir="ltr">${serialNumber}</td>
+                                    <td style="padding: 0.5rem;">${status}</td>
+                                    <td style="padding: 0.5rem;">${Utils.formatDate(req.created_at || req.createdAt)}</td>
+                                    <td style="padding: 0.5rem; font-weight: 700; color: ${daysDiff > 14 ? '#ef4444' : daysDiff > 10 ? '#f59e0b' : '#64748b'};">${daysDiff} يوم</td>
+                                    <td style="padding: 0.5rem;">
+                                        <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                                            ${req.type === 'عادي' ? `
+                                                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="adminManager.viewRequest(${req.id})">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            ` : req.type === 'جملة' ? `
+                                                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="adminManager.viewBulkRequest(${req.id})">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            ` : `
+                                                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="adminManager.viewCompanyRequest(${req.id})">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            `}
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    /**
+     * Export critical requests to Excel
+     */
+    exportCriticalRequestsToExcel() {
+        const today = new Date();
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(today.getDate() - 7);
+
+        const allRequests = [];
+
+        (this.requests || []).forEach(r => {
+            const requestDate = new Date(r.created_at || r.createdAt);
+            if (requestDate < sevenDaysAgo) {
+                allRequests.push({ ...r, type: 'عادي' });
+            }
+        });
+
+        (this.bulkRequests || []).forEach(r => {
+            const requestDate = new Date(r.created_at || r.createdAt);
+            if (requestDate < sevenDaysAgo) {
+                allRequests.push({ ...r, type: 'جملة' });
+            }
+        });
+
+        (this.companyRequests || []).forEach(r => {
+            const requestDate = new Date(r.created_at || r.createdAt);
+            if (requestDate < sevenDaysAgo) {
+                allRequests.push({ ...r, type: 'شركات' });
+            }
+        });
+
+        allRequests.sort((a, b) => {
+            const dateA = new Date(a.created_at || a.createdAt);
+            const dateB = new Date(b.created_at || b.createdAt);
+            return dateA - dateB;
+        });
+
+        const exportData = allRequests.map(req => {
+            const requestDate = new Date(req.created_at || req.createdAt);
+            const daysDiff = Math.floor((today - requestDate) / (1000 * 60 * 60 * 24));
+            return {
+                'النوع': req.type,
+                'رقم الطلب': req.request_number || req.requestNumber || `#${req.id}`,
+                'الاسم': req.full_name || req.fullName || req.customer_name || req.customerName || '—',
+                'الهاتف': req.phone || '—',
+                'الجهاز': `${req.laptop_brand || req.laptopBrand || '—'} ${req.laptop_model || req.laptopModel || ''}`,
+                'الرقم التسلسلي': req.serial_number || req.serialNumber || '—',
+                'الحالة': this.translateStatus(req.status),
+                'التاريخ': Utils.formatDate(req.created_at || req.createdAt),
+                'الأيام': daysDiff
+            };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'الطلبات الحرجة');
+        XLSX.writeFile(wb, `طلبات_حرجة_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        toast.success('تم تصدير الطلبات الحرجة بنجاح');
+    }
+
+    /**
+     * Export filtered critical requests
+     */
+    exportFilteredCriticalRequests() {
+        this.exportCriticalRequestsToExcel();
     }
 
     /**
@@ -6456,7 +6668,8 @@ class AdminManager {
     async performGlobalSearch() {
         const searchInput = document.getElementById('globalSearchInput').value.trim();
         const todayOnly = document.getElementById('todayOnlyFilter')?.checked || false;
-        
+        const criticalOnly = document.getElementById('criticalFilter')?.checked || false;
+
         if (!searchInput) {
             toast.warning('الرجاء إدخال كلمة البحث');
             return;
@@ -6473,7 +6686,7 @@ class AdminManager {
             return;
         }
 
-        console.log('🔍 Multi-term search:', searchTerms, 'Today only:', todayOnly);
+        console.log('🔍 Multi-term search:', searchTerms, 'Today only:', todayOnly, 'Critical only:', criticalOnly);
 
         try {
             // Search for each term and combine results
@@ -6483,19 +6696,29 @@ class AdminManager {
             for (const searchTerm of searchTerms) {
                 // Use the optimized search API endpoint
                 const response = await fetch(`/api/search?q=${encodeURIComponent(searchTerm)}`);
-                
+
                 if (!response.ok) {
                     throw new Error('Search API request failed');
                 }
 
                 const apiResults = await response.json();
-                
+
                 // Helper function to check if date is today
                 const isToday = (dateString) => {
                     if (!dateString) return false;
                     const date = new Date(dateString);
                     const today = new Date();
                     return date.toDateString() === today.toDateString();
+                };
+
+                // Helper function to check if request is critical (older than 7 days)
+                const isCritical = (dateString) => {
+                    if (!dateString) return false;
+                    const date = new Date(dateString);
+                    const today = new Date();
+                    const sevenDaysAgo = new Date(today);
+                    sevenDaysAgo.setDate(today.getDate() - 7);
+                    return date < sevenDaysAgo;
                 };
 
                 // Convert API results to the format expected by display function
@@ -6505,9 +6728,11 @@ class AdminManager {
                     if (req.requestType === 'hikvision' || req.request_type === 'hikvision') {
                         return;
                     }
-                    
+
                     const isRequestToday = isToday(req.createdAt);
-                    if (!todayOnly || isRequestToday) {
+                    const isRequestCritical = isCritical(req.createdAt);
+
+                    if ((!todayOnly || isRequestToday) && (!criticalOnly || isRequestCritical)) {
                         allResults.push({
                             type: 'normal',
                             id: req.id,
@@ -6524,7 +6749,8 @@ class AdminManager {
                             cost: req.cost,
                             estimatedCompletionDate: req.estimatedCompletionDate || null,
                             matchedTerm: searchTerm,
-                            isToday: isRequestToday
+                            isToday: isRequestToday,
+                            isCritical: isRequestCritical
                         });
                     }
                 });
@@ -6532,7 +6758,9 @@ class AdminManager {
                 apiResults.bulkRequests.forEach(req => {
                     const devices = req.devices || [];
                     const isRequestToday = isToday(req.createdAt);
-                    if (!todayOnly || isRequestToday) {
+                    const isRequestCritical = isCritical(req.createdAt);
+
+                    if ((!todayOnly || isRequestToday) && (!criticalOnly || isRequestCritical)) {
                         const hasMatchingDevice = devices.some(d =>
                             d.serialNumber?.toLowerCase().includes(searchTerm) ||
                             d.laptopBrand?.toLowerCase().includes(searchTerm) ||
@@ -6559,14 +6787,17 @@ class AdminManager {
                             cost: req.totalCost || 0,
                             estimatedCompletionDate: req.estimatedCompletionDate || null,
                             matchedTerm: searchTerm,
-                            isToday: isRequestToday
+                            isToday: isRequestToday,
+                            isCritical: isRequestCritical
                         });
                     }
                 });
 
                 apiResults.companyRequests.forEach(req => {
                     const isRequestToday = isToday(req.createdAt);
-                    if (!todayOnly || isRequestToday) {
+                    const isRequestCritical = isCritical(req.createdAt);
+
+                    if ((!todayOnly || isRequestToday) && (!criticalOnly || isRequestCritical)) {
                         allResults.push({
                             type: 'company',
                             id: req.id,
@@ -6583,7 +6814,8 @@ class AdminManager {
                             cost: req.cost,
                             estimatedCompletionDate: req.estimatedCompletionDate || null,
                             matchedTerm: searchTerm,
-                            isToday: isRequestToday
+                            isToday: isRequestToday,
+                            isCritical: isRequestCritical
                         });
                     }
                 });
@@ -6608,11 +6840,11 @@ class AdminManager {
 
             this.currentSearchResults = uniqueResults;
             this.currentSearchTermInfo = searchTermInfo;
-            this.displayGlobalSearchResults(uniqueResults, searchTermInfo, todayOnly);
-            
+            this.displayGlobalSearchResults(uniqueResults, searchTermInfo, todayOnly, criticalOnly);
+
         } catch (error) {
             console.error('Error using search API, falling back to client-side search:', error);
-            
+
             // Fallback to client-side search if API fails
             const allResults = [];
             const searchTermInfo = [];
@@ -6625,13 +6857,25 @@ class AdminManager {
                 return date.toDateString() === today.toDateString();
             };
 
+            // Helper function to check if request is critical (older than 7 days)
+            const isCritical = (dateString) => {
+                if (!dateString) return false;
+                const date = new Date(dateString);
+                const today = new Date();
+                const sevenDaysAgo = new Date(today);
+                sevenDaysAgo.setDate(today.getDate() - 7);
+                return date < sevenDaysAgo;
+            };
+
             for (const searchTerm of searchTerms) {
                 const results = [];
 
                 // Search in normal requests - enhanced with more fields
                 this.requests.forEach(req => {
                     const isRequestToday = isToday(req.createdAt);
-                    if (!todayOnly || isRequestToday) {
+                    const isRequestCritical = isCritical(req.createdAt);
+
+                    if ((!todayOnly || isRequestToday) && (!criticalOnly || isRequestCritical)) {
                         if (
                             (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
                             (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
@@ -6657,7 +6901,8 @@ class AdminManager {
                                 createdAt: req.createdAt,
                                 cost: req.cost,
                                 matchedTerm: searchTerm,
-                                isToday: isRequestToday
+                                isToday: isRequestToday,
+                                isCritical: isRequestCritical
                             });
                         }
                     }
@@ -6666,7 +6911,9 @@ class AdminManager {
                 // Search in bulk requests - enhanced with device-level search
                 this.bulkRequests.forEach(req => {
                     const isRequestToday = isToday(req.createdAt);
-                    if (!todayOnly || isRequestToday) {
+                    const isRequestCritical = isCritical(req.createdAt);
+
+                    if ((!todayOnly || isRequestToday) && (!criticalOnly || isRequestCritical)) {
                         const devices = req.devices || [];
                         const hasMatchingDevice = devices.some(d =>
                             (d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm)) ||
@@ -6690,7 +6937,7 @@ class AdminManager {
                                 phone: req.customerPhone,
                                 email: req.customerEmail || '',
                                 laptopBrand: `طلب جملة (${req.devices?.length || 0} لابتوب)`,
-                                laptopModel: devices.find(d => 
+                                laptopModel: devices.find(d =>
                                     d.serialNumber?.toLowerCase().includes(searchTerm) ||
                                     d.laptopBrand?.toLowerCase().includes(searchTerm) ||
                                     d.laptopModel?.toLowerCase().includes(searchTerm)
@@ -6701,7 +6948,8 @@ class AdminManager {
                                 createdAt: req.createdAt,
                                 cost: req.totalCost || 0,
                                 matchedTerm: searchTerm,
-                                isToday: isRequestToday
+                                isToday: isRequestToday,
+                                isCritical: isRequestCritical
                             });
                         }
                     }
@@ -6710,7 +6958,9 @@ class AdminManager {
                 // Search in company requests - enhanced with more fields
                 this.companyRequests.forEach(req => {
                     const isRequestToday = isToday(req.createdAt);
-                    if (!todayOnly || isRequestToday) {
+                    const isRequestCritical = isCritical(req.createdAt);
+
+                    if ((!todayOnly || isRequestToday) && (!criticalOnly || isRequestCritical)) {
                         if (
                             (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
                             (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
@@ -6735,7 +6985,8 @@ class AdminManager {
                                 createdAt: req.createdAt,
                                 cost: req.cost,
                                 matchedTerm: searchTerm,
-                                isToday: isRequestToday
+                                isToday: isRequestToday,
+                                isCritical: isRequestCritical
                             });
                         }
                     }
@@ -6751,7 +7002,7 @@ class AdminManager {
             // Remove duplicates
             const uniqueResults = [];
             const seen = new Set();
-            
+
             allResults.forEach(result => {
                 const key = `${result.type}-${result.requestNumber}`;
                 if (!seen.has(key)) {
@@ -6762,7 +7013,7 @@ class AdminManager {
 
             this.currentSearchResults = uniqueResults;
             this.currentSearchTermInfo = searchTermInfo;
-            this.displayGlobalSearchResults(uniqueResults, searchTermInfo, todayOnly);
+            this.displayGlobalSearchResults(uniqueResults, searchTermInfo, todayOnly, criticalOnly);
         }
     }
 
@@ -6770,7 +7021,7 @@ class AdminManager {
      * Display global search results in modal with enhanced UI
      * Supports displaying results from multiple search terms
      */
-    displayGlobalSearchResults(results, searchTermInfo = null, todayOnly = false) {
+    displayGlobalSearchResults(results, searchTermInfo = null, todayOnly = false, criticalOnly = false) {
         const resultsContainer = document.getElementById('globalSearchResults');
         const downloadBtn = document.getElementById('downloadExcelBtn');
 
@@ -6780,6 +7031,7 @@ class AdminManager {
                     <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted, #94a3b8); margin-bottom: 1rem;"></i>
                     <p style="color: var(--text-muted, #94a3b8);">لا توجد نتائج للبحث</p>
                     ${todayOnly ? '<p style="color: var(--text-muted, #94a3b8); font-size: 0.875rem;">(تم تطبيق فلتر "طلبات اليوم فقط")</p>' : ''}
+                    ${criticalOnly ? '<p style="color: var(--text-muted, #94a3b8); font-size: 0.875rem;">(تم تطبيق فلتر "الطلبات الحرجة")</p>' : ''}
                 </div>
             `;
             downloadBtn.style.display = 'none';
@@ -6816,18 +7068,32 @@ class AdminManager {
                 `;
             }
 
+            // Add critical filter indicator
+            let criticalFilterIndicator = '';
+            if (criticalOnly) {
+                criticalFilterIndicator = `
+                    <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                        <p style="color: var(--accent-red, #ef4444); margin: 0; font-size: 0.875rem;">
+                            <i class="fas fa-exclamation-triangle"></i> يتم عرض الطلبات الحرجة فقط (أكثر من 7 أيام)
+                        </p>
+                    </div>
+                `;
+            }
+
             const hasMatchedTerm = results.some(r => r.matchedTerm);
-            
+
             const tableHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <p style="color: var(--text-muted, #94a3b8); margin: 0;">
                         <i class="fas fa-search"></i> تم العثور على ${results.length} نتيجة
                         <span style="margin-right: 0.5rem; color: var(--text-muted, #94a3b8);">(عادي: ${counts.normal} | جملة: ${counts.bulk} | شركة: ${counts.company})</span>
                         ${todayOnly ? '<span style="margin-right: 0.5rem; color: #10b981;">| اليوم فقط</span>' : ''}
+                        ${criticalOnly ? '<span style="margin-right: 0.5rem; color: #ef4444;">| حرجة</span>' : ''}
                     </p>
                 </div>
                 ${searchTermsSummary}
                 ${todayFilterIndicator}
+                ${criticalFilterIndicator}
                 <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; background: var(--card-bg, rgba(255, 255, 255, 0.05)); color: var(--text-primary, #e2e8f0);">
                     <thead>
                         <tr style="background: var(--table-header-bg, rgba(59, 130, 246, 0.1));">
