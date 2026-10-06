@@ -4550,26 +4550,32 @@ class AdminManager {
         // Collect all requests from all types
         const allRequests = [];
 
-        // Normal requests
+        // Normal requests - exclude Delivered and Ready
         (this.requests || []).forEach(r => {
             const requestDate = new Date(r.created_at || r.createdAt);
-            if (requestDate < sevenDaysAgo) {
+            const status = r.status || '';
+            // Exclude Delivered and Ready status
+            if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
                 allRequests.push({ ...r, type: 'عادي' });
             }
         });
 
-        // Bulk requests
+        // Bulk requests - exclude Delivered and Ready
         (this.bulkRequests || []).forEach(r => {
             const requestDate = new Date(r.created_at || r.createdAt);
-            if (requestDate < sevenDaysAgo) {
+            const status = r.status || '';
+            // Exclude Delivered and Ready status
+            if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
                 allRequests.push({ ...r, type: 'جملة' });
             }
         });
 
-        // Company requests
+        // Company requests - exclude Delivered and Ready
         (this.companyRequests || []).forEach(r => {
             const requestDate = new Date(r.created_at || r.createdAt);
-            if (requestDate < sevenDaysAgo) {
+            const status = r.status || '';
+            // Exclude Delivered and Ready status
+            if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
                 allRequests.push({ ...r, type: 'شركات' });
             }
         });
@@ -4585,7 +4591,7 @@ class AdminManager {
             container.innerHTML = `
                 <div class="glass-card" style="text-align: center; padding: 3rem;">
                     <i class="fas fa-check-circle" style="font-size: 3rem; color: #10b981; margin-bottom: 1rem;"></i>
-                    <p style="color: #94a3b8;">لا توجد طلبات حرجة حالياً (لا توجد طلبات مر عليها أكثر من 7 أيام)</p>
+                    <p style="color: #94a3b8;">لا توجد طلبات حرجة حالياً (لا توجد طلبات مر عليها أكثر من 7 أيام ولم يتم تسليمها)</p>
                 </div>
             `;
             return;
@@ -4593,7 +4599,7 @@ class AdminManager {
 
         container.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3 style="margin: 0; color: #ef4444;">⚠️ الطلبات الحرجة (${allRequests.length})</h3>
+                <h3 style="margin: 0; color: #ef4444;">⚠️ الطلبات الحرجة (${allRequests.length}) - تستثني الطلبات الجاهزة والمسلمة</h3>
                 <div style="display: flex; gap: 0.5rem;">
                     <button class="btn btn-success" onclick="adminManager.exportCriticalRequestsToExcel()" style="padding: 0.5rem 1rem;">
                         <i class="fas fa-file-excel"></i> تصدير Excel
@@ -4677,21 +4683,27 @@ class AdminManager {
 
         (this.requests || []).forEach(r => {
             const requestDate = new Date(r.created_at || r.createdAt);
-            if (requestDate < sevenDaysAgo) {
+            const status = r.status || '';
+            // Exclude Delivered and Ready status
+            if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
                 allRequests.push({ ...r, type: 'عادي' });
             }
         });
 
         (this.bulkRequests || []).forEach(r => {
             const requestDate = new Date(r.created_at || r.createdAt);
-            if (requestDate < sevenDaysAgo) {
+            const status = r.status || '';
+            // Exclude Delivered and Ready status
+            if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
                 allRequests.push({ ...r, type: 'جملة' });
             }
         });
 
         (this.companyRequests || []).forEach(r => {
             const requestDate = new Date(r.created_at || r.createdAt);
-            if (requestDate < sevenDaysAgo) {
+            const status = r.status || '';
+            // Exclude Delivered and Ready status
+            if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
                 allRequests.push({ ...r, type: 'شركات' });
             }
         });
