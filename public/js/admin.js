@@ -6668,7 +6668,6 @@ class AdminManager {
     async performGlobalSearch() {
         const searchInput = document.getElementById('globalSearchInput').value.trim();
         const todayOnly = document.getElementById('todayOnlyFilter')?.checked || false;
-        const criticalOnly = document.getElementById('criticalFilter')?.checked || false;
 
         if (!searchInput) {
             toast.warning('الرجاء إدخال كلمة البحث');
@@ -6686,7 +6685,7 @@ class AdminManager {
             return;
         }
 
-        console.log('🔍 Multi-term search:', searchTerms, 'Today only:', todayOnly, 'Critical only:', criticalOnly);
+        console.log('🔍 Multi-term search:', searchTerms, 'Today only:', todayOnly);
 
         try {
             // Search for each term and combine results
@@ -6711,16 +6710,6 @@ class AdminManager {
                     return date.toDateString() === today.toDateString();
                 };
 
-                // Helper function to check if request is critical (older than 7 days)
-                const isCritical = (dateString) => {
-                    if (!dateString) return false;
-                    const date = new Date(dateString);
-                    const today = new Date();
-                    const sevenDaysAgo = new Date(today);
-                    sevenDaysAgo.setDate(today.getDate() - 7);
-                    return date < sevenDaysAgo;
-                };
-
                 // Convert API results to the format expected by display function
                 // Add search term to track which term matched this result
                 apiResults.requests.forEach(req => {
@@ -6730,9 +6719,7 @@ class AdminManager {
                     }
 
                     const isRequestToday = isToday(req.createdAt);
-                    const isRequestCritical = isCritical(req.createdAt);
-
-                    if ((!todayOnly || isRequestToday) && (!criticalOnly || isRequestCritical)) {
+                    if (!todayOnly || isRequestToday) {
                         allResults.push({
                             type: 'normal',
                             id: req.id,
@@ -6749,8 +6736,7 @@ class AdminManager {
                             cost: req.cost,
                             estimatedCompletionDate: req.estimatedCompletionDate || null,
                             matchedTerm: searchTerm,
-                            isToday: isRequestToday,
-                            isCritical: isRequestCritical
+                            isToday: isRequestToday
                         });
                     }
                 });
@@ -6758,9 +6744,7 @@ class AdminManager {
                 apiResults.bulkRequests.forEach(req => {
                     const devices = req.devices || [];
                     const isRequestToday = isToday(req.createdAt);
-                    const isRequestCritical = isCritical(req.createdAt);
-
-                    if ((!todayOnly || isRequestToday) && (!criticalOnly || isRequestCritical)) {
+                    if (!todayOnly || isRequestToday) {
                         const hasMatchingDevice = devices.some(d =>
                             d.serialNumber?.toLowerCase().includes(searchTerm) ||
                             d.laptopBrand?.toLowerCase().includes(searchTerm) ||
@@ -6787,17 +6771,14 @@ class AdminManager {
                             cost: req.totalCost || 0,
                             estimatedCompletionDate: req.estimatedCompletionDate || null,
                             matchedTerm: searchTerm,
-                            isToday: isRequestToday,
-                            isCritical: isRequestCritical
+                            isToday: isRequestToday
                         });
                     }
                 });
 
                 apiResults.companyRequests.forEach(req => {
                     const isRequestToday = isToday(req.createdAt);
-                    const isRequestCritical = isCritical(req.createdAt);
-
-                    if ((!todayOnly || isRequestToday) && (!criticalOnly || isRequestCritical)) {
+                    if (!todayOnly || isRequestToday) {
                         allResults.push({
                             type: 'company',
                             id: req.id,
@@ -6814,8 +6795,7 @@ class AdminManager {
                             cost: req.cost,
                             estimatedCompletionDate: req.estimatedCompletionDate || null,
                             matchedTerm: searchTerm,
-                            isToday: isRequestToday,
-                            isCritical: isRequestCritical
+                            isToday: isRequestToday
                         });
                     }
                 });
@@ -6840,7 +6820,7 @@ class AdminManager {
 
             this.currentSearchResults = uniqueResults;
             this.currentSearchTermInfo = searchTermInfo;
-            this.displayGlobalSearchResults(uniqueResults, searchTermInfo, todayOnly, criticalOnly);
+            this.displayGlobalSearchResults(uniqueResults, searchTermInfo, todayOnly);
 
         } catch (error) {
             console.error('Error using search API, falling back to client-side search:', error);
@@ -6857,25 +6837,13 @@ class AdminManager {
                 return date.toDateString() === today.toDateString();
             };
 
-            // Helper function to check if request is critical (older than 7 days)
-            const isCritical = (dateString) => {
-                if (!dateString) return false;
-                const date = new Date(dateString);
-                const today = new Date();
-                const sevenDaysAgo = new Date(today);
-                sevenDaysAgo.setDate(today.getDate() - 7);
-                return date < sevenDaysAgo;
-            };
-
             for (const searchTerm of searchTerms) {
                 const results = [];
 
                 // Search in normal requests - enhanced with more fields
                 this.requests.forEach(req => {
                     const isRequestToday = isToday(req.createdAt);
-                    const isRequestCritical = isCritical(req.createdAt);
-
-                    if ((!todayOnly || isRequestToday) && (!criticalOnly || isRequestCritical)) {
+                    if (!todayOnly || isRequestToday) {
                         if (
                             (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
                             (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
@@ -6901,8 +6869,7 @@ class AdminManager {
                                 createdAt: req.createdAt,
                                 cost: req.cost,
                                 matchedTerm: searchTerm,
-                                isToday: isRequestToday,
-                                isCritical: isRequestCritical
+                                isToday: isRequestToday
                             });
                         }
                     }
@@ -6911,9 +6878,7 @@ class AdminManager {
                 // Search in bulk requests - enhanced with device-level search
                 this.bulkRequests.forEach(req => {
                     const isRequestToday = isToday(req.createdAt);
-                    const isRequestCritical = isCritical(req.createdAt);
-
-                    if ((!todayOnly || isRequestToday) && (!criticalOnly || isRequestCritical)) {
+                    if (!todayOnly || isRequestToday) {
                         const devices = req.devices || [];
                         const hasMatchingDevice = devices.some(d =>
                             (d.serialNumber && d.serialNumber.toLowerCase().includes(searchTerm)) ||
@@ -6948,8 +6913,7 @@ class AdminManager {
                                 createdAt: req.createdAt,
                                 cost: req.totalCost || 0,
                                 matchedTerm: searchTerm,
-                                isToday: isRequestToday,
-                                isCritical: isRequestCritical
+                                isToday: isRequestToday
                             });
                         }
                     }
@@ -6958,9 +6922,7 @@ class AdminManager {
                 // Search in company requests - enhanced with more fields
                 this.companyRequests.forEach(req => {
                     const isRequestToday = isToday(req.createdAt);
-                    const isRequestCritical = isCritical(req.createdAt);
-
-                    if ((!todayOnly || isRequestToday) && (!criticalOnly || isRequestCritical)) {
+                    if (!todayOnly || isRequestToday) {
                         if (
                             (req.requestNumber && req.requestNumber.toLowerCase().includes(searchTerm)) ||
                             (req.fullName && req.fullName.toLowerCase().includes(searchTerm)) ||
@@ -6985,8 +6947,7 @@ class AdminManager {
                                 createdAt: req.createdAt,
                                 cost: req.cost,
                                 matchedTerm: searchTerm,
-                                isToday: isRequestToday,
-                                isCritical: isRequestCritical
+                                isToday: isRequestToday
                             });
                         }
                     }
@@ -7013,7 +6974,7 @@ class AdminManager {
 
             this.currentSearchResults = uniqueResults;
             this.currentSearchTermInfo = searchTermInfo;
-            this.displayGlobalSearchResults(uniqueResults, searchTermInfo, todayOnly, criticalOnly);
+            this.displayGlobalSearchResults(uniqueResults, searchTermInfo, todayOnly);
         }
     }
 
@@ -7021,7 +6982,7 @@ class AdminManager {
      * Display global search results in modal with enhanced UI
      * Supports displaying results from multiple search terms
      */
-    displayGlobalSearchResults(results, searchTermInfo = null, todayOnly = false, criticalOnly = false) {
+    displayGlobalSearchResults(results, searchTermInfo = null, todayOnly = false) {
         const resultsContainer = document.getElementById('globalSearchResults');
         const downloadBtn = document.getElementById('downloadExcelBtn');
 
@@ -7031,7 +6992,6 @@ class AdminManager {
                     <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted, #94a3b8); margin-bottom: 1rem;"></i>
                     <p style="color: var(--text-muted, #94a3b8);">لا توجد نتائج للبحث</p>
                     ${todayOnly ? '<p style="color: var(--text-muted, #94a3b8); font-size: 0.875rem;">(تم تطبيق فلتر "طلبات اليوم فقط")</p>' : ''}
-                    ${criticalOnly ? '<p style="color: var(--text-muted, #94a3b8); font-size: 0.875rem;">(تم تطبيق فلتر "الطلبات الحرجة")</p>' : ''}
                 </div>
             `;
             downloadBtn.style.display = 'none';
@@ -7068,18 +7028,6 @@ class AdminManager {
                 `;
             }
 
-            // Add critical filter indicator
-            let criticalFilterIndicator = '';
-            if (criticalOnly) {
-                criticalFilterIndicator = `
-                    <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
-                        <p style="color: var(--accent-red, #ef4444); margin: 0; font-size: 0.875rem;">
-                            <i class="fas fa-exclamation-triangle"></i> يتم عرض الطلبات الحرجة فقط (أكثر من 7 أيام)
-                        </p>
-                    </div>
-                `;
-            }
-
             const hasMatchedTerm = results.some(r => r.matchedTerm);
 
             const tableHTML = `
@@ -7088,12 +7036,10 @@ class AdminManager {
                         <i class="fas fa-search"></i> تم العثور على ${results.length} نتيجة
                         <span style="margin-right: 0.5rem; color: var(--text-muted, #94a3b8);">(عادي: ${counts.normal} | جملة: ${counts.bulk} | شركة: ${counts.company})</span>
                         ${todayOnly ? '<span style="margin-right: 0.5rem; color: #10b981;">| اليوم فقط</span>' : ''}
-                        ${criticalOnly ? '<span style="margin-right: 0.5rem; color: #ef4444;">| حرجة</span>' : ''}
                     </p>
                 </div>
                 ${searchTermsSummary}
                 ${todayFilterIndicator}
-                ${criticalFilterIndicator}
                 <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; background: var(--card-bg, rgba(255, 255, 255, 0.05)); color: var(--text-primary, #e2e8f0);">
                     <thead>
                         <tr style="background: var(--table-header-bg, rgba(59, 130, 246, 0.1));">
