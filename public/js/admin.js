@@ -3230,7 +3230,13 @@ class AdminManager {
      */
     async switchSection(section) {
         this.currentSection = section;
-        
+
+        // Check if user can access this section
+        if (!this.canAccessSection(section)) {
+            toast.error('ليس لديك صلاحية للوصول إلى هذا القسم');
+            return;
+        }
+
         // Update sidebar
         document.querySelectorAll('.sidebar-nav-link').forEach(link => {
             link.classList.remove('active');
