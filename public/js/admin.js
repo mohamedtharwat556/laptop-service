@@ -4547,6 +4547,10 @@ class AdminManager {
         const sevenDaysAgo = new Date(today);
         sevenDaysAgo.setDate(today.getDate() - 7);
 
+        // Get search term
+        const searchInput = document.getElementById('criticalSearchInput');
+        const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
         // Collect all requests from all types
         const allRequests = [];
 
@@ -4580,18 +4584,38 @@ class AdminManager {
             }
         });
 
+        // Filter by search term (name, serial number, device name)
+        let filteredRequests = allRequests;
+        if (searchTerm) {
+            filteredRequests = allRequests.filter(req => {
+                const fullName = (req.full_name || req.fullName || req.customer_name || req.customerName || '').toLowerCase();
+                const serialNumber = (req.serial_number || req.serialNumber || '').toLowerCase();
+                const laptopBrand = (req.laptop_brand || req.laptopBrand || '').toLowerCase();
+                const laptopModel = (req.laptop_model || req.laptopModel || '').toLowerCase();
+                const deviceName = `${laptopBrand} ${laptopModel}`.toLowerCase();
+
+                return fullName.includes(searchTerm) ||
+                       serialNumber.includes(searchTerm) ||
+                       deviceName.includes(searchTerm);
+            });
+        }
+
         // Sort by date (oldest first)
-        allRequests.sort((a, b) => {
+        filteredRequests.sort((a, b) => {
             const dateA = new Date(a.created_at || a.createdAt);
             const dateB = new Date(b.created_at || b.createdAt);
             return dateA - dateB;
         });
 
-        if (allRequests.length === 0) {
+        if (filteredRequests.length === 0) {
+            const message = searchTerm
+                ? 'لا توجد نتائج للبحث'
+                : 'لا توجد طلبات حرجة حالياً (لا توجد طلبات مر عليها أكثر من 7 أيام ولم يتم تسليمها)';
+
             container.innerHTML = `
                 <div class="glass-card" style="text-align: center; padding: 3rem;">
-                    <i class="fas fa-check-circle" style="font-size: 3rem; color: #10b981; margin-bottom: 1rem;"></i>
-                    <p style="color: #94a3b8;">لا توجد طلبات حرجة حالياً (لا توجد طلبات مر عليها أكثر من 7 أيام ولم يتم تسليمها)</p>
+                    <i class="fas fa-search" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+                    <p style="color: #94a3b8;">${message}</p>
                 </div>
             `;
             return;
@@ -4599,7 +4623,7 @@ class AdminManager {
 
         container.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3 style="margin: 0; color: #ef4444;">⚠️ الطلبات الحرجة (${allRequests.length}) - تستثني الطلبات الجاهزة والمسلمة</h3>
+                <h3 style="margin: 0; color: #ef4444;">⚠️ الطلبات الحرجة (${filteredRequests.length}) - تستثني الطلبات الجاهزة والمسلمة</h3>
                 <div style="display: flex; gap: 0.5rem;">
                     <button class="btn btn-success" onclick="adminManager.exportCriticalRequestsToExcel()" style="padding: 0.5rem 1rem;">
                         <i class="fas fa-file-excel"></i> تصدير Excel
@@ -4623,7 +4647,7 @@ class AdminManager {
                         </tr>
                     </thead>
                     <tbody>
-                        ${allRequests.map(req => {
+                        ${filteredRequests.map(req => {
                             const requestDate = new Date(req.created_at || req.createdAt);
                             const daysDiff = Math.floor((today - requestDate) / (1000 * 60 * 60 * 24));
                             const requestNumber = req.request_number || req.requestNumber || `#${req.id}`;
@@ -4679,6 +4703,10 @@ class AdminManager {
         const sevenDaysAgo = new Date(today);
         sevenDaysAgo.setDate(today.getDate() - 7);
 
+        // Get search term
+        const searchInput = document.getElementById('criticalSearchInput');
+        const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
         const allRequests = [];
 
         (this.requests || []).forEach(r => {
@@ -4708,13 +4736,29 @@ class AdminManager {
             }
         });
 
-        allRequests.sort((a, b) => {
+        // Filter by search term (name, serial number, device name)
+        let filteredRequests = allRequests;
+        if (searchTerm) {
+            filteredRequests = allRequests.filter(req => {
+                const fullName = (req.full_name || req.fullName || req.customer_name || req.customerName || '').toLowerCase();
+                const serialNumber = (req.serial_number || req.serialNumber || '').toLowerCase();
+                const laptopBrand = (req.laptop_brand || req.laptopBrand || '').toLowerCase();
+                const laptopModel = (req.laptop_model || req.laptopModel || '').toLowerCase();
+                const deviceName = `${laptopBrand} ${laptopModel}`.toLowerCase();
+
+                return fullName.includes(searchTerm) ||
+                       serialNumber.includes(searchTerm) ||
+                       deviceName.includes(searchTerm);
+            });
+        }
+
+        filteredRequests.sort((a, b) => {
             const dateA = new Date(a.created_at || a.createdAt);
             const dateB = new Date(b.created_at || b.createdAt);
             return dateA - dateB;
         });
 
-        const exportData = allRequests.map(req => {
+        const exportData = filteredRequests.map(req => {
             const requestDate = new Date(req.created_at || req.createdAt);
             const daysDiff = Math.floor((today - requestDate) / (1000 * 60 * 60 * 24));
             return {
@@ -4733,7 +4777,10 @@ class AdminManager {
         const ws = XLSX.utils.json_to_sheet(exportData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'الطلبات الحرجة');
-        XLSX.writeFile(wb, `طلبات_حرجة_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        const filename = searchTerm
+            ? `طلبات_حرجة_فلتر_${new Date().toISOString().slice(0, 10)}.xlsx`
+            : `طلبات_حرجة_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        XLSX.writeFile(wb, filename);
         toast.success('تم تصدير الطلبات الحرجة بنجاح');
     }
 
