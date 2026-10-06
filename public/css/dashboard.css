@@ -1667,6 +1667,278 @@
     }
 }
 
+/* Main Dashboard Header - Global Search Section */
+@media (max-width: 767px) {
+    .dashboard-header h1 {
+        font-size: 1.25rem;
+    }
+
+    .global-search-wrapper {
+        width: 100%;
+        margin-left: 0 !important;
+        order: 2;
+    }
+
+    .global-search-box {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .global-search-box input {
+        width: 100%;
+        font-size: 0.875rem;
+        padding: 0.625rem;
+    }
+
+    .global-search-box button {
+        width: 100%;
+        padding: 0.625rem;
+        font-size: 0.875rem;
+    }
+
+    .search-btn-text {
+        display: inline;
+    }
+
+    .global-search-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .search-info-text {
+        font-size: 0.6875rem;
+    }
+
+    .critical-btn-wrapper {
+        width: 100%;
+        margin-left: 0 !important;
+        order: 3;
+    }
+
+    .critical-btn-wrapper button {
+        width: 100%;
+        justify-content: center;
+        padding: 0.625rem;
+        font-size: 0.875rem;
+    }
+
+    .critical-btn-text {
+        display: inline;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-header h1 {
+        font-size: 1.125rem;
+    }
+
+    .search-btn-text {
+        display: none;
+    }
+
+    .critical-btn-text {
+        display: none;
+    }
+
+    .global-search-box button {
+        padding: 0.5rem;
+    }
+
+    .global-search-box button i {
+        font-size: 1.125rem;
+    }
+
+    .critical-btn-wrapper button {
+        padding: 0.5rem;
+    }
+
+    .critical-btn-wrapper button i {
+        font-size: 1.125rem;
+    }
+
+    .global-search-box input {
+        font-size: 0.8125rem;
+        padding: 0.5rem;
+    }
+
+    /* Dashboard Charts Section */
+    .charts-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .chart-card {
+        padding: 1rem;
+    }
+
+    .chart-card h3 {
+        font-size: 1rem;
+    }
+
+    .chart-card > div > div:first-child {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .chart-container {
+        height: 250px;
+        padding: 0.5rem;
+    }
+
+    #distributionDetails {
+        width: 100%;
+    }
+
+    #distributionDetails h4 {
+        font-size: 0.875rem;
+    }
+
+    #calculationMode {
+        width: 100%;
+        font-size: 0.8125rem;
+        padding: 0.5rem;
+    }
+
+    .chart-card > div > div:first-child > div:first-child {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .chart-card > div > div:first-child > div:first-child label {
+        font-size: 0.75rem;
+    }
+}
+
+/* Tablet Dashboard Header */
+@media (min-width: 768px) and (max-width: 991px) {
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .global-search-wrapper {
+        max-width: 400px;
+    }
+
+    .global-search-box input {
+        font-size: 0.875rem;
+    }
+
+    .global-search-box button {
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .critical-btn-wrapper button {
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-card > div > div:first-child {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .chart-container {
+        height: 300px;
+    }
+
+    #distributionDetails {
+        width: 100%;
+    }
+
+    /* Stats Grid on Dashboard */
+    #adminStats {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    #adminStats > div {
+        padding: 1rem;
+    }
+
+    #adminStats > div > div:first-child {
+        width: 40px;
+        height: 40px;
+        font-size: 1.125rem;
+    }
+
+    #adminStats > div > div:last-child > h3 {
+        font-size: 1.5rem;
+    }
+
+    #adminStats > div > div:last-child > p {
+        font-size: 0.8125rem;
+    }
+}
+
+/* Large Desktop Dashboard */
+@media (min-width: 1200px) {
+    .dashboard-header h1 {
+        font-size: 2rem;
+    }
+
+    .global-search-wrapper {
+        max-width: 700px;
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Global Search Results Modal Responsive */
+@media (max-width: 767px) {
+    #globalSearchResultsModal {
+        padding: 1rem;
+    }
+
+    #globalSearchResultsModal > div {
+        padding: 1rem;
+        max-width: 100%;
+    }
+
+    #globalSearchResultsModal > div > div {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    #globalSearchResultsModal > div > div > h2 {
+        font-size: 1.25rem;
+    }
+
+    #globalSearchResultsModal > div > div > div {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    #globalSearchResultsModal > div > div > div button {
+        width: 100%;
+        padding: 0.625rem;
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #globalSearchResultsModal > div > div > h2 {
+        font-size: 1.125rem;
+    }
+
+    #globalSearchResultsModal > div > div > div button {
+        padding: 0.5rem;
+        font-size: 0.8125rem;
+    }
+}
+
 
 
 /* Tablet (768px - 991px) */
