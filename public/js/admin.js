@@ -51,15 +51,20 @@ class AdminManager {
                     this.currentUser = JSON.parse(user);
                     this.userRole = role;
                     console.log('✅ User loaded from sessionStorage:', this.currentUser.name, 'Role:', this.userRole);
-                    
+
                     // User already authenticated, skip login modal
                     // Update UI and load data
                     this.updateUserUI();
                     console.log('📊 Loading data...');
                     await this.loadData();
                     console.log('✅ Data loaded successfully');
-                    console.log('📑 Switching to dashboard section...');
-                    await this.switchSection('dashboard');
+
+                    // Restore last section or go to dashboard
+                    const lastSection = sessionStorage.getItem('YAS_lastSection');
+                    console.log('📑 Last section:', lastSection);
+                    console.log('📑 Switching to section:', lastSection || 'dashboard');
+                    await this.switchSection(lastSection || 'dashboard');
+
                     console.log('🔄 Auto-refresh disabled');
                     console.log('🔔 Initializing notification badge...');
                     this.updateNotificationBadge();
@@ -85,8 +90,11 @@ class AdminManager {
             await this.loadData();
             console.log('✅ Data loaded successfully');
 
-            console.log('📑 Switching to dashboard section...');
-            await this.switchSection('dashboard');
+            // Restore last section or go to dashboard
+            const lastSection = sessionStorage.getItem('YAS_lastSection');
+            console.log('📑 Last section:', lastSection);
+            console.log('📑 Switching to section:', lastSection || 'dashboard');
+            await this.switchSection(lastSection || 'dashboard');
 
             console.log('🔄 Auto-refresh disabled');
             // this.startAutoRefresh(); // Auto-refresh disabled as requested
@@ -334,10 +342,11 @@ class AdminManager {
 
             // Load data and switch to appropriate section
             this.loadData().then(() => {
+                const lastSection = sessionStorage.getItem('YAS_lastSection');
                 if (this.userRole === 'hikvision') {
                     this.switchSection('hikvision-requests');
                 } else {
-                    this.switchSection('dashboard');
+                    this.switchSection(lastSection || 'dashboard');
                 }
             });
 
@@ -439,6 +448,7 @@ class AdminManager {
     logout() {
         sessionStorage.removeItem('YAS_currentUser');
         sessionStorage.removeItem('YAS_userRole');
+        sessionStorage.removeItem('YAS_lastSection');
         sessionStorage.removeItem('hikvisionAuthenticated');
         this.currentUser = null;
         this.userRole = null;
@@ -1532,17 +1542,8 @@ class AdminManager {
             sessionStorage.setItem('YAS_currentUser', JSON.stringify(user));
             return true;
         }
-        
-        return false;
-    }
 
-    /**
-     * Logout
-     */
-    logout() {
-        this.currentUser = null;
-        sessionStorage.removeItem('YAS_currentUser');
-        window.location.href = 'index.html';
+        return false;
     }
 
     /**
@@ -3221,6 +3222,9 @@ class AdminManager {
      */
     async switchSection(section) {
         this.currentSection = section;
+
+        // Save current section to sessionStorage
+        sessionStorage.setItem('YAS_lastSection', section);
 
         // Check if user can access this section
         if (!this.canAccessSection(section)) {
