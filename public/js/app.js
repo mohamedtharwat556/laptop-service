@@ -254,6 +254,13 @@ class ModalManager {
             delete this.modals[id];
         }
     }
+
+    // Safely destroy modal if it exists
+    safeDestroy(id) {
+        if (this.modals[id]) {
+            this.destroy(id);
+        }
+    }
 }
 
 // Loading Spinner

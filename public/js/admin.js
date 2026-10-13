@@ -4804,7 +4804,7 @@ class AdminManager {
                         <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${companyRequest.problem_description || companyRequest.problemDescription || ''}</span></div>
                     </div>
 
-                    <form id="editCompanyRequestForm" method="POST" style="margin-top: 1.5rem;">
+                    <form id="editCompanyRequestForm" style="margin-top: 1.5rem;">
                         <div class="form-group">
                             <label class="form-label">رقم الهاتف</label>
                             <input type="tel" class="form-input" name="phone" value="${companyRequest.phone || ''}" placeholder="أدخل رقم الهاتف">
@@ -4890,9 +4890,9 @@ class AdminManager {
                     </form>
                 </div>
             `;
-            
+
+            modalManager.safeDestroy('view-company-request');
             modalManager.create('view-company-request', 'تفاصيل الطلب', content);
-            modalManager.open('view-company-request');
 
             const form = document.getElementById('editCompanyRequestForm');
             if (form) {
@@ -4935,7 +4935,7 @@ class AdminManager {
                     if (!response.ok) throw new Error('Failed to update company request');
 
                     const updatedData = await response.json();
-                    
+
                     // Update local data instead of reloading everything
                     const index = this.companyRequests.findIndex(r => r.id === companyRequestId);
                     if (index !== -1) {
@@ -4951,6 +4951,8 @@ class AdminManager {
                 }
                 });
             }
+
+            modalManager.open('view-company-request');
         } catch (error) {
             console.error('Error viewing company request:', error);
             toast.error('فشل تحميل تفاصيل الطلب');
@@ -5894,7 +5896,7 @@ class AdminManager {
                     </button>
                 </div>
 
-                <form id="editBulkRequestForm" method="POST" style="margin-top: 1.5rem;">
+                <form id="editBulkRequestForm" style="margin-top: 1.5rem;">
                     <div class="form-group">
                         <label class="form-label">رقم الطلب</label>
                         <input type="text" class="form-input" name="requestNumber" value="${bulkRequest.requestNumber || ''}" readonly style="background: rgba(59, 130, 246, 0.1);">
@@ -5980,18 +5982,13 @@ class AdminManager {
                 </form>
             </div>
         `;
-        
+
         const modalId = `view-bulk-request-${bulkRequestId}`;
+        modalManager.safeDestroy(modalId);
         modalManager.create(modalId, 'تفاصيل طلب الجملة', content);
-        modalManager.open(modalId);
 
-        setTimeout(() => {
-            const form = document.getElementById('editBulkRequestForm');
-            if (!form) {
-                console.error('Form not found');
-                return;
-            }
-
+        const form = document.getElementById('editBulkRequestForm');
+        if (form) {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -6004,7 +6001,7 @@ class AdminManager {
                         estimatedCompletionDate = dateObj.toISOString();
                     }
                 }
-                
+
                 const updateData = {
                     customerPhone: form.customerPhone.value,
                     adminReply: form.adminReply.value,
@@ -6034,7 +6031,9 @@ class AdminManager {
                     toast.error('فشل تحديث الطلب');
                 }
             });
-        }, 100);
+        }
+
+        modalManager.open(modalId);
         } catch (error) {
             console.error('Error viewing bulk request:', error);
             toast.error('فشل في تحميل تفاصيل طلب الجملة');
@@ -7219,7 +7218,7 @@ class AdminManager {
                     </div>
                     ` : ''}
                 </div>
-                <form id="editRequestForm" method="POST" style="margin-top: 1.5rem;">
+                <form id="editRequestForm" style="margin-top: 1.5rem;">
                     <div class="form-group">
                         <label class="form-label">رقم الهاتف</label>
                         <input type="tel" class="form-input" name="phone" value="${request.phone || ''}" placeholder="أدخل رقم الهاتف">
@@ -7305,8 +7304,9 @@ class AdminManager {
                 </form>
             </div>
         `;
+        // Destroy existing modal if it exists to prevent duplicates
+        modalManager.safeDestroy('view-request');
         modalManager.create('view-request', 'تفاصيل الطلب', content);
-        modalManager.open('view-request');
 
         const form = document.getElementById('editRequestForm');
         if (form) {
@@ -7344,6 +7344,8 @@ class AdminManager {
                 this.updateRequest(requestId, updateData);
             });
         }
+
+        modalManager.open('view-request');
     }
 
     /**
@@ -7606,8 +7608,8 @@ class AdminManager {
             </form>
         `;
 
+        modalManager.safeDestroy('quick-edit');
         modalManager.create('quick-edit', 'تعديل سريع', content);
-        modalManager.open('quick-edit');
 
         const form = document.getElementById('quickEditForm');
         if (form) {
@@ -7641,6 +7643,8 @@ class AdminManager {
                 }
             });
         }
+
+        modalManager.open('quick-edit');
     }
 
     /**
@@ -7663,8 +7667,8 @@ class AdminManager {
             </form>
         `;
 
+        modalManager.safeDestroy('quick-edit-bulk');
         modalManager.create('quick-edit-bulk', 'تعديل سريع', content);
-        modalManager.open('quick-edit-bulk');
 
         const form = document.getElementById('quickEditBulkForm');
         if (form) {
@@ -7697,6 +7701,8 @@ class AdminManager {
                 }
             });
         }
+
+        modalManager.open('quick-edit-bulk');
     }
 
     /**
@@ -7723,8 +7729,8 @@ class AdminManager {
             </form>
         `;
 
+        modalManager.safeDestroy('quick-edit-company');
         modalManager.create('quick-edit-company', 'تعديل سريع', content);
-        modalManager.open('quick-edit-company');
 
         const form = document.getElementById('quickEditCompanyForm');
         if (form) {
@@ -7758,6 +7764,8 @@ class AdminManager {
                 }
             });
         }
+
+        modalManager.open('quick-edit-company');
     }
 
     /**
