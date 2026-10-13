@@ -4119,6 +4119,7 @@ class AdminManager {
             // Prepare data for Excel
             const excelData = filteredOrders.map(order => ({
                 'رقم الطلب': order.requestNumber,
+                'الرقم التسلسلي': order.serialNumber || 'غير متوفر',
                 'اسم العميل': order.customerName,
                 'رقم الهاتف': order.phone || '',
                 'نوع الطلب': this.translateOrderType(order.type),
@@ -4134,6 +4135,7 @@ class AdminManager {
             // Set column widths
             const colWidths = [
                 { wch: 15 }, // رقم الطلب
+                { wch: 20 }, // الرقم التسلسلي
                 { wch: 25 }, // اسم العميل
                 { wch: 15 }, // رقم الهاتف
                 { wch: 15 }, // نوع الطلب
@@ -4827,6 +4829,7 @@ class AdminManager {
                     <thead>
                         <tr>
                             <th style="padding: 0.5rem;">رقم الطلب</th>
+                            <th style="padding: 0.5rem;">الرقم التسلسلي</th>
                             <th style="padding: 0.5rem;">اسم العميل</th>
                             <th style="padding: 0.5rem;">الهاتف</th>
                             <th style="padding: 0.5rem;">النوع</th>
@@ -4841,6 +4844,7 @@ class AdminManager {
                         ${data.map(order => `
                             <tr style="transition: background-color 0.2s;">
                                 <td style="padding: 0.5rem; font-weight: 600;">${order.requestNumber}</td>
+                                <td style="padding: 0.5rem; font-size: 0.8rem; color: #64748b;" dir="ltr">${order.serialNumber || 'غير متوفر'}</td>
                                 <td style="padding: 0.5rem; font-weight: 600;">${order.customerName}</td>
                                 <td style="padding: 0.5rem;" dir="ltr">${order.phone || '—'}</td>
                                 <td style="padding: 0.5rem;">${this.translateOrderType(order.type)}</td>
@@ -4870,7 +4874,7 @@ class AdminManager {
     }
 
     /**
-     * Get all critical orders (3+ days old, not delivered)
+     * Get all critical orders (2+ days old, not delivered)
      */
     getCriticalOrders() {
         const criticalOrders = [];
@@ -4882,13 +4886,14 @@ class AdminManager {
             if (req.status !== 'Delivered') {
                 const createdDate = new Date(req.createdAt || req.created_at);
                 const ageInDays = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
-                if (ageInDays >= 3) {
+                if (ageInDays >= 2) {
                     criticalOrders.push({
                         ...req,
                         type: 'normal',
                         requestNumber: req.requestNumber,
                         customerName: req.fullName,
                         phone: req.phone,
+                        serialNumber: req.serialNumber || '',
                         createdAt: req.createdAt || req.created_at,
                         status: req.status,
                         age: ageInDays,
@@ -4898,18 +4903,27 @@ class AdminManager {
             }
         });
 
-        // Add bulk requests
+        // Add bulk requests - handle multiple devices
         this.bulkRequests.forEach(req => {
             if (req.status !== 'Delivered') {
                 const createdDate = new Date(req.createdAt || req.created_at);
                 const ageInDays = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
-                if (ageInDays >= 3) {
+                if (ageInDays >= 2) {
+                    // Collect all serial numbers from devices
+                    let serialNumbers = [];
+                    if (req.devices && Array.isArray(req.devices)) {
+                        serialNumbers = req.devices
+                            .map(d => d.serialNumber)
+                            .filter(sn => sn && sn.trim() !== '');
+                    }
+
                     criticalOrders.push({
                         ...req,
                         type: 'bulk',
                         requestNumber: req.requestNumber,
                         customerName: req.customerName,
                         phone: req.customerPhone,
+                        serialNumber: serialNumbers.length > 0 ? serialNumbers.join(', ') : '',
                         createdAt: req.createdAt || req.created_at,
                         status: req.status,
                         age: ageInDays,
@@ -4924,13 +4938,14 @@ class AdminManager {
             if (req.status !== 'Delivered') {
                 const createdDate = new Date(req.createdAt || req.created_at);
                 const ageInDays = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
-                if (ageInDays >= 3) {
+                if (ageInDays >= 2) {
                     criticalOrders.push({
                         ...req,
                         type: 'company',
                         requestNumber: req.request_number || req.requestNumber,
                         customerName: req.full_name || req.fullName,
                         phone: req.phone,
+                        serialNumber: req.serial_number || req.serialNumber || '',
                         createdAt: req.createdAt || req.created_at,
                         status: req.status,
                         age: ageInDays,
@@ -4960,8 +4975,8 @@ class AdminManager {
         if (severityFilter !== 'all') {
             filtered = filtered.filter(order => {
                 switch (severityFilter) {
-                    case '3-5':
-                        return order.age >= 3 && order.age <= 5;
+                    case '2-5':
+                        return order.age >= 2 && order.age <= 5;
                     case '6-15':
                         return order.age >= 6 && order.age <= 15;
                     case '16-30':
@@ -4996,7 +5011,7 @@ class AdminManager {
 
         const counts = {
             total: orders.length,
-            earlyWarning: orders.filter(o => o.age >= 3 && o.age <= 5).length,
+            earlyWarning: orders.filter(o => o.age >= 2 && o.age <= 5).length,
             delayed: orders.filter(o => o.age >= 6 && o.age <= 15).length,
             severelyDelayed: orders.filter(o => o.age >= 16 && o.age <= 30).length,
             criticallyDelayed: orders.filter(o => o.age > 30).length
@@ -5012,7 +5027,7 @@ class AdminManager {
             <div class="glass-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 179, 8, 0.1)); border: 2px solid #f59e0b;">
                 <div style="text-align: center;">
                     <h3 style="margin: 0; color: #f59e0b; font-size: 1.5rem;">${counts.earlyWarning}</h3>
-                    <p style="margin: 0; color: #94a3b8; font-size: 0.875rem;">3-5 أيام (تحذير)</p>
+                    <p style="margin: 0; color: #94a3b8; font-size: 0.875rem;">2-5 أيام (تحذير)</p>
                 </div>
             </div>
             <div class="glass-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(234, 88, 12, 0.1)); border: 2px solid #f97316;">
@@ -5040,7 +5055,7 @@ class AdminManager {
      * Get severity level based on age in days
      */
     getSeverity(ageInDays) {
-        if (ageInDays >= 3 && ageInDays <= 5) return 'early-warning';
+        if (ageInDays >= 2 && ageInDays <= 5) return 'early-warning';
         if (ageInDays >= 6 && ageInDays <= 15) return 'delayed';
         if (ageInDays >= 16 && ageInDays <= 30) return 'severely-delayed';
         if (ageInDays > 30) return 'critically-delayed';
