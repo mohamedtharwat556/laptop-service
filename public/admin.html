@@ -244,7 +244,7 @@
                     <h2>إدارة الطلبات</h2>
                     <div class="search-container">
                         <input type="text" id="requestSearch" class="form-input search-input" placeholder="البحث برقم الهاتف، الاسم، الماركة...">
-                        <button onclick="handleAdminManagerAction('setTodayFilter('requests')" class="btn btn-primary" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
+                        <button onclick="handleAdminManagerAction('setTodayFilter', 'requests')" class="btn btn-primary" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
                             <i class="fas fa-calendar-day"></i> طلبات اليوم
                         </button>
                         <select id="statusFilter" class="form-select filter-select">
@@ -280,7 +280,7 @@
                             <option value="Medium">متوسطة</option>
                             <option value="Low">منخفضة</option>
                         </select>
-                        <button onclick="handleAdminManagerAction('exportFilteredRequests()" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
+                        <button onclick="handleAdminManagerAction('exportFilteredRequests')" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
                             <i class="fas fa-file-excel"></i> تصدير Excel
                         </button>
                     </div>
@@ -289,7 +289,7 @@
                         <input type="date" id="dateFrom" class="form-input" style="flex: 1;">
                         <label style="color: var(--text-muted);">إلى:</label>
                         <input type="date" id="dateTo" class="form-input" style="flex: 1;">
-                        <button onclick="handleAdminManagerAction('clearFilters()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">
+                        <button onclick="handleAdminManagerAction('clearFilters')" class="btn btn-secondary" style="padding: 0.5rem 1rem;">
                             <i class="fas fa-times"></i>
                             مسح الفلاتر
                         </button>
@@ -336,7 +336,7 @@
                     </div>
                     <div class="search-container">
                         <input type="text" id="todaySearchInput" class="form-input search-input" placeholder="بحث في طلبات اليوم..." style="width: 300px;">
-                        <button onclick="handleAdminManagerAction('exportTodayRequests()" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
+                        <button onclick="handleAdminManagerAction('exportTodayRequests')" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
                             <i class="fas fa-file-excel"></i> تصدير Excel
                         </button>
                     </div>
@@ -344,16 +344,16 @@
                 
                 <!-- Tabs for different request types -->
                 <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
-                    <button onclick="handleAdminManagerAction('showTodayTab('all')" class="btn btn-primary" id="todayTabAll" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 8px; font-weight: 600;">
+                    <button onclick="handleAdminManagerAction('showTodayTab', 'all')" class="btn btn-primary" id="todayTabAll" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 8px; font-weight: 600;">
                         <i class="fas fa-list"></i> الكل
                     </button>
-                    <button onclick="handleAdminManagerAction('showTodayTab('normal')" class="btn" id="todayTabNormal" style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-weight: 600;">
+                    <button onclick="handleAdminManagerAction('showTodayTab', 'normal')" class="btn" id="todayTabNormal" style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-weight: 600;">
                         <i class="fas fa-laptop"></i> عادية
                     </button>
-                    <button onclick="handleAdminManagerAction('showTodayTab('bulk')" class="btn" id="todayTabBulk" style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-weight: 600;">
+                    <button onclick="handleAdminManagerAction('showTodayTab', 'bulk')" class="btn" id="todayTabBulk" style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-weight: 600;">
                         <i class="fas fa-boxes"></i> جملة
                     </button>
-                    <button onclick="handleAdminManagerAction('showTodayTab('company')" class="btn" id="todayTabCompany" style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-weight: 600;">
+                    <button onclick="handleAdminManagerAction('showTodayTab', 'company')" class="btn" id="todayTabCompany" style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-weight: 600;">
                         <i class="fas fa-building"></i> شركة
                     </button>
                 </div>
@@ -367,7 +367,7 @@
                     <h2>إدارة طلبات الجملة</h2>
                     <div class="search-container">
                         <input type="text" id="bulkSearchInput" class="form-input" placeholder="بحث برقم الطلب أو اسم العميل..." style="width: 300px;">
-                        <button onclick="handleAdminManagerAction('setTodayFilter('bulk')" class="btn btn-primary" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
+                        <button onclick="handleAdminManagerAction('setTodayFilter', 'bulk')" class="btn btn-primary" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
                             <i class="fas fa-calendar-day"></i> طلبات اليوم
                         </button>
                         <select id="bulkStatusFilter" class="form-select" style="width: auto;">
@@ -383,10 +383,10 @@
                             <option value="Ready">جاهز</option>
                             <option value="Delivered">تم التسليم</option>
                         </select>
-                        <button onclick="handleAdminManagerAction('exportFilteredBulkRequests()" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
+                        <button onclick="handleAdminManagerAction('exportFilteredBulkRequests')" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
                             <i class="fas fa-file-excel"></i> تصدير Excel
                         </button>
-                        <button onclick="handleAdminManagerAction('deleteAllBulkRequests()" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        <button onclick="handleAdminManagerAction('deleteAllBulkRequests')" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
                             <i class="fas fa-trash"></i> حذف الكل
                         </button>
                     </div>
@@ -400,7 +400,7 @@
                     <h2>موظفي الشركة</h2>
                     <div class="search-container">
                         <input type="text" id="companySearchInput" class="form-input" placeholder="بحث برقم الطلب أو اسم الشركة..." style="width: 300px;">
-                        <button onclick="handleAdminManagerAction('setTodayFilter('company')" class="btn btn-primary" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
+                        <button onclick="handleAdminManagerAction('setTodayFilter', 'company')" class="btn btn-primary" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
                             <i class="fas fa-calendar-day"></i> طلبات اليوم
                         </button>
                         <select id="companyStatusFilter" class="form-select" style="width: auto;">
@@ -416,10 +416,10 @@
                             <option value="Ready">جاهز</option>
                             <option value="Delivered">تم التسليم</option>
                         </select>
-                        <button onclick="handleAdminManagerAction('exportFilteredCompanyRequests()" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
+                        <button onclick="handleAdminManagerAction('exportFilteredCompanyRequests')" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
                             <i class="fas fa-file-excel"></i> تصدير Excel
                         </button>
-                        <button onclick="handleAdminManagerAction('deleteAllCompanyRequests()" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        <button onclick="handleAdminManagerAction('deleteAllCompanyRequests')" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
                             <i class="fas fa-trash"></i> حذف الكل
                         </button>
                     </div>
@@ -433,7 +433,7 @@
                     <h2 style="color: #ef4444;">⚠️ الطلبات الحرجة (أكثر من 7 أيام) - تستثني الطلبات الجاهزة والمسلمة</h2>
                     <div class="search-container">
                         <input type="text" id="criticalSearchInput" class="form-input" placeholder="بحث بالاسم، الرقم التسلسلي، أو اسم الجهاز..." style="width: 300px;">
-                        <button onclick="handleAdminManagerAction('exportFilteredCriticalRequests()" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
+                        <button onclick="handleAdminManagerAction('exportFilteredCriticalRequests')" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
                             <i class="fas fa-file-excel"></i> تصدير Excel
                         </button>
                     </div>
@@ -514,19 +514,19 @@
                         </div>
                         <input type="date" id="reportStartDate" class="form-input" style="width:auto;">
                         <input type="date" id="reportEndDate" class="form-input" style="width:auto;">
-                        <button class="btn btn-primary" onclick="handleAdminManagerAction('generateReport()">
+                        <button class="btn btn-primary" onclick="handleAdminManagerAction('generateReport')">
                             <i class="fas fa-download"></i> انقر هنا
                         </button>
-                        <button class="btn btn-info" onclick="handleAdminManagerAction('generateWeeklyReport()" style="display:flex;align-items:center;gap:0.5rem;">
+                        <button class="btn btn-info" onclick="handleAdminManagerAction('generateWeeklyReport')" style="display:flex;align-items:center;gap:0.5rem;">
                             <i class="fas fa-calendar-week"></i> تقارير الأسبوع
                         </button>
-                        <button class="btn btn-success" onclick="handleAdminManagerAction('exportWeeklyReport()" style="display:flex;align-items:center;gap:0.5rem;">
+                        <button class="btn btn-success" onclick="handleAdminManagerAction('exportWeeklyReport')" style="display:flex;align-items:center;gap:0.5rem;">
                             <i class="fas fa-download"></i> تحميل Excel للأسبوع
                         </button>
-                        <button onclick="handleAdminManagerAction('exportDailyReport()" class="btn btn-success" style="display:flex;align-items:center;gap:0.5rem;">
+                        <button onclick="handleAdminManagerAction('exportDailyReport')" class="btn btn-success" style="display:flex;align-items:center;gap:0.5rem;">
                             <i class="fas fa-download"></i> تحميل Excel (الشامل)
                         </button>
-                        <button onclick="handleAdminManagerAction('exportDailyReportPDF()" class="btn btn-danger" style="display:flex;align-items:center;gap:0.5rem;">
+                        <button onclick="handleAdminManagerAction('exportDailyReportPDF')" class="btn btn-danger" style="display:flex;align-items:center;gap:0.5rem;">
                             <i class="fas fa-file-pdf"></i> تحميل PDF
                         </button>
                     </div>
@@ -538,7 +538,7 @@
             <div id="duplicate-serialsSection" class="dashboard-section">
                 <div class="dashboard-header" style="flex-wrap:wrap; gap:1rem;">
                     <h2><i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i> الأرقام التسلسلية المتكررة <span style="font-size: 0.875rem; color: #ef4444; margin-left: 0.5rem;">ارحموني يا جدعان</span></h2>
-                    <button class="btn btn-danger" onclick="handleAdminManagerAction('checkDuplicateSerials()" style="display:flex;align-items:center;gap:0.5rem;">
+                    <button class="btn btn-danger" onclick="handleAdminManagerAction('checkDuplicateSerials')" style="display:flex;align-items:center;gap:0.5rem;">
                         <i class="fas fa-search"></i> فحص الأرقام المتكررة
                     </button>
                 </div>
