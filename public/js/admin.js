@@ -4093,6 +4093,75 @@ class AdminManager {
     }
 
     /**
+     * Export critical orders to Excel
+     */
+    async exportCriticalOrdersToExcel() {
+        try {
+            loading.show('جاري تصدير البيانات...');
+
+            // Get all critical orders and apply current filters
+            const criticalOrders = this.getCriticalOrders();
+            const filteredOrders = this.filterCriticalOrders(criticalOrders);
+
+            if (filteredOrders.length === 0) {
+                toast.error('لا توجد طلبات حرجة للتصدير');
+                loading.hide();
+                return;
+            }
+
+            // Check if XLSX is available
+            if (typeof XLSX === 'undefined') {
+                toast.error('مكتبة Excel غير متاحة');
+                loading.hide();
+                return;
+            }
+
+            // Prepare data for Excel
+            const excelData = filteredOrders.map(order => ({
+                'رقم الطلب': order.requestNumber,
+                'اسم العميل': order.customerName,
+                'رقم الهاتف': order.phone || '',
+                'نوع الطلب': this.translateOrderType(order.type),
+                'تاريخ الإنشاء': Utils.formatDate(order.createdAt),
+                'العمر بالأيام': order.age,
+                'مستوى الخطورة': this.translateSeverity(order.severity),
+                'الحالة الحالية': this.translateStatus(order.status)
+            }));
+
+            // Create worksheet
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+            // Set column widths
+            const colWidths = [
+                { wch: 15 }, // رقم الطلب
+                { wch: 25 }, // اسم العميل
+                { wch: 15 }, // رقم الهاتف
+                { wch: 15 }, // نوع الطلب
+                { wch: 15 }, // تاريخ الإنشاء
+                { wch: 12 }, // العمر بالأيام
+                { wch: 15 }, // مستوى الخطورة
+                { wch: 20 }  // الحالة الحالية
+            ];
+            worksheet['!cols'] = colWidths;
+
+            // Create workbook
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'الطلبات الحرجة');
+
+            // Generate Excel file with date in filename
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `Critical_Orders_${today}.xlsx`);
+
+            loading.hide();
+            toast.success('تم تصدير البيانات بنجاح');
+        } catch (error) {
+            loading.hide();
+            console.error('Error exporting critical orders to Excel:', error);
+            toast.error('فشل تصدير البيانات');
+        }
+    }
+
+    /**
      * Export normal requests to Excel
      */
     async exportRequestsToExcel() {
