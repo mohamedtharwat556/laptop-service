@@ -101,12 +101,6 @@
                     </a>
                 </li>
                 <li class="sidebar-nav-item">
-                    <a href="#" class="sidebar-nav-link" data-section="critical-requests" style="color: #ef4444; font-weight: 600;" title="الطلبات الحرجة (أكثر من 7 أيام - تستثني الجاهزة والمسلمة)">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        الطلبات الحرجة
-                    </a>
-                </li>
-                <li class="sidebar-nav-item">
                     <a href="#" class="sidebar-nav-link" data-section="hikvision-requests" style="color: #f59e0b; font-weight: 600;">
                         <i class="fas fa-video"></i>
                         Hikvision
@@ -134,12 +128,6 @@
                     <a href="#" class="sidebar-nav-link" data-section="daily-report">
                         <i class="fas fa-file-excel"></i>
                         تقرير اليوم
-                    </a>
-                </li>
-                <li class="sidebar-nav-item">
-                    <a href="#" class="sidebar-nav-link" data-section="duplicate-serials" style="color: #ef4444; font-weight: 600;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        الأرقام المتكررة
                     </a>
                 </li>
                 <li class="sidebar-nav-item">
@@ -176,14 +164,6 @@
                         </div>
                         <div id="globalSearchSuggestions" class="search-suggestions" style="display: none;"></div>
                     </form>
-                </div>
-
-                <!-- Critical Requests Button -->
-                <div class="critical-btn-wrapper" style="margin-left: 1rem;">
-                    <button onclick="handleAdminManagerAction('switchSection', 'critical-requests')" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1)); border: 2px solid #ef4444; border-radius: 12px; color: #ef4444; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(239, 68, 68, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(239, 68, 68, 0.2)';" title="الطلبات الحرجة (أكثر من 7 أيام - تستثني الجاهزة والمسلمة)">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span class="critical-btn-text">الطلبات الحرجة</span>
-                    </button>
                 </div>
             </div>
 
@@ -427,20 +407,6 @@
                 <div id="companyRequestsContainer"></div>
             </div>
 
-            <!-- Critical Requests Section -->
-            <div id="critical-requestsSection" class="dashboard-section">
-                <div class="dashboard-header">
-                    <h2 style="color: #ef4444;">⚠️ الطلبات الحرجة (أكثر من 7 أيام) - تستثني الطلبات الجاهزة والمسلمة</h2>
-                    <div class="search-container">
-                        <input type="text" id="criticalSearchInput" class="form-input" placeholder="بحث بالاسم، الرقم التسلسلي، أو اسم الجهاز..." style="width: 300px;">
-                        <button onclick="handleAdminManagerAction('exportFilteredCriticalRequests')" class="btn btn-success" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; font-weight: 600; white-space: nowrap;">
-                            <i class="fas fa-file-excel"></i> تصدير Excel
-                        </button>
-                    </div>
-                </div>
-                <div id="criticalRequestsContainer"></div>
-            </div>
-
             <!-- Users Section -->
             <div id="usersSection" class="dashboard-section">
                 <div class="dashboard-header">
@@ -532,17 +498,6 @@
                     </div>
                 </div>
                 <div id="reportContainer"></div>
-            </div>
-
-            <!-- Duplicate Serial Numbers Section -->
-            <div id="duplicate-serialsSection" class="dashboard-section">
-                <div class="dashboard-header" style="flex-wrap:wrap; gap:1rem;">
-                    <h2><i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i> الأرقام التسلسلية المتكررة <span style="font-size: 0.875rem; color: #ef4444; margin-left: 0.5rem;">ارحموني يا جدعان</span></h2>
-                    <button class="btn btn-danger" onclick="handleAdminManagerAction('checkDuplicateSerials')" style="display:flex;align-items:center;gap:0.5rem;">
-                        <i class="fas fa-search"></i> فحص الأرقام المتكررة
-                    </button>
-                </div>
-                <div id="duplicateSerialsContainer"></div>
             </div>
 
             <!-- Trash Section -->

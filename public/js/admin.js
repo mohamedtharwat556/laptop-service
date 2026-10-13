@@ -3292,11 +3292,6 @@ class AdminManager {
                     this._companyTodayFilter = null;
                     this.renderCompanyRequests();
                     break;
-                case 'critical-requests':
-                    this._bulkTodayFilter = null;
-                    this._companyTodayFilter = null;
-                    this.renderCriticalRequests();
-                    break;
                 case 'hikvision-requests':
                     this.renderHikvisionRequests();
                     break;
@@ -3312,11 +3307,6 @@ class AdminManager {
                     this._bulkTodayFilter = null;
                     this._companyTodayFilter = null;
                     this.renderProductsManagement();
-                    break;
-                case 'duplicate-serials':
-                    this._bulkTodayFilter = null;
-                    this._companyTodayFilter = null;
-                    this.checkDuplicateSerials();
                     break;
                 case 'trash':
                     this._bulkTodayFilter = null;
