@@ -118,32 +118,39 @@ class AdminManager {
             
             console.log('🔗 Setting up sidebar navigation...');
             // Setup sidebar navigation with role-based access
-            document.querySelectorAll('.sidebar-nav-link').forEach(link => {
-                link.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    const section = link.dataset.section;
+            setTimeout(() => {
+                const sidebarLinks = document.querySelectorAll('.sidebar-nav-link');
+                sidebarLinks.forEach(link => {
+                    // Remove existing listeners to avoid duplicates
+                    const newLink = link.cloneNode(true);
+                    link.parentNode.replaceChild(newLink, link);
 
-                    // Check if user has access to this section
-                    if (!this.canAccessSection(section)) {
-                        toast.error('ليس لديك صلاحية للوصول إلى هذا القسم');
-                        return;
-                    }
+                    newLink.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        const section = newLink.dataset.section;
 
-                    await this.switchSection(section);
-                    if (section === 'daily-report') {
-                        // Set today's date by default
-                        const dateInput = document.getElementById('reportDate');
-                        if (dateInput && !dateInput.value) {
-                            dateInput.value = new Date().toISOString().slice(0, 10);
+                        // Check if user has access to this section
+                        if (!this.canAccessSection(section)) {
+                            toast.error('ليس لديك صلاحية للوصول إلى هذا القسم');
+                            return;
                         }
-                        this.renderDailyReport();
-                        // Re-render on date change
-                        if (dateInput) {
-                            dateInput.onchange = () => this.renderDailyReport();
+
+                        await this.switchSection(section);
+                        if (section === 'daily-report') {
+                            // Set today's date by default
+                            const dateInput = document.getElementById('reportDate');
+                            if (dateInput && !dateInput.value) {
+                                dateInput.value = new Date().toISOString().slice(0, 10);
+                            }
+                            this.renderDailyReport();
+                            // Re-render on date change
+                            if (dateInput) {
+                                dateInput.onchange = () => this.renderDailyReport();
+                            }
                         }
-                    }
+                    });
                 });
-            });
+            }, 100);
 
             console.log('⏹️  Setting up logout button...');
             // Setup logout
