@@ -3229,88 +3229,95 @@ class AdminManager {
      * Switch section
      */
     async switchSection(section) {
-        this.currentSection = section;
+        try {
+            this.currentSection = section;
 
-        // Save current section to sessionStorage
-        sessionStorage.setItem('YAS_lastSection', section);
+            // Save current section to sessionStorage
+            sessionStorage.setItem('YAS_lastSection', section);
 
-        // Check if user can access this section
-        if (!this.canAccessSection(section)) {
-            toast.error('ليس لديك صلاحية للوصول إلى هذا القسم');
-            return;
-        }
-
-        // Update sidebar
-        document.querySelectorAll('.sidebar-nav-link').forEach(link => {
-            link.classList.remove('active');
-            if (link.dataset.section === section) {
-                link.classList.add('active');
+            // Check if user can access this section
+            if (!this.canAccessSection(section)) {
+                toast.error('ليس لديك صلاحية للوصول إلى هذا القسم');
+                return;
             }
-        });
 
-        // Update content
-        document.querySelectorAll('.dashboard-section').forEach(sec => {
-            sec.classList.remove('active');
-            if (sec.id === `${section}Section`) {
-                sec.classList.add('active');
+            // Update sidebar
+            document.querySelectorAll('.sidebar-nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.section === section) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Update content
+            document.querySelectorAll('.dashboard-section').forEach(sec => {
+                sec.classList.remove('active');
+                if (sec.id === `${section}Section`) {
+                    sec.classList.add('active');
+                }
+            });
+
+            // Load fresh data from API (don't block on it)
+            this.loadData().catch(err => {
+                console.error('Error loading data in switchSection:', err);
+            });
+
+            // Render section content immediately with cached data
+            switch (section) {
+                case 'dashboard':
+                    this.renderStats();
+                    this.renderCharts();
+                    break;
+                case 'today-requests':
+                    this._bulkTodayFilter = null;
+                    this._companyTodayFilter = null;
+                    this.renderTodayRequests();
+                    break;
+                case 'requests':
+                    this._bulkTodayFilter = null;
+                    this._companyTodayFilter = null;
+                    this.renderRequests();
+                    break;
+                case 'bulk-requests':
+                    this._bulkTodayFilter = null;
+                    this._companyTodayFilter = null;
+                    this.renderBulkRequests();
+                    break;
+                case 'company-requests':
+                    this._bulkTodayFilter = null;
+                    this._companyTodayFilter = null;
+                    this.renderCompanyRequests();
+                    break;
+                case 'critical-requests':
+                    this._bulkTodayFilter = null;
+                    this._companyTodayFilter = null;
+                    this.renderCriticalRequests();
+                    break;
+                case 'hikvision-requests':
+                    this.renderHikvisionRequests();
+                    break;
+                case 'statistics':
+                    this.renderStatistics();
+                    break;
+                case 'users':
+                    this._bulkTodayFilter = null;
+                    this._companyTodayFilter = null;
+                    this.renderUsers();
+                    break;
+                case 'products':
+                    this._bulkTodayFilter = null;
+                    this._companyTodayFilter = null;
+                    this.renderProductsManagement();
+                    break;
+                case 'trash':
+                    this._bulkTodayFilter = null;
+                    this._companyTodayFilter = null;
+                    this.renderTrash();
+                    break;
             }
-        });
-
-        // Load fresh data from API
-        await this.loadData();
-
-        // Render section content
-        switch (section) {
-            case 'dashboard':
-                this.renderStats();
-                this.renderCharts();
-                break;
-            case 'today-requests':
-                this._bulkTodayFilter = null;
-                this._companyTodayFilter = null;
-                this.renderTodayRequests();
-                break;
-            case 'requests':
-                this._bulkTodayFilter = null;
-                this._companyTodayFilter = null;
-                this.renderRequests();
-                break;
-            case 'bulk-requests':
-                this._bulkTodayFilter = null;
-                this._companyTodayFilter = null;
-                this.renderBulkRequests();
-                break;
-            case 'company-requests':
-                this._bulkTodayFilter = null;
-                this._companyTodayFilter = null;
-                this.renderCompanyRequests();
-                break;
-            case 'critical-requests':
-                this._bulkTodayFilter = null;
-                this._companyTodayFilter = null;
-                this.renderCriticalRequests();
-                break;
-            case 'hikvision-requests':
-                this.renderHikvisionRequests();
-                break;
-            case 'statistics':
-                this.renderStatistics();
-                break;
-            case 'users':
-                this._bulkTodayFilter = null;
-                this._companyTodayFilter = null;
-                this.renderUsers();
-                break;
-            case 'products':
-                this._bulkTodayFilter = null;
-                this._companyTodayFilter = null;
-                this.renderProductsManagement();
-                break;
-            case 'trash':
-                this._bulkTodayFilter = null;
-                this._companyTodayFilter = null;
-                this.renderTrash();
-                break;
+        } catch (error) {
+            console.error('Error in switchSection:', error);
+            toast.error('حدث خطأ أثناء التبديل بين الأقسام');
         }
     }
 
@@ -4546,73 +4553,74 @@ class AdminManager {
      * Render critical requests (older than 7 days)
      */
     renderCriticalRequests() {
-        const container = document.getElementById('criticalRequestsContainer');
-        if (!container) return;
+        try {
+            const container = document.getElementById('criticalRequestsContainer');
+            if (!container) return;
 
-        // Setup search input listener (only once)
-        const searchInput = document.getElementById('criticalSearchInput');
-        if (searchInput && !searchInput.hasAttribute('data-listener-attached')) {
-            searchInput.setAttribute('data-listener-attached', 'true');
-            searchInput.addEventListener('input', Utils.debounce(() => {
-                this.renderCriticalRequests();
-            }, 300));
-        }
-
-        const today = new Date();
-        const sevenDaysAgo = new Date(today);
-        sevenDaysAgo.setDate(today.getDate() - 7);
-
-        // Get search term
-        const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
-
-        // Collect all requests from all types
-        const allRequests = [];
-
-        // Normal requests - exclude Delivered and Ready
-        (this.requests || []).forEach(r => {
-            const requestDate = new Date(r.created_at || r.createdAt);
-            const status = r.status || '';
-            // Exclude Delivered and Ready status
-            if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
-                allRequests.push({ ...r, type: 'عادي' });
+            // Setup search input listener (only once)
+            const searchInput = document.getElementById('criticalSearchInput');
+            if (searchInput && !searchInput.hasAttribute('data-listener-attached')) {
+                searchInput.setAttribute('data-listener-attached', 'true');
+                searchInput.addEventListener('input', Utils.debounce(() => {
+                    this.renderCriticalRequests();
+                }, 300));
             }
-        });
 
-        // Bulk requests - exclude Delivered and Ready
-        (this.bulkRequests || []).forEach(r => {
-            const requestDate = new Date(r.created_at || r.createdAt);
-            const status = r.status || '';
-            // Exclude Delivered and Ready status
-            if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
-                allRequests.push({ ...r, type: 'جملة' });
-            }
-        });
+            const today = new Date();
+            const sevenDaysAgo = new Date(today);
+            sevenDaysAgo.setDate(today.getDate() - 7);
 
-        // Company requests - exclude Delivered and Ready
-        (this.companyRequests || []).forEach(r => {
-            const requestDate = new Date(r.created_at || r.createdAt);
-            const status = r.status || '';
-            // Exclude Delivered and Ready status
-            if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
-                allRequests.push({ ...r, type: 'شركات' });
-            }
-        });
+            // Get search term
+            const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
-        // Filter by search term (name, serial number, device name)
-        let filteredRequests = allRequests;
-        if (searchTerm) {
-            filteredRequests = allRequests.filter(req => {
-                const fullName = (req.full_name || req.fullName || req.customer_name || req.customerName || '').toLowerCase();
-                const serialNumber = (req.serial_number || req.serialNumber || '').toLowerCase();
-                const laptopBrand = (req.laptop_brand || req.laptopBrand || '').toLowerCase();
-                const laptopModel = (req.laptop_model || req.laptopModel || '').toLowerCase();
-                const deviceName = `${laptopBrand} ${laptopModel}`.toLowerCase();
+            // Collect all requests from all types
+            const allRequests = [];
 
-                return fullName.includes(searchTerm) ||
-                       serialNumber.includes(searchTerm) ||
-                       deviceName.includes(searchTerm);
+            // Normal requests - exclude Delivered and Ready
+            (this.requests || []).forEach(r => {
+                const requestDate = new Date(r.created_at || r.createdAt);
+                const status = r.status || '';
+                // Exclude Delivered and Ready status
+                if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
+                    allRequests.push({ ...r, type: 'عادي' });
+                }
             });
-        }
+
+            // Bulk requests - exclude Delivered and Ready
+            (this.bulkRequests || []).forEach(r => {
+                const requestDate = new Date(r.created_at || r.createdAt);
+                const status = r.status || '';
+                // Exclude Delivered and Ready status
+                if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
+                    allRequests.push({ ...r, type: 'جملة' });
+                }
+            });
+
+            // Company requests - exclude Delivered and Ready
+            (this.companyRequests || []).forEach(r => {
+                const requestDate = new Date(r.created_at || r.createdAt);
+                const status = r.status || '';
+                // Exclude Delivered and Ready status
+                if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
+                    allRequests.push({ ...r, type: 'شركات' });
+                }
+            });
+
+            // Filter by search term (name, serial number, device name)
+            let filteredRequests = allRequests;
+            if (searchTerm) {
+                filteredRequests = allRequests.filter(req => {
+                    const fullName = (req.full_name || req.fullName || req.customer_name || req.customerName || '').toLowerCase();
+                    const serialNumber = (req.serial_number || req.serialNumber || '').toLowerCase();
+                    const laptopBrand = (req.laptop_brand || req.laptopBrand || '').toLowerCase();
+                    const laptopModel = (req.laptop_model || req.laptopModel || '').toLowerCase();
+                    const deviceName = `${laptopBrand} ${laptopModel}`.toLowerCase();
+
+                    return fullName.includes(searchTerm) ||
+                           serialNumber.includes(searchTerm) ||
+                           deviceName.includes(searchTerm);
+                });
+            }
 
         // Sort by date (oldest first)
         filteredRequests.sort((a, b) => {
@@ -4639,7 +4647,7 @@ class AdminManager {
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h3 style="margin: 0; color: #ef4444;">⚠️ الطلبات الحرجة (${filteredRequests.length}) - تستثني الطلبات الجاهزة والمسلمة</h3>
                 <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn-success" onclick="adminManager.exportCriticalRequestsToExcel()" style="padding: 0.5rem 1rem;">
+                    <button class="btn btn-success" onclick="handleAdminManagerAction('exportCriticalRequestsToExcel')" style="padding: 0.5rem 1rem;">
                         <i class="fas fa-file-excel"></i> تصدير Excel
                     </button>
                 </div>
@@ -4686,15 +4694,15 @@ class AdminManager {
                                     <td style="padding: 0.5rem;">
                                         <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
                                             ${req.type === 'عادي' ? `
-                                                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="adminManager.viewRequest(${req.id})">
+                                                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="handleAdminManagerAction('viewRequest', ${req.id})">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
                                             ` : req.type === 'جملة' ? `
-                                                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="adminManager.viewBulkRequest(${req.id})">
+                                                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="handleAdminManagerAction('viewBulkRequest', ${req.id})">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
                                             ` : `
-                                                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="adminManager.viewCompanyRequest(${req.id})">
+                                                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="handleAdminManagerAction('viewCompanyRequest', ${req.id})">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
                                             `}
@@ -4707,6 +4715,10 @@ class AdminManager {
                 </table>
             </div>
         `;
+        } catch(error) {
+            console.error('Error rendering critical requests:', error);
+            container.innerHTML = `<div class="glass-card" style="text-align: center; padding: 3rem; color: #ef4444;">خطأ في عرض الطلبات الحرجة: ${error.message}</div>`;
+        }
     }
 
     /**
