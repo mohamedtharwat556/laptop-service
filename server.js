@@ -5,8 +5,12 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const compression = require('compression');
-const supabase = require('./config/db');
-// Laptop Service - Clean version
+const { createClient } = require('@supabase/supabase-js');
+
+// Initialize Supabase client
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -49,9 +53,9 @@ app.use((req, res, next) => {
     next();
 });
 
-// Initialize database (localStorage mode only)
-console.log('🔧 Running in localStorage mode - no database required');
-console.log('📝 All data will be stored in browser localStorage');
+// Initialize database (Supabase mode)
+console.log('🔧 Running in Supabase mode');
+console.log('📝 All data will be stored in Supabase');
 
 // Simple test endpoint (no middleware)
 app.get('/test', (req, res) => {

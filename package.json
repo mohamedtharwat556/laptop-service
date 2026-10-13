@@ -5,24 +5,15 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "test": "jest"
+    "dev": "node server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "@supabase/supabase-js": "^2.39.0",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
     "express-rate-limit": "^7.2.0",
     "helmet": "^7.1.0",
-    "compression": "^1.7.4",
-    "nodemailer": "^6.9.7",
-    "xlsx": "^0.18.5"
-  },
-  "devDependencies": {
-    "jest": "^29.7.0",
-    "supertest": "^6.3.4"
+    "compression": "^1.7.4"
   }
 }

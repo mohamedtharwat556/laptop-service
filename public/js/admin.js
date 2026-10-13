@@ -51,20 +51,15 @@ class AdminManager {
                     this.currentUser = JSON.parse(user);
                     this.userRole = role;
                     console.log('✅ User loaded from sessionStorage:', this.currentUser.name, 'Role:', this.userRole);
-
+                    
                     // User already authenticated, skip login modal
                     // Update UI and load data
                     this.updateUserUI();
                     console.log('📊 Loading data...');
                     await this.loadData();
                     console.log('✅ Data loaded successfully');
-
-                    // Restore last section or go to dashboard
-                    const lastSection = sessionStorage.getItem('YAS_lastSection');
-                    console.log('📑 Last section:', lastSection);
-                    console.log('📑 Switching to section:', lastSection || 'dashboard');
-                    await this.switchSection(lastSection || 'dashboard');
-
+                    console.log('📑 Switching to dashboard section...');
+                    await this.switchSection('dashboard');
                     console.log('🔄 Auto-refresh disabled');
                     console.log('🔔 Initializing notification badge...');
                     this.updateNotificationBadge();
@@ -90,11 +85,8 @@ class AdminManager {
             await this.loadData();
             console.log('✅ Data loaded successfully');
 
-            // Restore last section or go to dashboard
-            const lastSection = sessionStorage.getItem('YAS_lastSection');
-            console.log('📑 Last section:', lastSection);
-            console.log('📑 Switching to section:', lastSection || 'dashboard');
-            await this.switchSection(lastSection || 'dashboard');
+            console.log('📑 Switching to dashboard section...');
+            await this.switchSection('dashboard');
 
             console.log('🔄 Auto-refresh disabled');
             // this.startAutoRefresh(); // Auto-refresh disabled as requested
@@ -118,18 +110,9 @@ class AdminManager {
             
             console.log('🔗 Setting up sidebar navigation...');
             // Setup sidebar navigation with role-based access
-            const sidebarLinks = document.querySelectorAll('.sidebar-nav-link');
-            sidebarLinks.forEach(link => {
-                // Remove existing listener if present
-                if (link.hasAttribute('data-listener-attached')) {
-                    return;
-                }
-                link.setAttribute('data-listener-attached', 'true');
-
+            document.querySelectorAll('.sidebar-nav-link').forEach(link => {
                 link.addEventListener('click', async (e) => {
-                    console.log('🔵 Sidebar link clicked:', link.dataset.section);
                     e.preventDefault();
-                    e.stopPropagation();
                     const section = link.dataset.section;
 
                     // Check if user has access to this section
@@ -138,7 +121,6 @@ class AdminManager {
                         return;
                     }
 
-                    console.log('✅ Access granted, calling switchSection');
                     await this.switchSection(section);
                     if (section === 'daily-report') {
                         // Set today's date by default
@@ -352,11 +334,10 @@ class AdminManager {
 
             // Load data and switch to appropriate section
             this.loadData().then(() => {
-                const lastSection = sessionStorage.getItem('YAS_lastSection');
                 if (this.userRole === 'hikvision') {
                     this.switchSection('hikvision-requests');
                 } else {
-                    this.switchSection(lastSection || 'dashboard');
+                    this.switchSection('dashboard');
                 }
             });
 
@@ -439,7 +420,7 @@ class AdminManager {
                     item.style.display = 'none';
                 }
             } else if (this.userRole === 'company') {
-                // Company: hide Hikvision section, show everything else including critical
+                // Company: hide Hikvision section
                 if (section === 'hikvision-requests') {
                     item.style.display = 'none';
                 } else {
@@ -458,7 +439,6 @@ class AdminManager {
     logout() {
         sessionStorage.removeItem('YAS_currentUser');
         sessionStorage.removeItem('YAS_userRole');
-        sessionStorage.removeItem('YAS_lastSection');
         sessionStorage.removeItem('hikvisionAuthenticated');
         this.currentUser = null;
         this.userRole = null;
@@ -530,8 +510,6 @@ class AdminManager {
                 }, 100);
             } else if (this.currentSection === 'company-requests') {
                 this.renderCompanyRequests();
-            } else if (this.currentSection === 'critical-requests') {
-                this.renderCriticalRequests();
             } else if (this.currentSection === 'users') {
                 this.renderUsers();
             } else if (this.currentSection === 'products') {
@@ -1552,8 +1530,17 @@ class AdminManager {
             sessionStorage.setItem('YAS_currentUser', JSON.stringify(user));
             return true;
         }
-
+        
         return false;
+    }
+
+    /**
+     * Logout
+     */
+    logout() {
+        this.currentUser = null;
+        sessionStorage.removeItem('YAS_currentUser');
+        window.location.href = 'index.html';
     }
 
     /**
@@ -3231,93 +3218,74 @@ class AdminManager {
      * Switch section
      */
     async switchSection(section) {
-        console.log('🔄 switchSection called:', section);
-        try {
-            this.currentSection = section;
-
-            // Save current section to sessionStorage
-            sessionStorage.setItem('YAS_lastSection', section);
-
-            // Check if user can access this section
-            if (!this.canAccessSection(section)) {
-                toast.error('ليس لديك صلاحية للوصول إلى هذا القسم');
-                return;
+        this.currentSection = section;
+        
+        // Update sidebar
+        document.querySelectorAll('.sidebar-nav-link').forEach(link => {
+            link.classList.remove('active');
+            if (link.dataset.section === section) {
+                link.classList.add('active');
             }
+        });
 
-            // Update sidebar
-            document.querySelectorAll('.sidebar-nav-link').forEach(link => {
-                link.classList.remove('active');
-                if (link.dataset.section === section) {
-                    link.classList.add('active');
-                }
-            });
-
-            // Update content
-            document.querySelectorAll('.dashboard-section').forEach(sec => {
-                sec.classList.remove('active');
-                if (sec.id === `${section}Section`) {
-                    sec.classList.add('active');
-                }
-            });
-
-            // Load fresh data from API (don't block on it)
-            this.loadData().catch(err => {
-                console.error('Error loading data in switchSection:', err);
-            });
-
-            // Render section content immediately with cached data
-            console.log('🎨 Rendering section:', section);
-            switch (section) {
-                case 'dashboard':
-                    this.renderStats();
-                    this.renderCharts();
-                    break;
-                case 'today-requests':
-                    this._bulkTodayFilter = null;
-                    this._companyTodayFilter = null;
-                    this.renderTodayRequests();
-                    break;
-                case 'requests':
-                    this._bulkTodayFilter = null;
-                    this._companyTodayFilter = null;
-                    this.renderRequests();
-                    break;
-                case 'bulk-requests':
-                    this._bulkTodayFilter = null;
-                    this._companyTodayFilter = null;
-                    this.renderBulkRequests();
-                    break;
-                case 'company-requests':
-                    this._bulkTodayFilter = null;
-                    this._companyTodayFilter = null;
-                    this.renderCompanyRequests();
-                    break;
-                case 'hikvision-requests':
-                    this.renderHikvisionRequests();
-                    break;
-                case 'statistics':
-                    this.renderStatistics();
-                    break;
-                case 'users':
-                    this._bulkTodayFilter = null;
-                    this._companyTodayFilter = null;
-                    this.renderUsers();
-                    break;
-                case 'products':
-                    this._bulkTodayFilter = null;
-                    this._companyTodayFilter = null;
-                    this.renderProductsManagement();
-                    break;
-                case 'trash':
-                    this._bulkTodayFilter = null;
-                    this._companyTodayFilter = null;
-                    this.renderTrash();
-                    break;
+        // Update content
+        document.querySelectorAll('.dashboard-section').forEach(sec => {
+            sec.classList.remove('active');
+            if (sec.id === `${section}Section`) {
+                sec.classList.add('active');
             }
-            console.log('✅ Section rendered successfully');
-        } catch (error) {
-            console.error('❌ Error in switchSection:', error);
-            toast.error('حدث خطأ أثناء التبديل بين الأقسام');
+        });
+
+        // Load fresh data from API
+        await this.loadData();
+
+        // Render section content
+        switch (section) {
+            case 'dashboard':
+                this.renderStats();
+                this.renderCharts();
+                break;
+            case 'today-requests':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
+                this.renderTodayRequests();
+                break;
+            case 'requests':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
+                this.renderRequests();
+                break;
+            case 'bulk-requests':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
+                this.renderBulkRequests();
+                break;
+            case 'company-requests':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
+                this.renderCompanyRequests();
+                break;
+            case 'hikvision-requests':
+                this.renderHikvisionRequests();
+                break;
+            case 'statistics':
+                this.renderStatistics();
+                break;
+            case 'users':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
+                this.renderUsers();
+                break;
+            case 'products':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
+                this.renderProductsManagement();
+                break;
+            case 'trash':
+                this._bulkTodayFilter = null;
+                this._companyTodayFilter = null;
+                this.renderTrash();
+                break;
         }
     }
 
@@ -3645,14 +3613,7 @@ class AdminManager {
                 const result = await response.json();
                 console.log('Device deleted:', result);
 
-                // Update local data instead of reloading everything
-                const bulkIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-                if (bulkIndex !== -1) {
-                    const deviceIndex = this.bulkRequests[bulkIndex].devices.findIndex(d => d.id === device.id);
-                    if (deviceIndex !== -1) {
-                        this.bulkRequests[bulkIndex].devices.splice(deviceIndex, 1);
-                    }
-                }
+                await this.loadData();
                 this.renderBulkRequests();
                 modalManager.close('delete-device');
                 loading.hide();
@@ -3734,6 +3695,10 @@ class AdminManager {
                     <label class="form-label">التكلفة</label>
                     <input type="number" class="form-input" name="cost" value="${device.cost || 0}" min="0" step="0.01">
                 </div>
+                <div class="form-group">
+                    <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
+                    <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${device.estimatedCompletionDate ? new Date(device.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
+                </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
                     <i class="fas fa-save"></i> حفظ التغييرات
                 </button>
@@ -3746,7 +3711,17 @@ class AdminManager {
         const form = document.getElementById('editDeviceForm');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-
+            
+            // Handle estimated completion date
+            const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+            let estimatedCompletionDate = null;
+            if (estimatedCompletionDateValue) {
+                const dateObj = new Date(estimatedCompletionDateValue);
+                if (!isNaN(dateObj.getTime())) {
+                    estimatedCompletionDate = dateObj.toISOString();
+                }
+            }
+            
             const deviceData = {
                 laptopBrand: form.laptopBrand.value,
                 laptopModel: form.laptopModel.value,
@@ -3755,8 +3730,15 @@ class AdminManager {
                 priority: form.priority.value,
                 problemDescription: form.problemDescription.value,
                 status: form.status.value,
-                cost: parseFloat(form.cost.value) || 0
+                cost: parseFloat(form.cost.value) || 0,
+                estimatedCompletionDate: estimatedCompletionDate
             };
+
+            // Check if changing to Delivered status without estimated completion date
+            if (deviceData.status === 'Delivered' && !deviceData.estimatedCompletionDate) {
+                toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
+                return;
+            }
 
             try {
                 loading.show('جاري حفظ التغييرات...');
@@ -3776,14 +3758,7 @@ class AdminManager {
                 const result = await response.json();
                 console.log('Device updated:', result);
 
-                // Update local data instead of reloading everything
-                const bulkIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-                if (bulkIndex !== -1) {
-                    const deviceIndex = this.bulkRequests[bulkIndex].devices.findIndex(d => d.id === device.id);
-                    if (deviceIndex !== -1) {
-                        this.bulkRequests[bulkIndex].devices[deviceIndex] = { ...this.bulkRequests[bulkIndex].devices[deviceIndex], ...result };
-                    }
-                }
+                await this.loadData();
                 this.renderBulkRequests();
                 modalManager.close('edit-device');
                 loading.hide();
@@ -3891,11 +3866,7 @@ class AdminManager {
                 const result = await response.json();
                 console.log('Device added:', result);
 
-                // Update local data instead of reloading everything
-                const bulkIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-                if (bulkIndex !== -1) {
-                    this.bulkRequests[bulkIndex].devices.push(result);
-                }
+                await this.loadData();
                 this.renderBulkRequests();
                 modalManager.close('add-device');
                 loading.hide();
@@ -4550,274 +4521,6 @@ class AdminManager {
     }
 
     /**
-     * Render critical requests (older than 7 days)
-     */
-    renderCriticalRequests() {
-        try {
-            const container = document.getElementById('criticalRequestsContainer');
-            if (!container) return;
-
-            // Setup search input listener (only once)
-            const searchInput = document.getElementById('criticalSearchInput');
-            if (searchInput && !searchInput.hasAttribute('data-listener-attached')) {
-                searchInput.setAttribute('data-listener-attached', 'true');
-                searchInput.addEventListener('input', Utils.debounce(() => {
-                    this.renderCriticalRequests();
-                }, 300));
-            }
-
-            const today = new Date();
-            const sevenDaysAgo = new Date(today);
-            sevenDaysAgo.setDate(today.getDate() - 7);
-
-            // Get search term
-            const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
-
-            // Collect all requests from all types
-            const allRequests = [];
-
-            // Normal requests - exclude Delivered and Ready
-            (this.requests || []).forEach(r => {
-                const requestDate = new Date(r.created_at || r.createdAt);
-                const status = r.status || '';
-                // Exclude Delivered and Ready status
-                if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
-                    allRequests.push({ ...r, type: 'عادي' });
-                }
-            });
-
-            // Bulk requests - exclude Delivered and Ready
-            (this.bulkRequests || []).forEach(r => {
-                const requestDate = new Date(r.created_at || r.createdAt);
-                const status = r.status || '';
-                // Exclude Delivered and Ready status
-                if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
-                    allRequests.push({ ...r, type: 'جملة' });
-                }
-            });
-
-            // Company requests - exclude Delivered and Ready
-            (this.companyRequests || []).forEach(r => {
-                const requestDate = new Date(r.created_at || r.createdAt);
-                const status = r.status || '';
-                // Exclude Delivered and Ready status
-                if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
-                    allRequests.push({ ...r, type: 'شركات' });
-                }
-            });
-
-            // Filter by search term (name, serial number, device name)
-            let filteredRequests = allRequests;
-            if (searchTerm) {
-                filteredRequests = allRequests.filter(req => {
-                    const fullName = (req.full_name || req.fullName || req.customer_name || req.customerName || '').toLowerCase();
-                    const serialNumber = (req.serial_number || req.serialNumber || '').toLowerCase();
-                    const laptopBrand = (req.laptop_brand || req.laptopBrand || '').toLowerCase();
-                    const laptopModel = (req.laptop_model || req.laptopModel || '').toLowerCase();
-                    const deviceName = `${laptopBrand} ${laptopModel}`.toLowerCase();
-
-                    return fullName.includes(searchTerm) ||
-                           serialNumber.includes(searchTerm) ||
-                           deviceName.includes(searchTerm);
-                });
-            }
-
-        // Sort by date (oldest first)
-        filteredRequests.sort((a, b) => {
-            const dateA = new Date(a.created_at || a.createdAt);
-            const dateB = new Date(b.created_at || b.createdAt);
-            return dateA - dateB;
-        });
-
-        if (filteredRequests.length === 0) {
-            const message = searchTerm
-                ? 'لا توجد نتائج للبحث'
-                : 'لا توجد طلبات حرجة حالياً (لا توجد طلبات مر عليها أكثر من 7 أيام ولم يتم تسليمها)';
-
-            container.innerHTML = `
-                <div class="glass-card" style="text-align: center; padding: 3rem;">
-                    <i class="fas fa-search" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
-                    <p style="color: #94a3b8;">${message}</p>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3 style="margin: 0; color: #ef4444;">⚠️ الطلبات الحرجة (${filteredRequests.length}) - تستثني الطلبات الجاهزة والمسلمة</h3>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn-success" onclick="handleAdminManagerAction('exportCriticalRequestsToExcel')" style="padding: 0.5rem 1rem;">
-                        <i class="fas fa-file-excel"></i> تصدير Excel
-                    </button>
-                </div>
-            </div>
-            <div style="overflow-x: auto; max-height: 70vh;">
-                <table class="table" style="font-size: 0.85rem;">
-                    <thead>
-                        <tr>
-                            <th style="padding: 0.5rem;">النوع</th>
-                            <th style="padding: 0.5rem;">رقم الطلب</th>
-                            <th style="padding: 0.5rem;">الاسم</th>
-                            <th style="padding: 0.5rem;">الهاتف</th>
-                            <th style="padding: 0.5rem;">الجهاز</th>
-                            <th style="padding: 0.5rem;">الرقم التسلسلي</th>
-                            <th style="padding: 0.5rem;">الحالة</th>
-                            <th style="padding: 0.5rem;">التاريخ</th>
-                            <th style="padding: 0.5rem;">الأيام</th>
-                            <th style="padding: 0.5rem;">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${filteredRequests.map(req => {
-                            const requestDate = new Date(req.created_at || req.createdAt);
-                            const daysDiff = Math.floor((today - requestDate) / (1000 * 60 * 60 * 24));
-                            const requestNumber = req.request_number || req.requestNumber || `#${req.id}`;
-                            const fullName = req.full_name || req.fullName || req.customer_name || req.customerName || '—';
-                            const phone = req.phone || '—';
-                            const laptopBrand = req.laptop_brand || req.laptopBrand || '—';
-                            const laptopModel = req.laptop_model || req.laptopModel || '';
-                            const serialNumber = req.serial_number || req.serialNumber || '—';
-                            const status = this.translateStatus(req.status);
-
-                            return `
-                                <tr style="transition: background-color 0.2s; background: ${daysDiff > 14 ? 'rgba(239, 68, 68, 0.1)' : daysDiff > 10 ? 'rgba(245, 158, 11, 0.1)' : 'transparent'};">
-                                    <td style="padding: 0.5rem; font-weight: 600; color: ${req.type === 'عادي' ? '#3b82f6' : req.type === 'جملة' ? '#8b5cf6' : '#10b981'};">${req.type}</td>
-                                    <td style="padding: 0.5rem; font-weight: 600; color: #3b82f6;">${requestNumber}</td>
-                                    <td style="padding: 0.5rem; font-weight: 600;">${fullName}</td>
-                                    <td style="padding: 0.5rem;" dir="ltr">${phone}</td>
-                                    <td style="padding: 0.5rem;">${laptopBrand} ${laptopModel}</td>
-                                    <td style="padding: 0.5rem; font-size: 0.8rem; color: #94a3b8;" dir="ltr">${serialNumber}</td>
-                                    <td style="padding: 0.5rem;">${status}</td>
-                                    <td style="padding: 0.5rem;">${Utils.formatDate(req.created_at || req.createdAt)}</td>
-                                    <td style="padding: 0.5rem; font-weight: 700; color: ${daysDiff > 14 ? '#ef4444' : daysDiff > 10 ? '#f59e0b' : '#64748b'};">${daysDiff} يوم</td>
-                                    <td style="padding: 0.5rem;">
-                                        <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
-                                            ${req.type === 'عادي' ? `
-                                                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="handleAdminManagerAction('viewRequest', ${req.id})">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            ` : req.type === 'جملة' ? `
-                                                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="handleAdminManagerAction('viewBulkRequest', ${req.id})">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            ` : `
-                                                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="handleAdminManagerAction('viewCompanyRequest', ${req.id})">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            `}
-                                        </div>
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            </div>
-        `;
-        } catch(error) {
-            console.error('Error rendering critical requests:', error);
-            container.innerHTML = `<div class="glass-card" style="text-align: center; padding: 3rem; color: #ef4444;">خطأ في عرض الطلبات الحرجة: ${error.message}</div>`;
-        }
-    }
-
-    /**
-     * Export critical requests to Excel
-     */
-    exportCriticalRequestsToExcel() {
-        const today = new Date();
-        const sevenDaysAgo = new Date(today);
-        sevenDaysAgo.setDate(today.getDate() - 7);
-
-        // Get search term
-        const searchInput = document.getElementById('criticalSearchInput');
-        const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
-
-        const allRequests = [];
-
-        (this.requests || []).forEach(r => {
-            const requestDate = new Date(r.created_at || r.createdAt);
-            const status = r.status || '';
-            // Exclude Delivered and Ready status
-            if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
-                allRequests.push({ ...r, type: 'عادي' });
-            }
-        });
-
-        (this.bulkRequests || []).forEach(r => {
-            const requestDate = new Date(r.created_at || r.createdAt);
-            const status = r.status || '';
-            // Exclude Delivered and Ready status
-            if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
-                allRequests.push({ ...r, type: 'جملة' });
-            }
-        });
-
-        (this.companyRequests || []).forEach(r => {
-            const requestDate = new Date(r.created_at || r.createdAt);
-            const status = r.status || '';
-            // Exclude Delivered and Ready status
-            if (requestDate < sevenDaysAgo && status !== 'Delivered' && status !== 'Ready') {
-                allRequests.push({ ...r, type: 'شركات' });
-            }
-        });
-
-        // Filter by search term (name, serial number, device name)
-        let filteredRequests = allRequests;
-        if (searchTerm) {
-            filteredRequests = allRequests.filter(req => {
-                const fullName = (req.full_name || req.fullName || req.customer_name || req.customerName || '').toLowerCase();
-                const serialNumber = (req.serial_number || req.serialNumber || '').toLowerCase();
-                const laptopBrand = (req.laptop_brand || req.laptopBrand || '').toLowerCase();
-                const laptopModel = (req.laptop_model || req.laptopModel || '').toLowerCase();
-                const deviceName = `${laptopBrand} ${laptopModel}`.toLowerCase();
-
-                return fullName.includes(searchTerm) ||
-                       serialNumber.includes(searchTerm) ||
-                       deviceName.includes(searchTerm);
-            });
-        }
-
-        filteredRequests.sort((a, b) => {
-            const dateA = new Date(a.created_at || a.createdAt);
-            const dateB = new Date(b.created_at || b.createdAt);
-            return dateA - dateB;
-        });
-
-        const exportData = filteredRequests.map(req => {
-            const requestDate = new Date(req.created_at || req.createdAt);
-            const daysDiff = Math.floor((today - requestDate) / (1000 * 60 * 60 * 24));
-            return {
-                'النوع': req.type,
-                'رقم الطلب': req.request_number || req.requestNumber || `#${req.id}`,
-                'الاسم': req.full_name || req.fullName || req.customer_name || req.customerName || '—',
-                'الهاتف': req.phone || '—',
-                'الجهاز': `${req.laptop_brand || req.laptopBrand || '—'} ${req.laptop_model || req.laptopModel || ''}`,
-                'الرقم التسلسلي': req.serial_number || req.serialNumber || '—',
-                'الحالة': this.translateStatus(req.status),
-                'التاريخ': Utils.formatDate(req.created_at || req.createdAt),
-                'الأيام': daysDiff
-            };
-        });
-
-        const ws = XLSX.utils.json_to_sheet(exportData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'الطلبات الحرجة');
-        const filename = searchTerm
-            ? `طلبات_حرجة_فلتر_${new Date().toISOString().slice(0, 10)}.xlsx`
-            : `طلبات_حرجة_${new Date().toISOString().slice(0, 10)}.xlsx`;
-        XLSX.writeFile(wb, filename);
-        toast.success('تم تصدير الطلبات الحرجة بنجاح');
-    }
-
-    /**
-     * Export filtered critical requests
-     */
-    exportFilteredCriticalRequests() {
-        this.exportCriticalRequestsToExcel();
-    }
-
-    /**
      * Render company requests table
      */
     renderCompanyRequests() {
@@ -5120,6 +4823,10 @@ class AdminManager {
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
+                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${companyRequest.estimatedCompletionDate ? new Date(companyRequest.estimatedCompletionDate).toISOString().slice(0, 16) : (companyRequest.estimated_completion_date ? new Date(companyRequest.estimated_completion_date).toISOString().slice(0, 16) : '')}">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">تحديث الحالة</label>
                             <select class="form-select" name="status">
                                 <option value="Received" ${companyRequest.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
@@ -5130,13 +4837,68 @@ class AdminManager {
                                 <option value="Delivered" ${companyRequest.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
                             </select>
                         </div>
-                        <button type="button" onclick="handleAdminManagerAction('saveCompanyRequestEdit', ${companyRequestId})" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
                     </form>
                 </div>
             `;
-
+            
             modalManager.create('view-company-request', 'تفاصيل الطلب', content);
             modalManager.open('view-company-request');
+
+            const form = document.getElementById('editCompanyRequestForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+                let estimatedCompletionDate = null;
+                if (estimatedCompletionDateValue) {
+                    const dateObj = new Date(estimatedCompletionDateValue);
+                    if (!isNaN(dateObj.getTime())) {
+                        estimatedCompletionDate = dateObj.toISOString();
+                    }
+                }
+
+                const updateData = {
+                    phone: form.phone.value,
+                    problemDescription: form.problemDescription.value,
+                    adminReply: form.adminReply.value,
+                    cost: parseFloat(form.cost.value) || 0,
+                    technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
+                    estimatedCompletionDate: estimatedCompletionDate,
+                    status: form.status.value
+                };
+
+                // Check if changing to Delivered status without estimated completion date
+                if (updateData.status === 'Delivered' && !updateData.estimatedCompletionDate) {
+                    toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/company-requests/${companyRequestId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (!response.ok) throw new Error('Failed to update company request');
+
+                    const updatedData = await response.json();
+                    
+                    // Update local data instead of reloading everything
+                    const index = this.companyRequests.findIndex(r => r.id === companyRequestId);
+                    if (index !== -1) {
+                        this.companyRequests[index] = { ...this.companyRequests[index], ...updatedData };
+                        this.renderCompanyRequests();
+                    }
+
+                    toast.success('تم تحديث الطلب بنجاح');
+                    modalManager.close('view-company-request');
+                } catch (error) {
+                    console.error('Error updating company request:', error);
+                    toast.error('فشل تحديث الطلب');
+                }
+            });
         } catch (error) {
             console.error('Error viewing company request:', error);
             toast.error('فشل تحميل تفاصيل الطلب');
@@ -5157,15 +4919,9 @@ class AdminManager {
             });
 
             if (response.ok) {
-                const result = await response.json();
-
-                // Update local data instead of reloading everything
-                const index = this.companyRequests.findIndex(cr => cr.id === requestId);
-                if (index !== -1) {
-                    this.companyRequests[index] = { ...this.companyRequests[index], ...result };
-                }
-                this.renderCompanyRequests();
                 toast.success('تم نقل طلب موظفي الشركة إلى سلة المحذوفات');
+                await this.loadData();
+                this.renderCompanyRequests();
             } else {
                 throw new Error('Failed to soft delete company request');
             }
@@ -5191,14 +4947,9 @@ class AdminManager {
 
             if (response.ok) {
                 const result = await response.json();
-
-                // Update local data instead of reloading everything
-                const index = this.companyRequests.findIndex(cr => cr.id === requestId);
-                if (index !== -1) {
-                    this.companyRequests[index] = { ...this.companyRequests[index], ...result };
-                }
-                this.renderCompanyRequests();
                 toast.success('تم تحويل الطلب إلى طلب جملة بنجاح');
+                await this.loadData();
+                this.renderCompanyRequests();
             } else {
                 throw new Error('Failed to convert request');
             }
@@ -5225,15 +4976,9 @@ class AdminManager {
             });
 
             if (response.ok) {
-                const result = await response.json();
-
-                // Update local data instead of reloading everything
-                const index = this.companyRequests.findIndex(cr => cr.id === requestId);
-                if (index !== -1) {
-                    this.companyRequests[index] = { ...this.companyRequests[index], ...result };
-                }
-                this.renderCompanyRequests();
                 toast.success('تم تحويل الطلب بنجاح');
+                await this.loadData();
+                this.renderCompanyRequests();
             } else {
                 throw new Error('Failed');
             }
@@ -5259,15 +5004,9 @@ class AdminManager {
             });
 
             if (response.ok) {
-                const result = await response.json();
-
-                // Update local data instead of reloading everything
-                const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-                if (index !== -1) {
-                    this.bulkRequests[index] = { ...this.bulkRequests[index], ...result };
-                }
-                this.renderBulkRequests();
                 toast.success('تم تحويل الطلب بنجاح');
+                await this.loadData();
+                this.renderBulkRequests();
             } else {
                 throw new Error('Failed');
             }
@@ -5294,14 +5033,9 @@ class AdminManager {
 
             if (response.ok) {
                 const result = await response.json();
-
-                // Update local data instead of reloading everything
-                const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-                if (index !== -1) {
-                    this.bulkRequests[index] = { ...this.bulkRequests[index], ...result };
-                }
-                this.renderBulkRequests();
                 toast.success('تم تحويل الطلب إلى طلب موظفي شركة بنجاح');
+                await this.loadData();
+                this.renderBulkRequests();
             } else {
                 throw new Error('Failed to convert request');
             }
@@ -5327,9 +5061,9 @@ class AdminManager {
             });
 
             if (response.ok) {
-                this.companyRequests = [];
-                this.renderCompanyRequests();
                 toast.success('تم حذف جميع طلبات موظفي الشركة بنجاح');
+                await this.loadData();
+                this.renderCompanyRequests();
             } else {
                 toast.error('فشل حذف الطلبات');
             }
@@ -5353,9 +5087,9 @@ class AdminManager {
             });
 
             if (response.ok) {
-                this.bulkRequests = [];
-                this.renderBulkRequests();
                 toast.success('تم حذف جميع طلبات الجملة بنجاح');
+                await this.loadData();
+                this.renderBulkRequests();
             } else {
                 const errorText = await response.text();
                 console.error('Delete all failed:', errorText);
@@ -5554,21 +5288,9 @@ class AdminManager {
 
             if (!updateResponse.ok) throw new Error('Failed to update bulk request status');
 
-            // Update local data only - don't re-render
-            const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-            if (index !== -1) {
-                this.bulkRequests[index].status = newStatus;
-            }
-
-            // Re-render only the current section
-            if (this.currentSection === 'bulk-requests') {
-                this.renderBulkRequests();
-            } else if (this.currentSection === 'dashboard') {
-                this.renderStats();
-                this.renderCharts();
-            }
-
             toast.success('تم تحديث حالة الطلب بنجاح');
+            await this.loadData();
+            this.renderBulkRequests();
         } catch (error) {
             console.error('Error updating bulk request status:', error);
             toast.error('فشل تحديث حالة الطلب');
@@ -5602,16 +5324,9 @@ class AdminManager {
 
             if (!updateResponse.ok) throw new Error('Failed to update device status');
 
-            // Update local data instead of reloading everything
-            const bulkIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-            if (bulkIndex !== -1) {
-                const deviceIndex = this.bulkRequests[bulkIndex].devices.findIndex(d => d.id === deviceId);
-                if (deviceIndex !== -1) {
-                    this.bulkRequests[bulkIndex].devices[deviceIndex].status = newStatus;
-                }
-            }
-            this.renderBulkRequests();
             toast.success('تم تحديث حالة الجهاز بنجاح');
+            await this.loadData();
+            this.renderBulkRequests();
         } catch (error) {
             console.error('Error updating device status:', error);
             toast.error('فشل تحديث حالة الجهاز');
@@ -5623,7 +5338,43 @@ class AdminManager {
      */
     async updateCompanyRequestStatus(companyRequestId, newStatus) {
         try {
-            // Direct status update
+            // Check if changing to Delivered status
+            if (newStatus === 'Delivered') {
+                const request = this.companyRequests.find(r => r.id === companyRequestId);
+                if (!request || !request.estimatedCompletionDate) {
+                    // Prompt for estimated completion date
+                    const dateInput = prompt('يرجى إدخال تاريخ ووقت الاستلام المتوقع (YYYY-MM-DD HH:MM):');
+                    if (!dateInput) {
+                        toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
+                        return;
+                    }
+                    
+                    // Validate and format the date
+                    const dateObj = new Date(dateInput);
+                    if (isNaN(dateObj.getTime())) {
+                        toast.error('تاريخ غير صحيح، يرجى إدخال التاريخ بصيغة YYYY-MM-DD HH:MM');
+                        return;
+                    }
+                    
+                    // Update the request with the date
+                    const updateResponse = await fetch(`/api/company-requests/${companyRequestId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            status: newStatus,
+                            estimatedCompletionDate: dateObj.toISOString()
+                        })
+                    });
+
+                    if (!updateResponse.ok) throw new Error('Failed to update company request status');
+
+                    toast.success('تم تحديث حالة الطلب بنجاح');
+                    await this.loadData();
+                    this.renderCompanyRequests();
+                    return;
+                }
+            }
+
             const updateResponse = await fetch(`/api/company-requests/${companyRequestId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -5632,21 +5383,9 @@ class AdminManager {
 
             if (!updateResponse.ok) throw new Error('Failed to update company request status');
 
-            // Update local data only - don't re-render
-            const index = this.companyRequests.findIndex(r => r.id === companyRequestId);
-            if (index !== -1) {
-                this.companyRequests[index].status = newStatus;
-            }
-
-            // Re-render only the current section
-            if (this.currentSection === 'company-requests') {
-                this.renderCompanyRequests();
-            } else if (this.currentSection === 'dashboard') {
-                this.renderStats();
-                this.renderCharts();
-            }
-
             toast.success('تم تحديث حالة الطلب بنجاح');
+            await this.loadData();
+            this.renderCompanyRequests();
         } catch (error) {
             console.error('Error updating company request status:', error);
             toast.error('فشل تحديث حالة الطلب');
@@ -5657,9 +5396,52 @@ class AdminManager {
      * Update request status directly from table
      */
     async updateRequestStatus(requestId, newStatus) {
-        console.log('🟢 updateRequestStatus called:', { requestId, newStatus, currentSection: this.currentSection });
         try {
-            // Direct status update
+            // Check if changing to Delivered status
+            if (newStatus === 'Delivered') {
+                const request = this.requests.find(r => r.id === requestId);
+                if (!request || !request.estimatedCompletionDate) {
+                    // Prompt for estimated completion date
+                    const dateInput = prompt('يرجى إدخال تاريخ ووقت الاستلام المتوقع (YYYY-MM-DD HH:MM):');
+                    if (!dateInput) {
+                        toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
+                        return;
+                    }
+                    
+                    // Validate and format the date
+                    const dateObj = new Date(dateInput);
+                    if (isNaN(dateObj.getTime())) {
+                        toast.error('تاريخ غير صحيح، يرجى إدخال التاريخ بصيغة YYYY-MM-DD HH:MM');
+                        return;
+                    }
+                    
+                    // Update the request with the date
+                    const updateResponse = await fetch(`/api/requests/${requestId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            status: newStatus,
+                            estimatedCompletionDate: dateObj.toISOString()
+                        })
+                    });
+
+                    if (!updateResponse.ok) throw new Error('Failed to update request status');
+
+                    // Update local data
+                    const index = this.requests.findIndex(r => r.id === requestId);
+                    if (index !== -1) {
+                        this.requests[index].status = newStatus;
+                        this.requests[index].estimatedCompletionDate = dateObj.toISOString();
+                        this.renderRequests();
+                        this.renderStats();
+                        this.renderCharts();
+                    }
+
+                    toast.success('تم تحديث حالة الطلب بنجاح');
+                    return;
+                }
+            }
+
             const updateResponse = await fetch(`/api/requests/${requestId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -5668,26 +5450,18 @@ class AdminManager {
 
             if (!updateResponse.ok) throw new Error('Failed to update request status');
 
-            // Update local data only - don't re-render everything
+            // Update local data instead of reloading everything
             const index = this.requests.findIndex(r => r.id === requestId);
             if (index !== -1) {
                 this.requests[index].status = newStatus;
-                console.log('✅ Local data updated');
-            }
-
-            // Re-render only the current section
-            if (this.currentSection === 'requests') {
-                console.log('🔄 Rendering requests section');
                 this.renderRequests();
-            } else if (this.currentSection === 'dashboard') {
-                console.log('🔄 Rendering dashboard');
                 this.renderStats();
                 this.renderCharts();
             }
 
             toast.success('تم تحديث حالة الطلب بنجاح');
         } catch (error) {
-            console.error('❌ Error updating request status:', error);
+            console.error('Error updating request status:', error);
             toast.error('فشل تحديث حالة الطلب');
         }
     }
@@ -5699,7 +5473,55 @@ class AdminManager {
         try {
             console.log('Updating device status:', { bulkRequestId, deviceId, newStatus });
 
-            // Direct status update
+            // Check if changing to Delivered status
+            if (newStatus === 'Delivered') {
+                // Get the bulk request to find the device
+                const bulkRequest = this.bulkRequests.find(r => r.id === bulkRequestId);
+                if (bulkRequest && bulkRequest.devices) {
+                    const device = bulkRequest.devices.find(d => d.id === deviceId);
+                    if (!device || !device.estimatedCompletionDate) {
+                        // Prompt for estimated completion date
+                        const dateInput = prompt('يرجى إدخال تاريخ ووقت الاستلام المتوقع (YYYY-MM-DD HH:MM):');
+                        if (!dateInput) {
+                            toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
+                            return;
+                        }
+                        
+                        // Validate and format the date
+                        const dateObj = new Date(dateInput);
+                        if (isNaN(dateObj.getTime())) {
+                            toast.error('تاريخ غير صحيح، يرجى إدخال التاريخ بصيغة YYYY-MM-DD HH:MM');
+                            return;
+                        }
+                        
+                        // Update device status with the date
+                        const updateResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                status: newStatus,
+                                estimatedCompletionDate: dateObj.toISOString()
+                            })
+                        });
+
+                        if (!updateResponse.ok) {
+                            const errorText = await updateResponse.text();
+                            console.error('Error response:', errorText);
+                            throw new Error('Failed to update device status');
+                        }
+
+                        const result = await updateResponse.json();
+                        console.log('Device status updated:', result);
+
+                        toast.success('تم تحديث حالة الجهاز بنجاح');
+                        await this.loadData();
+                        this.renderBulkRequests();
+                        return;
+                    }
+                }
+            }
+            
+            // Update device status using the device-specific endpoint
             const updateResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -5713,23 +5535,11 @@ class AdminManager {
             }
 
             const result = await updateResponse.json();
+            console.log('Device status updated:', result);
 
-            // Update local data only - don't re-render
-            const bulkIndex = this.bulkRequests.findIndex(r => r.id === bulkRequestId);
-            if (bulkIndex !== -1) {
-                const deviceIndex = this.bulkRequests[bulkIndex].devices.findIndex(d => d.id === deviceId);
-                if (deviceIndex !== -1) {
-                    this.bulkRequests[bulkIndex].devices[deviceIndex].status = newStatus;
-                }
-            }
-
-            // Re-render only the current section
-            if (this.currentSection === 'bulk-requests') {
-                this.renderBulkRequests();
-            } else if (this.currentSection === 'dashboard') {
-                this.renderStats();
-                this.renderCharts();
-            }
+            // Reload data from server to get fresh data
+            await this.loadData();
+            this.renderBulkRequests();
 
             toast.success('تم تحديث حالة الجهاز بنجاح');
         } catch (error) {
@@ -5839,6 +5649,10 @@ class AdminManager {
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
+                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${device.estimatedCompletionDate ? new Date(device.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">حالة الطلب</label>
                             <select class="form-select" name="status">
                                 <option value="Received" ${device.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
@@ -5849,14 +5663,99 @@ class AdminManager {
                                 <option value="Delivered" ${device.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
                             </select>
                         </div>
-                        <button type="button" onclick="handleAdminManagerAction('saveBulkDeviceEdit', ${bulkRequestId}, ${deviceId})" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
                     </form>
                 </div>
             `;
-
+            
             const modalId = `view-bulk-device-${deviceId}`;
             modalManager.create(modalId, 'تفاصيل الجهاز', content);
             modalManager.open(modalId);
+
+            setTimeout(() => {
+                const form = document.getElementById('editBulkDeviceForm');
+                if (!form) {
+                    console.error('Form not found');
+                    return;
+                }
+                
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+                    let estimatedCompletionDate = null;
+                    if (estimatedCompletionDateValue) {
+                        const dateObj = new Date(estimatedCompletionDateValue);
+                        if (!isNaN(dateObj.getTime())) {
+                            estimatedCompletionDate = dateObj.toISOString();
+                        }
+                    }
+                    
+                    // Update device with all fields
+                    const deviceUpdateData = {
+                        problemDescription: form.problemDescription.value,
+                        adminReply: form.adminReply.value,
+                        cost: form.cost.value ? parseFloat(form.cost.value) : 0,
+                        technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
+                        estimatedCompletionDate: estimatedCompletionDate,
+                        status: form.status.value
+                    };
+
+                    // Update bulk request phone
+                    const bulkUpdateData = {
+                        customerPhone: form.phone.value
+                    };
+
+                    try {
+                        // Update device with all fields
+                        const deviceResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(deviceUpdateData)
+                        });
+
+                        if (!deviceResponse.ok) throw new Error('Failed to update device');
+
+                        // Update bulk request phone
+                        const bulkResponse = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(bulkUpdateData)
+                        });
+
+                        if (!bulkResponse.ok) throw new Error('Failed to update bulk request');
+
+                        // Update local data
+                        const bulkRequestIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                        if (bulkRequestIndex !== -1) {
+                            this.bulkRequests[bulkRequestIndex].customerPhone = bulkUpdateData.customerPhone;
+                            const deviceIndex = this.bulkRequests[bulkRequestIndex].devices.findIndex(d => d.id === deviceId);
+                            if (deviceIndex !== -1) {
+                                this.bulkRequests[bulkRequestIndex].devices[deviceIndex] = {
+                                    ...this.bulkRequests[bulkRequestIndex].devices[deviceIndex],
+                                    problemDescription: deviceUpdateData.problemDescription,
+                                    adminReply: deviceUpdateData.adminReply,
+                                    cost: deviceUpdateData.cost,
+                                    technician: deviceUpdateData.technician,
+                                    estimatedCompletionDate: deviceUpdateData.estimatedCompletionDate,
+                                    status: deviceUpdateData.status
+                                };
+                            }
+                        }
+
+                        toast.success('تم تحديث الجهاز بنجاح');
+                        modalManager.close(modalId);
+                        this.renderBulkRequests();
+                    } catch (error) {
+                        console.error('Error updating device:', error);
+                        toast.error('فشل تحديث الجهاز');
+                    }
+                });
+            }, 100);
         } catch (error) {
             console.error('Error viewing bulk device:', error);
             toast.error('فشل في تحميل تفاصيل الجهاز');
@@ -6011,6 +5910,10 @@ class AdminManager {
                         </div>
                     </div>
                     <div class="form-group">
+                        <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
+                        <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${bulkRequest.estimatedCompletionDate ? new Date(bulkRequest.estimatedCompletionDate).toISOString().slice(0, 16) : (bulkRequest.estimated_completion_date ? new Date(bulkRequest.estimated_completion_date).toISOString().slice(0, 16) : '')}">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">تحديث الحالة</label>
                         <select class="form-select" name="status">
                             <option value="Received" ${bulkRequest.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
@@ -6021,14 +5924,64 @@ class AdminManager {
                             <option value="Delivered" ${bulkRequest.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
                         </select>
                     </div>
-                    <button type="button" onclick="handleAdminManagerAction('saveBulkRequestEdit', ${bulkRequestId})" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
                 </form>
             </div>
         `;
-
+        
         const modalId = `view-bulk-request-${bulkRequestId}`;
         modalManager.create(modalId, 'تفاصيل طلب الجملة', content);
         modalManager.open(modalId);
+
+        setTimeout(() => {
+            const form = document.getElementById('editBulkRequestForm');
+            if (!form) {
+                console.error('Form not found');
+                return;
+            }
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+                let estimatedCompletionDate = null;
+                if (estimatedCompletionDateValue) {
+                    const dateObj = new Date(estimatedCompletionDateValue);
+                    if (!isNaN(dateObj.getTime())) {
+                        estimatedCompletionDate = dateObj.toISOString();
+                    }
+                }
+                
+                const updateData = {
+                    customerPhone: form.customerPhone.value,
+                    adminReply: form.adminReply.value,
+                    cost: form.cost.value ? parseFloat(form.cost.value) : 0,
+                    technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
+                    estimatedCompletionDate: estimatedCompletionDate,
+                    status: form.status.value
+                };
+
+                try {
+                    const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (!response.ok) throw new Error('Failed to update bulk request');
+
+                    toast.success('تم تحديث الطلب بنجاح');
+                    modalManager.close(modalId);
+                    await this.loadData();
+                    this.renderBulkRequests();
+                } catch (error) {
+                    console.error('Error updating bulk request:', error);
+                    toast.error('فشل تحديث الطلب');
+                }
+            });
+        }, 100);
         } catch (error) {
             console.error('Error viewing bulk request:', error);
             toast.error('فشل في تحميل تفاصيل طلب الجملة');
@@ -6046,15 +5999,9 @@ class AdminManager {
             });
 
             if (response.ok) {
-                const result = await response.json();
-
-                // Update local data instead of reloading everything
-                const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-                if (index !== -1) {
-                    this.bulkRequests[index] = { ...this.bulkRequests[index], ...result };
-                }
-                this.renderBulkRequests();
                 toast.success('تم نقل طلب الجملة إلى سلة المحذوفات');
+                await this.loadData();
+                this.renderBulkRequests();
             } else {
                 throw new Error('Failed to soft delete bulk request');
             }
@@ -6075,15 +6022,9 @@ class AdminManager {
             });
 
             if (response.ok) {
-                const result = await response.json();
-
-                // Update local data instead of reloading everything
-                const index = this.requests.findIndex(r => r.id === requestId);
-                if (index !== -1) {
-                    this.requests[index] = { ...this.requests[index], ...result };
-                }
-                this.renderRequests();
                 toast.success('تم نقل الطلب إلى سلة المحذوفات');
+                await this.loadData();
+                this.renderRequests();
             } else {
                 throw new Error('Failed to soft delete request');
             }
@@ -6106,14 +6047,9 @@ class AdminManager {
 
             if (response.ok) {
                 const result = await response.json();
-
-                // Update local data instead of reloading everything
-                const index = this.requests.findIndex(r => r.id === requestId);
-                if (index !== -1) {
-                    this.requests[index] = { ...this.requests[index], ...result };
-                }
-                this.renderRequests();
                 toast.success('تم تحويل الطلب إلى طلب جملة بنجاح');
+                await this.loadData();
+                this.renderRequests();
             } else {
                 throw new Error('Failed to convert request');
             }
@@ -6138,14 +6074,9 @@ class AdminManager {
 
             if (response.ok) {
                 const result = await response.json();
-
-                // Update local data instead of reloading everything
-                const index = this.requests.findIndex(r => r.id === requestId);
-                if (index !== -1) {
-                    this.requests[index] = { ...this.requests[index], ...result };
-                }
-                this.renderRequests();
                 toast.success('تم تحويل الطلب إلى طلب موظفي شركة بنجاح');
+                await this.loadData();
+                this.renderRequests();
             } else {
                 throw new Error('Failed to convert request');
             }
@@ -6525,7 +6456,7 @@ class AdminManager {
     async performGlobalSearch() {
         const searchInput = document.getElementById('globalSearchInput').value.trim();
         const todayOnly = document.getElementById('todayOnlyFilter')?.checked || false;
-
+        
         if (!searchInput) {
             toast.warning('الرجاء إدخال كلمة البحث');
             return;
@@ -6552,13 +6483,13 @@ class AdminManager {
             for (const searchTerm of searchTerms) {
                 // Use the optimized search API endpoint
                 const response = await fetch(`/api/search?q=${encodeURIComponent(searchTerm)}`);
-
+                
                 if (!response.ok) {
                     throw new Error('Search API request failed');
                 }
 
                 const apiResults = await response.json();
-
+                
                 // Helper function to check if date is today
                 const isToday = (dateString) => {
                     if (!dateString) return false;
@@ -6574,7 +6505,7 @@ class AdminManager {
                     if (req.requestType === 'hikvision' || req.request_type === 'hikvision') {
                         return;
                     }
-
+                    
                     const isRequestToday = isToday(req.createdAt);
                     if (!todayOnly || isRequestToday) {
                         allResults.push({
@@ -6678,10 +6609,10 @@ class AdminManager {
             this.currentSearchResults = uniqueResults;
             this.currentSearchTermInfo = searchTermInfo;
             this.displayGlobalSearchResults(uniqueResults, searchTermInfo, todayOnly);
-
+            
         } catch (error) {
             console.error('Error using search API, falling back to client-side search:', error);
-
+            
             // Fallback to client-side search if API fails
             const allResults = [];
             const searchTermInfo = [];
@@ -6759,7 +6690,7 @@ class AdminManager {
                                 phone: req.customerPhone,
                                 email: req.customerEmail || '',
                                 laptopBrand: `طلب جملة (${req.devices?.length || 0} لابتوب)`,
-                                laptopModel: devices.find(d =>
+                                laptopModel: devices.find(d => 
                                     d.serialNumber?.toLowerCase().includes(searchTerm) ||
                                     d.laptopBrand?.toLowerCase().includes(searchTerm) ||
                                     d.laptopModel?.toLowerCase().includes(searchTerm)
@@ -6820,7 +6751,7 @@ class AdminManager {
             // Remove duplicates
             const uniqueResults = [];
             const seen = new Set();
-
+            
             allResults.forEach(result => {
                 const key = `${result.type}-${result.requestNumber}`;
                 if (!seen.has(key)) {
@@ -6886,7 +6817,7 @@ class AdminManager {
             }
 
             const hasMatchedTerm = results.some(r => r.matchedTerm);
-
+            
             const tableHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <p style="color: var(--text-muted, #94a3b8); margin: 0;">
@@ -7303,6 +7234,10 @@ class AdminManager {
                         </div>
                     </div>
                     <div class="form-group">
+                        <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
+                        <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${request.estimatedCompletionDate ? new Date(request.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">تحديث الحالة</label>
                         <select class="form-select" name="status">
                             <option value="Received" ${request.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
@@ -7313,203 +7248,46 @@ class AdminManager {
                             <option value="Delivered" ${request.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
                         </select>
                     </div>
-                    <button type="button" onclick="handleAdminManagerAction('saveRequestEdit', ${requestId})" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
                 </form>
             </div>
         `;
         modalManager.create('view-request', 'تفاصيل الطلب', content);
         modalManager.open('view-request');
-    }
 
-    /**
-     * Save request edit from modal
-     */
-    saveRequestEdit(requestId) {
         const form = document.getElementById('editRequestForm');
-        if (!form) {
-            console.error('Form not found');
-            return;
-        }
-
-        const updateData = {
-            phone: form.phone.value,
-            problemDescription: form.problemDescription.value,
-            adminReply: form.adminReply.value,
-            cost: parseFloat(form.cost.value) || 0,
-            technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-            status: form.status.value
-        };
-
-        this.updateRequest(requestId, updateData);
-    }
-
-    /**
-     * Save company request edit from modal
-     */
-    saveCompanyRequestEdit(companyRequestId) {
-        const form = document.getElementById('editCompanyRequestForm');
-        if (!form) {
-            console.error('Form not found');
-            return;
-        }
-
-        const updateData = {
-            phone: form.phone.value,
-            problemDescription: form.problemDescription.value,
-            adminReply: form.adminReply.value,
-            cost: parseFloat(form.cost.value) || 0,
-            technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-            status: form.status.value
-        };
-
-        (async () => {
-            try {
-                const response = await fetch(`/api/company-requests/${companyRequestId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updateData)
-                });
-
-                if (!response.ok) throw new Error('Failed to update company request');
-
-                const updatedData = await response.json();
-
-                // Update local data instead of reloading everything
-                const index = this.companyRequests.findIndex(r => r.id === companyRequestId);
-                if (index !== -1) {
-                    this.companyRequests[index] = { ...this.companyRequests[index], ...updatedData };
-                    this.renderCompanyRequests();
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+            // Convert datetime-local to ISO string
+            let estimatedCompletionDate = null;
+            if (estimatedCompletionDateValue) {
+                const dateObj = new Date(estimatedCompletionDateValue);
+                if (!isNaN(dateObj.getTime())) {
+                    estimatedCompletionDate = dateObj.toISOString();
                 }
-
-                toast.success('تم تحديث الطلب بنجاح');
-                modalManager.close('view-company-request');
-            } catch (error) {
-                console.error('Error updating company request:', error);
-                toast.error('فشل تحديث الطلب');
             }
-        })();
-    }
 
-    /**
-     * Save bulk device edit from modal
-     */
-    saveBulkDeviceEdit(bulkRequestId, deviceId) {
-        const form = document.getElementById('editBulkDeviceForm');
-        if (!form) {
-            console.error('Form not found');
-            return;
-        }
+            const updateData = {
+                phone: form.phone.value,
+                problemDescription: form.problemDescription.value,
+                adminReply: form.adminReply.value,
+                cost: parseFloat(form.cost.value) || 0,
+                technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
+                estimatedCompletionDate: estimatedCompletionDate,
+                status: form.status.value
+            };
 
-        // Update device with all fields
-        const deviceUpdateData = {
-            problemDescription: form.problemDescription.value,
-            adminReply: form.adminReply.value,
-            cost: form.cost.value ? parseFloat(form.cost.value) : 0,
-            technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-            status: form.status.value
-        };
+            console.log('📝 Updating request with data:', updateData);
 
-        // Update bulk request phone
-        const bulkUpdateData = {
-            customerPhone: form.phone.value
-        };
-
-        (async () => {
-            try {
-                // Update device with all fields
-                const deviceResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(deviceUpdateData)
-                });
-
-                if (!deviceResponse.ok) throw new Error('Failed to update device');
-
-                // Update bulk request phone
-                const bulkResponse = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(bulkUpdateData)
-                });
-
-                if (!bulkResponse.ok) throw new Error('Failed to update bulk request');
-
-                // Update local data
-                const bulkRequestIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-                if (bulkRequestIndex !== -1) {
-                    this.bulkRequests[bulkRequestIndex].customerPhone = bulkUpdateData.customerPhone;
-                    const deviceIndex = this.bulkRequests[bulkRequestIndex].devices.findIndex(d => d.id === deviceId);
-                    if (deviceIndex !== -1) {
-                        this.bulkRequests[bulkRequestIndex].devices[deviceIndex] = {
-                            ...this.bulkRequests[bulkRequestIndex].devices[deviceIndex],
-                            problemDescription: deviceUpdateData.problemDescription,
-                            adminReply: deviceUpdateData.adminReply,
-                            cost: deviceUpdateData.cost,
-                            technician: deviceUpdateData.technician,
-                            status: deviceUpdateData.status
-                        };
-                    }
-                }
-
-                toast.success('تم تحديث الجهاز بنجاح');
-                modalManager.close(`view-bulk-device-${deviceId}`);
-                this.renderBulkRequests();
-            } catch (error) {
-                console.error('Error updating device:', error);
-                toast.error('فشل تحديث الجهاز');
+            // Check if changing to Delivered status without estimated completion date
+            if (updateData.status === 'Delivered' && !updateData.estimatedCompletionDate) {
+                toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
+                return;
             }
-        })();
-    }
 
-    /**
-     * Save bulk request edit from modal
-     */
-    saveBulkRequestEdit(bulkRequestId) {
-        const form = document.getElementById('editBulkRequestForm');
-        if (!form) {
-            console.error('Form not found');
-            return;
-        }
-
-        const updateData = {
-            customerPhone: form.customerPhone.value,
-            adminReply: form.adminReply.value,
-            cost: form.cost.value ? parseFloat(form.cost.value) : 0,
-            technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-            status: form.status.value
-        };
-
-        (async () => {
-            try {
-                const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updateData)
-                });
-
-                if (!response.ok) throw new Error('Failed to update bulk request');
-
-                const result = await response.json();
-
-                // Update local data instead of reloading everything
-                const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-                if (index !== -1) {
-                    this.bulkRequests[index] = { ...this.bulkRequests[index], ...result };
-                }
-                this.renderBulkRequests();
-                toast.success('تم تحديث الطلب بنجاح');
-                modalManager.close(`view-bulk-request-${bulkRequestId}`);
-            } catch (error) {
-                console.error('Error updating bulk request:', error);
-                toast.error('فشل تحديث الطلب');
-            }
-        })();
+            this.updateRequest(requestId, updateData);
+        });
     }
 
     /**
@@ -7546,12 +7324,9 @@ class AdminManager {
                             newSpan.id = `requestPhone_${requestId}`;
                             newSpan.textContent = newPhone;
                             input.replaceWith(newSpan);
-
-                            // Update local data instead of reloading everything
-                            const index = this.requests.findIndex(r => r.id === requestId);
-                            if (index !== -1) {
-                                this.requests[index].phone = newPhone;
-                            }
+                            
+                            // Refresh data
+                            await this.loadData();
                             this.renderRequests();
                         }
                     } catch (error) {
@@ -7624,11 +7399,8 @@ class AdminManager {
                             newSpan.textContent = newPhone;
                             input.replaceWith(newSpan);
 
-                            // Update local data instead of reloading everything
-                            const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-                            if (index !== -1) {
-                                this.bulkRequests[index].customerPhone = newPhone;
-                            }
+                            // Refresh data
+                            await this.loadData();
                             this.renderBulkRequests();
                         } else {
                             console.error('📞 Server returned error:', response.status);
@@ -7691,12 +7463,9 @@ class AdminManager {
                             newSpan.id = `companyRequestPhone_${companyRequestId}`;
                             newSpan.textContent = newPhone;
                             input.replaceWith(newSpan);
-
-                            // Update local data instead of reloading everything
-                            const index = this.companyRequests.findIndex(cr => cr.id === companyRequestId);
-                            if (index !== -1) {
-                                this.companyRequests[index].phone = newPhone;
-                            }
+                            
+                            // Refresh data
+                            await this.loadData();
                             this.renderCompanyRequests();
                         }
                     } catch (error) {
@@ -7723,6 +7492,9 @@ class AdminManager {
     async updateRequest(requestId, data) {
         // Use same-origin API (Vercel handles both frontend and backend)
         const apiUrl = '/api/requests';
+        console.log('📡 Sending PUT request to:', `${apiUrl}/${requestId}`);
+        console.log('📡 Request data:', data);
+
         const response = await fetch(`${apiUrl}/${requestId}`, {
             method: 'PUT',
             headers: {
@@ -7731,23 +7503,20 @@ class AdminManager {
             body: JSON.stringify(data)
         });
 
+        console.log('📡 Response status:', response.status);
+
         if (response.ok) {
             const updatedData = await response.json();
-
-            // Update local data only - don't re-render everything
+            
+            // Update local data instead of reloading everything
             const index = this.requests.findIndex(r => r.id === requestId);
             if (index !== -1) {
                 this.requests[index] = { ...this.requests[index], ...updatedData };
-            }
-
-            // Re-render only the current section
-            if (this.currentSection === 'requests') {
                 this.renderRequests();
-            } else if (this.currentSection === 'dashboard') {
                 this.renderStats();
                 this.renderCharts();
             }
-
+            
             modalManager.close('view-request');
             toast.success('تم تحديث الطلب بنجاح');
         } else {
@@ -7801,24 +7570,10 @@ class AdminManager {
                 });
 
                 if (response.ok) {
-                    const updatedData = await response.json();
-
-                    // Update local data only - don't re-render everything
-                    const index = this.requests.findIndex(r => r.id === requestId);
-                    if (index !== -1) {
-                        this.requests[index] = { ...this.requests[index], ...updatedData };
-                    }
-
-                    // Re-render only the current section
-                    if (this.currentSection === 'requests') {
-                        this.renderRequests();
-                    } else if (this.currentSection === 'dashboard') {
-                        this.renderStats();
-                        this.renderCharts();
-                    }
-
                     toast.success('تم تحديث الطلب بنجاح');
                     modalManager.close('quick-edit');
+                    await this.loadData();
+                    this.renderRequests();
                 } else {
                     throw new Error('Failed to update');
                 }
@@ -7867,24 +7622,10 @@ class AdminManager {
                 });
 
                 if (response.ok) {
-                    const updatedData = await response.json();
-
-                    // Update local data only - don't re-render
-                    const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-                    if (index !== -1) {
-                        this.bulkRequests[index] = { ...this.bulkRequests[index], ...updatedData };
-                    }
-
-                    // Re-render only the current section
-                    if (this.currentSection === 'bulk-requests') {
-                        this.renderBulkRequests();
-                    } else if (this.currentSection === 'dashboard') {
-                        this.renderStats();
-                        this.renderCharts();
-                    }
-
                     toast.success('تم تحديث الطلب بنجاح');
                     modalManager.close('quick-edit-bulk');
+                    await this.loadData();
+                    this.renderBulkRequests();
                 } else {
                     throw new Error('Failed to update');
                 }
@@ -7938,24 +7679,10 @@ class AdminManager {
                 });
 
                 if (response.ok) {
-                    const updatedData = await response.json();
-
-                    // Update local data only - don't re-render
-                    const index = this.companyRequests.findIndex(cr => cr.id === companyRequestId);
-                    if (index !== -1) {
-                        this.companyRequests[index] = { ...this.companyRequests[index], ...updatedData };
-                    }
-
-                    // Re-render only the current section
-                    if (this.currentSection === 'company-requests') {
-                        this.renderCompanyRequests();
-                    } else if (this.currentSection === 'dashboard') {
-                        this.renderStats();
-                        this.renderCharts();
-                    }
-
                     toast.success('تم تحديث الطلب بنجاح');
                     modalManager.close('quick-edit-company');
+                    await this.loadData();
+                    this.renderCompanyRequests();
                 } else {
                     throw new Error('Failed to update');
                 }
@@ -8181,13 +7908,9 @@ class AdminManager {
 
             await Promise.all(deletePromises);
 
-            // Update local data instead of reloading everything
-            this.trashRequests = [];
-            this.trashBulkRequests = [];
-            this.trashCompanyRequests = [];
-
-            this.renderTrash();
             toast.success(`تم حذف ${allDeleted.length} عنصر نهائياً`);
+            await this.loadData();
+            this.renderTrash();
         } catch (error) {
             console.error('Error deleting all trash:', error);
             toast.error('فشل حذف جميع العناصر');
@@ -8221,20 +7944,9 @@ class AdminManager {
             });
 
             if (response.ok) {
-                // Update local data instead of reloading everything
-                switch (type) {
-                    case 'request':
-                        this.trashRequests = this.trashRequests.filter(r => r.id !== id);
-                        break;
-                    case 'bulk':
-                        this.trashBulkRequests = this.trashBulkRequests.filter(br => br.id !== id);
-                        break;
-                    case 'company':
-                        this.trashCompanyRequests = this.trashCompanyRequests.filter(cr => cr.id !== id);
-                        break;
-                }
-                this.renderTrash();
                 toast.success('تم الحذف النهائي بنجاح');
+                await this.loadData();
+                this.renderTrash();
             } else {
                 throw new Error('Failed to permanently delete item');
             }
@@ -11205,80 +10917,5 @@ window.adminManager = adminManager;
 document.addEventListener('DOMContentLoaded', async () => {
     if (document.getElementById('adminDashboard')) {
         await adminManager.init();
-
-        // Event delegation for dynamic onclick handlers with adminManager
-        document.addEventListener('click', (e) => {
-            const target = e.target.closest('[onclick]');
-            if (target) {
-                const onclick = target.getAttribute('onclick');
-                if (onclick && onclick.includes('adminManager.')) {
-                    console.log('🔵 Event delegation caught:', onclick);
-                    e.preventDefault();
-                    e.stopPropagation();
-                    // Extract function name and arguments
-                    const match = onclick.match(/adminManager\.(\w+)\(([^)]*)\)/);
-                    if (match) {
-                        const funcName = match[1];
-                        const argsStr = match[2];
-                        console.log('📌 Function:', funcName, 'Args:', argsStr);
-                        // Simple eval for arguments (be careful with this in production)
-                        try {
-                            const args = argsStr ? new Function(`return [${argsStr}]`)() : [];
-                            if (adminManager[funcName]) {
-                                console.log('✅ Executing:', funcName);
-                                adminManager[funcName](...args);
-                            } else {
-                                console.error('❌ Function not found:', funcName);
-                            }
-                        } catch (err) {
-                            console.error('❌ Error executing adminManager action:', err);
-                        }
-                    }
-                }
-            }
-        });
-
-        // Setup sidebar toggle for mobile
-        const sidebarToggle = document.querySelector('.sidebar-toggle');
-        const sidebar = document.querySelector('.sidebar');
-        const sidebarOverlay = document.querySelector('.sidebar-overlay');
-
-        if (sidebarToggle && sidebar) {
-            sidebarToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('active');
-                if (sidebarOverlay) {
-                    sidebarOverlay.classList.toggle('active');
-                }
-            });
-
-            // Close sidebar when clicking overlay
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', () => {
-                    sidebar.classList.remove('active');
-                    sidebarOverlay.classList.remove('active');
-                });
-            }
-
-            // Close sidebar when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target) && !sidebarOverlay?.contains(e.target)) {
-                    sidebar.classList.remove('active');
-                    if (sidebarOverlay) {
-                        sidebarOverlay.classList.remove('active');
-                    }
-                }
-            });
-
-            // Close sidebar when clicking a nav link
-            const sidebarLinks = document.querySelectorAll('.sidebar-nav-link');
-            sidebarLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    sidebar.classList.remove('active');
-                    if (sidebarOverlay) {
-                        sidebarOverlay.classList.remove('active');
-                    }
-                });
-            });
-        }
     }
 });
