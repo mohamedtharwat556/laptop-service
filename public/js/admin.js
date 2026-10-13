@@ -5107,52 +5107,13 @@ class AdminManager {
                                 <option value="Delivered" ${companyRequest.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
+                        <button type="button" onclick="handleAdminManagerAction('saveCompanyRequestEdit', ${companyRequestId})" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
                     </form>
                 </div>
             `;
-            
+
             modalManager.create('view-company-request', 'تفاصيل الطلب', content);
             modalManager.open('view-company-request');
-
-            const form = document.getElementById('editCompanyRequestForm');
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const updateData = {
-                    phone: form.phone.value,
-                    problemDescription: form.problemDescription.value,
-                    adminReply: form.adminReply.value,
-                    cost: parseFloat(form.cost.value) || 0,
-                    technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-                    status: form.status.value
-                };
-
-                try {
-                    const response = await fetch(`/api/company-requests/${companyRequestId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(updateData)
-                    });
-
-                    if (!response.ok) throw new Error('Failed to update company request');
-
-                    const updatedData = await response.json();
-                    
-                    // Update local data instead of reloading everything
-                    const index = this.companyRequests.findIndex(r => r.id === companyRequestId);
-                    if (index !== -1) {
-                        this.companyRequests[index] = { ...this.companyRequests[index], ...updatedData };
-                        this.renderCompanyRequests();
-                    }
-
-                    toast.success('تم تحديث الطلب بنجاح');
-                    modalManager.close('view-company-request');
-                } catch (error) {
-                    console.error('Error updating company request:', error);
-                    toast.error('فشل تحديث الطلب');
-                }
-            });
         } catch (error) {
             console.error('Error viewing company request:', error);
             toast.error('فشل تحميل تفاصيل الطلب');
@@ -5834,89 +5795,14 @@ class AdminManager {
                                 <option value="Delivered" ${device.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
+                        <button type="button" onclick="handleAdminManagerAction('saveBulkDeviceEdit', ${bulkRequestId}, ${deviceId})" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
                     </form>
                 </div>
             `;
-            
+
             const modalId = `view-bulk-device-${deviceId}`;
             modalManager.create(modalId, 'تفاصيل الجهاز', content);
             modalManager.open(modalId);
-
-            setTimeout(() => {
-                const form = document.getElementById('editBulkDeviceForm');
-                if (!form) {
-                    console.error('Form not found');
-                    return;
-                }
-                
-                form.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-
-                    // Update device with all fields
-                    const deviceUpdateData = {
-                        problemDescription: form.problemDescription.value,
-                        adminReply: form.adminReply.value,
-                        cost: form.cost.value ? parseFloat(form.cost.value) : 0,
-                        technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-                        status: form.status.value
-                    };
-
-                    // Update bulk request phone
-                    const bulkUpdateData = {
-                        customerPhone: form.phone.value
-                    };
-
-                    try {
-                        // Update device with all fields
-                        const deviceResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(deviceUpdateData)
-                        });
-
-                        if (!deviceResponse.ok) throw new Error('Failed to update device');
-
-                        // Update bulk request phone
-                        const bulkResponse = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(bulkUpdateData)
-                        });
-
-                        if (!bulkResponse.ok) throw new Error('Failed to update bulk request');
-
-                        // Update local data
-                        const bulkRequestIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-                        if (bulkRequestIndex !== -1) {
-                            this.bulkRequests[bulkRequestIndex].customerPhone = bulkUpdateData.customerPhone;
-                            const deviceIndex = this.bulkRequests[bulkRequestIndex].devices.findIndex(d => d.id === deviceId);
-                            if (deviceIndex !== -1) {
-                                this.bulkRequests[bulkRequestIndex].devices[deviceIndex] = {
-                                    ...this.bulkRequests[bulkRequestIndex].devices[deviceIndex],
-                                    problemDescription: deviceUpdateData.problemDescription,
-                                    adminReply: deviceUpdateData.adminReply,
-                                    cost: deviceUpdateData.cost,
-                                    technician: deviceUpdateData.technician,
-                                    estimatedCompletionDate: deviceUpdateData.estimatedCompletionDate,
-                                    status: deviceUpdateData.status
-                                };
-                            }
-                        }
-
-                        toast.success('تم تحديث الجهاز بنجاح');
-                        modalManager.close(modalId);
-                        this.renderBulkRequests();
-                    } catch (error) {
-                        console.error('Error updating device:', error);
-                        toast.error('فشل تحديث الجهاز');
-                    }
-                });
-            }, 100);
         } catch (error) {
             console.error('Error viewing bulk device:', error);
             toast.error('فشل في تحميل تفاصيل الجهاز');
@@ -6081,60 +5967,14 @@ class AdminManager {
                             <option value="Delivered" ${bulkRequest.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
+                    <button type="button" onclick="handleAdminManagerAction('saveBulkRequestEdit', ${bulkRequestId})" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
                 </form>
             </div>
         `;
-        
+
         const modalId = `view-bulk-request-${bulkRequestId}`;
         modalManager.create(modalId, 'تفاصيل طلب الجملة', content);
         modalManager.open(modalId);
-
-        setTimeout(() => {
-            const form = document.getElementById('editBulkRequestForm');
-            if (!form) {
-                console.error('Form not found');
-                return;
-            }
-            
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const updateData = {
-                    customerPhone: form.customerPhone.value,
-                    adminReply: form.adminReply.value,
-                    cost: form.cost.value ? parseFloat(form.cost.value) : 0,
-                    technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-                    status: form.status.value
-                };
-
-                try {
-                    const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(updateData)
-                    });
-
-                    if (!response.ok) throw new Error('Failed to update bulk request');
-
-                    const result = await response.json();
-
-                    // Update local data instead of reloading everything
-                    const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
-                    if (index !== -1) {
-                        this.bulkRequests[index] = { ...this.bulkRequests[index], ...result };
-                    }
-                    this.renderBulkRequests();
-                    toast.success('تم تحديث الطلب بنجاح');
-                    modalManager.close(modalId);
-                } catch (error) {
-                    console.error('Error updating bulk request:', error);
-                    toast.error('فشل تحديث الطلب');
-                }
-            });
-        }, 100);
         } catch (error) {
             console.error('Error viewing bulk request:', error);
             toast.error('فشل في تحميل تفاصيل طلب الجملة');
@@ -7419,30 +7259,205 @@ class AdminManager {
                             <option value="Delivered" ${request.status === 'Delivered' ? 'selected' : ''}>تم التسليم للعميل</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
+                    <button type="button" onclick="handleAdminManagerAction('saveRequestEdit', ${requestId})" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التغييرات</button>
                 </form>
             </div>
         `;
         modalManager.create('view-request', 'تفاصيل الطلب', content);
         modalManager.open('view-request');
+    }
 
+    /**
+     * Save request edit from modal
+     */
+    saveRequestEdit(requestId) {
         const form = document.getElementById('editRequestForm');
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
+        if (!form) {
+            console.error('Form not found');
+            return;
+        }
 
-            const updateData = {
-                phone: form.phone.value,
-                problemDescription: form.problemDescription.value,
-                adminReply: form.adminReply.value,
-                cost: parseFloat(form.cost.value) || 0,
-                technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-                status: form.status.value
-            };
+        const updateData = {
+            phone: form.phone.value,
+            problemDescription: form.problemDescription.value,
+            adminReply: form.adminReply.value,
+            cost: parseFloat(form.cost.value) || 0,
+            technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
+            status: form.status.value
+        };
 
-            console.log('📝 Updating request with data:', updateData);
+        console.log('📝 Updating request with data:', updateData);
 
-            this.updateRequest(requestId, updateData);
-        });
+        this.updateRequest(requestId, updateData);
+    }
+
+    /**
+     * Save company request edit from modal
+     */
+    saveCompanyRequestEdit(companyRequestId) {
+        const form = document.getElementById('editCompanyRequestForm');
+        if (!form) {
+            console.error('Form not found');
+            return;
+        }
+
+        const updateData = {
+            phone: form.phone.value,
+            problemDescription: form.problemDescription.value,
+            adminReply: form.adminReply.value,
+            cost: parseFloat(form.cost.value) || 0,
+            technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
+            status: form.status.value
+        };
+
+        (async () => {
+            try {
+                const response = await fetch(`/api/company-requests/${companyRequestId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (!response.ok) throw new Error('Failed to update company request');
+
+                const updatedData = await response.json();
+
+                // Update local data instead of reloading everything
+                const index = this.companyRequests.findIndex(r => r.id === companyRequestId);
+                if (index !== -1) {
+                    this.companyRequests[index] = { ...this.companyRequests[index], ...updatedData };
+                    this.renderCompanyRequests();
+                }
+
+                toast.success('تم تحديث الطلب بنجاح');
+                modalManager.close('view-company-request');
+            } catch (error) {
+                console.error('Error updating company request:', error);
+                toast.error('فشل تحديث الطلب');
+            }
+        })();
+    }
+
+    /**
+     * Save bulk device edit from modal
+     */
+    saveBulkDeviceEdit(bulkRequestId, deviceId) {
+        const form = document.getElementById('editBulkDeviceForm');
+        if (!form) {
+            console.error('Form not found');
+            return;
+        }
+
+        // Update device with all fields
+        const deviceUpdateData = {
+            problemDescription: form.problemDescription.value,
+            adminReply: form.adminReply.value,
+            cost: form.cost.value ? parseFloat(form.cost.value) : 0,
+            technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
+            status: form.status.value
+        };
+
+        // Update bulk request phone
+        const bulkUpdateData = {
+            customerPhone: form.phone.value
+        };
+
+        (async () => {
+            try {
+                // Update device with all fields
+                const deviceResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(deviceUpdateData)
+                });
+
+                if (!deviceResponse.ok) throw new Error('Failed to update device');
+
+                // Update bulk request phone
+                const bulkResponse = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(bulkUpdateData)
+                });
+
+                if (!bulkResponse.ok) throw new Error('Failed to update bulk request');
+
+                // Update local data
+                const bulkRequestIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                if (bulkRequestIndex !== -1) {
+                    this.bulkRequests[bulkRequestIndex].customerPhone = bulkUpdateData.customerPhone;
+                    const deviceIndex = this.bulkRequests[bulkRequestIndex].devices.findIndex(d => d.id === deviceId);
+                    if (deviceIndex !== -1) {
+                        this.bulkRequests[bulkRequestIndex].devices[deviceIndex] = {
+                            ...this.bulkRequests[bulkRequestIndex].devices[deviceIndex],
+                            problemDescription: deviceUpdateData.problemDescription,
+                            adminReply: deviceUpdateData.adminReply,
+                            cost: deviceUpdateData.cost,
+                            technician: deviceUpdateData.technician,
+                            status: deviceUpdateData.status
+                        };
+                    }
+                }
+
+                toast.success('تم تحديث الجهاز بنجاح');
+                modalManager.close(`view-bulk-device-${deviceId}`);
+                this.renderBulkRequests();
+            } catch (error) {
+                console.error('Error updating device:', error);
+                toast.error('فشل تحديث الجهاز');
+            }
+        })();
+    }
+
+    /**
+     * Save bulk request edit from modal
+     */
+    saveBulkRequestEdit(bulkRequestId) {
+        const form = document.getElementById('editBulkRequestForm');
+        if (!form) {
+            console.error('Form not found');
+            return;
+        }
+
+        const updateData = {
+            customerPhone: form.customerPhone.value,
+            adminReply: form.adminReply.value,
+            cost: form.cost.value ? parseFloat(form.cost.value) : 0,
+            technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
+            status: form.status.value
+        };
+
+        (async () => {
+            try {
+                const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (!response.ok) throw new Error('Failed to update bulk request');
+
+                const result = await response.json();
+
+                // Update local data instead of reloading everything
+                const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                if (index !== -1) {
+                    this.bulkRequests[index] = { ...this.bulkRequests[index], ...result };
+                }
+                this.renderBulkRequests();
+                toast.success('تم تحديث الطلب بنجاح');
+                modalManager.close(`view-bulk-request-${bulkRequestId}`);
+            } catch (error) {
+                console.error('Error updating bulk request:', error);
+                toast.error('فشل تحديث الطلب');
+            }
+        })();
     }
 
     /**
