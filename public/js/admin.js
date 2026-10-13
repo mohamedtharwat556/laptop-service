@@ -11144,6 +11144,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (document.getElementById('adminDashboard')) {
         await adminManager.init();
 
+        // Event delegation for dynamic onclick handlers with adminManager
+        document.addEventListener('click', (e) => {
+            const target = e.target.closest('[onclick]');
+            if (target) {
+                const onclick = target.getAttribute('onclick');
+                if (onclick && onclick.includes('adminManager.')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Extract function name and arguments
+                    const match = onclick.match(/adminManager\.(\w+)\(([^)]*)\)/);
+                    if (match) {
+                        const funcName = match[1];
+                        const argsStr = match[2];
+                        // Simple eval for arguments (be careful with this in production)
+                        try {
+                            const args = argsStr ? new Function(`return [${argsStr}]`)() : [];
+                            if (adminManager[funcName]) {
+                                adminManager[funcName](...args);
+                            }
+                        } catch (err) {
+                            console.error('Error executing adminManager action:', err);
+                        }
+                    }
+                }
+            }
+        });
+
         // Setup sidebar toggle for mobile
         const sidebarToggle = document.querySelector('.sidebar-toggle');
         const sidebar = document.querySelector('.sidebar');
