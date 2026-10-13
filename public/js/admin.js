@@ -120,6 +120,12 @@ class AdminManager {
             // Setup sidebar navigation with role-based access
             const sidebarLinks = document.querySelectorAll('.sidebar-nav-link');
             sidebarLinks.forEach(link => {
+                // Remove existing listener if present
+                if (link.hasAttribute('data-listener-attached')) {
+                    return;
+                }
+                link.setAttribute('data-listener-attached', 'true');
+
                 link.addEventListener('click', async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
