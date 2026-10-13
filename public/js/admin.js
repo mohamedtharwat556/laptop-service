@@ -4804,7 +4804,7 @@ class AdminManager {
                         <div class="request-detail-item"><span class="request-detail-label">المشكلة</span><span class="request-detail-value">${companyRequest.problem_description || companyRequest.problemDescription || ''}</span></div>
                     </div>
 
-                    <form id="editCompanyRequestForm" style="margin-top: 1.5rem;">
+                    <form id="editCompanyRequestForm" method="POST" style="margin-top: 1.5rem;">
                         <div class="form-group">
                             <label class="form-label">رقم الهاتف</label>
                             <input type="tel" class="form-input" name="phone" value="${companyRequest.phone || ''}" placeholder="أدخل رقم الهاتف">
@@ -4895,10 +4895,12 @@ class AdminManager {
             modalManager.open('view-company-request');
 
             const form = document.getElementById('editCompanyRequestForm');
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+            if (form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
                 let estimatedCompletionDate = null;
                 if (estimatedCompletionDateValue) {
                     const dateObj = new Date(estimatedCompletionDateValue);
@@ -4947,7 +4949,8 @@ class AdminManager {
                     console.error('Error updating company request:', error);
                     toast.error('فشل تحديث الطلب');
                 }
-            });
+                });
+            }
         } catch (error) {
             console.error('Error viewing company request:', error);
             toast.error('فشل تحميل تفاصيل الطلب');
@@ -5891,7 +5894,7 @@ class AdminManager {
                     </button>
                 </div>
 
-                <form id="editBulkRequestForm" style="margin-top: 1.5rem;">
+                <form id="editBulkRequestForm" method="POST" style="margin-top: 1.5rem;">
                     <div class="form-group">
                         <label class="form-label">رقم الطلب</label>
                         <input type="text" class="form-input" name="requestNumber" value="${bulkRequest.requestNumber || ''}" readonly style="background: rgba(59, 130, 246, 0.1);">
@@ -5988,10 +5991,11 @@ class AdminManager {
                 console.error('Form not found');
                 return;
             }
-            
+
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
+                e.stopPropagation();
+
                 const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
                 let estimatedCompletionDate = null;
                 if (estimatedCompletionDateValue) {
@@ -7215,7 +7219,7 @@ class AdminManager {
                     </div>
                     ` : ''}
                 </div>
-                <form id="editRequestForm" style="margin-top: 1.5rem;">
+                <form id="editRequestForm" method="POST" style="margin-top: 1.5rem;">
                     <div class="form-group">
                         <label class="form-label">رقم الهاتف</label>
                         <input type="tel" class="form-input" name="phone" value="${request.phone || ''}" placeholder="أدخل رقم الهاتف">
@@ -7305,38 +7309,41 @@ class AdminManager {
         modalManager.open('view-request');
 
         const form = document.getElementById('editRequestForm');
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
-            // Convert datetime-local to ISO string
-            let estimatedCompletionDate = null;
-            if (estimatedCompletionDateValue) {
-                const dateObj = new Date(estimatedCompletionDateValue);
-                if (!isNaN(dateObj.getTime())) {
-                    estimatedCompletionDate = dateObj.toISOString();
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
+                // Convert datetime-local to ISO string
+                let estimatedCompletionDate = null;
+                if (estimatedCompletionDateValue) {
+                    const dateObj = new Date(estimatedCompletionDateValue);
+                    if (!isNaN(dateObj.getTime())) {
+                        estimatedCompletionDate = dateObj.toISOString();
+                    }
                 }
-            }
 
-            const updateData = {
-                phone: form.phone.value,
-                problemDescription: form.problemDescription.value,
-                adminReply: form.adminReply.value,
-                cost: parseFloat(form.cost.value) || 0,
-                technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-                estimatedCompletionDate: estimatedCompletionDate,
-                status: form.status.value
-            };
+                const updateData = {
+                    phone: form.phone.value,
+                    problemDescription: form.problemDescription.value,
+                    adminReply: form.adminReply.value,
+                    cost: parseFloat(form.cost.value) || 0,
+                    technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
+                    estimatedCompletionDate: estimatedCompletionDate,
+                    status: form.status.value
+                };
 
-            console.log('📝 Updating request with data:', updateData);
+                console.log('📝 Updating request with data:', updateData);
 
-            // Check if changing to Delivered status without estimated completion date
-            if (updateData.status === 'Delivered' && !updateData.estimatedCompletionDate) {
-                toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
-                return;
-            }
+                // Check if changing to Delivered status without estimated completion date
+                if (updateData.status === 'Delivered' && !updateData.estimatedCompletionDate) {
+                    toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
+                    return;
+                }
 
-            this.updateRequest(requestId, updateData);
-        });
+                this.updateRequest(requestId, updateData);
+            });
+        }
     }
 
     /**
