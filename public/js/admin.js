@@ -226,15 +226,6 @@ class AdminManager {
                 }, 300));
             }
 
-            // Critical search input
-            const criticalSearchInput = document.getElementById('criticalSearchInput');
-            if (criticalSearchInput) {
-                criticalSearchInput.addEventListener('input', Utils.debounce(() => {
-                    this.currentPage = 1;
-                    this.renderCriticalRequests();
-                }, 300));
-            }
-
             if (companyStatusFilter) {
                 companyStatusFilter.addEventListener('change', () => {
                     this.currentPage = 1;
@@ -4546,12 +4537,20 @@ class AdminManager {
         const container = document.getElementById('criticalRequestsContainer');
         if (!container) return;
 
+        // Setup search input listener (only once)
+        const searchInput = document.getElementById('criticalSearchInput');
+        if (searchInput && !searchInput.hasAttribute('data-listener-attached')) {
+            searchInput.setAttribute('data-listener-attached', 'true');
+            searchInput.addEventListener('input', Utils.debounce(() => {
+                this.renderCriticalRequests();
+            }, 300));
+        }
+
         const today = new Date();
         const sevenDaysAgo = new Date(today);
         sevenDaysAgo.setDate(today.getDate() - 7);
 
         // Get search term
-        const searchInput = document.getElementById('criticalSearchInput');
         const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
         // Collect all requests from all types
@@ -7286,8 +7285,6 @@ class AdminManager {
             status: form.status.value
         };
 
-        console.log('📝 Updating request with data:', updateData);
-
         this.updateRequest(requestId, updateData);
     }
 
@@ -7671,9 +7668,6 @@ class AdminManager {
     async updateRequest(requestId, data) {
         // Use same-origin API (Vercel handles both frontend and backend)
         const apiUrl = '/api/requests';
-        console.log('📡 Sending PUT request to:', `${apiUrl}/${requestId}`);
-        console.log('📡 Request data:', data);
-
         const response = await fetch(`${apiUrl}/${requestId}`, {
             method: 'PUT',
             headers: {
@@ -7682,11 +7676,9 @@ class AdminManager {
             body: JSON.stringify(data)
         });
 
-        console.log('📡 Response status:', response.status);
-
         if (response.ok) {
             const updatedData = await response.json();
-            
+
             // Update local data instead of reloading everything
             const index = this.requests.findIndex(r => r.id === requestId);
             if (index !== -1) {
@@ -7695,7 +7687,7 @@ class AdminManager {
                 this.renderStats();
                 this.renderCharts();
             }
-            
+
             modalManager.close('view-request');
             toast.success('تم تحديث الطلب بنجاح');
         } else {
