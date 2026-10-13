@@ -3741,12 +3741,6 @@ class AdminManager {
                 cost: parseFloat(form.cost.value) || 0
             };
 
-            // Check if changing to Delivered status without estimated completion date
-            if (deviceData.status === 'Delivered' && !deviceData.estimatedCompletionDate) {
-                toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
-                return;
-            }
-
             try {
                 loading.show('جاري حفظ التغييرات...');
                 
@@ -7359,15 +7353,8 @@ class AdminManager {
                 technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
                 status: form.status.value
             };
-            };
 
             console.log('📝 Updating request with data:', updateData);
-
-            // Check if changing to Delivered status without estimated completion date
-            if (updateData.status === 'Delivered' && !updateData.estimatedCompletionDate) {
-                toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
-                return;
-            }
 
             this.updateRequest(requestId, updateData);
         });
