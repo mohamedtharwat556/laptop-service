@@ -4723,6 +4723,15 @@ class AdminManager {
         const filteredOrders = this.filterCriticalOrders(criticalOrders);
         const { data, pages } = this.paginate(filteredOrders);
 
+        // Handle empty page scenario: if current page is beyond available pages, go to last page
+        if (this.currentPage > pages && pages > 0) {
+            this.currentPage = pages;
+            const { data: newData, pages: newPages } = this.paginate(this.filterCriticalOrders(criticalOrders));
+            this.renderCriticalSummaryCards(criticalOrders);
+            this.renderCriticalOrdersTable(newData, newPages);
+            return;
+        }
+
         // Render summary cards
         this.renderCriticalSummaryCards(criticalOrders);
 
@@ -4735,6 +4744,13 @@ class AdminManager {
             `;
             return;
         }
+
+        this.renderCriticalOrdersTable(data, pages);
+    }
+
+    renderCriticalOrdersTable(data, pages) {
+        const container = document.getElementById('criticalOrdersContainer');
+        if (!container) return;
 
         container.innerHTML = `
             <div style="overflow-x: auto;">
@@ -5698,6 +5714,12 @@ class AdminManager {
             toast.success('تم تحديث حالة الطلب بنجاح');
             await this.loadData();
             this.renderBulkRequests();
+
+            // Update Critical Orders if currently viewing that section
+            if (this.currentSection === 'critical-orders') {
+                this.renderCriticalOrders();
+            }
+            // Always update badge
             this.updateCriticalBadge();
         } catch (error) {
             console.error('Error updating bulk request status:', error);
@@ -5756,19 +5778,19 @@ class AdminManager {
                         toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
                         return;
                     }
-                    
+
                     // Validate and format the date
                     const dateObj = new Date(dateInput);
                     if (isNaN(dateObj.getTime())) {
                         toast.error('تاريخ غير صحيح، يرجى إدخال التاريخ بصيغة YYYY-MM-DD HH:MM');
                         return;
                     }
-                    
+
                     // Update the request with the date
                     const updateResponse = await fetch(`/api/company-requests/${companyRequestId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
+                        body: JSON.stringify({
                             status: newStatus,
                             estimatedCompletionDate: dateObj.toISOString()
                         })
@@ -5779,6 +5801,12 @@ class AdminManager {
                     toast.success('تم تحديث حالة الطلب بنجاح');
                     await this.loadData();
                     this.renderCompanyRequests();
+
+                    // Update Critical Orders if currently viewing that section
+                    if (this.currentSection === 'critical-orders') {
+                        this.renderCriticalOrders();
+                    }
+                    // Always update badge
                     this.updateCriticalBadge();
                     return;
                 }
@@ -5795,6 +5823,12 @@ class AdminManager {
             toast.success('تم تحديث حالة الطلب بنجاح');
             await this.loadData();
             this.renderCompanyRequests();
+
+            // Update Critical Orders if currently viewing that section
+            if (this.currentSection === 'critical-orders') {
+                this.renderCriticalOrders();
+            }
+            // Always update badge
             this.updateCriticalBadge();
         } catch (error) {
             console.error('Error updating company request status:', error);
@@ -7954,11 +7988,17 @@ class AdminManager {
                 this.renderRequests();
                 this.renderStats();
                 this.renderCharts();
-                this.updateCriticalBadge();
             }
 
             modalManager.close('view-request');
             toast.success('تم تحديث الطلب بنجاح');
+
+            // Update Critical Orders if currently viewing that section
+            if (this.currentSection === 'critical-orders') {
+                this.renderCriticalOrders();
+            }
+            // Always update badge
+            this.updateCriticalBadge();
         } else {
             const errorText = await response.text();
             console.error('❌ Update request failed:', errorText);
@@ -8016,6 +8056,13 @@ class AdminManager {
                         modalManager.close('quick-edit');
                         await this.loadData();
                         this.renderRequests();
+
+                        // Update Critical Orders if currently viewing that section
+                        if (this.currentSection === 'critical-orders') {
+                            this.renderCriticalOrders();
+                        }
+                        // Always update badge
+                        this.updateCriticalBadge();
                     } else {
                         throw new Error('Failed to update');
                     }
@@ -8074,6 +8121,13 @@ class AdminManager {
                         modalManager.close('quick-edit-bulk');
                         await this.loadData();
                         this.renderBulkRequests();
+
+                        // Update Critical Orders if currently viewing that section
+                        if (this.currentSection === 'critical-orders') {
+                            this.renderCriticalOrders();
+                        }
+                        // Always update badge
+                        this.updateCriticalBadge();
                     } else {
                         throw new Error('Failed to update');
                     }
@@ -8137,6 +8191,13 @@ class AdminManager {
                         modalManager.close('quick-edit-company');
                         await this.loadData();
                         this.renderCompanyRequests();
+
+                        // Update Critical Orders if currently viewing that section
+                        if (this.currentSection === 'critical-orders') {
+                            this.renderCriticalOrders();
+                        }
+                        // Always update badge
+                        this.updateCriticalBadge();
                     } else {
                         throw new Error('Failed to update');
                     }
