@@ -3635,7 +3635,14 @@ class AdminManager {
                 const result = await response.json();
                 console.log('Device deleted:', result);
 
-                await this.loadData();
+                // Update local data instead of reloading everything
+                const bulkIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                if (bulkIndex !== -1) {
+                    const deviceIndex = this.bulkRequests[bulkIndex].devices.findIndex(d => d.id === device.id);
+                    if (deviceIndex !== -1) {
+                        this.bulkRequests[bulkIndex].devices.splice(deviceIndex, 1);
+                    }
+                }
                 this.renderBulkRequests();
                 modalManager.close('delete-device');
                 loading.hide();
@@ -3759,7 +3766,14 @@ class AdminManager {
                 const result = await response.json();
                 console.log('Device updated:', result);
 
-                await this.loadData();
+                // Update local data instead of reloading everything
+                const bulkIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                if (bulkIndex !== -1) {
+                    const deviceIndex = this.bulkRequests[bulkIndex].devices.findIndex(d => d.id === device.id);
+                    if (deviceIndex !== -1) {
+                        this.bulkRequests[bulkIndex].devices[deviceIndex] = { ...this.bulkRequests[bulkIndex].devices[deviceIndex], ...result };
+                    }
+                }
                 this.renderBulkRequests();
                 modalManager.close('edit-device');
                 loading.hide();
@@ -3867,7 +3881,11 @@ class AdminManager {
                 const result = await response.json();
                 console.log('Device added:', result);
 
-                await this.loadData();
+                // Update local data instead of reloading everything
+                const bulkIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                if (bulkIndex !== -1) {
+                    this.bulkRequests[bulkIndex].devices.push(result);
+                }
                 this.renderBulkRequests();
                 modalManager.close('add-device');
                 loading.hide();
@@ -5155,9 +5173,15 @@ class AdminManager {
             });
 
             if (response.ok) {
-                toast.success('تم نقل طلب موظفي الشركة إلى سلة المحذوفات');
-                await this.loadData();
+                const result = await response.json();
+
+                // Update local data instead of reloading everything
+                const index = this.companyRequests.findIndex(cr => cr.id === requestId);
+                if (index !== -1) {
+                    this.companyRequests[index] = { ...this.companyRequests[index], ...result };
+                }
                 this.renderCompanyRequests();
+                toast.success('تم نقل طلب موظفي الشركة إلى سلة المحذوفات');
             } else {
                 throw new Error('Failed to soft delete company request');
             }
@@ -5183,9 +5207,14 @@ class AdminManager {
 
             if (response.ok) {
                 const result = await response.json();
-                toast.success('تم تحويل الطلب إلى طلب جملة بنجاح');
-                await this.loadData();
+
+                // Update local data instead of reloading everything
+                const index = this.companyRequests.findIndex(cr => cr.id === requestId);
+                if (index !== -1) {
+                    this.companyRequests[index] = { ...this.companyRequests[index], ...result };
+                }
                 this.renderCompanyRequests();
+                toast.success('تم تحويل الطلب إلى طلب جملة بنجاح');
             } else {
                 throw new Error('Failed to convert request');
             }
@@ -5212,9 +5241,15 @@ class AdminManager {
             });
 
             if (response.ok) {
-                toast.success('تم تحويل الطلب بنجاح');
-                await this.loadData();
+                const result = await response.json();
+
+                // Update local data instead of reloading everything
+                const index = this.companyRequests.findIndex(cr => cr.id === requestId);
+                if (index !== -1) {
+                    this.companyRequests[index] = { ...this.companyRequests[index], ...result };
+                }
                 this.renderCompanyRequests();
+                toast.success('تم تحويل الطلب بنجاح');
             } else {
                 throw new Error('Failed');
             }
@@ -5240,9 +5275,15 @@ class AdminManager {
             });
 
             if (response.ok) {
-                toast.success('تم تحويل الطلب بنجاح');
-                await this.loadData();
+                const result = await response.json();
+
+                // Update local data instead of reloading everything
+                const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                if (index !== -1) {
+                    this.bulkRequests[index] = { ...this.bulkRequests[index], ...result };
+                }
                 this.renderBulkRequests();
+                toast.success('تم تحويل الطلب بنجاح');
             } else {
                 throw new Error('Failed');
             }
@@ -5269,9 +5310,14 @@ class AdminManager {
 
             if (response.ok) {
                 const result = await response.json();
-                toast.success('تم تحويل الطلب إلى طلب موظفي شركة بنجاح');
-                await this.loadData();
+
+                // Update local data instead of reloading everything
+                const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                if (index !== -1) {
+                    this.bulkRequests[index] = { ...this.bulkRequests[index], ...result };
+                }
                 this.renderBulkRequests();
+                toast.success('تم تحويل الطلب إلى طلب موظفي شركة بنجاح');
             } else {
                 throw new Error('Failed to convert request');
             }
@@ -5297,9 +5343,9 @@ class AdminManager {
             });
 
             if (response.ok) {
-                toast.success('تم حذف جميع طلبات موظفي الشركة بنجاح');
-                await this.loadData();
+                this.companyRequests = [];
                 this.renderCompanyRequests();
+                toast.success('تم حذف جميع طلبات موظفي الشركة بنجاح');
             } else {
                 toast.error('فشل حذف الطلبات');
             }
@@ -5323,9 +5369,9 @@ class AdminManager {
             });
 
             if (response.ok) {
-                toast.success('تم حذف جميع طلبات الجملة بنجاح');
-                await this.loadData();
+                this.bulkRequests = [];
                 this.renderBulkRequests();
+                toast.success('تم حذف جميع طلبات الجملة بنجاح');
             } else {
                 const errorText = await response.text();
                 console.error('Delete all failed:', errorText);
@@ -5524,9 +5570,13 @@ class AdminManager {
 
             if (!updateResponse.ok) throw new Error('Failed to update bulk request status');
 
-            toast.success('تم تحديث حالة الطلب بنجاح');
-            await this.loadData();
+            // Update local data instead of reloading everything
+            const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+            if (index !== -1) {
+                this.bulkRequests[index].status = newStatus;
+            }
             this.renderBulkRequests();
+            toast.success('تم تحديث حالة الطلب بنجاح');
         } catch (error) {
             console.error('Error updating bulk request status:', error);
             toast.error('فشل تحديث حالة الطلب');
@@ -5560,9 +5610,16 @@ class AdminManager {
 
             if (!updateResponse.ok) throw new Error('Failed to update device status');
 
-            toast.success('تم تحديث حالة الجهاز بنجاح');
-            await this.loadData();
+            // Update local data instead of reloading everything
+            const bulkIndex = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+            if (bulkIndex !== -1) {
+                const deviceIndex = this.bulkRequests[bulkIndex].devices.findIndex(d => d.id === deviceId);
+                if (deviceIndex !== -1) {
+                    this.bulkRequests[bulkIndex].devices[deviceIndex].status = newStatus;
+                }
+            }
             this.renderBulkRequests();
+            toast.success('تم تحديث حالة الجهاز بنجاح');
         } catch (error) {
             console.error('Error updating device status:', error);
             toast.error('فشل تحديث حالة الجهاز');
@@ -6062,10 +6119,16 @@ class AdminManager {
 
                     if (!response.ok) throw new Error('Failed to update bulk request');
 
+                    const result = await response.json();
+
+                    // Update local data instead of reloading everything
+                    const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                    if (index !== -1) {
+                        this.bulkRequests[index] = { ...this.bulkRequests[index], ...result };
+                    }
+                    this.renderBulkRequests();
                     toast.success('تم تحديث الطلب بنجاح');
                     modalManager.close(modalId);
-                    await this.loadData();
-                    this.renderBulkRequests();
                 } catch (error) {
                     console.error('Error updating bulk request:', error);
                     toast.error('فشل تحديث الطلب');
@@ -6089,9 +6152,15 @@ class AdminManager {
             });
 
             if (response.ok) {
-                toast.success('تم نقل طلب الجملة إلى سلة المحذوفات');
-                await this.loadData();
+                const result = await response.json();
+
+                // Update local data instead of reloading everything
+                const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                if (index !== -1) {
+                    this.bulkRequests[index] = { ...this.bulkRequests[index], ...result };
+                }
                 this.renderBulkRequests();
+                toast.success('تم نقل طلب الجملة إلى سلة المحذوفات');
             } else {
                 throw new Error('Failed to soft delete bulk request');
             }
@@ -6112,9 +6181,15 @@ class AdminManager {
             });
 
             if (response.ok) {
-                toast.success('تم نقل الطلب إلى سلة المحذوفات');
-                await this.loadData();
+                const result = await response.json();
+
+                // Update local data instead of reloading everything
+                const index = this.requests.findIndex(r => r.id === requestId);
+                if (index !== -1) {
+                    this.requests[index] = { ...this.requests[index], ...result };
+                }
                 this.renderRequests();
+                toast.success('تم نقل الطلب إلى سلة المحذوفات');
             } else {
                 throw new Error('Failed to soft delete request');
             }
@@ -6137,9 +6212,14 @@ class AdminManager {
 
             if (response.ok) {
                 const result = await response.json();
-                toast.success('تم تحويل الطلب إلى طلب جملة بنجاح');
-                await this.loadData();
+
+                // Update local data instead of reloading everything
+                const index = this.requests.findIndex(r => r.id === requestId);
+                if (index !== -1) {
+                    this.requests[index] = { ...this.requests[index], ...result };
+                }
                 this.renderRequests();
+                toast.success('تم تحويل الطلب إلى طلب جملة بنجاح');
             } else {
                 throw new Error('Failed to convert request');
             }
@@ -6164,9 +6244,14 @@ class AdminManager {
 
             if (response.ok) {
                 const result = await response.json();
-                toast.success('تم تحويل الطلب إلى طلب موظفي شركة بنجاح');
-                await this.loadData();
+
+                // Update local data instead of reloading everything
+                const index = this.requests.findIndex(r => r.id === requestId);
+                if (index !== -1) {
+                    this.requests[index] = { ...this.requests[index], ...result };
+                }
                 this.renderRequests();
+                toast.success('تم تحويل الطلب إلى طلب موظفي شركة بنجاح');
             } else {
                 throw new Error('Failed to convert request');
             }
@@ -7394,9 +7479,12 @@ class AdminManager {
                             newSpan.id = `requestPhone_${requestId}`;
                             newSpan.textContent = newPhone;
                             input.replaceWith(newSpan);
-                            
-                            // Refresh data
-                            await this.loadData();
+
+                            // Update local data instead of reloading everything
+                            const index = this.requests.findIndex(r => r.id === requestId);
+                            if (index !== -1) {
+                                this.requests[index].phone = newPhone;
+                            }
                             this.renderRequests();
                         }
                     } catch (error) {
@@ -7469,8 +7557,11 @@ class AdminManager {
                             newSpan.textContent = newPhone;
                             input.replaceWith(newSpan);
 
-                            // Refresh data
-                            await this.loadData();
+                            // Update local data instead of reloading everything
+                            const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                            if (index !== -1) {
+                                this.bulkRequests[index].customerPhone = newPhone;
+                            }
                             this.renderBulkRequests();
                         } else {
                             console.error('📞 Server returned error:', response.status);
@@ -7533,9 +7624,12 @@ class AdminManager {
                             newSpan.id = `companyRequestPhone_${companyRequestId}`;
                             newSpan.textContent = newPhone;
                             input.replaceWith(newSpan);
-                            
-                            // Refresh data
-                            await this.loadData();
+
+                            // Update local data instead of reloading everything
+                            const index = this.companyRequests.findIndex(cr => cr.id === companyRequestId);
+                            if (index !== -1) {
+                                this.companyRequests[index].phone = newPhone;
+                            }
                             this.renderCompanyRequests();
                         }
                     } catch (error) {
@@ -7640,10 +7734,19 @@ class AdminManager {
                 });
 
                 if (response.ok) {
+                    const updatedData = await response.json();
+
+                    // Update local data instead of reloading everything
+                    const index = this.requests.findIndex(r => r.id === requestId);
+                    if (index !== -1) {
+                        this.requests[index] = { ...this.requests[index], ...updatedData };
+                        this.renderRequests();
+                        this.renderStats();
+                        this.renderCharts();
+                    }
+
                     toast.success('تم تحديث الطلب بنجاح');
                     modalManager.close('quick-edit');
-                    await this.loadData();
-                    this.renderRequests();
                 } else {
                     throw new Error('Failed to update');
                 }
@@ -7692,10 +7795,17 @@ class AdminManager {
                 });
 
                 if (response.ok) {
+                    const updatedData = await response.json();
+
+                    // Update local data instead of reloading everything
+                    const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
+                    if (index !== -1) {
+                        this.bulkRequests[index] = { ...this.bulkRequests[index], ...updatedData };
+                        this.renderBulkRequests();
+                    }
+
                     toast.success('تم تحديث الطلب بنجاح');
                     modalManager.close('quick-edit-bulk');
-                    await this.loadData();
-                    this.renderBulkRequests();
                 } else {
                     throw new Error('Failed to update');
                 }
@@ -7978,9 +8088,13 @@ class AdminManager {
 
             await Promise.all(deletePromises);
 
-            toast.success(`تم حذف ${allDeleted.length} عنصر نهائياً`);
-            await this.loadData();
+            // Update local data instead of reloading everything
+            this.trashRequests = [];
+            this.trashBulkRequests = [];
+            this.trashCompanyRequests = [];
+
             this.renderTrash();
+            toast.success(`تم حذف ${allDeleted.length} عنصر نهائياً`);
         } catch (error) {
             console.error('Error deleting all trash:', error);
             toast.error('فشل حذف جميع العناصر');
@@ -8014,9 +8128,20 @@ class AdminManager {
             });
 
             if (response.ok) {
-                toast.success('تم الحذف النهائي بنجاح');
-                await this.loadData();
+                // Update local data instead of reloading everything
+                switch (type) {
+                    case 'request':
+                        this.trashRequests = this.trashRequests.filter(r => r.id !== id);
+                        break;
+                    case 'bulk':
+                        this.trashBulkRequests = this.trashBulkRequests.filter(br => br.id !== id);
+                        break;
+                    case 'company':
+                        this.trashCompanyRequests = this.trashCompanyRequests.filter(cr => cr.id !== id);
+                        break;
+                }
                 this.renderTrash();
+                toast.success('تم الحذف النهائي بنجاح');
             } else {
                 throw new Error('Failed to permanently delete item');
             }
