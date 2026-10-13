@@ -127,6 +127,7 @@ class AdminManager {
                 link.setAttribute('data-listener-attached', 'true');
 
                 link.addEventListener('click', async (e) => {
+                    console.log('🔵 Sidebar link clicked:', link.dataset.section);
                     e.preventDefault();
                     e.stopPropagation();
                     const section = link.dataset.section;
@@ -137,6 +138,7 @@ class AdminManager {
                         return;
                     }
 
+                    console.log('✅ Access granted, calling switchSection');
                     await this.switchSection(section);
                     if (section === 'daily-report') {
                         // Set today's date by default
@@ -3229,6 +3231,7 @@ class AdminManager {
      * Switch section
      */
     async switchSection(section) {
+        console.log('🔄 switchSection called:', section);
         try {
             this.currentSection = section;
 
@@ -3263,6 +3266,7 @@ class AdminManager {
             });
 
             // Render section content immediately with cached data
+            console.log('🎨 Rendering section:', section);
             switch (section) {
                 case 'dashboard':
                     this.renderStats();
@@ -3309,14 +3313,20 @@ class AdminManager {
                     this._companyTodayFilter = null;
                     this.renderProductsManagement();
                     break;
+                case 'duplicate-serials':
+                    this._bulkTodayFilter = null;
+                    this._companyTodayFilter = null;
+                    this.checkDuplicateSerials();
+                    break;
                 case 'trash':
                     this._bulkTodayFilter = null;
                     this._companyTodayFilter = null;
                     this.renderTrash();
                     break;
             }
+            console.log('✅ Section rendered successfully');
         } catch (error) {
-            console.error('Error in switchSection:', error);
+            console.error('❌ Error in switchSection:', error);
             toast.error('حدث خطأ أثناء التبديل بين الأقسام');
         }
     }
@@ -5657,6 +5667,7 @@ class AdminManager {
      * Update request status directly from table
      */
     async updateRequestStatus(requestId, newStatus) {
+        console.log('🟢 updateRequestStatus called:', { requestId, newStatus, currentSection: this.currentSection });
         try {
             // Direct status update
             const updateResponse = await fetch(`/api/requests/${requestId}`, {
@@ -5671,19 +5682,22 @@ class AdminManager {
             const index = this.requests.findIndex(r => r.id === requestId);
             if (index !== -1) {
                 this.requests[index].status = newStatus;
+                console.log('✅ Local data updated');
             }
 
             // Re-render only the current section
             if (this.currentSection === 'requests') {
+                console.log('🔄 Rendering requests section');
                 this.renderRequests();
             } else if (this.currentSection === 'dashboard') {
+                console.log('🔄 Rendering dashboard');
                 this.renderStats();
                 this.renderCharts();
             }
 
             toast.success('تم تحديث حالة الطلب بنجاح');
         } catch (error) {
-            console.error('Error updating request status:', error);
+            console.error('❌ Error updating request status:', error);
             toast.error('فشل تحديث حالة الطلب');
         }
     }
@@ -11208,6 +11222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (target) {
                 const onclick = target.getAttribute('onclick');
                 if (onclick && onclick.includes('adminManager.')) {
+                    console.log('🔵 Event delegation caught:', onclick);
                     e.preventDefault();
                     e.stopPropagation();
                     // Extract function name and arguments
@@ -11215,14 +11230,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (match) {
                         const funcName = match[1];
                         const argsStr = match[2];
+                        console.log('📌 Function:', funcName, 'Args:', argsStr);
                         // Simple eval for arguments (be careful with this in production)
                         try {
                             const args = argsStr ? new Function(`return [${argsStr}]`)() : [];
                             if (adminManager[funcName]) {
+                                console.log('✅ Executing:', funcName);
                                 adminManager[funcName](...args);
+                            } else {
+                                console.error('❌ Function not found:', funcName);
                             }
                         } catch (err) {
-                            console.error('Error executing adminManager action:', err);
+                            console.error('❌ Error executing adminManager action:', err);
                         }
                     }
                 }
