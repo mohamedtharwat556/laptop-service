@@ -86,7 +86,8 @@ class AdminManager {
             console.log('🔔 Initializing notification badge...');
             this.updateNotificationBadge();
             this.updateTodayTotalBadge();
-            
+            this.updateCriticalBadge();
+
             // Close notification dropdown when clicking outside
             document.addEventListener('click', (e) => {
                 const dropdown = document.getElementById('notificationDropdown');
@@ -222,6 +223,32 @@ class AdminManager {
                 dateTo.addEventListener('change', () => {
                     this.currentPage = 1;
                     this.renderRequests();
+                });
+            }
+
+            // Setup critical orders filters
+            const criticalSeverityFilter = document.getElementById('criticalSeverityFilter');
+            const criticalTypeFilter = document.getElementById('criticalTypeFilter');
+            const criticalStatusFilter = document.getElementById('criticalStatusFilter');
+
+            if (criticalSeverityFilter) {
+                criticalSeverityFilter.addEventListener('change', () => {
+                    this.currentPage = 1;
+                    this.renderCriticalOrders();
+                });
+            }
+
+            if (criticalTypeFilter) {
+                criticalTypeFilter.addEventListener('change', () => {
+                    this.currentPage = 1;
+                    this.renderCriticalOrders();
+                });
+            }
+
+            if (criticalStatusFilter) {
+                criticalStatusFilter.addEventListener('change', () => {
+                    this.currentPage = 1;
+                    this.renderCriticalOrders();
                 });
             }
 
@@ -1639,6 +1666,7 @@ class AdminManager {
             // Wait a moment then update total badge with today's requests
             setTimeout(() => {
                 this.updateTodayTotalBadge();
+                this.updateCriticalBadge();
             }, 500);
         } catch (error) {
             console.error('Failed to load data from API:', error);
@@ -3330,6 +3358,9 @@ class AdminManager {
             case 'duplicate-serials':
                 this.renderDuplicateSerials();
                 break;
+            case 'critical-orders':
+                this.renderCriticalOrders();
+                break;
             case 'trash':
                 this._bulkTodayFilter = null;
                 this._companyTodayFilter = null;
@@ -4681,6 +4712,328 @@ class AdminManager {
     }
 
     /**
+     * Render critical orders page
+     */
+    renderCriticalOrders() {
+        const container = document.getElementById('criticalOrdersContainer');
+        if (!container) return;
+
+        // Get all critical orders from all sources
+        const criticalOrders = this.getCriticalOrders();
+        const filteredOrders = this.filterCriticalOrders(criticalOrders);
+        const { data, pages } = this.paginate(filteredOrders);
+
+        // Render summary cards
+        this.renderCriticalSummaryCards(criticalOrders);
+
+        if (data.length === 0) {
+            container.innerHTML = `
+                <div class="glass-card" style="text-align: center; padding: 3rem;">
+                    <i class="fas fa-check-circle" style="font-size: 3rem; color: #10b981; margin-bottom: 1rem;"></i>
+                    <p style="color: #94a3b8;">لا توجد طلبات حرجة حالياً</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div style="overflow-x: auto;">
+                <table class="table" style="font-size: 0.85rem;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 0.5rem;">رقم الطلب</th>
+                            <th style="padding: 0.5rem;">اسم العميل</th>
+                            <th style="padding: 0.5rem;">الهاتف</th>
+                            <th style="padding: 0.5rem;">النوع</th>
+                            <th style="padding: 0.5rem;">تاريخ الإنشاء</th>
+                            <th style="padding: 0.5rem;">العمر (أيام)</th>
+                            <th style="padding: 0.5rem;">الحالة</th>
+                            <th style="padding: 0.5rem;">الخطورة</th>
+                            <th style="padding: 0.5rem;">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(order => `
+                            <tr style="transition: background-color 0.2s;">
+                                <td style="padding: 0.5rem; font-weight: 600;">${order.requestNumber}</td>
+                                <td style="padding: 0.5rem; font-weight: 600;">${order.customerName}</td>
+                                <td style="padding: 0.5rem;" dir="ltr">${order.phone || '—'}</td>
+                                <td style="padding: 0.5rem;">${this.translateOrderType(order.type)}</td>
+                                <td style="padding: 0.5rem;">${Utils.formatDate(order.createdAt)}</td>
+                                <td style="padding: 0.5rem; font-weight: 600;">${order.age}</td>
+                                <td style="padding: 0.5rem;">
+                                    <span class="status-badge ${this.getStatusClass(order.status)}">${this.translateStatus(order.status)}</span>
+                                </td>
+                                <td style="padding: 0.5rem;">
+                                    <span class="priority-badge" style="${this.getSeverityStyle(order.severity)}">${this.translateSeverity(order.severity)}</span>
+                                </td>
+                                <td style="padding: 0.5rem;">
+                                    <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                            onclick="adminManager.openCriticalOrder('${order.type}', ${order.id})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div id="criticalOrdersPagination" style="margin-top: 1.5rem;"></div>
+        `;
+
+        this.renderPagination('criticalOrdersPagination', pages);
+    }
+
+    /**
+     * Get all critical orders (3+ days old, not delivered)
+     */
+    getCriticalOrders() {
+        const criticalOrders = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Add normal requests
+        this.requests.forEach(req => {
+            if (req.status !== 'Delivered') {
+                const createdDate = new Date(req.createdAt || req.created_at);
+                const ageInDays = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
+                if (ageInDays >= 3) {
+                    criticalOrders.push({
+                        ...req,
+                        type: 'normal',
+                        requestNumber: req.requestNumber,
+                        customerName: req.fullName,
+                        phone: req.phone,
+                        createdAt: req.createdAt || req.created_at,
+                        status: req.status,
+                        age: ageInDays,
+                        severity: this.getSeverity(ageInDays)
+                    });
+                }
+            }
+        });
+
+        // Add bulk requests
+        this.bulkRequests.forEach(req => {
+            if (req.status !== 'Delivered') {
+                const createdDate = new Date(req.createdAt || req.created_at);
+                const ageInDays = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
+                if (ageInDays >= 3) {
+                    criticalOrders.push({
+                        ...req,
+                        type: 'bulk',
+                        requestNumber: req.requestNumber,
+                        customerName: req.customerName,
+                        phone: req.customerPhone,
+                        createdAt: req.createdAt || req.created_at,
+                        status: req.status,
+                        age: ageInDays,
+                        severity: this.getSeverity(ageInDays)
+                    });
+                }
+            }
+        });
+
+        // Add company requests
+        this.companyRequests.forEach(req => {
+            if (req.status !== 'Delivered') {
+                const createdDate = new Date(req.createdAt || req.created_at);
+                const ageInDays = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
+                if (ageInDays >= 3) {
+                    criticalOrders.push({
+                        ...req,
+                        type: 'company',
+                        requestNumber: req.request_number || req.requestNumber,
+                        customerName: req.full_name || req.fullName,
+                        phone: req.phone,
+                        createdAt: req.createdAt || req.created_at,
+                        status: req.status,
+                        age: ageInDays,
+                        severity: this.getSeverity(ageInDays)
+                    });
+                }
+            }
+        });
+
+        // Sort by age (oldest first)
+        criticalOrders.sort((a, b) => b.age - a.age);
+
+        return criticalOrders;
+    }
+
+    /**
+     * Filter critical orders based on severity, type, and status
+     */
+    filterCriticalOrders(orders) {
+        const severityFilter = document.getElementById('criticalSeverityFilter')?.value || 'all';
+        const typeFilter = document.getElementById('criticalTypeFilter')?.value || 'all';
+        const statusFilter = document.getElementById('criticalStatusFilter')?.value || 'all';
+
+        let filtered = [...orders];
+
+        // Filter by severity
+        if (severityFilter !== 'all') {
+            filtered = filtered.filter(order => {
+                switch (severityFilter) {
+                    case '3-5':
+                        return order.age >= 3 && order.age <= 5;
+                    case '6-15':
+                        return order.age >= 6 && order.age <= 15;
+                    case '16-30':
+                        return order.age >= 16 && order.age <= 30;
+                    case '30+':
+                        return order.age > 30;
+                    default:
+                        return true;
+                }
+            });
+        }
+
+        // Filter by type
+        if (typeFilter !== 'all') {
+            filtered = filtered.filter(order => order.type === typeFilter);
+        }
+
+        // Filter by status
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(order => order.status === statusFilter);
+        }
+
+        return filtered;
+    }
+
+    /**
+     * Render critical orders summary cards
+     */
+    renderCriticalSummaryCards(orders) {
+        const container = document.getElementById('criticalSummaryCards');
+        if (!container) return;
+
+        const counts = {
+            total: orders.length,
+            earlyWarning: orders.filter(o => o.age >= 3 && o.age <= 5).length,
+            delayed: orders.filter(o => o.age >= 6 && o.age <= 15).length,
+            severelyDelayed: orders.filter(o => o.age >= 16 && o.age <= 30).length,
+            criticallyDelayed: orders.filter(o => o.age > 30).length
+        };
+
+        container.innerHTML = `
+            <div class="glass-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1)); border: 2px solid #ef4444;">
+                <div style="text-align: center;">
+                    <h3 style="margin: 0; color: #ef4444; font-size: 1.5rem;">${counts.total}</h3>
+                    <p style="margin: 0; color: #94a3b8; font-size: 0.875rem;">إجمالي الطلبات الحرجة</p>
+                </div>
+            </div>
+            <div class="glass-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 179, 8, 0.1)); border: 2px solid #f59e0b;">
+                <div style="text-align: center;">
+                    <h3 style="margin: 0; color: #f59e0b; font-size: 1.5rem;">${counts.earlyWarning}</h3>
+                    <p style="margin: 0; color: #94a3b8; font-size: 0.875rem;">3-5 أيام (تحذير)</p>
+                </div>
+            </div>
+            <div class="glass-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(234, 88, 12, 0.1)); border: 2px solid #f97316;">
+                <div style="text-align: center;">
+                    <h3 style="margin: 0; color: #f97316; font-size: 1.5rem;">${counts.delayed}</h3>
+                    <p style="margin: 0; color: #94a3b8; font-size: 0.875rem;">6-15 يوم (متأخر)</p>
+                </div>
+            </div>
+            <div class="glass-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1)); border: 2px solid #ef4444;">
+                <div style="text-align: center;">
+                    <h3 style="margin: 0; color: #ef4444; font-size: 1.5rem;">${counts.severelyDelayed}</h3>
+                    <p style="margin: 0; color: #94a3b8; font-size: 0.875rem;">16-30 يوم (شديد التأخير)</p>
+                </div>
+            </div>
+            <div class="glass-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(153, 27, 27, 0.25), rgba(127, 29, 29, 0.2)); border: 2px solid #7f1d1d;">
+                <div style="text-align: center;">
+                    <h3 style="margin: 0; color: #7f1d1d; font-size: 1.5rem;">${counts.criticallyDelayed}</h3>
+                    <p style="margin: 0; color: #94a3b8; font-size: 0.875rem;">أكثر من 30 يوم (حرج)</p>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Get severity level based on age in days
+     */
+    getSeverity(ageInDays) {
+        if (ageInDays >= 3 && ageInDays <= 5) return 'early-warning';
+        if (ageInDays >= 6 && ageInDays <= 15) return 'delayed';
+        if (ageInDays >= 16 && ageInDays <= 30) return 'severely-delayed';
+        if (ageInDays > 30) return 'critically-delayed';
+        return 'early-warning';
+    }
+
+    /**
+     * Translate severity level to Arabic
+     */
+    translateSeverity(severity) {
+        const translations = {
+            'early-warning': 'تحذير',
+            'delayed': 'متأخر',
+            'severely-delayed': 'شديد التأخير',
+            'critically-delayed': 'حرج'
+        };
+        return translations[severity] || severity;
+    }
+
+    /**
+     * Get CSS style for severity badge
+     */
+    getSeverityStyle(severity) {
+        const styles = {
+            'early-warning': 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(234, 179, 8, 0.8)); color: white;',
+            'delayed': 'background: linear-gradient(135deg, rgba(249, 115, 22, 0.9), rgba(234, 88, 12, 0.8)); color: white;',
+            'severely-delayed': 'background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.8)); color: white;',
+            'critically-delayed': 'background: linear-gradient(135deg, rgba(153, 27, 27, 0.9), rgba(127, 29, 29, 0.8)); color: white;'
+        };
+        return styles[severity] || styles['early-warning'];
+    }
+
+    /**
+     * Translate order type to Arabic
+     */
+    translateOrderType(type) {
+        const translations = {
+            'normal': 'عادي',
+            'bulk': 'جملة',
+            'company': 'موظفي شركة'
+        };
+        return translations[type] || type;
+    }
+
+    /**
+     * Open critical order details
+     */
+    openCriticalOrder(type, id) {
+        switch (type) {
+            case 'normal':
+                this.viewRequest(id);
+                break;
+            case 'bulk':
+                this.viewBulkRequest(id);
+                break;
+            case 'company':
+                this.viewCompanyRequest(id);
+                break;
+        }
+    }
+
+    /**
+     * Update critical orders badge
+     */
+    updateCriticalBadge() {
+        const criticalOrders = this.getCriticalOrders();
+        const badge = document.getElementById('sidebarCriticalBadge');
+        if (badge) {
+            if (criticalOrders.length > 0) {
+                badge.textContent = criticalOrders.length;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+
+    /**
      * Filter company requests
      */
     filterCompanyRequests(requests) {
@@ -5345,6 +5698,7 @@ class AdminManager {
             toast.success('تم تحديث حالة الطلب بنجاح');
             await this.loadData();
             this.renderBulkRequests();
+            this.updateCriticalBadge();
         } catch (error) {
             console.error('Error updating bulk request status:', error);
             toast.error('فشل تحديث حالة الطلب');
@@ -5425,6 +5779,7 @@ class AdminManager {
                     toast.success('تم تحديث حالة الطلب بنجاح');
                     await this.loadData();
                     this.renderCompanyRequests();
+                    this.updateCriticalBadge();
                     return;
                 }
             }
@@ -5440,6 +5795,7 @@ class AdminManager {
             toast.success('تم تحديث حالة الطلب بنجاح');
             await this.loadData();
             this.renderCompanyRequests();
+            this.updateCriticalBadge();
         } catch (error) {
             console.error('Error updating company request status:', error);
             toast.error('فشل تحديث حالة الطلب');
@@ -6405,6 +6761,9 @@ class AdminManager {
                 break;
             case 'company-requests':
                 this.renderCompanyRequests();
+                break;
+            case 'critical-orders':
+                this.renderCriticalOrders();
                 break;
             case 'users':
                 this.renderUsers();
@@ -7587,7 +7946,7 @@ class AdminManager {
 
         if (response.ok) {
             const updatedData = await response.json();
-            
+
             // Update local data instead of reloading everything
             const index = this.requests.findIndex(r => r.id === requestId);
             if (index !== -1) {
@@ -7595,8 +7954,9 @@ class AdminManager {
                 this.renderRequests();
                 this.renderStats();
                 this.renderCharts();
+                this.updateCriticalBadge();
             }
-            
+
             modalManager.close('view-request');
             toast.success('تم تحديث الطلب بنجاح');
         } else {
