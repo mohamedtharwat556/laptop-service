@@ -3717,10 +3717,6 @@ class AdminManager {
                     <label class="form-label">التكلفة</label>
                     <input type="number" class="form-input" name="cost" value="${device.cost || 0}" min="0" step="0.01">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
-                    <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${device.estimatedCompletionDate ? new Date(device.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
-                </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
                     <i class="fas fa-save"></i> حفظ التغييرات
                 </button>
@@ -5100,10 +5096,6 @@ class AdminManager {
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
-                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${companyRequest.estimatedCompletionDate ? new Date(companyRequest.estimatedCompletionDate).toISOString().slice(0, 16) : (companyRequest.estimated_completion_date ? new Date(companyRequest.estimated_completion_date).toISOString().slice(0, 16) : '')}">
-                        </div>
-                        <div class="form-group">
                             <label class="form-label">تحديث الحالة</label>
                             <select class="form-select" name="status">
                                 <option value="Received" ${companyRequest.status === 'Received' ? 'selected' : ''}>تم الاستلام</option>
@@ -5615,33 +5607,12 @@ class AdminManager {
      */
     async updateCompanyRequestStatus(companyRequestId, newStatus) {
         try {
-            // Check if changing to Delivered status
-            if (newStatus === 'Delivered') {
-                const request = this.companyRequests.find(r => r.id === companyRequestId);
-                if (!request || !request.estimatedCompletionDate) {
-                    // Prompt for estimated completion date
-                    const dateInput = prompt('يرجى إدخال تاريخ ووقت الاستلام المتوقع (YYYY-MM-DD HH:MM):');
-                    if (!dateInput) {
-                        toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
-                        return;
-                    }
-                    
-                    // Validate and format the date
-                    const dateObj = new Date(dateInput);
-                    if (isNaN(dateObj.getTime())) {
-                        toast.error('تاريخ غير صحيح، يرجى إدخال التاريخ بصيغة YYYY-MM-DD HH:MM');
-                        return;
-                    }
-                    
-                    // Update the request with the date
-                    const updateResponse = await fetch(`/api/company-requests/${companyRequestId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            status: newStatus,
-                            estimatedCompletionDate: dateObj.toISOString()
-                        })
-                    });
+            // Direct status update
+            const updateResponse = await fetch(`/api/company-requests/${companyRequestId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
 
                     if (!updateResponse.ok) throw new Error('Failed to update company request status');
 
@@ -5674,50 +5645,12 @@ class AdminManager {
      */
     async updateRequestStatus(requestId, newStatus) {
         try {
-            // Check if changing to Delivered status
-            if (newStatus === 'Delivered') {
-                const request = this.requests.find(r => r.id === requestId);
-                if (!request || !request.estimatedCompletionDate) {
-                    // Prompt for estimated completion date
-                    const dateInput = prompt('يرجى إدخال تاريخ ووقت الاستلام المتوقع (YYYY-MM-DD HH:MM):');
-                    if (!dateInput) {
-                        toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
-                        return;
-                    }
-                    
-                    // Validate and format the date
-                    const dateObj = new Date(dateInput);
-                    if (isNaN(dateObj.getTime())) {
-                        toast.error('تاريخ غير صحيح، يرجى إدخال التاريخ بصيغة YYYY-MM-DD HH:MM');
-                        return;
-                    }
-                    
-                    // Update the request with the date
-                    const updateResponse = await fetch(`/api/requests/${requestId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            status: newStatus,
-                            estimatedCompletionDate: dateObj.toISOString()
-                        })
-                    });
-
-                    if (!updateResponse.ok) throw new Error('Failed to update request status');
-
-                    // Update local data
-                    const index = this.requests.findIndex(r => r.id === requestId);
-                    if (index !== -1) {
-                        this.requests[index].status = newStatus;
-                        this.requests[index].estimatedCompletionDate = dateObj.toISOString();
-                        this.renderRequests();
-                        this.renderStats();
-                        this.renderCharts();
-                    }
-
-                    toast.success('تم تحديث حالة الطلب بنجاح');
-                    return;
-                }
-            }
+            // Direct status update
+            const updateResponse = await fetch(`/api/requests/${requestId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
 
             const updateResponse = await fetch(`/api/requests/${requestId}`, {
                 method: 'PUT',
@@ -5750,55 +5683,7 @@ class AdminManager {
         try {
             console.log('Updating device status:', { bulkRequestId, deviceId, newStatus });
 
-            // Check if changing to Delivered status
-            if (newStatus === 'Delivered') {
-                // Get the bulk request to find the device
-                const bulkRequest = this.bulkRequests.find(r => r.id === bulkRequestId);
-                if (bulkRequest && bulkRequest.devices) {
-                    const device = bulkRequest.devices.find(d => d.id === deviceId);
-                    if (!device || !device.estimatedCompletionDate) {
-                        // Prompt for estimated completion date
-                        const dateInput = prompt('يرجى إدخال تاريخ ووقت الاستلام المتوقع (YYYY-MM-DD HH:MM):');
-                        if (!dateInput) {
-                            toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
-                            return;
-                        }
-                        
-                        // Validate and format the date
-                        const dateObj = new Date(dateInput);
-                        if (isNaN(dateObj.getTime())) {
-                            toast.error('تاريخ غير صحيح، يرجى إدخال التاريخ بصيغة YYYY-MM-DD HH:MM');
-                            return;
-                        }
-                        
-                        // Update device status with the date
-                        const updateResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                status: newStatus,
-                                estimatedCompletionDate: dateObj.toISOString()
-                            })
-                        });
-
-                        if (!updateResponse.ok) {
-                            const errorText = await updateResponse.text();
-                            console.error('Error response:', errorText);
-                            throw new Error('Failed to update device status');
-                        }
-
-                        const result = await updateResponse.json();
-                        console.log('Device status updated:', result);
-
-                        toast.success('تم تحديث حالة الجهاز بنجاح');
-                        await this.loadData();
-                        this.renderBulkRequests();
-                        return;
-                    }
-                }
-            }
-            
-            // Update device status using the device-specific endpoint
+            // Direct status update
             const updateResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -5924,10 +5809,6 @@ class AdminManager {
                                     <input type="checkbox" name="technician" value="المهندس عبد الفتاح وادم" ${device.technician && device.technician.includes('المهندس عبد الفتاح وادم') ? 'checked' : ''}> المهندس عبد الفتاح وادم
                                 </label>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
-                            <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${device.estimatedCompletionDate ? new Date(device.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
                         </div>
                         <div class="form-group">
                             <label class="form-label">حالة الطلب</label>
@@ -6185,10 +6066,6 @@ class AdminManager {
                                 <input type="checkbox" name="technician" value="المهندس عبد الفتاح وادم" ${bulkRequest.technician && bulkRequest.technician.includes('المهندس عبد الفتاح وادم') ? 'checked' : ''}> المهندس عبد الفتاح وادم
                             </label>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
-                        <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${bulkRequest.estimatedCompletionDate ? new Date(bulkRequest.estimatedCompletionDate).toISOString().slice(0, 16) : (bulkRequest.estimated_completion_date ? new Date(bulkRequest.estimated_completion_date).toISOString().slice(0, 16) : '')}">
                     </div>
                     <div class="form-group">
                         <label class="form-label">تحديث الحالة</label>
@@ -7509,10 +7386,6 @@ class AdminManager {
                                 <input type="checkbox" name="technician" value="المهندس عبد الفتاح وادم" ${request.technician && request.technician.includes('المهندس عبد الفتاح وادم') ? 'checked' : ''}> المهندس عبد الفتاح وادم
                             </label>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">تاريخ ووقت الاستلام المتوقع</label>
-                        <input type="datetime-local" class="form-input" name="estimatedCompletionDate" value="${request.estimatedCompletionDate ? new Date(request.estimatedCompletionDate).toISOString().slice(0, 16) : ''}">
                     </div>
                     <div class="form-group">
                         <label class="form-label">تحديث الحالة</label>
