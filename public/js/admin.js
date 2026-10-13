@@ -6395,7 +6395,29 @@ class AdminManager {
 
     goToPage(page) {
         this.currentPage = page;
-        this.renderRequests();
+        // Render the appropriate section based on current section
+        switch (this.currentSection) {
+            case 'requests':
+                this.renderRequests();
+                break;
+            case 'bulk-requests':
+                this.renderBulkRequests();
+                break;
+            case 'company-requests':
+                this.renderCompanyRequests();
+                break;
+            case 'users':
+                this.renderUsers();
+                break;
+            case 'products':
+                this.renderProductsManagement();
+                break;
+            case 'trash':
+                this.renderTrash();
+                break;
+            default:
+                this.renderRequests();
+        }
     }
 
     /**
