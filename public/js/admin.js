@@ -5554,12 +5554,20 @@ class AdminManager {
 
             if (!updateResponse.ok) throw new Error('Failed to update bulk request status');
 
-            // Update local data instead of reloading everything
+            // Update local data only - don't re-render
             const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
             if (index !== -1) {
                 this.bulkRequests[index].status = newStatus;
             }
-            this.renderBulkRequests();
+
+            // Re-render only the current section
+            if (this.currentSection === 'bulk-requests') {
+                this.renderBulkRequests();
+            } else if (this.currentSection === 'dashboard') {
+                this.renderStats();
+                this.renderCharts();
+            }
+
             toast.success('تم تحديث حالة الطلب بنجاح');
         } catch (error) {
             console.error('Error updating bulk request status:', error);
@@ -5624,13 +5632,21 @@ class AdminManager {
 
             if (!updateResponse.ok) throw new Error('Failed to update company request status');
 
-            toast.success('تم تحديث حالة الطلب بنجاح');
-            // Update local data instead of reloading
+            // Update local data only - don't re-render
             const index = this.companyRequests.findIndex(r => r.id === companyRequestId);
             if (index !== -1) {
                 this.companyRequests[index].status = newStatus;
-                this.renderCompanyRequests();
             }
+
+            // Re-render only the current section
+            if (this.currentSection === 'company-requests') {
+                this.renderCompanyRequests();
+            } else if (this.currentSection === 'dashboard') {
+                this.renderStats();
+                this.renderCharts();
+            }
+
+            toast.success('تم تحديث حالة الطلب بنجاح');
         } catch (error) {
             console.error('Error updating company request status:', error);
             toast.error('فشل تحديث حالة الطلب');
@@ -5651,11 +5667,16 @@ class AdminManager {
 
             if (!updateResponse.ok) throw new Error('Failed to update request status');
 
-            // Update local data instead of reloading everything
+            // Update local data only - don't re-render everything
             const index = this.requests.findIndex(r => r.id === requestId);
             if (index !== -1) {
                 this.requests[index].status = newStatus;
+            }
+
+            // Re-render only the current section
+            if (this.currentSection === 'requests') {
                 this.renderRequests();
+            } else if (this.currentSection === 'dashboard') {
                 this.renderStats();
                 this.renderCharts();
             }
@@ -5688,16 +5709,22 @@ class AdminManager {
             }
 
             const result = await updateResponse.json();
-            console.log('Device status updated:', result);
 
-            // Update local data instead of reloading
+            // Update local data only - don't re-render
             const bulkIndex = this.bulkRequests.findIndex(r => r.id === bulkRequestId);
             if (bulkIndex !== -1) {
                 const deviceIndex = this.bulkRequests[bulkIndex].devices.findIndex(d => d.id === deviceId);
                 if (deviceIndex !== -1) {
                     this.bulkRequests[bulkIndex].devices[deviceIndex].status = newStatus;
-                    this.renderBulkRequests();
                 }
+            }
+
+            // Re-render only the current section
+            if (this.currentSection === 'bulk-requests') {
+                this.renderBulkRequests();
+            } else if (this.currentSection === 'dashboard') {
+                this.renderStats();
+                this.renderCharts();
             }
 
             toast.success('تم تحديث حالة الجهاز بنجاح');
@@ -7703,11 +7730,16 @@ class AdminManager {
         if (response.ok) {
             const updatedData = await response.json();
 
-            // Update local data instead of reloading everything
+            // Update local data only - don't re-render everything
             const index = this.requests.findIndex(r => r.id === requestId);
             if (index !== -1) {
                 this.requests[index] = { ...this.requests[index], ...updatedData };
+            }
+
+            // Re-render only the current section
+            if (this.currentSection === 'requests') {
                 this.renderRequests();
+            } else if (this.currentSection === 'dashboard') {
                 this.renderStats();
                 this.renderCharts();
             }
@@ -7767,11 +7799,16 @@ class AdminManager {
                 if (response.ok) {
                     const updatedData = await response.json();
 
-                    // Update local data instead of reloading everything
+                    // Update local data only - don't re-render everything
                     const index = this.requests.findIndex(r => r.id === requestId);
                     if (index !== -1) {
                         this.requests[index] = { ...this.requests[index], ...updatedData };
+                    }
+
+                    // Re-render only the current section
+                    if (this.currentSection === 'requests') {
                         this.renderRequests();
+                    } else if (this.currentSection === 'dashboard') {
                         this.renderStats();
                         this.renderCharts();
                     }
@@ -7828,11 +7865,18 @@ class AdminManager {
                 if (response.ok) {
                     const updatedData = await response.json();
 
-                    // Update local data instead of reloading everything
+                    // Update local data only - don't re-render
                     const index = this.bulkRequests.findIndex(br => br.id === bulkRequestId);
                     if (index !== -1) {
                         this.bulkRequests[index] = { ...this.bulkRequests[index], ...updatedData };
+                    }
+
+                    // Re-render only the current section
+                    if (this.currentSection === 'bulk-requests') {
                         this.renderBulkRequests();
+                    } else if (this.currentSection === 'dashboard') {
+                        this.renderStats();
+                        this.renderCharts();
                     }
 
                     toast.success('تم تحديث الطلب بنجاح');
@@ -7890,10 +7934,24 @@ class AdminManager {
                 });
 
                 if (response.ok) {
+                    const updatedData = await response.json();
+
+                    // Update local data only - don't re-render
+                    const index = this.companyRequests.findIndex(cr => cr.id === companyRequestId);
+                    if (index !== -1) {
+                        this.companyRequests[index] = { ...this.companyRequests[index], ...updatedData };
+                    }
+
+                    // Re-render only the current section
+                    if (this.currentSection === 'company-requests') {
+                        this.renderCompanyRequests();
+                    } else if (this.currentSection === 'dashboard') {
+                        this.renderStats();
+                        this.renderCharts();
+                    }
+
                     toast.success('تم تحديث الطلب بنجاح');
                     modalManager.close('quick-edit-company');
-                    await this.loadData();
-                    this.renderCompanyRequests();
                 } else {
                     throw new Error('Failed to update');
                 }
