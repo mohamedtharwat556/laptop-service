@@ -51,7 +51,7 @@ class AdminManager {
                     this.currentUser = JSON.parse(user);
                     this.userRole = role;
                     console.log('✅ User loaded from sessionStorage:', this.currentUser.name, 'Role:', this.userRole);
-                    
+
                     // User already authenticated, skip login modal
                     // Update UI and load data
                     this.updateUserUI();
@@ -64,7 +64,6 @@ class AdminManager {
                     console.log('🔔 Initializing notification badge...');
                     this.updateNotificationBadge();
                     this.updateTodayTotalBadge();
-                    return; // Skip the rest of initialization
                 } catch (e) {
                     console.error('Failed to parse user:', e);
                 }
@@ -73,7 +72,6 @@ class AdminManager {
             // If no user, show login modal
             if (!this.currentUser || !this.userRole) {
                 this.showAdminLoginModal();
-                // Don't return - let the rest of the initialization continue for sidebar, etc.
             }
 
             // Update UI with user info if user exists
@@ -81,12 +79,15 @@ class AdminManager {
                 this.updateUserUI();
             }
 
-            console.log('📊 Loading data...');
-            await this.loadData();
-            console.log('✅ Data loaded successfully');
+            // Load data if not already loaded
+            if (!this.currentUser || !this.userRole) {
+                console.log('📊 Loading data...');
+                await this.loadData();
+                console.log('✅ Data loaded successfully');
 
-            console.log('📑 Switching to dashboard section...');
-            await this.switchSection('dashboard');
+                console.log('📑 Switching to dashboard section...');
+                await this.switchSection('dashboard');
+            }
 
             console.log('🔄 Auto-refresh disabled');
             // this.startAutoRefresh(); // Auto-refresh disabled as requested
@@ -94,9 +95,6 @@ class AdminManager {
             console.log('🔔 Initializing notification badge...');
             this.updateNotificationBadge();
             this.updateTodayTotalBadge();
-            
-            console.log('🔔 Initializing notification badge...');
-            this.updateNotificationBadge();
             this.updateTodayTotalBadge();
             
             // Close notification dropdown when clicking outside
