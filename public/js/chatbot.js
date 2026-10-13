@@ -13,7 +13,11 @@
         ctx: null,
         init() {
             if (!this.ctx) {
-                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch(e) {
+                    console.warn('AudioContext not available:', e);
+                }
             }
         },
         playPop() {
@@ -38,24 +42,25 @@
         playNotification() {
             try {
                 this.init();
-                if (this.ctx.state === 'suspended') {
+                if (this.ctx && this.ctx.state === 'suspended') {
                     this.ctx.resume();
                 }
+                if (!this.ctx) return; // Don't play if audio context is not available
                 const now = this.ctx.currentTime;
-                
+
                 // Synth chime double beep
                 [523.25, 659.25].forEach((freq, idx) => {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
                     osc.connect(gain);
                     gain.connect(this.ctx.destination);
-                    
+
                     osc.type = 'triangle';
                     osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-                    
+
                     gain.gain.setValueAtTime(0.12, now + idx * 0.08);
                     gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.15);
-                    
+
                     osc.start(now + idx * 0.08);
                     osc.stop(now + idx * 0.08 + 0.15);
                 });
@@ -64,17 +69,18 @@
         playKeypress() {
             try {
                 this.init();
-                if (this.ctx.state === 'suspended') {
+                if (this.ctx && this.ctx.state === 'suspended') {
                     this.ctx.resume();
                 }
+                if (!this.ctx) return; // Don't play if audio context is not available
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
-                
+
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(600, this.ctx.currentTime);
-                
+
                 gain.gain.setValueAtTime(0.02, this.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.03);
                 
