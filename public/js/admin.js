@@ -7583,7 +7583,7 @@ class AdminManager {
         if (!request) return;
 
         const content = `
-            <form id="quickEditForm" style="padding: 1rem;">
+            <form id="quickEditForm" method="POST" style="padding: 1rem;">
                 <div class="form-group">
                     <label class="form-label">رقم الهاتف</label>
                     <input type="tel" class="form-input" name="phone" value="${request.phone || ''}" placeholder="أدخل رقم الهاتف">
@@ -7603,33 +7603,37 @@ class AdminManager {
         modalManager.open('quick-edit');
 
         const form = document.getElementById('quickEditForm');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const updateData = {
-                phone: form.phone.value,
-                problem_description: form.problemDescription.value
-            };
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
 
-            try {
-                const response = await fetch(`/api/requests/${requestId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updateData)
-                });
+                const updateData = {
+                    phone: form.phone.value,
+                    problem_description: form.problemDescription.value
+                };
 
-                if (response.ok) {
-                    toast.success('تم تحديث الطلب بنجاح');
-                    modalManager.close('quick-edit');
-                    await this.loadData();
-                    this.renderRequests();
-                } else {
-                    throw new Error('Failed to update');
+                try {
+                    const response = await fetch(`/api/requests/${requestId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (response.ok) {
+                        toast.success('تم تحديث الطلب بنجاح');
+                        modalManager.close('quick-edit');
+                        await this.loadData();
+                        this.renderRequests();
+                    } else {
+                        throw new Error('Failed to update');
+                    }
+                } catch (error) {
+                    console.error('Error updating request:', error);
+                    toast.error('فشل تحديث الطلب');
                 }
-            } catch (error) {
-                toast.error('فشل تحديث الطلب');
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -7640,7 +7644,7 @@ class AdminManager {
         if (!bulkRequest) return;
 
         const content = `
-            <form id="quickEditBulkForm" style="padding: 1rem;">
+            <form id="quickEditBulkForm" method="POST" style="padding: 1rem;">
                 <div class="form-group">
                     <label class="form-label">رقم الهاتف</label>
                     <input type="tel" class="form-input" name="phone" value="${bulkRequest.customerPhone || ''}" placeholder="أدخل رقم الهاتف">
@@ -7656,32 +7660,36 @@ class AdminManager {
         modalManager.open('quick-edit-bulk');
 
         const form = document.getElementById('quickEditBulkForm');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const updateData = {
-                customer_phone: form.phone.value
-            };
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
 
-            try {
-                const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updateData)
-                });
+                const updateData = {
+                    customer_phone: form.phone.value
+                };
 
-                if (response.ok) {
-                    toast.success('تم تحديث الطلب بنجاح');
-                    modalManager.close('quick-edit-bulk');
-                    await this.loadData();
-                    this.renderBulkRequests();
-                } else {
-                    throw new Error('Failed to update');
+                try {
+                    const response = await fetch(`/api/bulk-requests/${bulkRequestId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (response.ok) {
+                        toast.success('تم تحديث الطلب بنجاح');
+                        modalManager.close('quick-edit-bulk');
+                        await this.loadData();
+                        this.renderBulkRequests();
+                    } else {
+                        throw new Error('Failed to update');
+                    }
+                } catch (error) {
+                    console.error('Error updating bulk request:', error);
+                    toast.error('فشل تحديث الطلب');
                 }
-            } catch (error) {
-                toast.error('فشل تحديث الطلب');
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -7692,7 +7700,7 @@ class AdminManager {
         if (!companyRequest) return;
 
         const content = `
-            <form id="quickEditCompanyForm" style="padding: 1rem;">
+            <form id="quickEditCompanyForm" method="POST" style="padding: 1rem;">
                 <div class="form-group">
                     <label class="form-label">رقم الهاتف</label>
                     <input type="tel" class="form-input" name="phone" value="${companyRequest.phone || ''}" placeholder="أدخل رقم الهاتف">
@@ -7712,33 +7720,37 @@ class AdminManager {
         modalManager.open('quick-edit-company');
 
         const form = document.getElementById('quickEditCompanyForm');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const updateData = {
-                phone: form.phone.value,
-                problem_description: form.problemDescription.value
-            };
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
 
-            try {
-                const response = await fetch(`/api/company-requests/${companyRequestId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updateData)
-                });
+                const updateData = {
+                    phone: form.phone.value,
+                    problem_description: form.problemDescription.value
+                };
 
-                if (response.ok) {
-                    toast.success('تم تحديث الطلب بنجاح');
-                    modalManager.close('quick-edit-company');
-                    await this.loadData();
-                    this.renderCompanyRequests();
-                } else {
-                    throw new Error('Failed to update');
+                try {
+                    const response = await fetch(`/api/company-requests/${companyRequestId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (response.ok) {
+                        toast.success('تم تحديث الطلب بنجاح');
+                        modalManager.close('quick-edit-company');
+                        await this.loadData();
+                        this.renderCompanyRequests();
+                    } else {
+                        throw new Error('Failed to update');
+                    }
+                } catch (error) {
+                    console.error('Error updating company request:', error);
+                    toast.error('فشل تحديث الطلب');
                 }
-            } catch (error) {
-                toast.error('فشل تحديث الطلب');
-            }
-        });
+            });
+        }
     }
 
     /**
