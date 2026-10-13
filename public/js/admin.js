@@ -3729,17 +3729,7 @@ class AdminManager {
         const form = document.getElementById('editDeviceForm');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            // Handle estimated completion date
-            const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
-            let estimatedCompletionDate = null;
-            if (estimatedCompletionDateValue) {
-                const dateObj = new Date(estimatedCompletionDateValue);
-                if (!isNaN(dateObj.getTime())) {
-                    estimatedCompletionDate = dateObj.toISOString();
-                }
-            }
-            
+
             const deviceData = {
                 laptopBrand: form.laptopBrand.value,
                 laptopModel: form.laptopModel.value,
@@ -3748,8 +3738,7 @@ class AdminManager {
                 priority: form.priority.value,
                 problemDescription: form.problemDescription.value,
                 status: form.status.value,
-                cost: parseFloat(form.cost.value) || 0,
-                estimatedCompletionDate: estimatedCompletionDate
+                cost: parseFloat(form.cost.value) || 0
             };
 
             // Check if changing to Delivered status without estimated completion date
@@ -5117,15 +5106,6 @@ class AdminManager {
             const form = document.getElementById('editCompanyRequestForm');
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
-                const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
-                let estimatedCompletionDate = null;
-                if (estimatedCompletionDateValue) {
-                    const dateObj = new Date(estimatedCompletionDateValue);
-                    if (!isNaN(dateObj.getTime())) {
-                        estimatedCompletionDate = dateObj.toISOString();
-                    }
-                }
 
                 const updateData = {
                     phone: form.phone.value,
@@ -5133,15 +5113,8 @@ class AdminManager {
                     adminReply: form.adminReply.value,
                     cost: parseFloat(form.cost.value) || 0,
                     technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-                    estimatedCompletionDate: estimatedCompletionDate,
                     status: form.status.value
                 };
-
-                // Check if changing to Delivered status without estimated completion date
-                if (updateData.status === 'Delivered' && !updateData.estimatedCompletionDate) {
-                    toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
-                    return;
-                }
 
                 try {
                     const response = await fetch(`/api/company-requests/${companyRequestId}`, {
@@ -5614,26 +5587,15 @@ class AdminManager {
                 body: JSON.stringify({ status: newStatus })
             });
 
-                    if (!updateResponse.ok) throw new Error('Failed to update company request status');
-
-                    toast.success('تم تحديث حالة الطلب بنجاح');
-                    await this.loadData();
-                    this.renderCompanyRequests();
-                    return;
-                }
-            }
-
-            const updateResponse = await fetch(`/api/company-requests/${companyRequestId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus })
-            });
-
             if (!updateResponse.ok) throw new Error('Failed to update company request status');
 
             toast.success('تم تحديث حالة الطلب بنجاح');
-            await this.loadData();
-            this.renderCompanyRequests();
+            // Update local data instead of reloading
+            const index = this.companyRequests.findIndex(r => r.id === companyRequestId);
+            if (index !== -1) {
+                this.companyRequests[index].status = newStatus;
+                this.renderCompanyRequests();
+            }
         } catch (error) {
             console.error('Error updating company request status:', error);
             toast.error('فشل تحديث حالة الطلب');
@@ -5646,12 +5608,6 @@ class AdminManager {
     async updateRequestStatus(requestId, newStatus) {
         try {
             // Direct status update
-            const updateResponse = await fetch(`/api/requests/${requestId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus })
-            });
-
             const updateResponse = await fetch(`/api/requests/${requestId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -5699,9 +5655,15 @@ class AdminManager {
             const result = await updateResponse.json();
             console.log('Device status updated:', result);
 
-            // Reload data from server to get fresh data
-            await this.loadData();
-            this.renderBulkRequests();
+            // Update local data instead of reloading
+            const bulkIndex = this.bulkRequests.findIndex(r => r.id === bulkRequestId);
+            if (bulkIndex !== -1) {
+                const deviceIndex = this.bulkRequests[bulkIndex].devices.findIndex(d => d.id === deviceId);
+                if (deviceIndex !== -1) {
+                    this.bulkRequests[bulkIndex].devices[deviceIndex].status = newStatus;
+                    this.renderBulkRequests();
+                }
+            }
 
             toast.success('تم تحديث حالة الجهاز بنجاح');
         } catch (error) {
@@ -5839,23 +5801,13 @@ class AdminManager {
                 
                 form.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    
-                    const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
-                    let estimatedCompletionDate = null;
-                    if (estimatedCompletionDateValue) {
-                        const dateObj = new Date(estimatedCompletionDateValue);
-                        if (!isNaN(dateObj.getTime())) {
-                            estimatedCompletionDate = dateObj.toISOString();
-                        }
-                    }
-                    
+
                     // Update device with all fields
                     const deviceUpdateData = {
                         problemDescription: form.problemDescription.value,
                         adminReply: form.adminReply.value,
                         cost: form.cost.value ? parseFloat(form.cost.value) : 0,
                         technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-                        estimatedCompletionDate: estimatedCompletionDate,
                         status: form.status.value
                     };
 
@@ -6096,22 +6048,12 @@ class AdminManager {
             
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
-                const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
-                let estimatedCompletionDate = null;
-                if (estimatedCompletionDateValue) {
-                    const dateObj = new Date(estimatedCompletionDateValue);
-                    if (!isNaN(dateObj.getTime())) {
-                        estimatedCompletionDate = dateObj.toISOString();
-                    }
-                }
-                
+
                 const updateData = {
                     customerPhone: form.customerPhone.value,
                     adminReply: form.adminReply.value,
                     cost: form.cost.value ? parseFloat(form.cost.value) : 0,
                     technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-                    estimatedCompletionDate: estimatedCompletionDate,
                     status: form.status.value
                 };
 
@@ -7408,15 +7350,6 @@ class AdminManager {
         const form = document.getElementById('editRequestForm');
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            const estimatedCompletionDateValue = form.estimatedCompletionDate.value;
-            // Convert datetime-local to ISO string
-            let estimatedCompletionDate = null;
-            if (estimatedCompletionDateValue) {
-                const dateObj = new Date(estimatedCompletionDateValue);
-                if (!isNaN(dateObj.getTime())) {
-                    estimatedCompletionDate = dateObj.toISOString();
-                }
-            }
 
             const updateData = {
                 phone: form.phone.value,
@@ -7424,8 +7357,8 @@ class AdminManager {
                 adminReply: form.adminReply.value,
                 cost: parseFloat(form.cost.value) || 0,
                 technician: Array.from(form.querySelectorAll('input[name="technician"]:checked')).map(cb => cb.value).join(' و '),
-                estimatedCompletionDate: estimatedCompletionDate,
                 status: form.status.value
+            };
             };
 
             console.log('📝 Updating request with data:', updateData);
