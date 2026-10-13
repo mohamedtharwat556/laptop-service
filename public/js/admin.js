@@ -58,12 +58,6 @@ class AdminManager {
                     console.log('📊 Loading data...');
                     await this.loadData();
                     console.log('✅ Data loaded successfully');
-                    console.log('📑 Switching to dashboard section...');
-                    await this.switchSection('dashboard');
-                    console.log('🔄 Auto-refresh disabled');
-                    console.log('🔔 Initializing notification badge...');
-                    this.updateNotificationBadge();
-                    this.updateTodayTotalBadge();
                 } catch (e) {
                     console.error('Failed to parse user:', e);
                 }
@@ -84,9 +78,6 @@ class AdminManager {
                 console.log('📊 Loading data...');
                 await this.loadData();
                 console.log('✅ Data loaded successfully');
-
-                console.log('📑 Switching to dashboard section...');
-                await this.switchSection('dashboard');
             }
 
             console.log('🔄 Auto-refresh disabled');
@@ -94,7 +85,6 @@ class AdminManager {
 
             console.log('🔔 Initializing notification badge...');
             this.updateNotificationBadge();
-            this.updateTodayTotalBadge();
             this.updateTodayTotalBadge();
             
             // Close notification dropdown when clicking outside
@@ -120,18 +110,6 @@ class AdminManager {
                     }
 
                     await this.switchSection(section);
-                    if (section === 'daily-report') {
-                        // Set today's date by default
-                        const dateInput = document.getElementById('reportDate');
-                        if (dateInput && !dateInput.value) {
-                            dateInput.value = new Date().toISOString().slice(0, 10);
-                        }
-                        this.renderDailyReport();
-                        // Re-render on date change
-                        if (dateInput) {
-                            dateInput.onchange = () => this.renderDailyReport();
-                        }
-                    }
                 });
             });
 
@@ -246,6 +224,61 @@ class AdminManager {
                     this.renderRequests();
                 });
             }
+
+            // Setup report period selector
+            const reportPeriod = document.getElementById('reportPeriod');
+            const reportDate = document.getElementById('reportDate');
+            const reportDateFrom = document.getElementById('reportDateFrom');
+            const reportDateTo = document.getElementById('reportDateTo');
+
+            if (reportPeriod) {
+                reportPeriod.addEventListener('change', () => {
+                    const period = reportPeriod.value;
+                    reportDate.style.display = 'none';
+                    reportDateFrom.style.display = 'none';
+                    reportDateTo.style.display = 'none';
+
+                    if (period === 'today') {
+                        reportDate.value = new Date().toISOString().slice(0, 10);
+                    } else if (period === 'yesterday') {
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        reportDate.value = yesterday.toISOString().slice(0, 10);
+                    } else if (period === 'lastWeek') {
+                        const today = new Date();
+                        const lastWeek = new Date();
+                        lastWeek.setDate(today.getDate() - 7);
+                        reportDateFrom.value = lastWeek.toISOString().slice(0, 10);
+                        reportDateTo.value = today.toISOString().slice(0, 10);
+                        reportDateFrom.style.display = 'block';
+                        reportDateTo.style.display = 'block';
+                    } else if (period === 'custom') {
+                        reportDate.style.display = 'block';
+                    }
+                });
+            }
+
+            // Restore section from URL hash after initialization
+            console.log('📑 Restoring section from URL hash...');
+            const hash = window.location.hash.replace('#', '');
+            if (hash && this.canAccessSection(hash)) {
+                console.log('📑 Restoring section:', hash);
+                await this.switchSection(hash);
+            } else {
+                console.log('📑 Switching to default dashboard section...');
+                await this.switchSection('dashboard');
+            }
+
+            // Handle browser back/forward navigation
+            window.addEventListener('hashchange', async () => {
+                const newHash = window.location.hash.replace('#', '');
+                if (newHash && this.canAccessSection(newHash)) {
+                    console.log('📑 Hash changed to:', newHash);
+                    await this.switchSection(newHash);
+                }
+            });
+
+            console.log('✅ Admin dashboard initialized successfully!');
 
             // Setup global search
             const globalSearchForm = document.getElementById('globalSearchForm');
@@ -3217,7 +3250,10 @@ class AdminManager {
      */
     async switchSection(section) {
         this.currentSection = section;
-        
+
+        // Update URL hash for navigation persistence
+        window.location.hash = section;
+
         // Update sidebar
         document.querySelectorAll('.sidebar-nav-link').forEach(link => {
             link.classList.remove('active');
@@ -3278,6 +3314,21 @@ class AdminManager {
                 this._bulkTodayFilter = null;
                 this._companyTodayFilter = null;
                 this.renderProductsManagement();
+                break;
+            case 'daily-report':
+                // Set today's date by default
+                const dateInput = document.getElementById('reportDate');
+                if (dateInput && !dateInput.value) {
+                    dateInput.value = new Date().toISOString().slice(0, 10);
+                }
+                this.renderDailyReport();
+                // Re-render on date change
+                if (dateInput) {
+                    dateInput.onchange = () => this.renderDailyReport();
+                }
+                break;
+            case 'duplicate-serials':
+                this.renderDuplicateSerials();
                 break;
             case 'trash':
                 this._bulkTodayFilter = null;
