@@ -5900,54 +5900,6 @@ class AdminManager {
         try {
             console.log('Updating device status:', { bulkRequestId, deviceId, newStatus });
 
-            // Check if changing to Delivered status
-            if (newStatus === 'Delivered') {
-                // Get the bulk request to find the device
-                const bulkRequest = this.bulkRequests.find(r => r.id === bulkRequestId);
-                if (bulkRequest && bulkRequest.devices) {
-                    const device = bulkRequest.devices.find(d => d.id === deviceId);
-                    if (!device || !device.estimatedCompletionDate) {
-                        // Prompt for estimated completion date
-                        const dateInput = prompt('يرجى إدخال تاريخ ووقت الاستلام المتوقع (YYYY-MM-DD HH:MM):');
-                        if (!dateInput) {
-                            toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
-                            return;
-                        }
-                        
-                        // Validate and format the date
-                        const dateObj = new Date(dateInput);
-                        if (isNaN(dateObj.getTime())) {
-                            toast.error('تاريخ غير صحيح، يرجى إدخال التاريخ بصيغة YYYY-MM-DD HH:MM');
-                            return;
-                        }
-                        
-                        // Update device status with the date
-                        const updateResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                status: newStatus,
-                                estimatedCompletionDate: dateObj.toISOString()
-                            })
-                        });
-
-                        if (!updateResponse.ok) {
-                            const errorText = await updateResponse.text();
-                            console.error('Error response:', errorText);
-                            throw new Error('Failed to update device status');
-                        }
-
-                        const result = await updateResponse.json();
-                        console.log('Device status updated:', result);
-
-                        toast.success('تم تحديث حالة الجهاز بنجاح');
-                        await this.loadData();
-                        this.renderBulkRequests();
-                        return;
-                    }
-                }
-            }
-            
             // Update device status using the device-specific endpoint
             const updateResponse = await fetch(`/api/bulk-requests/devices/${deviceId}`, {
                 method: 'PUT',
