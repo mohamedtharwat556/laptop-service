@@ -3814,12 +3814,6 @@ class AdminManager {
                 estimatedCompletionDate: estimatedCompletionDate
             };
 
-            // Check if changing to Delivered status without estimated completion date
-            if (deviceData.status === 'Delivered' && !deviceData.estimatedCompletionDate) {
-                toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
-                return;
-            }
-
             try {
                 loading.show('جاري حفظ التغييرات...');
                 
@@ -5372,12 +5366,6 @@ class AdminManager {
                     status: form.status.value
                 };
 
-                // Check if changing to Delivered status without estimated completion date
-                if (updateData.status === 'Delivered' && !updateData.estimatedCompletionDate) {
-                    toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
-                    return;
-                }
-
                 try {
                     const response = await fetch(`/api/company-requests/${companyRequestId}`, {
                         method: 'PUT',
@@ -5852,50 +5840,6 @@ class AdminManager {
      */
     async updateCompanyRequestStatus(companyRequestId, newStatus) {
         try {
-            // Check if changing to Delivered status
-            if (newStatus === 'Delivered') {
-                const request = this.companyRequests.find(r => r.id === companyRequestId);
-                if (!request || !request.estimatedCompletionDate) {
-                    // Prompt for estimated completion date
-                    const dateInput = prompt('يرجى إدخال تاريخ ووقت الاستلام المتوقع (YYYY-MM-DD HH:MM):');
-                    if (!dateInput) {
-                        toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
-                        return;
-                    }
-
-                    // Validate and format the date
-                    const dateObj = new Date(dateInput);
-                    if (isNaN(dateObj.getTime())) {
-                        toast.error('تاريخ غير صحيح، يرجى إدخال التاريخ بصيغة YYYY-MM-DD HH:MM');
-                        return;
-                    }
-
-                    // Update the request with the date
-                    const updateResponse = await fetch(`/api/company-requests/${companyRequestId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            status: newStatus,
-                            estimatedCompletionDate: dateObj.toISOString()
-                        })
-                    });
-
-                    if (!updateResponse.ok) throw new Error('Failed to update company request status');
-
-                    toast.success('تم تحديث حالة الطلب بنجاح');
-                    await this.loadData();
-                    this.renderCompanyRequests();
-
-                    // Update Critical Orders if currently viewing that section
-                    if (this.currentSection === 'critical-orders') {
-                        this.renderCriticalOrders();
-                    }
-                    // Always update badge
-                    this.updateCriticalBadge();
-                    return;
-                }
-            }
-
             const updateResponse = await fetch(`/api/company-requests/${companyRequestId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -5925,51 +5869,6 @@ class AdminManager {
      */
     async updateRequestStatus(requestId, newStatus) {
         try {
-            // Check if changing to Delivered status
-            if (newStatus === 'Delivered') {
-                const request = this.requests.find(r => r.id === requestId);
-                if (!request || !request.estimatedCompletionDate) {
-                    // Prompt for estimated completion date
-                    const dateInput = prompt('يرجى إدخال تاريخ ووقت الاستلام المتوقع (YYYY-MM-DD HH:MM):');
-                    if (!dateInput) {
-                        toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
-                        return;
-                    }
-                    
-                    // Validate and format the date
-                    const dateObj = new Date(dateInput);
-                    if (isNaN(dateObj.getTime())) {
-                        toast.error('تاريخ غير صحيح، يرجى إدخال التاريخ بصيغة YYYY-MM-DD HH:MM');
-                        return;
-                    }
-                    
-                    // Update the request with the date
-                    const updateResponse = await fetch(`/api/requests/${requestId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            status: newStatus,
-                            estimatedCompletionDate: dateObj.toISOString()
-                        })
-                    });
-
-                    if (!updateResponse.ok) throw new Error('Failed to update request status');
-
-                    // Update local data
-                    const index = this.requests.findIndex(r => r.id === requestId);
-                    if (index !== -1) {
-                        this.requests[index].status = newStatus;
-                        this.requests[index].estimatedCompletionDate = dateObj.toISOString();
-                        this.renderRequests();
-                        this.renderStats();
-                        this.renderCharts();
-                    }
-
-                    toast.success('تم تحديث حالة الطلب بنجاح');
-                    return;
-                }
-            }
-
             const updateResponse = await fetch(`/api/requests/${requestId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -7833,12 +7732,6 @@ class AdminManager {
                 };
 
                 console.log('📝 Updating request with data:', updateData);
-
-                // Check if changing to Delivered status without estimated completion date
-                if (updateData.status === 'Delivered' && !updateData.estimatedCompletionDate) {
-                    toast.error('يجب إدخال تاريخ ووقت الاستلام المتقبل قبل التحويل إلى تم التسليم');
-                    return;
-                }
 
                 this.updateRequest(requestId, updateData);
             });
