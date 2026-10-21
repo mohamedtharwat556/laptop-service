@@ -207,6 +207,8 @@ router.post('/', async (req, res) => {
             status: 'Received'
         };
 
+        console.log('📝 Inserting company request:', newRequest);
+
         const { data, error } = await supabase
             .from('company_requests')
             .insert([newRequest])
@@ -242,7 +244,9 @@ router.post('/', async (req, res) => {
         res.status(201).json(camelCaseData);
     } catch (error) {
         console.error('Error creating company request:', error);
-        res.status(500).json({ error: 'Failed to create company request' });
+        console.error('Error details:', error.message);
+        console.error('Request body received:', req.body);
+        res.status(500).json({ error: 'Failed to create company request', details: error.message });
     }
 });
 
