@@ -174,20 +174,23 @@ router.get('/:id', async (req, res) => {
 // POST /api/company-requests - Create a new company request
 router.post('/', async (req, res) => {
     try {
-        // Generate request number
+        // Generate request number - get all requests to find the highest number
         const { data: existingRequests } = await supabase
             .from('company_requests')
-            .select('request_number')
-            .order('created_at', { ascending: false })
-            .limit(1);
+            .select('request_number');
 
         let nextNumber = 1;
         if (existingRequests && existingRequests.length > 0) {
-            const lastRequestNumber = existingRequests[0].request_number;
-            const match = lastRequestNumber.match(/YAS-COMP (\d+)/);
-            if (match) {
-                nextNumber = parseInt(match[1]) + 1;
-            }
+            // Find the highest number from all existing requests
+            let maxNumber = 0;
+            existingRequests.forEach(req => {
+                const match = req.request_number?.match(/YAS-COMP (\d+)/);
+                if (match) {
+                    const num = parseInt(match[1]);
+                    if (num > maxNumber) maxNumber = num;
+                }
+            });
+            nextNumber = maxNumber + 1;
         }
 
         const requestNumber = `YAS-COMP ${nextNumber}`;
